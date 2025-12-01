@@ -1,0 +1,148 @@
+﻿using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+using Helpers.Controls;
+using Helpers.Controls.ValueObjects;
+using System;
+using System.Collections.Generic;
+using System.ServiceModel;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CalibrationSaaS.Application.Services
+{
+    [ServiceContract(Name = "CalibrationSaaS.Application.Services.ComponentServices")]
+    public interface IComponentServices<T>
+    { 
+        ValueTask<Component> GetComponentByRoute(string route);
+        Task<Component> DeleteComponent(Component Component, T context);
+
+       
+        Task<ResultSet<Component>> CreateComponents(ICollection<Component> Component, T context);
+
+        Task<ResultSet<Component>> GetAllComponents(T context);
+
+
+        Task<ResultSet<CustomSequence>> CustomSequences(T context);
+
+
+    }
+
+
+
+    [ServiceContract(Name = "CalibrationSaaS.Application.Services.BasicsServices")]
+    public interface IBasicsServices<T>
+    {
+        ValueTask<User> Enable(User userDTO, T context = default);
+
+        ValueTask<User> Reset(User userDTO, T context = default);
+
+        ValueTask<IEnumerable<ToleranceType>> GetToleranceTypes(T context);
+
+       
+
+
+        ValueTask<Rol> AddRol(Rol rol, T context);
+        ValueTask<Rol> DeleteRole(Rol rol, T context);
+
+        ValueTask<EquipmentType> CreateEquipmentType(EquipmentType equipmentTypeDTO, T context);
+        ValueTask<EquipmentTypeResultSet> GetEquipmenTypes(T context);
+
+        ValueTask<ResultSet<EquipmentType>> GetEquipmenTypesPag(Pagination<EquipmentType> Pagination, T _context);
+        ValueTask<ResultSet<CalibrationType>> GetCalibrationTypesPag(Pagination<CalibrationType> Pagination, T _context);
+
+        ValueTask<EquipmentType> DeleteEquipmentType(EquipmentType equipmentTypeDTO, T context);
+
+         ValueTask<EquipmentType> GetEquipmentTypeByID(EquipmentType DTO, T context);
+
+        #region Manufacturer
+        ValueTask<Manufacturer> CreateManufacturer(Manufacturer manufacturerDTO, T context);
+        ValueTask<ResultSet<Manufacturer>> GetManufacturers(Pagination<Manufacturer> Pagination, T context=default);
+
+        ValueTask<ManufacturerResultSet> GetAllManufacturers(T context);
+        ValueTask<Manufacturer> DeleteManufacturer(Manufacturer manufacturerDTO, T context);
+        Task UpdateManufacturer(Manufacturer manufacturerDTO, T context);
+
+        Task<Manufacturer> GetManufacturerXName(Manufacturer manufacturerDTO, T context);
+        #endregion
+
+        #region EquipmentTemplate
+        ValueTask<EquipmentTemplate> CreateEquipment(EquipmentTemplate EquipmentDTO, T context);
+        
+        ValueTask<ResultSet<EquipmentTemplate>> GetEquipment(Pagination<EquipmentTemplate> pagination, T context);
+
+        ValueTask<EquipmentTemplate> DeleteEquipment(EquipmentTemplate EquipmentDTO, T context);
+
+        ValueTask<EquipmentTemplate> GetEquipmentByID(EquipmentTemplate EquipmentDTO, T context);
+
+        Task<EquipmentTemplate> GetEquipmentXName(EquipmentTemplate EquipmentDTO, T context);
+        #endregion
+
+        ValueTask<TestPointResultSet> GetTespoint(TestPointGroup DTO, T context);
+        ValueTask<TestPointGroupResultSet> GetTespointByEquipment(EquipmentTemplate EquipmentDTO, T context);
+        ValueTask<TestPointGroupResultSet> GetTespointGroup(EquipmentTemplate EquipmentDTO, T context);
+        ValueTask<TestPointGroup> InsertTestPointGroup(TestPointGroup DTO, T context);
+
+
+        ValueTask<ResultSet<EquipmentTypeGroup>> GetEquipmentTypeGroups(T context);
+        
+        ValueTask<List<CMCValues>> GetCMCValuesByCalibrationType(CalibrationType DTO, T context);
+        ValueTask<CMCValues> GetCMCValuesById(CMCValues DTO, T context);
+        ValueTask<CalibrationType> GetCalibrationTypeById(CalibrationType DTO, T context);
+        ValueTask<CalibrationType> InsertCMCValue(CalibrationType DTO, T context);
+        ValueTask<CMCValues> DeleteCMCValue(CMCValues DTO, T context);
+        ValueTask<CMCValues> UpdateCMCValue(CMCValues DTO, T context);
+        #region Technicians
+        ValueTask<User> CreateUser(User userDTO, T context);
+        ValueTask<User> GetUserById(User userDTO, T context);
+        ValueTask<User> GetUserById2(User userDTO, T context);
+        ValueTask<UserResultSet> GetUsers(T context);
+
+        ValueTask<ResultSet<User>> GetUsersPag(Pagination<User> Pagination, T _context);
+
+        ValueTask<User> DeleteUser(User userDTO, T context);
+        Task UpdateUser(User userDTO, T context);
+
+
+        ValueTask<IEnumerable<Certification>> GetCertifications(T context);
+
+        ValueTask<ResultSet<TechnicianCode>> GetTechnicianCodePag(Pagination<TechnicianCode> Pagination, T _context);
+
+
+        ValueTask<TechnicianCode> CreateTechnicianCode( TechnicianCode DTO, T _context);
+
+        ValueTask<TechnicianCode> DeleteTechnicianCode(TechnicianCode DTO, T _context);
+
+
+        #endregion
+
+        #region Contacts
+        ValueTask<Contact> CreateContact(Contact contactDTO, T context);
+        ValueTask<ContactResultSet> GetContacts(T context);
+        ValueTask<Contact> DeleteContact(Contact contactDTO, T context);
+        Task UpdateContact(Contact contactDTO, T context);
+        #endregion
+
+        #region Status
+       
+        ValueTask<StatusResultSet> GetStatus(T context);
+
+        #endregion
+
+        #region Rol
+
+        ValueTask<RolResultSet> GetRoles(T context);
+
+        #endregion
+
+        #region Procedure
+        ValueTask<Procedure> CreateProcedure(Procedure procedureDTO, T context);
+        ValueTask<ResultSet<Procedure>> GetProcedures(Pagination<Procedure> Pagination, T context = default);
+
+        ValueTask<ProcedureResultSet> GetAllProcedures(T context);
+        ValueTask<Procedure> DeleteProcedure(Procedure procedureDTO, T context);
+        Task UpdateProcedure(Procedure ProcedureDTO, T context);
+        Task<Procedure> GetProcedureXName(Procedure ProcedureDTO, T context);
+        #endregion
+    }
+
+}

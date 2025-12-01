@@ -1,0 +1,99 @@
+﻿@page "/Manufacturer/{EntityId}"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@namespace BlazorApp1.Blazor.Pages.Basics
+@inherits BlazorApp1.Blazor.Pages.Basics.Manufacturer_CreateBase
+@implements IDisposable
+@using System.Linq.Expressions
+@using Blazed.Controls
+
+
+@{
+
+
+    SetEnabled();
+
+
+}
+<HeaderComponent Title="Manufacturer" ActionBar="@Enabled" Enabled="@Enabled"></HeaderComponent>
+<div class="col-md-12">
+
+
+    <EditForm style="margin:10px" OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        @*<h4>@LastSubmitResult</h4>*@
+        <SubmitComponent>
+
+        </SubmitComponent>
+        <div class="form-row">
+            <div class="col-md-12">
+                @*<div class="form-row">
+                        <div style="visibility:hidden">
+                            <label for="validationServer01">@TypeName ID</label>
+                            <InputNumber @bind-Value="eq.ManufacturerID"
+                                         @attributes="@EnabledFunction()"
+
+                                         />
+                        </div>
+                        <ValidationMessage For="@(() => eq.ManufacturerID)" />
+                    </div>*@
+
+                <div class="form-row p-3">
+                    <div class="col-md">
+                        <label for="abbreviation">Abbreviation</label>
+                        <InputText @bind-Value="eq.Abbreviation" class="form-control"
+                                   @attributes="@EnabledFunction()" />
+                    </div>
+
+                </div>
+
+                <div class="form-row p-3">
+                    <div class="col-md">
+                      
+
+                        <TextInput Label="Manufacturer Name" @bind-Value="eq.Name"
+                                   Validate="true" ValidationFor="@(() => eq.Name)" IsDisabled="!Enabled">
+
+
+                        </TextInput>
+                   
+                    </div>
+
+                </div>
+                <div class="form-row p-3">
+                    <div class="col-md-3 mb-3">
+                      
+
+                        <TextInput Label="Enabled" @bind-Value="eq.IsEnabled"
+                                   Validate="false" ValidationFor="@(() => eq.IsEnabled)" IsDisabled="!Enabled"
+                                   Type="@Types.Switch">
+
+
+                        </TextInput>
+
+
+                    </div>
+                </div>
+
+
+                <div class="valid-feedback">
+                    Looks good!
+                </div>
+            </div>
+        </div>
+
+     
+
+
+    </EditForm>
+</div>
+@*<div id="dvModalCreateCustomer">
+        <StandardModal @ref="child"></StandardModal>
+    </div>*@
+
+@code{
+
+
+
+
+}

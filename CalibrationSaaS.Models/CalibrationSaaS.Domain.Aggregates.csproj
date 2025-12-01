@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">	
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>	
+  <ItemGroup>
+    <Compile Remove="Entities\Component.cs" />
+    <Compile Remove="Entities\KeyValue.cs" />
+    <Compile Remove="Entities\Tension.cs" />
+    <Compile Remove="Entities\TodoDto.cs" />
+    <Compile Remove="Interfaces\ICreateItems.cs" />
+    <Compile Remove="Interfaces\IGetItems.cs" />
+    <Compile Remove="Interfaces\IPaginationBase.cs" />
+    <Compile Remove="ValueObjects\Pagination.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="15.1.0" />
+    <PackageReference Include="DynamicExpressions.NET" Version="1.1.0" />
+    <PackageReference Include="IdentityModel" Version="7.0.0" />
+    <PackageReference Include="LinqKit.Core" Version="1.2.9" />
+    
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="10.0.0" />
+    
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bogus-master\Source\Bogus\Bogus.csproj" />
+    <ProjectReference Include="..\Helpers\Helpers.csproj" />
+    <ProjectReference Include="..\Reports.Domain.ReportViewModels\Reports.Domain.ReportViewModels.csproj" />
+  </ItemGroup>
+
+</Project>

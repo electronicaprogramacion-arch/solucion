@@ -1,0 +1,56 @@
+﻿using Helpers.Controls;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
+using System.Text;
+
+namespace CalibrationSaaS.Domain.Aggregates.Entities
+{
+    [DataContract]
+    public class Component 
+    {
+        public Component()
+        {
+
+        }
+
+
+        [Required]
+        [DataMember(Order = 1)]
+        public int ComponentID { get; set; }
+
+        
+        [DataMember(Order = 2)]
+        public string Route { get; set; }
+
+        
+        [DataMember(Order = 3)]
+        public string Name { get; set; }
+
+
+       
+        [DataMember(Order = 4)]
+        public string Group { get; set; }
+
+
+        
+        [DataMember(Order = 5)]
+        [NotMapped]
+        public virtual  Policies Permission { get; set; }
+
+        [DataMember(Order = 6)]
+        public bool Disabled { get; set; }
+
+
+        [DataMember(Order = 7)]
+        [NotMapped]
+        public string User { get; set; }
+
+        [DataMember(Order = 8)]
+        [NotMapped]
+        public bool IsModal { get; set; }
+
+    }
+}

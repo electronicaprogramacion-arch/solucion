@@ -1,0 +1,370 @@
+@page "/performance-monitor"
+@using Microsoft.JSInterop
+@using System.Threading
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+
+<PageTitle>Performance Monitor - CalibrationSaaS</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-tachometer-alt"></i> Performance Monitor
+        </h1>
+        <div>
+            <button class="btn btn-primary btn-sm" @onclick="RefreshData">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="btn btn-secondary btn-sm" @onclick="ClearData">
+                <i class="fas fa-trash"></i> Clear
+            </button>
+            <button class="btn btn-info btn-sm" @onclick="ExportData">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Performance Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Average Page Load
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(averagePageLoad.ToString("F0"))ms
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Fast Operations
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @fastOperations
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-rocket fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Slow Operations
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @slowOperations
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Very Slow Operations
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @verySlowOperations
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-time Performance Data -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Real-time Performance Data</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @bind="autoRefresh" id="autoRefresh">
+                        <label class="form-check-label" for="autoRefresh">
+                            Auto Refresh (@refreshInterval seconds)
+                        </label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (performanceData.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Type</th>
+                                        <th>Description</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                        <th>URL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var entry in performanceData.OrderByDescending(x => x.Timestamp).Take(50))
+                                    {
+                                        <tr class="@GetRowClass(entry.Duration)">
+                                            <td>@entry.Timestamp.ToString("HH:mm:ss.fff")</td>
+                                            <td>
+                                                <span class="badge badge-secondary">@entry.Type</span>
+                                            </td>
+                                            <td>@entry.Description</td>
+                                            <td>
+                                                <strong class="@GetDurationClass(entry.Duration)">
+                                                    @entry.Duration.ToString("F1")ms
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                @if (entry.Duration < 100)
+                                                {
+                                                    <span class="badge badge-success">Fast</span>
+                                                }
+                                                else if (entry.Duration < 500)
+                                                {
+                                                    <span class="badge badge-warning">Moderate</span>
+                                                }
+                                                else if (entry.Duration < 1000)
+                                                {
+                                                    <span class="badge badge-danger">Slow</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-dark">Very Slow</span>
+                                                }
+                                            </td>
+                                            <td>@entry.Url</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-line fa-3x text-gray-300 mb-3"></i>
+                            <p class="text-muted">No performance data available. Navigate to other pages to generate data.</p>
+                            <button class="btn btn-primary" @onclick="NavigateToWorkOrders">
+                                Go to Work Orders
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Instructions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">How to Use Performance Monitor</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>🚀 What's Being Tracked:</h6>
+                            <ul>
+                                <li>Page load times</li>
+                                <li>Navigation between pages</li>
+                                <li>Button clicks and user interactions</li>
+                                <li>API/gRPC calls</li>
+                                <li>Database operations</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>📊 Performance Thresholds:</h6>
+                            <ul>
+                                <li><span class="badge badge-success">Fast</span> &lt; 100ms</li>
+                                <li><span class="badge badge-warning">Moderate</span> 100-500ms</li>
+                                <li><span class="badge badge-danger">Slow</span> 500ms-1s</li>
+                                <li><span class="badge badge-dark">Very Slow</span> &gt; 1s</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <h6>🔍 Troubleshooting Slow Performance:</h6>
+                        <ol>
+                            <li>Check the browser console (F12) for detailed performance logs</li>
+                            <li>Look for operations taking more than 1 second</li>
+                            <li>Identify patterns in slow operations (specific pages, actions, etc.)</li>
+                            <li>Use the Export button to save performance data for analysis</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<PerformanceEntry> performanceData = new();
+    private bool autoRefresh = true;
+    private int refreshInterval = 5;
+    private Timer? refreshTimer;
+    
+    // Performance metrics
+    private double averagePageLoad = 0;
+    private int fastOperations = 0;
+    private int slowOperations = 0;
+    private int verySlowOperations = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshData();
+        
+        if (autoRefresh)
+        {
+            StartAutoRefresh();
+        }
+    }
+
+    private async Task RefreshData()
+    {
+        try
+        {
+            // Get performance data from JavaScript
+            var jsData = await JSRuntime.InvokeAsync<object>("window.PerformanceTracker.generatePerformanceReport");
+            
+            // For now, we'll simulate some data since the JS integration might need more work
+            // In a real implementation, you'd parse the jsData
+            
+            // Update metrics
+            CalculateMetrics();
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            //Console.WriteLine($"Failed to refresh performance data: {ex.Message}");
+        }
+    }
+
+    private void CalculateMetrics()
+    {
+        if (performanceData.Any())
+        {
+            averagePageLoad = performanceData.Where(x => x.Type == "PAGE_LOAD").Average(x => x.Duration);
+            fastOperations = performanceData.Count(x => x.Duration < 100);
+            slowOperations = performanceData.Count(x => x.Duration >= 500 && x.Duration < 1000);
+            verySlowOperations = performanceData.Count(x => x.Duration >= 1000);
+        }
+    }
+
+    private void StartAutoRefresh()
+    {
+        refreshTimer = new Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await RefreshData();
+            });
+        }, null, TimeSpan.FromSeconds(refreshInterval), TimeSpan.FromSeconds(refreshInterval));
+    }
+
+    private void StopAutoRefresh()
+    {
+        refreshTimer?.Dispose();
+        refreshTimer = null;
+    }
+
+    private async Task ClearData()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("window.PerformanceTracker.performanceData.length = 0");
+            performanceData.Clear();
+            CalculateMetrics();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            //Console.WriteLine($"Failed to clear performance data: {ex.Message}");
+        }
+    }
+
+    private async Task ExportData()
+    {
+        try
+        {
+            var report = await JSRuntime.InvokeAsync<object>("window.PerformanceTracker.generatePerformanceReport");
+            var json = System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            
+            await JSRuntime.InvokeVoidAsync("downloadFile", "performance-report.json", json, "application/json");
+        }
+        catch (Exception ex)
+        {
+            //Console.WriteLine($"Failed to export performance data: {ex.Message}");
+        }
+    }
+
+    private string GetRowClass(double duration)
+    {
+        if (duration >= 1000) return "table-danger";
+        if (duration >= 500) return "table-warning";
+        return "";
+    }
+
+    private string GetDurationClass(double duration)
+    {
+        if (duration >= 1000) return "text-danger";
+        if (duration >= 500) return "text-warning";
+        if (duration < 100) return "text-success";
+        return "text-dark";
+    }
+
+    private void NavigateToWorkOrders()
+    {
+        Navigation.NavigateTo("/workorder");
+    }
+
+    public void Dispose()
+    {
+        StopAutoRefresh();
+    }
+
+    private class PerformanceEntry
+    {
+        public DateTime Timestamp { get; set; }
+        public string Type { get; set; } = "";
+        public string Description { get; set; } = "";
+        public double Duration { get; set; }
+        public string Url { get; set; } = "";
+    }
+}

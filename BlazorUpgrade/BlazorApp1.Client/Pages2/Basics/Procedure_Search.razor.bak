@@ -1,0 +1,5 @@
+﻿@* @page "/ProcedureSearch" *@
+@* <CalibrationSaaS.Infraestructure.Blazor.Pages.Basics.Procedure_Search></CalibrationSaaS.Infraestructure.Blazor.Pages.Basics.Procedure_Search> *@
+@code {
+
+}

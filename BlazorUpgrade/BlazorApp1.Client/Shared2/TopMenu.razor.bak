@@ -1,0 +1,876 @@
+﻿@using Blazed.Controls
+@namespace BlazorApp1.Client.Shared
+@implements IDisposable
+@using BlazorApp1.Blazor
+
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using BrowserInterop.Extensions;
+@using System.Timers;
+@using CalibrationSaaS.Application.Services
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+
+
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@using Helpers
+@using Microsoft.Extensions.Logging
+@using ProtoBuf.Grpc;
+@using Grpc.Core;
+@using System.Reflection;
+@using System.Collections.Generic;
+@using System.Linq;
+@using Microsoft.Extensions.Options
+@using Helpers.Controls;
+@using Helpers.Controls.ValueObjects;
+@using Blazed.Controls.Toast;
+@using Radzen
+@using Radzen.Blazor
+@using Microsoft.AspNetCore.Components.Web
+@inject Microsoft.Extensions.Configuration.IConfiguration config;
+@inject CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity
+@inherits CalibrationSaaS.Infraestructure.Blazor.FComponentBase
+@inject NavigationManager NavigationManager
+
+
+<JavaScriptInteropHandler OnInitialized="HandleJsInteropInitialized">
+    <div class="header-content">
+        <div class="header-left">
+           @*  <RadzenSidebarToggle Click="@HandleSidebarToggleClick"></RadzenSidebarToggle> *@
+            <div class="logo-container">
+                <BlazorApp1.Client.Shared2.Component.Logo TypeString="LTILogo"></BlazorApp1.Client.Shared2.Component.Logo>
+            </div>
+        </div>
+
+        <div class="header-center">
+            <RadzenTextBox @bind-Value="SearchTerm" @ref="textBoxRef"
+                           @onkeyup="@(args => KeyEvent("Name", SearchTerm, args))"
+                           Placeholder="Please enter a keyword." />
+
+            <div class="btn-search" id="@("adv_btnSearch")"
+                 @onclick=@(async () => await SearchFunction()) @onclick:stopPropagation @onclick:preventDefault>
+                <RadzenIcon Icon="search" />
+            </div>
+        </div>
+
+        <div class="header-right">
+            @if (1 == 1 || IsInstalled == true || !ConnectionStatusService.GetCurrentStatus())
+            {
+                <div class="connection-status @(ConnectionStatusService.GetCurrentStatus() ? "connected" : "offline")" @onclick="ToggleState">
+                    <RadzenIcon Icon="@(ConnectionStatusService.GetCurrentStatus() ? "sync" : "sync_disabled")" />
+                    <span class="status-text">@ConnectionStatusService.GetCurrentStatusLabel()</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Version))
+            {
+                <div class="connection-status @(ConnectionStatusService.GetCurrentStatus() ? "connected" : "offline")">
+                    @Version
+                </div>
+            }
+            @if (ConnectionStatusService.GetCurrentConnected())
+            {
+                <RadzenIcon Icon="signal_wifi_4_bar" IconColor="var(--rz-success)" Style="font-size: 1.2rem;" class="connection-icon" />
+            }
+            else
+            {
+                <RadzenIcon Icon="signal_wifi_off" IconColor="var(--rz-danger)" Style="font-size: 1.2rem;" class="connection-icon" />
+            }
+            <div style="cursor: pointer; display: flex; align-items: center; padding: 4px;" @onclick="HandleSettingsClick">
+                <RadzenIcon Icon="settings" Style="font-size: 24px;" />
+            </div>
+            <BlazorApp1.Client.Shared2.Component.UserAccountCard></BlazorApp1.Client.Shared2.Component.UserAccountCard>
+            
+        </div>
+    </div>
+</JavaScriptInteropHandler>
+
+@code {
+
+
+
+    public IJSRuntime  jsr { get; set; }
+
+    [Inject] public ILogger<TopMenu> Logger { get; set; }
+
+    [CascadingParameter] public IModalService Modal { get; set; }
+    private ElementReference searchE;
+    private RadzenTextBox textBoxRef;
+
+    public string SearchTerm { get; set; } = "";
+    private static System.Timers.Timer aTimer;
+    public async Task SearchFunction()
+    {
+        try
+        {
+            await ShowProgress();
+            await ShowModalPoEIndicator();
+
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        finally
+        {
+            await CloseProgress();
+        }
+
+    }
+
+    private void OnUserFinish(Object source, ElapsedEventArgs e)
+    {
+
+    }
+    public async Task KeyEvent(string FieldName, object Field, KeyboardEventArgs arg)
+    {
+        string value = Field.ToString();
+
+        var kp = arg.Key; //Backspace
+
+        if ((value.Length > 2 && kp != "Backspace") || kp == "Enter")
+        {
+            // remove previous one
+            aTimer.Stop();
+
+            // new timer
+            aTimer.Start();
+
+        }
+
+        return;
+    }
+
+    [Inject]
+    public IBasicsServices<CallContext> basicServices { get; set; }
+    [Inject]
+    public IPieceOfEquipmentService<CallContext> poeServices { get; set; }
+    [Inject]
+    public IWorkOrderDetailServices<CallContext> wodServices { get; set; }
+    [Inject]
+    public ICustomerService<CallContext> CustomerServices { get; set; }
+    [Inject]
+    public IWorkOrderService<CallContext> woServices { get; set; }
+
+    [Inject]
+    public IAssetsServices<CallContext> assetsServices { get; set; }
+
+    public async Task ShowModalPoEIndicator()
+    {
+        Pagination<PieceOfEquipment> pag = new Pagination<PieceOfEquipment>();
+
+        pag.Filter = SearchTerm;
+        pag.Show = 5;
+        pag.Top = 5;
+        ResultSet<PieceOfEquipment> result0 = new ResultSet<PieceOfEquipment>();
+
+        var _poeGrpc = new PieceOfEquipmentGRPC(poeServices);
+
+        var g = new CallOptions();
+
+        if (String.IsNullOrEmpty(SearchTerm))
+        {
+            await ShowToast("Please enter a keyword.", ToastLevel.Warning);
+            return;
+        }
+        result0 = (await _poeGrpc.GetPiecesOfEquipmentXDueDate(pag, g));
+
+        List<KeyValueSearch> lista = new List<KeyValueSearch>();
+
+        if (result0.List != null)
+        {
+            foreach (var item in result0.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Piece Of Equipment";
+                KeyValueSearch.Link = "PieceOfEquipmentCreate/" + item.PieceOfEquipmentID;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+
+
+        //PieceOfEquipmentCreate
+        Pagination<EquipmentTemplate> pag2 = new Pagination<EquipmentTemplate>();
+
+        pag2.Filter = SearchTerm;
+        pag2.Show = 5;
+        pag2.Top = 5;
+
+
+        ResultSet<EquipmentTemplate> result3 = new ResultSet<EquipmentTemplate>();
+
+        var basic = new BasicsServiceGRPC(basicServices);
+
+        //var g = new CallOptions();
+
+        result3 = (await basic.GetEquipment(pag2, g));
+
+        if (result3.List != null)
+        {
+            foreach (var item in result3.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Equipment Template";
+                KeyValueSearch.Link = "EquipmentTemplate/" + item.EquipmentTemplateID;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+        Pagination<WorkOrder> pag3 = new Pagination<WorkOrder>();
+
+        pag3.Filter = SearchTerm;
+        pag3.Show = 5;
+        pag3.Top = 5;
+
+        ResultSet<WorkOrder> result4 = new ResultSet<WorkOrder>();
+
+        var wod = new AssetsServiceGRPC(assetsServices);
+
+        //var g = new CallOptions();
+
+        result4 = (await wod.GetWorkOrders(pag3, g));
+
+        if (result4.List != null)
+        {
+            foreach (var item in result4.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Work Order";
+                KeyValueSearch.Link = "WorkOrderCreate/" + item.WorkOrderId;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+
+
+        Pagination<Customer> pag4 = new Pagination<Customer>();
+
+        pag4.Filter = SearchTerm;
+        pag4.Show = 5;
+        pag4.Top = 5;
+
+        ResultSet<Customer> result5 = new ResultSet<Customer>();
+
+        var cust = new CustomerGRPC(CustomerServices);
+
+        //var g = new CallOptions();
+
+        result5 = (await cust.GetCustomers(pag4, g));
+
+        if (result5.List != null)
+        {
+            foreach (var item in result5.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Customer";
+                KeyValueSearch.Link = "Customer/" + item.CustomerID;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+
+
+        var parameters = new ModalParameters();
+        parameters.Add("SelectOnly", true);
+        parameters.Add("IsModal", true);
+        parameters.Add("Checkbox", false);
+        parameters.Add("Indicator", true);
+        parameters.Add("_pieceOfEquipmentsDueDate", lista);
+
+
+        ModalOptions op = new ModalOptions();
+        op.ContentScrollable = true;
+        op.Class = "blazored-modal " + ModalSize.MediumWindow;
+        //PieceOfEquipmentDueDate_Search
+        var messageForm = Modal.Show<BlazorApp1.Blazor.Blazor.Pages.Full_Search>("Results for Keyword " + SearchTerm, parameters, op);
+        var result = await messageForm.Result;
+        Console.Write("result " + result);
+        if (result != null && !result.Cancelled)
+        {
+
+            var res = (KeyValueSearch)result.Data;
+            //PieceOfEquipment _poe = new PieceOfEquipment();
+            //_poe.PieceOfEquipmentID = res.FirstOrDefault().PieceOfEquipmentID;
+
+            NavigationManager.NavigateTo(res.Link);
+
+            //StateHasChanged();
+        }
+
+    }
+
+
+
+    private bool stopPropagation = false;
+
+
+    private CustomEventInterop Interop { get; set; }
+
+    public bool HasRendered { get; set; }
+    private DotNetObjectReference<TopMenu> dotNetObjectReference;
+    public string Version { get; set; }
+
+    [Inject]
+    IServiceProvider Services { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+
+        if (Services.GetService<IJSRuntime>() is { } bs)
+        {
+            jsr = bs;
+        }
+
+        Version = config.GetSection("VersionApp")["Title"].ToString();
+
+        aTimer = new System.Timers.Timer(1500);
+        aTimer.Elapsed += OnUserFinish;
+        aTimer.AutoReset = false;
+
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleJsInteropInitialized(bool isInitialized)
+    {
+        if (isInitialized)
+        {
+            try
+            {
+                // Check if we're running in WebAssembly mode
+                if (AppSecurity.IsNotGrpc)
+                {
+                    try
+                    {
+                        var biWindow = await jsr.Window();
+                        var biNavigator = await biWindow.Navigator();
+                        var b1 = await jsr.InvokeAsync<BrowserDimension>("getDimensions");
+
+                        // Initialize connection status
+                        ConnectionStatusService.ConnectedChangeStatus(b1.Online, b1.Install, AppSecurity.IsNotGrpc);
+
+                        // Create DotNet reference for JS interop
+                        dotNetObjectReference = DotNetObjectReference.Create(this);
+                        await jsr.InvokeVoidAsync("jsToDotNetSamples.setDotNetReference", dotNetObjectReference);
+
+                        // Check if the app is installed
+                        IsInstalled = await ConnectionStatusService.IsInstalled();
+                        Logger.LogDebug($"IsInstalled: {IsInstalled}");
+
+                        // Set up connection change listener
+                        await biNavigator.Connection.OnChange(async () =>
+                        {
+                            Logger.LogDebug("Browser app changed");
+                            var b1 = await jsr.InvokeAsync<BrowserDimension>("getDimensions");
+                            ConnectionStatusService.ConnectedChangeStatus(b1.Online, b1.Install, AppSecurity.IsNotGrpc);
+                            StateHasChanged();
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogWarning(ex, "Browser interop failed, but continuing");
+                        // Set default connection status for server-side rendering
+                        ConnectionStatusService.ConnectedChangeStatus(true, false, AppSecurity.IsNotGrpc);
+                    }
+                }
+                else
+                {
+                    // Set default connection status for server-side rendering
+                    ConnectionStatusService.ConnectedChangeStatus(true, false, AppSecurity.IsNotGrpc);
+                }
+
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                //Logger.LogError(ex, "Error in HandleJsInteropInitialized");
+                // Set default connection status for server-side rendering
+                ConnectionStatusService.ConnectedChangeStatus(true, false, AppSecurity.IsNotGrpc);
+            }
+        }
+    }
+    private async Task HandleCustomEvent(EventArgs args)
+    {
+        // ... handle custom event here
+
+
+
+    }
+    [JSInvokable]
+    public object GetPerson()
+    {
+        var obj = new
+        {
+            FistName = "Jon",
+            LastName = "Doe",
+            Age = 27,
+            BirthDate = DateTime.Now.AddYears(-27),
+            LikesDotNet = true
+        };
+        return obj;
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    [Inject] IModalService modal { get; set; }
+    public bool? IsInstalled { get; set; }
+    protected async void ToggleState()
+    {
+        Logger.LogDebug("Application status changed manually");
+        var currentStatus = ConnectionStatusService.GetCurrentStatus();
+        IsInstalled = await ConnectionStatusService.IsInstalled();
+
+        try
+        {
+            if (currentStatus) // online
+            {
+                var formModal = modal.Show<BlazorApp1.Blazor.Pages.Offline.UploadOrders>("Please Select");
+                var result = await formModal.Result;
+
+                if (!result.Cancelled && result?.Data != null)
+                {
+                    var app = AppSecurity.Principal;
+
+                    await SetIsOffline(true);
+
+                    await SetPrincipal();
+
+                    //Rendermode = new InteractiveWebAssemblyRenderMode(prerender:false);
+
+                    NavigationManager.NavigateTo($"/Client/Account/Login", forceLoad: false);
+
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else // offline
+            {
+                var formModal = modal.Show<BlazorApp1.Blazor.Pages.Offline.DownloadOrders>("Please Select");
+                var result = await formModal.Result;
+
+                if (!result.Cancelled)
+                {
+                    // Logger.LogDebug(result.Data.ToString());
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+           
+            // Toggle the connection status
+            await ConnectionStatusService.ChangeConnectionStatus(!currentStatus);
+
+            // Update the UI
+            StateHasChanged();
+
+            // Toggle offline mode in JavaScript
+            try
+            {
+                // Call the toggleOfflineMode function in JavaScript
+                await jsr.InvokeVoidAsync("toggleOfflineMode");
+
+                // No need to reload the page - the offline-detector.js will handle updating the UI
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error toggling offline mode");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error in ToggleState");
+        }
+    }
+
+
+    
+
+    public void Dispose()
+    {
+        //dotNetObjectReference.Dispose();
+    }
+
+    //private void ShowModal(bool connectionStus)
+    //{
+    //    InvokeAsync(() =>
+    //    {
+    //        Logger.LogDebug("Connection Button Pressed");
+    //        //modal.Show<Pages.AssetsBasics.WorkOrder_SearchNew>("Modal Popup");
+    //        //StateHasChanged();
+    //    });
+    //}
+
+    // [Parameter] public EventCallback OnSettingsClick { get; set; }
+    //[Parameter] public EventCallback OnSidebarToggleClick { get; set; }
+
+    [Parameter] public Func<Task> OnSettingsClick { get; set; }
+
+    [Parameter] public Func<Task> OnSidebarToggleClick { get; set; }
+
+    private async Task HandleSettingsClick()
+    {
+        if (OnSettingsClick != null)
+        {
+            await OnSettingsClick();
+        }
+    }
+
+    private async Task HandleSidebarToggleClick()
+    {
+        if (OnSidebarToggleClick != null)
+        {
+            await OnSidebarToggleClick();
+        }
+    }
+
+
+
+}
+
+<style>
+
+    .custom-dialog-class {
+        position: absolute;
+        top:5px;
+    }
+
+    .custom-dialog-wrapper-class {
+        position: absolute;
+    }
+
+
+
+    .header-content {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        flex-basis: 30%;
+    }
+
+    .logo-container {
+        margin-left: 1rem;
+        max-width: 80%;
+    }
+
+    .header-center {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        flex-basis: 20%;
+    }
+
+    .top-menu-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 1rem;
+    }
+
+    .search-box-container {
+        flex: 1;
+        max-width: 400px;
+        min-width: 200px;
+    }
+
+    .btn-search {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--rz-primary);
+        color: white;
+        border-radius: 4px;
+        padding: 0.375rem 0.75rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .btn-search:hover {
+        background-color: var(--rz-primary-dark);
+        transform: scale(1.05);
+    }
+
+    .right-items {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-shrink: 0;
+    }
+
+    .dot {
+        height: 12px;
+        width: 12px;
+        background-color: #4caf50;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .dot-off {
+        height: 12px;
+        width: 12px;
+        background-color: #f44336;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .connection-status {
+        display: flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+        .connection-status:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .connection-status .status-text {
+            margin-left: 6px;
+        }
+
+    .connected {
+        background-color: rgba(52, 199, 89, 0.15);
+        color: #34c759;
+    }
+
+    .offline {
+        background-color: rgba(255, 149, 0, 0.15);
+        color: #ff9500;
+    }
+
+    /* Responsive styles for connection status */
+    @@media (max-width: 768px) {
+        .connection-status {
+            padding: 4px 10px;
+            font-size: 13px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .connection-status {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+            .connection-status .status-text {
+                margin-left: 4px;
+            }
+    }
+
+    /* Responsive styles */
+    @@media (max-width: 768px) {
+        .header-content {
+            flex-wrap: wrap;
+            padding: 0.5rem 0;
+        }
+
+        .header-left {
+            flex-basis: 70%;
+            order: 1;
+        }
+
+        .header-right {
+            flex-basis: 30%;
+            order: 2;
+        }
+
+        .header-center {
+            flex-basis: 100%;
+            order: 1;
+            margin-top: 0.5rem;
+        }
+
+        .logo-container {
+            max-width: 70%;
+        }
+
+        .top-menu-container {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 0 0.5rem;
+        }
+
+        .search-box-container {
+            max-width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .right-items {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .header-left {
+            flex-basis: 60%;
+        }
+
+        .header-right {
+            flex-basis: 40%;
+        }
+
+        .logo-container {
+            max-width: 60%;
+        }
+
+        .right-items {
+            gap: 0.5rem;
+        }
+    }
+
+    .connection-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+        .connection-icon:hover {
+            transform: scale(1.1);
+        }
+
+    /* Updated search box styles */
+    .search-box-container {
+        flex: 1;
+        max-width: 400px;
+        min-width: 200px;
+    }
+
+    .search-wrapper {
+        display: flex;
+        position: relative;
+        align-items: center;
+        width: 100%;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--rz-border-color);
+        background-color: var(--rz-base-100);
+    }
+
+    .search-input {
+        flex: 1;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0.5rem 1rem;
+        font-size: 14px;
+        background-color: transparent;
+        width: 100%;
+    }
+
+    .search-input:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    .search-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--rz-primary);
+        color: white;
+        height: 100%;
+        padding: 0 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .search-button:hover {
+        background-color: var(--rz-primary-dark);
+        transform: scale(1.05);
+    }
+
+    /* Override Radzen default input styles */
+    :deep(.rz-textbox) {
+        height: auto;
+        min-height: 38px;
+        border: none;
+        width: 100%;
+        padding: 0.5rem 1rem;
+    }
+
+    :deep(.rz-inputtext) {
+        font-size: 14px;
+        padding: 0.5rem 0;
+    }
+
+    /* Responsive adjustments for search container */
+    @@media (max-width: 768px) {
+        .search-box-container {
+            max-width: 100%;
+            margin-bottom: 0;
+        }
+
+        .search-wrapper {
+            border-radius: 4px;
+        }
+
+        .search-input {
+            font-size: 14px;
+            padding: 0.4rem 0.75rem;
+        }
+
+        .search-button {
+            padding: 0 0.6rem;
+        }
+
+        :deep(.rz-textbox) {
+            min-height: 36px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .search-input {
+            font-size: 13px;
+            padding: 0.3rem 0.5rem;
+        }
+
+        .search-button {
+            padding: 0 0.5rem;
+        }
+
+        :deep(.rz-icon) {
+            font-size: 16px;
+        }
+
+        :deep(.rz-textbox) {
+            min-height: 34px;
+        }
+    }
+
+    /* Keep all other existing styles below... */
+</style>

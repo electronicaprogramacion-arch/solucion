@@ -1,0 +1,102 @@
+﻿@page "/CertifiedSearch"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base
+@namespace CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+@inherits Certified_SearchBase
+
+
+
+
+
+<Search T="CalibrationSaaS.Domain.Aggregates.Entities.Certificate"
+        S="Application.Services.IAssetsServices<CallContext>"
+        D="CalibrationSaaS.Domain.Aggregates.Shared.Basic.AppState"
+        FuncFilter="@FilterList"
+        @ref="@searchComponent" PageSize="10">
+    <GridHeader>
+        <th>ID</th>
+        <th>Number</th>
+        <th>Description</th>
+        <th>CalibrationDate</th>
+        <th>DueDate</th>
+        <th>Download</th>
+    </GridHeader>
+
+    <GridFooter>
+        <th>ID</th>
+        <th>Number</th>
+        <th>Description</th>
+        <th>CalibrationDate</th>
+        <th>DueDate</th>
+        <th>Download</th>
+    </GridFooter>
+
+    <GridRow>
+
+
+        
+        <td>@context.CertificateNumber</td>
+        <td>@context.Description</td>
+        <td>
+            @context.CalibrationDate</td>
+        <td>@context.DueDate</td>
+        <td>
+            <a href="@searchComponent.CreateUrl(context.CertificateNumber.ToString())"
+               target="_blank" class="btn btn-success btn-sm"> Download </a>
+        </td>
+</GridRow>
+
+    <GridSelect>
+        <div>
+            <button class="btn btn-primary btn-sm" 
+                    
+                    @onclick:stopPropagation @onclick:preventDefault>@context.CertificateNumber</button>
+        </div>
+    </GridSelect>
+    <GridEdit>
+        @*<td><NavLink class="btn btn-success btn-sm"
+        href="@searchComponent.CreateUrl(context.CertificateNumber.ToString())">Download</NavLink></td>*@
+
+        <a href="@searchComponent.CreateUrl(context.CertificateNumber.ToString())" target="_blank" class="btn btn-success btn-sm"> DownLoad </a>
+
+    </GridEdit>
+    @*<GridDelete>
+            <td><NavLink class="btn btn-success btn-sm" href="@searchComponent.DeletUrl(context.ManufacturerID.ToString())">Delete</NavLink></td>
+
+        </GridDelete>*@
+    <GridDelete>
+        <td>
+            <div>
+                <button class="btn btn-primary btn-sm"
+                        @onclick=@(async () => await Delete(context)) @onclick:stopPropagation @onclick:preventDefault>
+                    Delete
+                </button>
+            </div>
+
+        </td>
+    </GridDelete>
+
+</Search>
+
+
+
+
+@code {
+
+
+    private Address AddresInstance = new Address() { StreetAddress1 = "sssss" };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        AddresInstance.StreetAddress1 = "dsdd";
+
+
+    }
+
+}

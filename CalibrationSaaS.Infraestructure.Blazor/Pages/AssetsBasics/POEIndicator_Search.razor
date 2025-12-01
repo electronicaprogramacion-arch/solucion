@@ -1,0 +1,170 @@
+@page "/POEIndicatorSearch"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@inherits POEIndicator_SearchBase
+
+
+<ResponsiveTable ItemsDataSource="@_pieceOfEquipmentsDueDate"
+                 PageSize="paginaSize"
+                 HasAction="true"
+                 HasDelete="false"
+                 HasEdit="false"
+                 HasSelect="true"
+                 HasNew="true"
+                 Context="Entity"
+                 @ref="@Grid"
+                 GridID="gridPoe"
+                 InLineEdit="false"
+                 RowEditClass=""
+                 RowNewClass=""
+                 TableItem="PieceOfEquipment"
+                 EnabledSearch="true"
+                 editContext="@CurrentEditContext"
+                 EnabledModal="false"
+                 SaveButtonSubmit="false"
+                 PaginationFunction1="LoadData"                 
+                 DeleteAction="@Delete"
+                 SelectOnly="true"
+                 Component="@Component">
+
+    <ChildContent>
+
+        <GridColumns>
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.SerialNumber)" />
+
+            <GridColumn TableItem="PieceOfEquipment" Title="@nameof(eq.EquipmentTemplate.Model)"
+                        Field="@Grid.GetPropertyName(() => eq.EquipmentTemplate.Model)">
+                <ResponsiveTemplate>
+                    @{ var entity = context as PieceOfEquipment;
+
+                        @Format(entity.EquipmentTemplate.Model)
+
+                    }
+                </ResponsiveTemplate>
+            </GridColumn>
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Customer.Name)" Title="Customer" />
+
+            @*<GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Capacity)" />*@
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.UnitOfMeasureID)" Title="Capacity">
+
+                <ResponsiveTemplate Context="POE">
+
+                    @{
+
+                        string s = "";
+
+                        var a = POE as PieceOfEquipment;
+
+                        var b = a.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList,a.Capacity);
+
+                        if (b != null)
+                        {
+                            s = b.CapacityFull;
+                        }
+
+                    }
+                    @s
+
+
+                </ResponsiveTemplate>
+
+            </GridColumn>
+
+
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Status)">
+
+                <ResponsiveTemplate>
+
+                    @{
+
+                        var a = context as PieceOfEquipment;
+
+                        var b = a.Status.GetStatus(AppState.StatusListET);
+                    }
+                    @b
+                </ResponsiveTemplate>
+
+
+            </GridColumn>
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.DueDate)" DefaultSort="true" />
+
+        </GridColumns>
+
+
+
+    </ChildContent>
+    <GridSelect>
+
+        <button class="btn btn-sm btn-primary" id="_btnselect"
+                @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+            Select
+        </button>
+
+    </GridSelect>
+
+    <GridRow>
+
+
+    </GridRow>
+
+    <NewButton>
+        <button class="btn btn-primary" @onclick=@(async () => await ReturnModal())>Select</button>
+    </NewButton>
+    @*<EditButton>
+            <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton" href="PieceOfEquipmentCreate/@Entity.PieceOfEquipmentID">Edit</a>
+
+        </EditButton>*@
+
+</ResponsiveTable>
+
+
+@code {
+    string classPieceOfEquipment;
+
+    //public async Task ReturnModal()
+    //{
+    //    await BlazoredModal.Close(ModalResult.Ok(_pieceOfEquipmentsFiltered));
+    //}
+
+
+    //public async Task addToListPoE(int ID)
+    //{
+    //    PieceOfEquipment _poe = new PieceOfEquipment();
+    //    if (_pieceOfEquipmentsDueDate != null)
+    //    {
+    //        var listPoe = _pieceOfEquipmentsDueDate.Where(x => x.PieceOfEquipmentID == ID).FirstOrDefault();
+
+    //        _poe = new PieceOfEquipment()
+    //        {
+    //            PieceOfEquipmentID = ID,
+    //            SerialNumber = listPoe.SerialNumber
+    //        };
+
+
+    //        _pieceOfEquipmentsFiltered.Add(_poe);
+    //    }
+    //    //await BlazoredModal.Close(ModalResult.Ok(searchComponent.Detail));
+
+    //}
+    async Task Select(object arg, PieceOfEquipment entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+
+}

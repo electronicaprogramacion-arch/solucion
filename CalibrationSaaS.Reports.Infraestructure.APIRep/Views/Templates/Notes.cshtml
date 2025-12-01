@@ -1,0 +1,38 @@
+﻿@model CalibrationSaaS.Reports.Infraestructure.APIRep.ViewModels.NoteViewModel
+
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html>
+<head>
+   
+</head>
+
+<body>
+    
+         
+            @if (@Model.NotesList != null)
+            {
+                foreach (var item in Model.NotesList)
+                {
+                    <p style="text-align:justify; line-height:100%">
+                           - @item.Text
+                    </p>
+                    
+                }
+                    }
+            @if (@Model.NotesWODList != null)
+            {
+                foreach (var item1 in Model.NotesWODList)
+                {
+                    <p style="text-align:justify; line-height:100%">
+                        - @item1.Text
+                    </p>
+
+                }
+            }
+
+</body>
+</html>

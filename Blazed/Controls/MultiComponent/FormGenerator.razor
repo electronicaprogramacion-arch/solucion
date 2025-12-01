@@ -1,0 +1,49 @@
+﻿@page "/FormGenerator/{EntityID}"
+@using Bogus
+@using Blazed.Controls
+@typeparam TEntity
+@inherits Blazed.Controls.KavokuComponentBase<TEntity>
+@namespace Blazed.Controls.MultiComponent
+@{
+
+
+
+    @if (ViewModel.IsVisible && ViewModel.PropertiesViewModel.Count > 0 && FEntity.IsFirstGenerate)
+    {
+
+        foreach (var item in ViewModel.PropertiesViewModel)
+        {
+
+        }
+
+    }
+
+    //var proList = typeof(EmployeeDetails).GetProperties();
+    //foreach (var prp in proList)
+    //{
+    //    Type T = prp.GetType();
+
+    //}
+}
+
+
+@code
+{
+
+    RenderFragment Control<T>(ViewProperty<T> property)
+    {
+
+        return@<Blazed.Controls.TextInput2 TValue="T" TInstance="TEntity"
+                                                           Fake="@FEntity"
+                                                           @bind-Value="property.Value"
+                                                           placeholder="Customer Name"
+                                                           class="@property.CSSClass"
+                                                           Type=@Types.text
+                                                           ValidationFor="(()=> property.Value)">
+        </Blazed.Controls.TextInput2>;
+
+
+}
+
+}
+|

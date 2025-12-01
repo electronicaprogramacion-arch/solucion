@@ -1,0 +1,34 @@
+[
+  {
+    "Statement": "Calibration services were performed under a controlled Quality System Program Manual, Rev. 21 dated 5/1/2019 which incorporates the requirements of ISO/IEC 17025:2017, ISO 10012-1, ANSI/INCSL Z640-1 and MIL-STD-45682A.",
+    "DataGrid": "Force"
+  },
+  {
+    "Statement": "Calibration services were performed under a controlled Quality System Program Manual, Rev. 21 dated 5/1/2019 which incorporates the requirements of ISO/IEC 17025:2017, ISO 10012-1, ANSI/INCSL Z640-1 and MIL-STD-45682A.",
+    "DataGrid": "Force"
+  },
+  {
+    "Statement": "Calibration Data contained in this report obtained from the subject instrument used standards which are traceable to the International System of Units (SI) through National Metrological Institutes (such as,NIST) Intrinsic Standards or other accepted means."
+  },
+  {
+    "Statement": "The result herein relate only to the item calibrated and are reflective of conditions at the time of the calibration/test.",
+    "DataGrid": "Force"
+  },
+
+  {
+    "Statement": "The Simple Acceptance Method is used for statements of compliance (In Tolerance/Pass and Out of Tolerance/Fall), excluding gage blocks. This a shared risk decision rule which the customer also has responsibility for determining acceptance of results.",
+    "DataGrid": "Force"
+  },
+  {
+    "Statement": "This report shall not be reproduced, except in full, without the written permission of Laboratory Testing Inc.",
+    "DataGrid": "Force"
+  },
+  {
+    "Statement": "The services provided on this certificate have been performed in conformance with the purchase order requirements (PO number referenced above).",
+    "DataGrid": "Force"
+  },
+  {
+    "Statement": "The recording of false, fictious or fraudulent statements or entries on this document may be punishable as a felony under Federal Statutes.",
+    "DataGrid": "Force"
+  }
+]

@@ -1,0 +1,421 @@
+﻿@page "/LoadCSV"
+@using CalibrationSaaS.Domain.Aggregates.Entities
+
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+@inject ILogger<LoadCSV> Logger
+@using System.Linq;
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using System.Text.RegularExpressions
+@using CsvHelper
+@namespace BlazorApp1.Blazor.Blazor.GenericMethods
+@inherits BlazorApp1.Blazor.Blazor.GenericMethods.LoadCSVBase
+@*<InputFile OnChange=@(async (arg) => await HandleFileSelected(arg)) />
+@if (file != null)
+{
+    <label> File Name: @file.Name</label>
+
+}*@
+
+@*<h1>Upload TestPoints To Piece Of Equipment</h1>*@
+
+<p>Upload Testpoint from CSV file to different Calibration</p>
+
+<div class="drag-drop-zone">
+    <BlazorInputFile.InputFile OnChange="ViewFile" />
+    @status
+</div>
+<div class="row" >
+
+    <div class="col-2">
+
+        @if (CalSubType != null && CalSubType.CalibrationSubTypeId > 0)
+        {
+            <a href="@(url)" class="d-sm-inline-block btn btn-sm btn-primary" download>Download Example</a>
+        }
+
+    </div>
+
+</div>
+@if (fileName != null)
+{
+    <h3>@fileName</h3>
+    <pre>@fileTextContents</pre>
+}
+@if (LIST1 != null && 1==2)
+{
+    @*<EditForm  EditContext="@EditContext">
+        <DataAnnotationsValidator />*@
+    <div class="row">
+        <div class="col-sm-12">
+            @if (IsForAccredited != true)
+            {
+
+                <ResponsiveTable ItemsDataSource="@LIST1" PageSize="5" HasAction="false"
+                                 TableItem="WeightSet" @ref="RT" InLineEdit="true" HasNew="false"
+                                 EnabledModal="false" Context="Entity" 
+                                 NewButtonText="Add Non Accredited Weight Set" 
+                                 NewItemDefaultItem="DefaultItem"
+                                 Component="Component">
+                    @*<GridHeader>
+
+                            <div class="col-sm-2 customcol">Weight<br />Value</div>
+                            <div class="col-sm-2 customcol">UnitOf<br />Measurement</div>
+                            <div class="col-sm-2 customcol">Note</div>
+                            <div class="col-sm-2 customcol">PoE<br />Status</div>
+
+                        </GridHeader>*@
+
+
+                    <ChildContent>
+
+                        <GridColumns>
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.WeightNominalValue)" DefaultSort="true" Title="Weight" />
+
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.UnitOfMeasure.Abbreviation)" Title="UoM">
+
+                                <ResponsiveTemplate>
+                                    @{ var entity = context as WeightSet;
+
+                                        entity.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList);
+
+                                        var a = entity.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList);
+
+                                        @a.Abbreviation;
+
+                                    }
+                                </ResponsiveTemplate>
+
+                            </GridColumn>
+
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.Note)" Title="Note" />
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.PieceOfEquipmentStatus)" Title="Status" />
+
+                        </GridColumns>
+
+
+                    </ChildContent>
+
+
+                    <GridRow>
+                        @*<div class="col-sm-2 customcol inv">WeightValue</div>
+                            <div class="col-sm-2 customcol">@Entity.WeightNominalValue</div>
+                            <div class="col-sm-2 customcol inv">UnitOfMeasurement</div>
+                            <div class="col-sm-2 customcol">@Entity.UnitOfMeasureID</div>
+                            <div class="col-sm-2 customcol inv">Note</div>
+                            <div class="col-sm-2 customcol">@Entity.Note</div>
+                            <div class="col-sm-2 customcol inv">PoEStatus</div>
+                            <div class="col-sm-2 customcol">@Entity.PieceOfEquipmentStatus</div>*@
+                    </GridRow>
+
+                    <GridEdit>
+                        <div class="col-sm-2 customcol inv">WeightValue</div>
+                        <div class="col-sm-2 customcol">
+                            <TextInput @bind-Value="@Entity.WeightNominalValue" Validate="false" IsDisabled="!Enabled" Label="Weight Value" LabelDown="false">
+
+                            </TextInput>
+                            @RT.GetErrorMessage(nameof(Entity.WeightNominalValue))
+                        </div>
+                        <div class="col-sm-2 customcol inv">UnitOfMeasurement</div>
+                        <div class="col-sm-2 customcol">
+                            @*<InputSelect @bind-Value="@Entity.UnitofMeasureID" class="form-control">
+                                    @foreach (UnitOfMeasure item in AppState.UnitofMeasureList)
+                                            {
+                                        <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                            }
+                                </InputSelect>*@
+
+
+                            <TextInput Label="Unit of Measure" @bind-Value="@Entity.UnitOfMeasureID"
+                                       Validate="false" Type="@Types.select" IsDisabled="!Enabled" LabelDown="false">
+                                @foreach (UnitOfMeasure item in AppState.UnitofMeasureList)
+                                        {
+                                    <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                        }
+                            </TextInput>
+                            @RT.GetErrorMessage(nameof(Entity.UnitOfMeasureID))
+
+
+                        </div>
+                        <div class="col-sm-2 customcol inv">Note</div>
+                        <div class="col-sm-2 customcol">
+                            <TextInput @bind-Value="@Entity.Note" Validate="false" IsDisabled="!Enabled" Label="Note" LabelDown="false">
+
+                            </TextInput>
+                            @RT.GetErrorMessage(nameof(Entity.Note))
+                        </div>
+                        <div class="col-sm-2 customcol inv">PoEStatus</div>
+                        <div class="col-sm-2 customcol">
+                            <TextInput @bind-Value="@Entity.PieceOfEquipmentStatus" Validate="false" IsDisabled="!Enabled" Label="PoE Status" LabelDown="false">
+
+                            </TextInput>
+                            @RT.GetErrorMessage(nameof(Entity.PieceOfEquipmentStatus))
+                        </div>
+
+                    </GridEdit>
+                </ResponsiveTable>
+            }
+            else
+            {
+
+                <ResponsiveTable ItemsDataSource="@LIST1"
+                                                                 PageSize="5"
+                                                                 HasAction="false"
+                                                                 TableItem="WeightSet"
+                                                                 @ref="RT"
+                                                                 RowEditClass=""
+                                                                 RowNewClass=""
+                                                                 InLineEdit=false
+                                                                 Context="Entity"
+                                                                 EnabledSearch="false"
+                                                                 NewItemDefaultItem="DefaultItemAcr"
+                                                                 EnabledModal="false"
+                                                                 NewButtonText="Add Accredited Weight Set"
+                                                                 Component="Component">
+
+
+                    <ChildContent>
+
+                        <GridColumns>
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.WeightNominalValue)" DefaultSort="true" Title="Weight" />
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.WeightActualValue)" Title="Weight" />
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.UnitOfMeasure.Abbreviation)" Title="UoM">
+
+                                <ResponsiveTemplate>
+                                    @{
+                                        var entity = context as WeightSet;
+
+                                        var a = entity.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList);
+
+                                        @a.Abbreviation;
+
+                                    }
+                                </ResponsiveTemplate>
+
+                            </GridColumn>
+
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.CalibrationUncertValue)" Title="Calibration Uncertainty" />
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.UnitOfMeasure.Abbreviation)" Title="UoMUncertainty">
+
+                                <ResponsiveTemplate>
+                                    @{
+                                        var entity = context as WeightSet;
+
+                                        var a = entity.UncertaintyUnitOfMeasureId.GetUoM(AppState.UnitofMeasureList);
+
+                                        @a.Abbreviation
+                                        ;
+
+                                    }
+                                </ResponsiveTemplate>
+
+                            </GridColumn>
+
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.Note)" Title="Note" />
+
+
+                        </GridColumns>
+
+
+                    </ChildContent>
+
+
+
+                    @*<GridHeader>
+                            <div class="col-sm-2 customcol">-</div>
+                            <div class="col-sm-2 customcol">Weight<br />Nominal Value</div>
+                            <div class="col-sm-2 customcol">Weight<br />Actual Value</div>
+                            <div class="col-sm-2 customcol">Unit of<br />Measure</div>
+                            <div class="col-sm-2 customcol">Note<br />Note</div>
+                        </GridHeader>*@
+                    <GridRow>
+                        @*<div class="col-sm-2 customcol inv">WeightNominalValue</div>
+                            <div class="col-sm-2 customcol">@Entity.WeightNominalValue</div>
+                            <div class="col-sm-2 customcol inv">WeightActualValue</div>
+                            <div class="col-sm-2 customcol">@Entity.WeightActualValue</div>
+                            <div class="col-sm-2 customcol inv">UnitofMeasure</div>
+                            <div class="col-sm-2 customcol">@Entity.UnitOfMeasureID</div>
+                            <div class="col-sm-2 customcol inv">Note</div>
+                            <div class="col-sm-2 customcol">@Entity.Note</div>*@
+                    </GridRow>
+                    <GridEdit>
+                        <div class="row">
+                            <div class="col-md-12 mx-auto">
+                                <form>
+
+                                    <div class="form-group row">
+                                        <div class="col-sm-4">
+
+                                            <TextInput Label="Weight Nominal Value" @bind-Value="@Entity.WeightNominalValue"
+                                                       Validate="false" ValidationFor="@(() => @Entity.WeightNominalValue)" Type="@Types.number" IsDisabled="!Enabled">
+
+                                            </TextInput>
+                                            @RT.GetErrorMessage(nameof(Entity.WeightNominalValue))
+
+
+                                        </div>
+                                        <div class="col-sm-4">
+
+                                            @*<label>Weight Actual Value</label>
+                                                <InputNumber @bind-Value="@Entity.WeightActualValue" class="form-control">
+                                                </InputNumber>
+                                                @RT.GetErrorMessage(nameof(Entity.WeightActualValue))*@
+
+                                            <TextInput Label="Weight Actual Value" @bind-Value="@Entity.WeightActualValue"
+                                                       Validate="false" ValidationFor="@(() => @Entity.WeightActualValue)" Type="@Types.number" IsDisabled="!Enabled">
+
+                                            </TextInput>
+                                            @RT.GetErrorMessage(nameof(Entity.WeightActualValue))
+
+
+                                        </div>
+                                        <div class="col-sm-4">
+
+
+                                            <TextInput Label="Unit of Measure" @bind-Value="@Entity.UnitOfMeasureID"
+                                                       Validate="false" Type="@Types.select" IsDisabled="!Enabled">
+                                                @foreach (UnitOfMeasure item in AppState.UnitofMeasureList)
+                                                        {
+                                                    <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                                        }
+                                            </TextInput>
+                                            @RT.GetErrorMessage(nameof(Entity.UnitOfMeasureID))
+
+
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-4">
+
+                                            <TextInput @bind-Value="@Entity.CalibrationUncertValue" Validate="false" IsDisabled="!Enabled" Label="Calibration Uncertainty Value">
+                                            </TextInput>
+                                            @RT.GetErrorMessage(nameof(Entity.CalibrationUncertValue))
+
+                                            @*<TextInput Label="Calibration Uncertainty Value" @bind-Value="@Entity.CalibrationUncertValue"
+                                                           Validate="false" ValidationFor="@(() => @Entity.CalibrationUncertValue)" Type="@Types.number" IsDisabled="!Enabled">
+
+                                                </TextInput>*@
+
+                                        </div>
+                                        <div class="col-sm-4">
+
+                                            <TextInput TValue="int?" Label="Uncertainty Value Unit Of Measure" @bind-Value="@Entity.UncertaintyUnitOfMeasureId"
+                                                       Validate="false" Type="@Types.select" IsDisabled="!Enabled">
+                                                @foreach (UnitOfMeasure item in AppState.UnitofMeasureList)
+                                                {
+                                                    <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                                }
+                                            </TextInput>
+                                            @RT.GetErrorMessage(nameof(Entity.UncertaintyUnitOfMeasure))
+
+
+
+
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="custom-control custom-switch">
+                                                @*<label>Divisor</label>
+                                                        <InputText @bind-Value="@Entity.Divisor" class="form-control">
+                                                        </InputText>
+                                                        @RT.GetErrorMessage(nameof(Entity.Divisor))
+                                                    </div>*@
+                                                <TextInput Label="Divisor" @bind-Value="@Entity.Divisor"
+                                                           Validate="false" ValidationFor="@(() => @Entity.Divisor)" IsDisabled="!Enabled">
+
+                                                </TextInput>
+                                                @RT.GetErrorMessage(nameof(Entity.Divisor))
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-4">
+
+
+                                            <TextInput Label="Type" @bind-Value="@Entity.Type"
+                                                       Validate="false" Type="@Types.select" IsDisabled="!Enabled">
+                                                @foreach (WeightType item in AppState.WeightTypeList)
+                                                        {
+                                                    <option value="@item.WeightTypeID.ToString()">@item.Name</option>
+                                                        }
+                                            </TextInput>
+                                            @RT.GetErrorMessage(nameof(Entity.Type))
+
+
+                                        </div>
+                                        <div class="col-sm-4">
+                                            @* <div class="custom-control custom-switch">
+                                                    <label>Distribution</label>
+                                                   @if (AppState.WeightDistributionList != null)
+                                                    {
+                                                                    <TextInput TValue="int" Validate="false"
+                                                                   @bind-Value="@Entity.Distribution"
+                                                                   ValidationFor="@(()=>Entity.Distribution)">
+                                                                    @foreach (Address item in AppState.WeightDistributionList)
+                                                                    {
+                                                                        <option value="@item.WeightDistributionID">@item.Name</option>
+                                                                    }
+                                                        </TextInput>
+                                                        }
+                                                </div>*@
+                                            <TextInput @bind-Value="@Entity.Distribution" Label="Distribution" Validate="false" Type="@Types.select" IsDisabled="!Enabled">
+                                                @foreach (WeightDistribution item in AppState.WeightDistributionList)
+                                                        {
+                                                    <option value="@item.WeightDistributionID.ToString()">@item.Name</option>
+                                                        }
+                                            </TextInput>
+                                            @RT.GetErrorMessage(nameof(Entity.Distribution))
+
+
+                                        </div>
+                                        <div class="col-sm-4">
+                                            @*<div class="custom-control custom-switch">
+                                                                                        <label>PoE Status</label>
+
+                                                                                       <InputSelect @bind-Value="Entity.PieceOfEquipmentStatus" class="form-control">
+
+                                                                @foreach (KeyValuePair<string, string> item in AppState.StatusList)
+                                                                        {
+                                                                    <option value="@item.Key">@item.Value</option>
+                                                                        }
+                                                            </InputSelect>
+                                                            @RT.GetErrorMessage(nameof(Entity.PieceOfEquipmentStatus))
+                                                    </div>
+
+                                                </div>*@
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-4">
+
+                                            <TextInput @bind-Value="@Entity.Note" Validate="true" IsDisabled="!Enabled" Label="Note" ValidationFor="@(() => @Entity.Note)">
+                                            </TextInput>
+                                            @RT.GetErrorMessage(nameof(Entity.Note))
+
+
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </GridEdit>
+                </ResponsiveTable>
+
+            }
+
+
+        </div>
+    </div>
+
+}
+
+@code
+    {
+
+
+  
+
+
+}

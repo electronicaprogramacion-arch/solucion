@@ -1,0 +1,339 @@
+@using CalibrationSaaS.CustomerPortal.Models.Equipment
+
+<RadzenStack Gap="1rem">
+    <!-- Calendar Header -->
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+            <RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" 
+                         Click="@(() => ChangeMonth(-1))" />
+            <RadzenText TextStyle="TextStyle.H5">@CurrentDate.ToString("MMMM yyyy")</RadzenText>
+            <RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" 
+                         Click="@(() => ChangeMonth(1))" />
+        </RadzenStack>
+        
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+            <RadzenButton Text="Today" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" 
+                         Click="@GoToToday" />
+            <RadzenButton Text="@ViewMode" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+                         Click="@ToggleViewMode" />
+        </RadzenStack>
+    </RadzenStack>
+
+    <!-- Legend -->
+    <RadzenCard Class="rz-p-3">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" Wrap="FlexWrap.Wrap">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <div style="width: 16px; height: 16px; background-color: var(--rz-success); border-radius: 50%;"></div>
+                <RadzenText TextStyle="TextStyle.Caption">Current</RadzenText>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <div style="width: 16px; height: 16px; background-color: var(--rz-warning); border-radius: 50%;"></div>
+                <RadzenText TextStyle="TextStyle.Caption">Expiring Soon</RadzenText>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <div style="width: 16px; height: 16px; background-color: var(--rz-danger); border-radius: 50%;"></div>
+                <RadzenText TextStyle="TextStyle.Caption">Overdue</RadzenText>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <div style="width: 16px; height: 16px; background-color: var(--rz-info); border-radius: 50%;"></div>
+                <RadzenText TextStyle="TextStyle.Caption">Today</RadzenText>
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+
+    <!-- Calendar Grid -->
+    @if (ViewMode == "Month")
+    {
+        <RadzenCard Class="rz-p-0">
+            <div class="calendar-grid">
+                <!-- Day Headers -->
+                <div class="calendar-header">
+                    @foreach (var day in dayHeaders)
+                    {
+                        <div class="calendar-day-header">
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">@day</RadzenText>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Calendar Days -->
+                <div class="calendar-body">
+                    @foreach (var week in GetCalendarWeeks())
+                    {
+                        @foreach (var day in week)
+                        {
+                            <div class="@GetDayClass(day)" @onclick="@(() => SelectDate(day.Date))">
+                                <div class="calendar-day-content">
+                                    <RadzenText TextStyle="TextStyle.Body2" 
+                                               Class="@(day.IsCurrentMonth ? "" : "rz-color-secondary")">
+                                        @day.Date.Day
+                                    </RadzenText>
+                                    
+                                    @if (day.Equipment.Any())
+                                    {
+                                        <div class="calendar-equipment-indicators">
+                                            @foreach (var equipment in day.Equipment.Take(3))
+                                            {
+                                                <div class="equipment-indicator" 
+                                                     style="@($"background-color: {GetStatusColor(equipment.DueStatus)};")"
+                                                     title="@($"{equipment.Description} - {equipment.DueStatusText}")">
+                                                </div>
+                                            }
+                                            @if (day.Equipment.Count > 3)
+                                            {
+                                                <div class="equipment-indicator-more" title="@($"+{day.Equipment.Count - 3} more")">
+                                                    <RadzenText TextStyle="TextStyle.Caption">+@(day.Equipment.Count - 3)</RadzenText>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </RadzenCard>
+    }
+    else
+    {
+        <!-- Week View -->
+        <RadzenCard Class="rz-p-3">
+            <RadzenText TextStyle="TextStyle.Body1">Week view implementation coming soon...</RadzenText>
+        </RadzenCard>
+    }
+
+    <!-- Selected Date Details -->
+    @if (SelectedDate.HasValue && GetEquipmentForDate(SelectedDate.Value).Any())
+    {
+        <RadzenCard Class="rz-p-4">
+            <RadzenStack Gap="1rem">
+                <RadzenText TextStyle="TextStyle.H6">
+                    Equipment Due on @SelectedDate.Value.ToString("MMMM dd, yyyy")
+                </RadzenText>
+                
+                <RadzenStack Gap="0.5rem">
+                    @foreach (var equipment in GetEquipmentForDate(SelectedDate.Value))
+                    {
+                        <RadzenCard Class="rz-p-3" Style="@($"border-left: 4px solid {GetStatusColor(equipment.DueStatus)};")">
+                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText TextStyle="TextStyle.Body2" Class="rz-font-weight-bold">
+                                        @equipment.Description
+                                    </RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                                        @equipment.SerialNumber | @equipment.EquipmentType
+                                    </RadzenText>
+                                </RadzenStack>
+                                
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                    <DueDateStatusIndicator Equipment="@equipment" ShowIcon="true" ShowText="true" ShowBadge="false" />
+                                    <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+                                                 Click="@(() => OnEquipmentSelected.InvokeAsync(equipment))" />
+                                </RadzenStack>
+                            </RadzenStack>
+                        </RadzenCard>
+                    }
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    }
+</RadzenStack>
+
+<style>
+    .calendar-grid {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--rz-border-color);
+        border-radius: var(--rz-border-radius);
+        overflow: hidden;
+    }
+
+    .calendar-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        background-color: var(--rz-base-100);
+        border-bottom: 1px solid var(--rz-border-color);
+    }
+
+    .calendar-day-header {
+        padding: 0.75rem;
+        text-align: center;
+        border-right: 1px solid var(--rz-border-color);
+    }
+
+    .calendar-day-header:last-child {
+        border-right: none;
+    }
+
+    .calendar-body {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+    }
+
+    .calendar-day {
+        min-height: 100px;
+        border-right: 1px solid var(--rz-border-color);
+        border-bottom: 1px solid var(--rz-border-color);
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .calendar-day:hover {
+        background-color: var(--rz-base-50);
+    }
+
+    .calendar-day:nth-child(7n) {
+        border-right: none;
+    }
+
+    .calendar-day.selected {
+        background-color: var(--rz-primary-lighter);
+    }
+
+    .calendar-day.today {
+        background-color: var(--rz-info-lighter);
+    }
+
+    .calendar-day-content {
+        padding: 0.5rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .calendar-equipment-indicators {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px;
+        margin-top: auto;
+    }
+
+    .equipment-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .equipment-indicator-more {
+        background-color: var(--rz-base-300);
+        border-radius: 4px;
+        padding: 1px 3px;
+        font-size: 0.6rem;
+        line-height: 1;
+    }
+</style>
+
+@code {
+    [Parameter] public List<EquipmentDueDateDto> Equipment { get; set; } = new();
+    [Parameter] public DateTime? SelectedDate { get; set; }
+    [Parameter] public EventCallback<DateTime> SelectedDateChanged { get; set; }
+    [Parameter] public EventCallback<EquipmentDueDateDto> OnEquipmentSelected { get; set; }
+
+    private DateTime CurrentDate { get; set; } = DateTime.Now;
+    private string ViewMode { get; set; } = "Month";
+    
+    private readonly string[] dayHeaders = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+
+    private void ChangeMonth(int months)
+    {
+        CurrentDate = CurrentDate.AddMonths(months);
+    }
+
+    private async Task GoToToday()
+    {
+        CurrentDate = DateTime.Now;
+        await SelectDate(DateTime.Now.Date);
+    }
+
+    private void ToggleViewMode()
+    {
+        ViewMode = ViewMode == "Month" ? "Week" : "Month";
+    }
+
+    private async Task SelectDate(DateTime date)
+    {
+        SelectedDate = date;
+        await SelectedDateChanged.InvokeAsync(date);
+    }
+
+    private List<List<CalendarDay>> GetCalendarWeeks()
+    {
+        var weeks = new List<List<CalendarDay>>();
+        var firstDayOfMonth = new DateTime(CurrentDate.Year, CurrentDate.Month, 1);
+        var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+        
+        // Start from the first Sunday of the calendar view
+        var startDate = firstDayOfMonth.AddDays(-(int)firstDayOfMonth.DayOfWeek);
+        
+        var currentDate = startDate;
+        while (currentDate <= lastDayOfMonth || weeks.Count == 0 || weeks.Last().Count < 7)
+        {
+            if (weeks.Count == 0 || weeks.Last().Count == 7)
+            {
+                weeks.Add(new List<CalendarDay>());
+            }
+            
+            var isCurrentMonth = currentDate.Month == CurrentDate.Month;
+            var equipmentForDay = GetEquipmentForDate(currentDate);
+            
+            weeks.Last().Add(new CalendarDay
+            {
+                Date = currentDate,
+                IsCurrentMonth = isCurrentMonth,
+                Equipment = equipmentForDay
+            });
+            
+            currentDate = currentDate.AddDays(1);
+            
+            // Stop after 6 weeks
+            if (weeks.Count >= 6 && weeks.Last().Count == 7)
+                break;
+        }
+        
+        return weeks;
+    }
+
+    private List<EquipmentDueDateDto> GetEquipmentForDate(DateTime date)
+    {
+        return Equipment
+            .Where(e => e.NextCalibrationDate?.Date == date.Date)
+            .OrderBy(e => e.DueStatus)
+            .ThenBy(e => e.Description)
+            .ToList();
+    }
+
+    private string GetDayClass(CalendarDay day)
+    {
+        var classes = new List<string> { "calendar-day" };
+        
+        if (day.Date.Date == DateTime.Now.Date)
+            classes.Add("today");
+            
+        if (SelectedDate?.Date == day.Date.Date)
+            classes.Add("selected");
+        
+        return string.Join(" ", classes);
+    }
+
+    private string GetStatusColor(DueDateStatus status)
+    {
+        return status switch
+        {
+            DueDateStatus.Current => "var(--rz-success)",
+            DueDateStatus.ExpiringSoon => "var(--rz-warning)",
+            DueDateStatus.Overdue => "var(--rz-danger)",
+            DueDateStatus.Unknown => "var(--rz-secondary)",
+            _ => "var(--rz-secondary)"
+        };
+    }
+
+    private class CalendarDay
+    {
+        public DateTime Date { get; set; }
+        public bool IsCurrentMonth { get; set; }
+        public List<EquipmentDueDateDto> Equipment { get; set; } = new();
+    }
+}

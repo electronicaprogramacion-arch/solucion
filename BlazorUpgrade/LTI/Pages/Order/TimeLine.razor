@@ -1,0 +1,149 @@
+﻿@page "/Timeline2"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using System.Reflection
+@implements IDisposable
+@inject IModalService modal
+@using Microsoft.JSInterop;
+@using System.Collections.Generic;
+@using System.Globalization;
+@using System.Linq;
+@using CalibrationSaaS.Infraestructure.Blazor.Services;
+
+
+<div class="container" style="max-height:600px; overflow:auto">
+    @*<div id="timeline">
+
+        @if (HistoryList != null)
+        {
+
+            var result = HistoryList.GroupBy(i => i.Date.ToString("yyyyMMdd"))
+           .Select(i => new
+           {
+
+               Date = DateTime.ParseExact(i.Key, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None),
+               Count = i.Count(),
+               List = i.ToList()
+           });
+
+            foreach (var item in result)
+            {
+
+
+                string day = item.Date.Day.ToString();
+                string month = item.Date.ToString("MMM", CultureInfo.InvariantCulture); ;
+
+
+        <div class="row timeline-movement">
+
+            <div class="timeline-badge">
+                <span class="timeline-balloon-date-day" style="font-size:x-small">@day</span>
+                <span class="timeline-balloon-date-month">@month</span>
+            </div>
+
+            @foreach (var item2 in item.List)
+            {
+                <div class="col-sm-6  timeline-item">
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="timeline-panel credits">
+                                <ul class="timeline-panel-ul">
+                                    <li><span class="importo">@item2.Name</span></li>
+                                    <li><span class="causale">@item2.Action</span> </li>
+                                    <li><p><small class="text-muted"><i class="glyphicon glyphicon-time"></i>@item2.UserName</small></p> </li>
+                                </ul>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            }
+
+
+
+        </div>
+
+
+
+               
+
+            }
+
+
+        }
+
+
+       
+
+    </div>*@
+
+
+
+
+
+
+</div>
+
+@code {
+
+
+   
+
+    [Inject] CalibrationSaaS.Application.Services.IWorkOrderDetailServices<CallContext> Client { get; set; }
+
+    public List<WorkDetailHistory> HistoryList { get; set; }
+
+    public dynamic groupList { get; set; }
+
+    public void GroupList()
+    {
+
+
+
+
+
+    }
+
+    [Parameter]
+    public WorkOrderDetail WorkOrderDetail { get; set; }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        WorkOrderDetail w = new WorkOrderDetail();
+
+        WorkOrderDetailGrpc wod = new WorkOrderDetailGrpc(Client);
+
+
+        var a = await wod.GetHistory(WorkOrderDetail);
+
+        HistoryList = a.WorkOrderDetailsHistory;
+
+        //var result = HistoryList.GroupBy(i => i.Date.ToString("yyyyMMdd"))
+        // .Select(i => new
+        // {
+        //     Date = DateTime.ParseExact(i.Key, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None),
+        //     Count = i.Count()
+        // });
+
+        //foreach (var item in result)
+        //{
+
+
+        //}
+
+
+
+
+        await base.OnInitializedAsync();
+    }
+
+    public new void Dispose()
+    {
+
+    }
+
+
+}

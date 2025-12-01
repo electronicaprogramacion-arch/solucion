@@ -1,0 +1,186 @@
+@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="nav-menu">
+    <div class="nav-header">
+        <img src="img/logo-white.png" alt="CalibrationSaaS" height="40" class="logo" />
+        <h5 class="text-white mt-2 mb-0">Customer Portal</h5>
+    </div>
+
+    <AuthorizeView>
+        <Authorized>
+            <nav class="nav-items">
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                        <i class="fas fa-tachometer-alt nav-icon"></i>
+                        <span class="nav-text">Dashboard</span>
+                    </NavLink>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/certificates">
+                        <i class="fas fa-certificate nav-icon"></i>
+                        <span class="nav-text">Certificates</span>
+                    </NavLink>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/equipment">
+                        <i class="fas fa-tools nav-icon"></i>
+                        <span class="nav-text">Equipment Due Dates</span>
+                    </NavLink>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/history">
+                        <i class="fas fa-history nav-icon"></i>
+                        <span class="nav-text">Calibration History</span>
+                    </NavLink>
+                </div>
+
+                <div class="nav-divider"></div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/profile">
+                        <i class="fas fa-user-circle nav-icon"></i>
+                        <span class="nav-text">Profile</span>
+                    </NavLink>
+                </div>
+
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/support">
+                        <i class="fas fa-question-circle nav-icon"></i>
+                        <span class="nav-text">Support</span>
+                    </NavLink>
+                </div>
+            </nav>
+        </Authorized>
+        <NotAuthorized>
+            <nav class="nav-items">
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="/login">
+                        <i class="fas fa-sign-in-alt nav-icon"></i>
+                        <span class="nav-text">Login</span>
+                    </NavLink>
+                </div>
+            </nav>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    <div class="nav-footer">
+        <div class="text-white-50 small">
+            <div>Version 1.0.0</div>
+            <div>&copy; 2024 CalibrationSaaS</div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-menu {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+    }
+
+    .nav-header {
+        padding: 1.5rem 1rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo {
+        filter: brightness(0) invert(1);
+    }
+
+    .nav-items {
+        flex: 1;
+        padding: 1rem 0;
+        overflow-y: auto;
+    }
+
+    .nav-item {
+        margin: 0.25rem 0;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+    }
+
+    .nav-link:hover {
+        color: white;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-left-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .nav-link.active {
+        color: white;
+        background-color: rgba(255, 255, 255, 0.15);
+        border-left-color: #ffc107;
+        font-weight: 500;
+    }
+
+    .nav-icon {
+        width: 1.25rem;
+        margin-right: 0.75rem;
+        text-align: center;
+    }
+
+    .nav-text {
+        flex: 1;
+    }
+
+    .nav-divider {
+        height: 1px;
+        background-color: rgba(255, 255, 255, 0.1);
+        margin: 1rem 1.5rem;
+    }
+
+    .nav-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+    }
+
+    /* Mobile responsiveness */
+    @@media (max-width: 768px) {
+        .nav-menu {
+            width: 260px;
+        }
+
+        .nav-header {
+            padding: 1rem;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+        }
+
+        .nav-icon {
+            margin-right: 0.5rem;
+        }
+    }
+
+    /* Scrollbar styling for nav items */
+    .nav-items::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .nav-items::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-items::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+    }
+
+    .nav-items::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+</style>

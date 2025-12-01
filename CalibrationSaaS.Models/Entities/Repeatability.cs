@@ -1,0 +1,111 @@
+using CalibrationSaaS.Domain.Aggregates.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+
+namespace CalibrationSaaS.Domain.Aggregates.Entities
+{
+
+
+    [DataContract]
+    public partial class Repeatability : IGenericCalibrationSubTypeCollection<BasicCalibrationResult>
+    {
+
+
+        [JsonIgnore]
+        [NotMapped]
+        public int SequenceID { get ; set ; }
+
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [DataMember(Order = 1)]
+        public int RepeatabilityId { get; set; } //TODO: Should be the TestPointNumber, and the primaty key should be a compound between this ID, Calibration Type and WorkOrderDetailId 
+
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [DataMember(Order = 2)]
+        public int CalibrationSubTypeId { get; set; } = 2;
+
+        
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [DataMember(Order = 3)]
+        public int WorkOrderDetailId { get; set; }
+        
+        [DataMember(Order = 4)]
+        public virtual ICollection<WeightSet> WeightSets { get; set; }
+
+        [DataMember(Order = 5)]
+        public int TenantId { get; set; }
+
+        [DataMember(Order = 6)]
+        public virtual TestPoint TestPoint { get; set; }
+
+        [DataMember(Order = 7)]
+        public int NumberOfSamples { get; set; } = 10;
+
+
+
+       
+
+        //Repeatability Values
+        public double RepeatabilityStdDeviationAsLeft { get; set; }
+        public double RepeatabilityStdDeviationAsFound { get; set; }
+        public int RepeatabilityUncertaintyValueUOMID { get; set; }
+        public string RepeatabilityUncertaintyType { get; set; }
+        public string RepeatabilityUncertaintyDistribution { get; set; }
+        public double RepeatabilityUncertaintyDivisor { get; set; }
+        public double RepeatabilityQuotient { get; set; }
+        [NotMapped]
+        public double RepeatabilitySquare
+        {
+            get
+            {
+                return RepeatabilityQuotient * RepeatabilityQuotient;
+            }
+        }
+        [NotMapped]
+        public double RepeatabilityTotalUncertainty
+        {
+            get
+            {
+                return Math.Sqrt(RepeatabilitySquare);
+            }
+        }
+        [NotMapped]
+        public double RepeatabilityExpandedUncertainty
+        {
+            get
+            {
+                return RepeatabilityTotalUncertainty * 2;
+            }
+        }
+
+
+       
+        [DataMember(Order = 10)]
+        public virtual List<BasicCalibrationResult> TestPointResult { get; set; }
+
+        [DataMember(Order = 8)]
+        public int? TestPointID { get; set; }
+
+        [JsonIgnore]
+        [DataMember(Order = 9)]
+        public virtual ICollection<CalibrationSubType_Weight> CalibrationSubType_Weights { get; set; }
+
+        [JsonIgnore]
+        [IgnoreDataMember]
+        public virtual BalanceAndScaleCalibration BalanceAndScaleCalibration { get; set; }
+
+        [NotMapped]
+        [IgnoreDataMember]
+        public double CalculateWeightValue { get; set; }
+
+        [NotMapped]
+        [IgnoreDataMember]
+        public virtual ICollection<CalibrationSubType_Standard> Standards { get ; set ; }
+    }
+
+  
+
+}

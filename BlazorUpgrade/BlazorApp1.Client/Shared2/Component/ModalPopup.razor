@@ -1,0 +1,11 @@
+﻿@page "/ModalPopup"
+
+@using Blazored.Modal.Services
+<h3>ModalPopup</h3>
+@inject IModalService modal
+
+<button @onclick="@(() => modal.Show<BlazorApp1.Blazor.Pages.Basics.Equipment_Search>("Modal Popup"))">VIEW</button>
+
+@code {
+
+}

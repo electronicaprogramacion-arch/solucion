@@ -1,0 +1,488 @@
+﻿@page "/UOMManager"
+@using Blazed.Controls
+
+
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@*<EditForm style="margin:10px" OnValidSubmit="Submit" Model="@eq" Context="CurrenEditContext">
+    <DataAnnotationsValidator />*@
+@namespace CalibrationSaaS.Infraestructure.Blazor.Shared
+@inherits UOMManager
+
+@{
+
+
+    SetEnabled();
+
+
+}
+
+<div class="col-md">
+
+    <HeaderComponent Title="Unit of Measurement" ActionBar="false"></HeaderComponent>
+
+
+    <EditForm OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+        <DataAnnotationsValidator />
+        <SubmitComponent>
+
+        </SubmitComponent>
+        <ResponsiveTable ItemsDataSource="@List"
+                         PageSize="5"
+                         HasAction="true"
+                         HasEdit="true"
+                         Context="Entity"
+                         @ref="@Grid"
+                         GridID="gridUOM"
+                         InLineEdit="false"
+                         RowEditClass=""
+                         RowNewClass=""
+                         TableItem="UnitOfMeasure"
+                         EnabledSearch="true"
+                         editContext="@CurrentEditContext"
+                         EnabledModal="false"
+                         OnChangeWindow="ClearList"
+                         SelectOnly="@SelectOnly"
+                         SaveButtonSubmit="false"
+                         OnSave="@Submitted"
+                         OnUpdate="@SubmittedUP"
+                         PaginationFunction1="LoadData"
+                         DeleteAction="@Delete"
+                         NewItemDefaultItem="DefaultItem"
+                         Component="@Component"
+                         HasSelect="false">
+
+
+            <GridRow>
+
+
+
+            </GridRow>
+
+            <ChildContent>
+
+                <GridColumns>
+
+                    <GridColumn TableItem="UnitOfMeasure" Field="@Grid.GetPropertyName(() => eq.Name)" Title="Name" DefaultSort="true" />
+
+                    <GridColumn TableItem="UnitOfMeasure" Field="@Grid.GetPropertyName(() => eq.Abbreviation)" Title="Abbreviation" CSScol="col-sm-1 customcol" />
+                    <GridColumn TableItem="UnitOfMeasure" Field="@Grid.GetPropertyName(() => eq.Type.Name)" Title="Type" />
+                    <GridColumn TableItem="UnitOfMeasure" Field="@Grid.GetPropertyName(() => eq.ConversionValue)" Title="Conversion Value" />
+                </GridColumns>
+            </ChildContent>
+
+            <GridEdit>
+                <div class="row">
+                    <div class="col-sm-6 customcol">
+                        <TextInput @bind-Value="@Entity.Name" Label="Name" Validate="false" ValidationFor="@(()=> Entity.Name)" IsDisabled="!Enabled"
+                                   LabelDown="false">
+
+                        </TextInput>
+                        @Grid.GetErrorMessage(nameof(Entity.Name))
+
+                    </div>
+                    <div class="col-sm-6 customcol">
+
+                        <TextInput @bind-Value="@Entity.Abbreviation" Label="Abbreviation" Validate="false" LabelDown="false" IsDisabled="!Enabled">
+
+                        </TextInput>
+                        @Grid.GetErrorMessage(nameof(Entity.Abbreviation))
+
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 customcol">
+
+
+                        <TextInput @bind-Value="@Entity.TypeID" Type="@Types.select" Label="Type" LabelDown="false" IsDisabled="!Enabled">
+                            @foreach (var item in ListTypes)
+                            {
+                                <option value="@item.Value">@item.Name</option>
+                            }
+                        </TextInput>
+                        @Grid.GetErrorMessage(nameof(@Entity.TypeID))
+
+                    </div>
+                    <div class="col-sm-6" style="margin-top:1rem">
+                        <SearchButtonComponent FormType="typeof(CalibrationSaaS.Infraestructure.Blazor.Shared.UOMMangerType)"
+                                               Parameters="@ParametersType"
+                                               Type="search"
+                                               Size="@ModalSize.LargeWindow"
+                                               Text="Add Type"
+                                               CloseWindow="((arg)=>CloseUOMType(Entity,arg))" CSSButton="primary allWindow" IsDisabled="true">
+
+                        </SearchButtonComponent>
+
+                    </div>
+
+
+
+                </div>
+                <div class="row" style="margin-top:1rem">
+                    <div class="col-sm-6 customcol">
+                        @*<TextInput @bind-Value="@Entity.TypeID" Type="@Types.select" Label="Type" LabelDown="false">
+                               @foreach (var item in ListTypes)
+                               {
+                               <option value="@item.Value">@item.Name</option>
+                               }
+                            </TextInput>*@
+                        <div class="form-group">
+                            <label class="form-control-label">UoM Base</label>
+                            @if (eq != null && eq.TypeID > 0)
+                            {
+                                <SearchButtonComponent FormType="typeof(CalibrationSaaS.Infraestructure.Blazor.Shared.UOMManger)"
+                                                       Parameters="@Parameters"
+                                                       Type="search"
+                                                       Size="@ModalSize.LargeWindow"
+                                                       Text="@Concat("Unit Base"," - ",Entity?.UnitOfMeasureBase?.Name)"
+                                                       CloseWindow="((arg)=>CloseBase(Entity,arg))" CSSButton="primary allWindow" IsDisabled="!Enabled">
+
+                                </SearchButtonComponent>
+                            }
+                            else
+                            {
+                                <SearchButtonComponent FormType="typeof(CalibrationSaaS.Infraestructure.Blazor.Shared.UOMManger)"
+                                                       Parameters="@Parameters"
+                                                       Type="search"
+                                                       Size="@ModalSize.LargeWindow"
+                                                       Text="@Concat("Unit Base"," - ",Entity?.UnitOfMeasureBase?.Name)"
+                                                       CloseWindow="((arg)=>CloseBase(Entity,arg))" CSSButton="primary allWindow" IsDisabled="true">
+
+                                </SearchButtonComponent>
+                            }
+
+                        </div>
+                    </div>
+                    <div class="col-sm-6 customcol">
+                        <TextInput @bind-Value="@Entity.ConversionValue" Validate="false" Label="Conversion Value" LabelDown="false" IsDisabled="!Enabled">
+
+                        </TextInput>
+                        @Grid.GetErrorMessage(nameof(@Entity.ConversionValue))
+                    </div>
+                </div>
+
+                <div class="row">
+
+
+
+
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-6 customcol">
+                        <div class="col-sm-1">
+                            <label class="form-control-label">UoM Uncertainty</label>
+                        </div>
+
+                        <div class="form-group">
+                            @if (eq != null && eq.TypeID > 0)
+                            {
+                                <SearchButtonComponent FormType="typeof(CalibrationSaaS.Infraestructure.Blazor.Shared.UOMManger)"
+                                                       Parameters="@Parameters"
+                                                       Type="search"
+                                                       Size="@ModalSize.LargeWindow"
+                                                       Text="@Concat("Unit Uncertainty", " - ", Entity?.UncertaintyUnitOfMeasure?.Name)"
+                                                       CloseWindow="((arg) => CloseUncertain(Entity, arg))" CSSButton="primary allWindow" IsDisabled="!Enabled">
+
+                                </SearchButtonComponent>
+                            }
+                            else
+                            {
+                                <SearchButtonComponent FormType="typeof(CalibrationSaaS.Infraestructure.Blazor.Shared.UOMManger)"
+                                                       Parameters="@Parameters"
+                                                       Type="search"
+                                                       Size="@ModalSize.LargeWindow"
+                                                       Text="@Concat("Unit Uncertainty", " - ", Entity?.UncertaintyUnitOfMeasure?.Name)"
+                                                       CloseWindow="((arg) => CloseUncertain(Entity, arg))" CSSButton="primary allWindow" IsDisabled="true">
+
+                                </SearchButtonComponent>
+
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 customcol">
+                        <label class="form-control-label"></label>
+                        <TextInput @bind-Value="@Entity.IsEnabled" Label="Enabled"
+                                   Validate="false"
+                                   LabelDown="false"
+                                   Type="@Types.Switch"
+                                   OnChangeControl="@((arg)=>SelectionChanged(arg,Entity))" IsDisabled="!Enabled">
+
+                        </TextInput>
+                        @Grid.GetErrorMessage(nameof(Entity.Abbreviation))
+
+
+                    </div>
+                </div>
+                @Bound(Entity);
+
+            </GridEdit>
+
+            <GridSelect>
+
+                <button class="btn btn-sm btn-primary" id="_btnselect"
+                        @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                    select
+                </button>
+
+            </GridSelect>
+
+
+
+        </ResponsiveTable>
+    </EditForm>
+    @*}*@
+
+</div>
+
+@code
+{
+    //[CascadingParameter] public BlazoredModalInstance BlazoredModal { get; set; }
+
+
+    async Task CloseUOMType(UnitOfMeasure current, ChangeEventArgs arg)
+    {
+
+        ModalResult r = (ModalResult)arg.Value;
+
+        if (r.Cancelled == false)
+        {
+            UnitOfMeasureType baseUOM = (UnitOfMeasureType)r.Data;
+
+            //current.UnitOfMeasureBase = baseUOM;
+            ListTypes.Add(baseUOM);
+
+            StateHasChanged();
+
+        }
+
+
+    }
+
+
+
+    async Task CloseBase(UnitOfMeasure current, ChangeEventArgs arg)
+    {
+
+        ModalResult r = (ModalResult)arg.Value;
+
+        if (r.Cancelled == false)
+        {
+            UnitOfMeasure baseUOM = (UnitOfMeasure)r.Data;
+
+            current.UnitOfMeasureBase = baseUOM;
+
+
+        }
+
+
+    }
+
+
+    async Task CloseUncertain(UnitOfMeasure current, ChangeEventArgs arg)
+    {
+
+        ModalResult r = (ModalResult)arg.Value;
+
+        if (r.Cancelled == false)
+        {
+            UnitOfMeasure UOM = (UnitOfMeasure)r.Data;
+
+            current.UncertaintyUnitOfMeasure = UOM;
+
+            current.UncertaintyUnitOfMeasureID = UOM.UnitOfMeasureID;
+
+        }
+
+
+    }
+
+
+    async Task Select(object arg, UnitOfMeasure entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+    public bool IsEnabled { get; set; }
+
+    void SelectionChanged(ChangeEventArgs args, UnitOfMeasure entity)
+    {
+
+        if (entity.IsEnabled)
+        {
+            entity.IsEnabled = false;
+        }
+        else
+        {
+            entity.IsEnabled = true;
+        }
+
+        //entity.IsEnabled = (bool)args.Value;
+
+        //var  selectedAnswer = args.Value.ToString();
+
+        //Logger.LogDebug(selectedAnswer);
+
+        //if (selectedAnswer.Contains("Percentage"))
+        //{
+
+
+        //}
+        //else
+        //{
+
+        //}
+
+        StateHasChanged();
+    }
+
+
+    public UnitOfMeasure UnitOfMeasure = new UnitOfMeasure();
+
+
+
+
+
+    //public EditContext editContex { get; set; }
+
+
+    //protected override Task OnAfterRenderAsync(bool firstRender)
+    //{
+    //    //eq = Grid.currentEdit;
+    //    //CurrentEditContext = Grid.editContext;
+
+
+    //    return base.OnAfterRenderAsync(firstRender);
+    //}
+
+    //protected async override Task OnInitializedAsync()
+    //{
+
+    //    //editContex = new EditContext(UnitOfMeasure);
+
+    //    await base.OnInitializedAsync();
+
+
+    //}
+
+
+
+
+
+    IList<Rol> lista;
+
+    public string GetRoles(string roles)
+
+    {
+
+        //if (string.IsNullOrEmpty(roles))
+        //{
+        //    if(lista != null) {
+        //        //lista.Clear();
+        //    }
+        //    return "";
+        //}
+
+        //List<Roles> lis = new List<Roles>();
+        //var a = roles.Split(',');
+        //foreach(var item in a)
+        //{
+        //    Logger.LogDebug(item);
+        //    var array =  AppState.RolesList.Where(x => x.Name.Trim() == item.Trim()).ToList();
+
+        //    lis = lis.Concat(array).ToList();
+        //}
+
+        //lista = lis;
+        //var s = 1;
+
+        return "";
+    }
+
+    public IList<Rol> _Roles;
+
+
+    public IList<Rol> TempRole
+    {
+        get
+        {
+
+            return lista;
+        }
+
+        set
+        {
+            _Roles = value;
+
+            lista = _Roles;
+
+        }
+
+    }
+
+    public string _strroles { get; set; }
+
+    //IList<Rol> result= GetRoles(_strroles)
+
+
+    public Task<IEnumerable<Rol>> SearchRol(string searchText)
+    {
+        var result = AppSecurity.RolesList
+            .Where(x => x.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+
+        return Task.FromResult<IEnumerable<Rol>>(result);
+    }
+
+    public string BoundValues(UnitOfMeasure model)
+    {
+        //if (model == null || model.RolesList == null || model.RolesList.Count == 0)
+        //{
+        //    model.Roles = string.Empty;
+        //    return String.Empty;
+        //}
+
+        //string roles = "";
+        //foreach (var item in model.RolesList)
+        //{
+        //    roles += item.Name + " ,";
+        //}
+
+
+        //model.Roles = roles;
+        return "";
+    }
+
+
+    protected async Task Submit(EditContext editContext)
+    {
+
+    }
+
+
+    public string setContext(UnitOfMeasure Model)
+    {
+        UnitOfMeasure = Model;
+
+        //editContex = new EditContext(Model);
+        return "";
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+
+    }
+
+
+
+
+
+
+}
+
+

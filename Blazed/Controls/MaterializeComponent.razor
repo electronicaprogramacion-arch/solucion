@@ -1,0 +1,30 @@
+﻿@namespace Blazed.Controls
+@if (ShowBottomBorder)
+{
+    <div class="mat-div">
+        <div class="mat-input">
+            @Content
+        </div>
+        
+    </div>
+}
+else
+{
+<div class="mat-div" >
+    <div class="mat-input" style="border-bottom-color:transparent !important">
+        @Content
+        </div>
+    </div>
+    }
+
+
+    @code {
+
+
+        [Parameter]
+        public RenderFragment Content { get; set; }
+
+        [Parameter]
+        public bool ShowBottomBorder { get; set; }
+
+    }

@@ -1,0 +1,942 @@
+﻿@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+@using CalibrationSaaS.Infraestructure.Blazor.Helper
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@using CalibrationSaaS.Domain.Aggregates.Interfaces
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@namespace CalibrationSaaS.Infraestructure.Blazor
+@typeparam CalibrationItem
+@typeparam CalibrationItemResult
+@*@inherits CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponentBase<CalibrationItem,CalibrationItemResult>*@
+@inherits CalibrationSaaS.Infraestructure.Blazor.GridResultsComponentBase<Rockwell>
+<style>
+
+    .grid-row1.headerRow {
+        height: 55% !important;
+    }
+
+
+
+    .noedit {
+    }
+
+    .btnWidth {
+        width: 75px
+    }
+
+
+    .secondGrid {
+        /*padding-left: 70px*/
+        /*left:-7%;*/
+    }
+
+    .linearityCol {
+        padding: 0px;
+    }
+
+    .linearityColHeader {
+        padding: 0px;
+    }
+
+    @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+        /*  .editcolumn {
+        }
+
+        .container, .container-fluid {
+            padding-left: 0rem;
+            padding-right: 0rem;
+        }
+
+        .container-fluid {
+            width: 100%;
+            padding-right: 0rem;
+            padding-left: 0rem;
+            margin-right: auto;
+            margin-left: auto;
+        }*/
+    }
+</style>
+
+
+@if (WorkOrderItemCreate.eq != null && LIST != null)
+{
+
+
+    <div style="display:none">
+        WeightSets :   @Description
+        @if (WeightSetList2 != null)
+        {
+            <div class="" style="max-height:300px;overflow:auto;width:100%">
+
+               
+            </div>
+        }
+    </div>
+
+
+
+    @if (WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate != null)
+    {
+
+        if (WorkOrderItemCreate.eq == null
+           || WorkOrderItemCreate.eq?.PieceOfEquipment == null
+           || WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate == null
+           || WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups == null
+           || WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups?.ElementAtOrDefault(0)?.TestPoints?.Count == 0
+           || WorkOrderItemCreate.eq.IsAccredited == false
+           )
+        {
+            EnableSetPoints = false;
+        }
+        else
+        {
+            EnableSetPoints = true;
+        }
+
+
+    }
+
+
+    <div class="" style="min-height: 600px; overflow: auto; padding-left: 5px; width: 100%; overflow-y: scroll; max-height: 600px;">
+        @if (1 == 1)
+        {
+            var tem = LIST;
+            string sortField = "";
+
+            //@Grid.GetPropertyName(() => PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.Name)
+
+        <ResponsiveTable ItemsDataSource="LIST"
+                         PageSize="20"
+                         HasAction="true"
+                         HasSelect="true"
+                         HasDelete="true"
+                         HasDuplicate="true"
+                         HasEdit="false"
+                         HasNew="true"
+                         @ref="@RT"
+                         Context="ITEM"
+                         TableItem="CalibrationItem"
+                         ForceNEwButton="false"
+                         ClientPagination="true"
+                         DisabledRowHover="true"
+                         InLineEdit="false"
+                         ColActionHeaderCSS="col-sm-2"
+                         EnabledSearch="false"
+                         ClientDefaultSortField="@SortField"
+                         ClientDefaultSortDirection="asc"
+                         RowExecute="RowChange"
+                         Component="@Component"
+                         RowAfterRender="@RowAfterRender"
+                         AfterAction="@TaskAfterSave"
+                         ColActionCSS="btnWidth"
+                         EnabledDrag="true"
+                         LabelHeader="true"
+                     Key="SequenceID">
+
+           
+           <GridHeader2>
+                @if (ITEM != null && ITEM.BasicCalibrationResult != null)
+                {
+                    <EditForm Model="@ITEM" class="col">
+                        <div class="form-row" style="width:100%">
+                            <div class="col-sm">
+                                <div class="row">
+                                    @*<div class="col-sm-2 linearityCol inv">FS</div>*@
+                                    <div class="col-sm-2 linearityCol">
+
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.ScaleRange"
+                                                   CSSClass="@("inputgridNoBorder")"
+                                                   Type=@Types.text
+                                                   Validate="false"
+                                                   ValidationFor="@(()=> ITEM.BasicCalibrationResult.ScaleRange)"
+                                                   TValue="string"
+                                                   IsDisabled="false"
+                                                   StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                   DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                   DecimalRoundType="RoundType.RoundToResolution"
+                                                   Label="Scale-Range"
+                                                   OnlyHeader="true"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "FSTexbox_" + ITEM.SequenceID.ToString())">
+                                        </TextInput>
+
+
+                                    </div>
+
+
+
+
+                                    @*<div class="col-sm-1 linearityCol inv noedit">Nominal</div>*@
+                                    <div class="col-sm-2 linearityCol editcolumn">
+
+                                        @if (WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == false && Enabled)
+                                        {
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Nominal"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Nominal)"
+                                                       IsDisabled="!Enabled"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "NominalTexbox_" + ITEM.SequenceID.ToString())"
+                                                       EnableToastMessage="true"
+                                                       Label="Nominal"
+                                                       OnlyHeader="true"
+                                                       ToastMessage=@("in Force  the typed value {0} was rounded to {1}")>
+                                            </TextInput>
+                                        }
+                                        else
+                                        {
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Nominal"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Nominal)"
+                                                       IsDisabled="true"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "NominalTexbox_" + ITEM.SequenceID.ToString())"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       OnlyHeader="true"
+                                                       Label="Nominal">
+                                            </TextInput>
+                                        }
+
+                                    </div>
+
+
+
+                                        <div class="col-sm-2 linearityCol noedit">
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Max"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Max)"
+                                           IsDisabled="true"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "MaxTexbox_" + ITEM.SequenceID.ToString())"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           OnlyHeader="true"
+                                           Label="Max">
+                                            </TextInput>
+
+                                        </div>
+
+                                        <div class="col-sm-2 linearityCol noedit">
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Min"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Min)"
+                                           IsDisabled="true"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "MinTexbox_" + ITEM.SequenceID.ToString())"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           OnlyHeader="true"
+                                           Label="Min">
+                                            </TextInput>
+
+                                        </div>
+                                    <div class="col-sm-2 linearityCol noedit">
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Average"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.numberdecimal
+                                                   TValue="double"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Average)"
+                                                   IsDisabled="!Enabled"
+                                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                   StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                   DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "AverageTexbox_" + ITEM.SequenceID.ToString())"
+                                                   DecimalRoundType="RoundType.RoundToResolution"
+                                                   ToastMessage=@("in Rockwell  the typed value {0} was rounded to {1}")
+                                                   OnlyHeader="true"
+                                                   Label="Average">
+                                        </TextInput>
+
+                                    </div>
+
+                                   
+                                    @*<div class="col-sm-2 linearityCol noedit">
+
+
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.InToleranceFound"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.text
+                                                   TValue="string"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.InToleranceFound)"
+                                                   IsDisabled="true"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "InToleranceFoundTexbox_" + ITEM.SequenceID.ToString())"
+                                                   Label="Result As Found"
+                                                   OnlyHeader="true"
+                                                   >
+                                        </TextInput>
+                                    </div>*@
+
+
+                                   
+                                   
+                                </div>
+                            </div>
+
+                            <div class="col-sm" style="left:-0px">
+                                <div class="row">
+
+                                     <div class="col-sm-2 linearityCol noedit">
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Test1"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.text
+                                                   TValue="double"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Test1)"
+                                           IsDisabled="!Enabled"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "R" +
+                                                             "Test1Texbox_" + ITEM.SequenceID.ToString())"
+                                                   Label="Test1"
+                                                   OnlyHeader="true"
+                                                   >
+                                        </TextInput>
+
+                                    </div>
+
+
+
+                                   
+                                    <div class="col-sm-2 linearityCol">
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Test2"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.numberdecimal
+                                                   TValue="double"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Test2)"
+                                                   IsDisabled="!Enabled"
+                                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                   StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                   DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                   DecimalRoundType="RoundType.RoundToResolution"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "Test2Texbox_" + ITEM.SequenceID.ToString())"
+                                                   ToastMessage=@("in Rockwell  the typed value {0} was rounded to {1}")
+                                                   Label="Test2"
+                                                   OnlyHeader="true"
+                                                   >
+                                        </TextInput>
+
+
+                                    </div>
+
+
+                                    @*<div class="col-sm linearityCol inv noedit">As Left</div>*@
+                                   @* <div class="col-sm-2 linearityCol noedit">
+
+
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Test3"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.numberdecimal
+                                                   TValue="double"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Test3)"
+                                                   IsDisabled="!Enabled"
+                                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                   StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                   DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                   DecimalRoundType="RoundType.RoundToResolution"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "Test3Texbox_" + ITEM.SequenceID.ToString())"
+                                                   ToastMessage=@("in Rockwell  the typed value {0} was rounded to {1}")
+                                                   Label="Test3"
+                                                   OnlyHeader="true">
+                                        </TextInput>
+
+
+
+                                    </div>
+                                    <div class="col-sm-2 linearityCol noedit">
+
+
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Test4"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.numberdecimal
+                                                   TValue="double"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Test4)"
+                                                   IsDisabled="!Enabled"
+                                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                   StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                   DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                   DecimalRoundType="RoundType.RoundToResolution"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "Test4Texbox_" + ITEM.SequenceID.ToString())"
+                                                   ToastMessage=@("in Rockwell  the typed value {0} was rounded to {1}")
+                                                   Label="Test4"
+                                                   OnlyHeader="true">
+                                        </TextInput>
+
+
+
+                                    </div>
+                                    <div class="col-sm-2 linearityCol noedit">
+
+
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Test5"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.numberdecimal
+                                                   TValue="double"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Test5)"
+                                                   IsDisabled="!Enabled"
+                                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                   StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                   DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                   DecimalRoundType="RoundType.RoundToResolution"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "Test5Texbox_" + ITEM.SequenceID.ToString())"
+                                                   ToastMessage=@("in Rockwell  the typed value {0} was rounded to {1}")
+                                                   Label="Test5"
+                                                   OnlyHeader="true">
+                                        </TextInput>
+
+
+
+                                    </div>
+*@
+                                    @*<div class="col-sm-2 linearityCol noedit">
+
+
+            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.InToleranceLeft"
+                       CSSClass="inputgrid"
+                       Type=@Types.text
+                       TValue="string"
+                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.InToleranceLeft)"
+                       IsDisabled="true"
+                       Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "InToleranceLeft" + ITEM.SequenceID.ToString())"
+                       Label="Result As Left"
+                       OnlyHeader="true">
+            </TextInput>
+
+
+
+        </div>*@
+
+
+
+
+                                    <div class="col-sm-2 linearityCol noedit secondGrid">
+
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Resolution"
+                                                   CSSClass="@("inputgridNoBorder")"
+                                                   Type=@Types.number
+                                                   Validate="false"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Resolution)"
+                                                   TValue="double"
+                                                   IsDisabled="!Enabled"
+                                                   StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                   DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                   DecimalRoundType="RoundType.Ceiling"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "ResolutionTexbox_" + ITEM.SequenceID.ToString())"
+                                                   Label="Resolution"
+                                                   OnlyHeader="true">
+                                        </TextInput>
+                                    </div>
+                                    @*<div class="col-sm-1 linearityCol inv editcolumn">Error</div>*@
+
+                                    @*<div class="col-sm-2 linearityCol editcolumn secondGrid">
+
+
+            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RelativeRepeatabilityError"
+                       CSSClass="@("inputgridNoBorder")"
+                       Type=@Types.number
+                       Validate="false"
+                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RelativeRepeatabilityError)"
+                       TValue="double"
+                       IsDisabled="true"
+                       Label="Rel Rep Err"
+                       OnlyHeader="true">
+            </TextInput>
+        </div>*@
+                                    <div class="col-sm-2 linearityCol noedit">
+
+
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Repeateability"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.numberdecimal
+                                                   TValue="double"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Repeateability)"
+                                                   IsDisabled="!Enabled"
+                                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                   StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                   DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                   DecimalRoundType="RoundType.RoundToResolution"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "RepeateabilityTexbox_" + ITEM.SequenceID.ToString())"
+                                                   ToastMessage=@("in Rockwell  the typed value {0} was rounded to {1}")
+                                                   Label="Repeateability"
+                                                   OnlyHeader="true">
+                                        </TextInput>
+
+
+
+                                    </div>
+
+                                    <div class="col-sm-2 linearityCol noedit">
+
+
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Error"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.numberdecimal
+                                                   TValue="double"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Error)"
+                                                   IsDisabled="!Enabled"
+                                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                   StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                   DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                   DecimalRoundType="RoundType.RoundToResolution"
+                                                   Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "ErrorTexbox_" + ITEM.SequenceID.ToString())"
+                                                   ToastMessage=@("in Rockwell  the typed value {0} was rounded to {1}")
+                                                   Label="Error"
+                                                   OnlyHeader="true">
+                                        </TextInput>
+
+
+
+                                    </div>
+
+                                    @*<div class="col-sm linearityCol inv editcolumn">Uncertainty</div>*@
+                                    <div class="col-sm-2 linearityCol editcolumn secondGrid">
+
+
+                                        @*@ITEM?.BasicCalibrationResult?.Uncertanty*@
+                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Uncertanty"
+                                                   CSSClass="@("inputgridNoBorder")"
+                                                   Type=@Types.number
+                                                   Validate="false"
+                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Uncertanty)"
+                                                   TValue="double"
+                                                   IsDisabled="true"
+                                                   Label="Uncertanty"
+                                                   OnlyHeader="true">
+                                        </TextInput>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                       
+                    </EditForm>
+                }
+            </GridHeader2>
+
+                <ChildContent>
+                    <GridColumns>
+
+                  
+                        @{
+                            int DecimalNumber = 1;// ITEM.BasicCalibrationResult.DecimalNumber + 1;
+                        }
+
+
+
+
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Nominal)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Nominal)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Nominal"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Nominal)"
+                                           IsDisabled="!Enabled"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "NominalTexbox_" + ITEM.SequenceID.ToString())"
+                                           EnableToastMessage="true"
+                                           Label="Nominal"
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Max)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Max)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Max"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Max)"
+                                           IsDisabled="true"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "MaxTexbox_" + ITEM.SequenceID.ToString())"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl"
+                                           Label="Max">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Min)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Min)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Min"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Min)"
+                                           IsDisabled="true"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "MinTexbox_" + ITEM.SequenceID.ToString())"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl"
+                                           Label="Min">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Average)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Average)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Average"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Average)"
+                                           IsDisabled="true"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "AverageTexbox_" + ITEM.SequenceID.ToString())"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl"
+                                           Label="Average">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Test1)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Test1)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Test1"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Test1)"
+                                           IsDisabled="!Enabled"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "R" +
+                                                                    "Test1Texbox_" + ITEM.SequenceID.ToString())"
+                                   Label="Test1"
+                                   ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl">
+                        </TextInput>
+                    </ResponsiveTemplate>
+                </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Test2)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Test2)">
+                            <ResponsiveTemplate Context="_context">
+                        @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Test2"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Test2)"
+                                           IsDisabled="!Enabled"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "Test2Texbox_" + ITEM.SequenceID.ToString())"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           Label="Test2"
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Test3)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Test3)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Test3"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Test3)"
+                                           IsDisabled="!Enabled"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "Test3Texbox_" + ITEM.SequenceID.ToString())"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           Label="Test3"
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Test4)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Test4)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Test4"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Test4)"
+                                           IsDisabled="!Enabled"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "Test4Texbox_" + ITEM.SequenceID.ToString())"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           Label="Test4"
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Test5)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Test5)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Test5"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Test5)"
+                                           IsDisabled="!Enabled"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "Test5Texbox_" + ITEM.SequenceID.ToString())"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           Label="Test5"
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Repeateability)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Repeateability)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Repeateability"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Repeateability)"
+                                           IsDisabled="true"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "RepeateabilityTexbox_" + ITEM.SequenceID.ToString())"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           Label="Repeateability"
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Error)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Error)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Error"
+                                           CSSClass="inputgrid"
+                                           Type=@Types.numberdecimal
+                                           TValue="double"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Error)"
+                                           IsDisabled="true"
+                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                           DecimalNumbers="DecimalNumber"
+                                           DecimalRoundType="RoundType.RoundToResolution"
+                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, IsCompresion).ToString() + "" + "ErrorTexbox_" + ITEM.SequenceID.ToString())"
+                                           ToastMessage=@("in Rockwell the typed value {0} was rounded to {1}")
+                                           Label="Error"
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="CalibrationItem" Title="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Uncertanty)"
+                                    Field="@RT.GetPropertyName(() => _Linearity.BasicCalibrationResult.Uncertanty)">
+                            <ResponsiveTemplate Context="_context">
+                                @{
+                                    var ITEM = _context as CalibrationItem;
+                                }
+                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Uncertanty"
+                                           CSSClass="@("inputgridNoBorder")"
+                                           Type=@Types.number
+                                           Validate="false"
+                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Uncertanty)"
+                                           TValue="double"
+                                           IsDisabled="true"
+                                           Label="Uncertanty"
+                                           ShowLabel="RT.ShowLabel" ShowControl="RT.ShowControl">
+                                </TextInput>
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                   
+
+                    </GridColumns>
+                </ChildContent>
+
+                <GridSelect2 Context="select">
+
+                    @{
+                        var a = new ResponsiveTable<CalibrationItem>.SelectRow();
+                        if (select != null)
+                        {
+                            a = select as ResponsiveTable<CalibrationItem>.SelectRow;
+                        }
+
+                        var color = "";
+
+                    }
+
+                    <div class="row" rt="TTT">
+
+
+                        @if ((a.Entity.WeightSets != null && a.Entity.WeightSets.Count > 0) || a?.Entity?.Standards?.Count > 0)
+                        {
+                            color = "success";
+                        }
+                        else
+                        {
+                            color = "primary";
+                        }
+
+
+
+                        @if (!Enabled || !EnableWeightSet)
+                        {
+                           
+                            <div class="btnWidth buttonLin">
+                                <button class="btn btn-sm btn-@color shadow-sm editButton"
+                            id="@("btnSelect_" + a.Position.ToString())" @onclick=@(async () => await SelectWeight(a.Entity,a.Position))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                    Standard
+                                </button>
+                            </div>
+                        }
+                        else if (a != null && a.Entity != null && WorkOrderItemCreate.eq != null && EnableWeightSet && Enabled
+                        || a != null && a.Entity != null && WorkOrderItemCreate.eq != null && WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == true && Enabled)
+                        {
+                            <div class="btnWidth buttonLin">
+                                <button class="btn btn-sm btn-@color shadow-sm editButton"
+                            id="@("btnSelect_" + a.Position.ToString())" @onclick=@(async () => await SelectWeight(a.Entity,a.Position))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                    Standard
+                                </button>
+                            </div>
+                        }
+                        @if (select != null && RT != null && a != null && a?.Entity != null)
+                        {
+
+                        }
+
+
+                    </div>
+                </GridSelect2>
+        </ResponsiveTable>
+
+            <CalibrationSaaS.Infraestructure.Blazor.LTI.Rockwell.EnviromentComponent @ref="EnviromentComponent" IsAsFound="true">
+
+
+            </CalibrationSaaS.Infraestructure.Blazor.LTI.Rockwell.EnviromentComponent>
+        
+
+      }
+    </div>
+
+
+
+}
+
+
+
+@code {
+
+    async Task newitem(EventArgs obj)
+    {
+
+    }
+
+
+    //public string GetInvalidClass(double a,double b)
+    //{
+    //    var valid = 0d;
+    //    if (b != 0)
+    //    {
+    //        valid = (a % b);
+    //    }
+    //    else
+    //    {
+    //        return "";
+    //    }
+    //    var c = true;
+    //    if(Math.Abs(valid) > 0)
+    //    {
+    //        c=  Math.Abs(valid % 1) <= (Double.Epsilon * 100);
+    //    }
+
+    //    var cssinvalid = "";
+    //    if (valid != 0 && !c )
+    //    {
+    //        cssinvalid = "inputinvalid";
+    //    }
+    //    return cssinvalid;
+    //}
+
+
+}

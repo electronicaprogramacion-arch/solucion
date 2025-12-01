@@ -1,0 +1,21 @@
+@inherits BlazorApp1.Shared.Component.CulturePicker
+
+<RadzenSplitButton Icon="language" Text="@selectedCultureText" Click=@(args => ChangeCulture(args.Value))>
+    <ChildContent>
+        <RadzenSplitButtonItem Text="English" Value="en" />
+        <RadzenSplitButtonItem Text="español (Colombia)" Value="es-CO" />
+    </ChildContent>
+</RadzenSplitButton>
+
+@code {
+    // private string culture;
+    private string selectedCultureText = "Select Culture";
+
+    private void ChangeCulture(object value)
+    {
+        culture = value.ToString();
+        selectedCultureText = culture == "en" ? "English" : "español (Colombia)";
+        // Implement culture change logic here
+        this.ChangeCulture();
+    }
+}

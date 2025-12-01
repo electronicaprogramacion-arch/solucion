@@ -1,0 +1,250 @@
+﻿@using System.Reflection
+@using BlazorApp1.Client.Components
+@using BlazorApp1.Client.Shared
+@using Blazored.Modal
+@namespace BlazorApp1.Client
+@using CalibrationSaaS.Infraestructure.Blazor
+@using Helpers.Controls
+@using Microsoft.AspNetCore.Components.WebAssembly.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inherits FComponentBase
+
+@* <CascadingAuthenticationState>
+    <CascadingBlazoredModal>
+        <CustomRouter AppAssembly="typeof(Client._Imports).Assembly" AdditionalAssemblies="new[] { typeof(CalibrationSaaS.Infraestructure.Blazor.Program).Assembly }"
+                    OnNavigateAsync="OnNavigateAsync">
+            <Found Context="routeData">
+                <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(BlazorApp1.Blazor.Pages.Layout.MainLayout)" Context="_context">
+                    <NotAuthorized>
+                        <CalibrationSaaS.Infraestructure.Blazor.Shared.RedirectToLogin />
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+                <FocusOnNavigate RouteData="routeData" Selector="h1" />
+            </Found>
+        </CustomRouter>
+    </CascadingBlazoredModal>
+</CascadingAuthenticationState> *@
+
+<CascadingAuthenticationState>
+    <CascadingBlazoredModal>
+        <CustomRouter Routes="@DefinedRoutes"
+                      AppAssembly="typeof(Program).Assembly"
+                      AdditionalAssemblies="new[] {  typeof(CalibrationSaaS.Infraestructure.Blazor.Program).Assembly }"
+                      OnNavigateAsync="OnNavigateAsync"
+                      DefaultLayout="typeof(BlazorApp1.Blazor.Pages.Layout.MainLayout)" @rendermode=Rendermode>
+            <NotFound>
+                <PageTitle>Not found</PageTitle>
+                <LayoutView Layout="typeof(BlazorApp1.Blazor.Pages.Layout.MainLayout)" >
+                    <div class="container mt-5">
+                        <div class="row">
+                            <div class="col-md-6 offset-md-3">
+                                <div class="card shadow">
+                                    <div class="card-body text-center">
+                                        <h2 class="text-danger mb-4">Page Not Found</h2>
+                                        <p class="lead">The page you are looking for does not exist or has been moved.</p>
+                                        <hr />
+                                        <a href="/" class="btn btn-primary">Go to Home Page</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </LayoutView>
+            </NotFound>
+            <NotAuthorized>
+                <LayoutView Layout="typeof(BlazorApp1.Client.Account.Shared.LoginLayout)">
+                    <div class="container mt-5">
+                        <div class="row">
+                            <div class="col-md-6 offset-md-3">
+
+                                @if (NavigationManager.Uri.Replace(NavigationManager.BaseUri, string.Empty) == "RedirectToLogin")
+                                {
+                                    <BlazorApp1.Client.Pages.RedirectToLogin></BlazorApp1.Client.Pages.RedirectToLogin>
+                                }
+                               else
+                                @if (currenUser != null && currenUser.Claims is not null && Operating)
+                                {
+                                    <BlazorApp1.Client.Components.Account.LoginWasm >
+
+                                    </BlazorApp1.Client.Components.Account.LoginWasm>
+                                }
+                                else
+                                {
+                                   @*  <BlazorApp1.Client.Pages.RedirectToLogin></BlazorApp1.Client.Pages.RedirectToLogin> *@
+                                    <BlazorApp1.Client.Components.Account.Login >
+
+                                    </BlazorApp1.Client.Components.Account.Login>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </LayoutView>
+                
+            </NotAuthorized>
+        </CustomRouter>
+    </CascadingBlazoredModal>
+</CascadingAuthenticationState>
+@code
+{
+
+    // Lista de rutas definidas
+    private List<Components.CustomRouter.RouteDefinition> DefinedRoutes { get; set; } = new List<Components.CustomRouter.RouteDefinition>();
+
+    [Inject]
+    public Blazed.Controls.Route.Services.RouterSessionService RouterSessionService { get; set; }
+
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+
+    [Inject]
+    public CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity { get; set; }
+
+    private List<Assembly> _lazyLoadedAssemblies = new List<Assembly>();
+
+    LazyAssemblyLoader AssemblyLoader { get; set; }
+
+    SignOutSessionStateManager SignOutManager { get; set; }
+
+
+    public void BeginSignOut()
+    {
+        SignOutManager.SetSignOutState().ConfigureAwait(false).GetAwaiter().GetResult(); ;
+
+    }
+
+    private async Task OnNavigateAsync(CustomNavigationContext context)
+    {
+        Microsoft.AspNetCore.Components.Routing.Router router = new Router();
+
+        
+        var CurrUrl = NavigationManager.Uri;
+
+        //if (context.Path == "fetchdata2")
+        // if (!string.IsNullOrEmpty(AppSecurity.AssemblyName))
+        // {
+        //     var assemblies = await AssemblyLoader.LoadAssembliesAsync(new[] { AppSecurity.AssemblyName + ".dll" });
+        //     _lazyLoadedAssemblies.AddRange(assemblies);
+        // }
+
+        if (1 == 1)
+        //if (!HistoryButton)
+        {
+
+            Blazed.Controls.Route.Services.HistoryNavigation h = new Blazed.Controls.Route.Services.HistoryNavigation();
+
+            h.Route = context.Path;
+
+            h.user = "test";
+
+            //h.Data = this.ActiveComponent;
+
+            //if(History.Count > 1 && (History[History.Count-1].Route== _LastRouteUrl
+            //        || History[History.Count - 1].Route == _LastRouteUrl + "?h=y"))
+            //{
+
+            //    }
+            //    else{
+            //        History.Add(h);
+            //    }
+
+
+            if (context.Path.Contains("?h=y"))
+
+            {
+
+
+                if (RouterSessionService.History.Count > 0 && RouterSessionService.CurrentNavigationIndex >= 0)
+                {
+                    for (int i = RouterSessionService.CurrentNavigationIndex + 1; i < RouterSessionService.History.Count; i++)
+                    {
+                        RouterSessionService.History.RemoveAt(i);
+                    }
+                }
+
+                RouterSessionService.History.Add(h);
+            }
+            else
+            {
+                RouterSessionService.History.Add(h);
+                RouterSessionService.CurrentNavigationIndex = RouterSessionService.History.Count - 1;
+            }
+
+
+            Console.WriteLine("xxxxxxxxxxxxxxxxxxxxxxx");
+            //Console.WriteLine(h.Route);
+
+
+        }
+        //RouterSessionService.History.Add(context.Path);
+
+    }
+
+    @inject IServiceProvider Services
+
+    CurrentUser currenUser { get; set; } = new CurrentUser();
+    public bool Operating { get; set; }
+    public string  CurrentUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            await base.OnInitializedAsync();
+            //var rout = NavigationManager.Uri;
+
+            //CurrentUrl = NavigationManager.Uri.Replace(NavigationManager.BaseUri, string.Empty);
+            Console.WriteLine("Routes++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+            if (currenUser is not null)
+            {
+
+            }
+
+            if (Services.GetService<SignOutSessionStateManager>() is { } env)
+            {
+                SignOutManager = env;
+            }
+
+            if (Services.GetService<LazyAssemblyLoader>() is { } lz)
+            {
+                AssemblyLoader = lz;
+            }
+        }
+        catch
+        {
+            
+        }
+       
+
+        
+    }
+    public bool IsOffline { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+       
+        try
+        {
+            await base.OnAfterRenderAsync(firstRender);
+
+            currenUser = await GetPrincipal();
+
+
+            IsOffline = await IsOffline();
+
+
+            Operating = OperatingSystem.IsBrowser();
+        }
+        catch
+        {
+            
+        }
+       
+
+    }
+
+}

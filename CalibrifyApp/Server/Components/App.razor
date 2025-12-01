@@ -1,0 +1,2377 @@
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject CalibrationSaaS.Infraestructure.Blazor.Services.ThemeService ThemeService
+@inject CalibrationSaaS.Infraestructure.Blazor.Services.CookieThemeService CookieThemeService
+
+
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <base href="/" />
+    <base href="@NavigationManager.BaseUri" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <!--<meta name="viewport" id="testViewport" content="width=device-width, initial-scale=0.75, maximum-scale=0.75, user-scalable=no" />-->
+    <meta name="viewport" id="testViewport" content="width=device-width, initial-scale=0.75, maximum-scale=0.75" />
+    <title>Calibrify</title>
+    <meta name="description" content="Cloud Based Calibration Management System">
+    <meta name="author" content="Kavoku, LLC">
+
+
+    <link href="manifest.json" rel="manifest" />
+    <link rel="icon" type="image/svg+xml" href="img/logo/favicon.svg" />
+    <!--Style-->
+    <!-- Custom fonts for this template-->
+    <link href="lib/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <!-- Custom styles for this template-->
+    <!--<link href="lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />-->
+    <link href="css/sb-admin-2.css" rel="stylesheet">
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="_content/Blazored.Modal/blazored-modal.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!--Reports Script-->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.0.943/pdf.min.js"></script>-->
+    <script src="js/pdf.min.js"></script>
+    <script src="js/pdf.worker.min.js"></script>
+    <script src="js/getReportCanvasDemo.js?v3"></script>
+    <link href="css/BlazorControls.css" rel="stylesheet">
+    <script src="js/print.min.js"></script>
+    <link href="css/print.min.css" rel="stylesheet" />
+    <script src="_content/Fluxor.Blazor.Web/scripts/index.js"></script>
+
+
+    <!-- Radzen Blazor dependencies -->
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/default-base.css" data-theme="default">
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/dark-base.css" data-theme="dark" disabled>
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/software-base.css" data-theme="software" disabled>
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/software-dark-base.css" data-theme="software-dark" disabled>
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/humanistic-base.css" data-theme="humanistic" disabled>
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/humanistic-dark-base.css" data-theme="humanistic-dark" disabled>
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/standard-base.css" data-theme="standard" disabled>
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/standard-dark-base.css" data-theme="standard-dark" disabled>
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" data-theme="material" disabled>
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-dark-base.css" data-theme="material-dark" disabled>
+    <link rel="stylesheet" href="css/radzen-custom.css">
+
+    <!-- Theme handling scripts -->
+    <script src="js/theme.js"></script>
+    <script>
+        // Set this to false to prevent automatic page refresh when changing themes
+        window.forceRefreshOnThemeChange = false;
+
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Get theme from localStorage or cookie
+                var theme = localStorage.getItem('calibration_theme');
+                if (!theme) {
+                    // Try to get from cookie
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = cookies[i].trim();
+                        if (cookie.indexOf('CalibrifyTheme=') === 0) {
+                            theme = cookie.substring('CalibrifyTheme='.length, cookie.length);
+                            break;
+                        }
+                    }
+                }
+
+                // Default to 'default' theme if none found
+                if (!theme) {
+                    theme = 'default';
+                }
+
+                console.log('Theme from storage:', theme);
+
+                // Apply the theme by enabling the correct stylesheet
+                var themeLinks = document.querySelectorAll('link[data-theme]');
+                themeLinks.forEach(function(link) {
+                    if (link.getAttribute('data-theme') === theme) {
+                        link.disabled = false;
+                        console.log('Enabled theme:', theme);
+                    } else {
+                        link.disabled = true;
+                    }
+                });
+
+                // Set theme class on body
+                document.body.className = document.body.className.replace(/theme-\S+/g, '').trim();
+                document.body.classList.add('theme-' + theme);
+
+                // Set data-theme attribute on html element
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (error) {
+                console.error('Error initializing theme:', error);
+            }
+        });
+    </script>
+
+    <Radzen.RadzenComponents />
+    <HeadOutlet @rendermode="@InteractiveAuto" />
+
+
+    <!-- Add reference to Chart.js files -->
+    <script src="lib/chart.js/Chart.min.js"></script>
+    <!-- Add reference to ChartJsInterop.js -->
+    <script src="js/ChartJsInterop.js"></script>
+    <!-- Add navigation debug script -->
+    <script src="js/navigation-debug.js"></script>
+    <!-- Add enhanced Blazor error handler -->
+    <script src="js/blazor-error-handler.js"></script>
+    <!-- Add PWA Manager for offline functionality -->
+    <script src="js/pwa-manager.js"></script>
+
+    <script>
+        if (window.location.hostname === 'bit-staging-calibration-cdn.azureedge.net') {
+            (function (w, d, s) {
+                var a = d.getElementsByTagName('head')[0];
+                var r = d.createElement('script');
+                r.async = 1;
+                r.src = s;
+                r.setAttribute('id', 'usetifulScript');
+                r.dataset.token = "97b72d29ea44723f57a87f13480620bb";
+                a.appendChild(r);
+            })(window, document, "https://www.usetiful.com/dist/usetiful.js");
+        }
+    </script>
+
+
+    <style>
+        .row-striped:nth-of-type(odd) {
+            background-color: #efefef;
+        }
+
+        .row-striped:nth-of-type(even) {
+            background-color: #ffffff;
+        }
+
+        .tableresponsive {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow-x: auto;
+        }
+
+        .table-row {
+            padding: 2px;
+            width: 100%;
+            height: 10%;
+            display: flex;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .responsivetable-header {
+            font-weight: bold;
+            background-color: #5A5C69;
+            color: white;
+        }
+
+        .table-row div:first-child {
+            width: 2% !important;
+        }
+
+        .table-row-column {
+            min-width: 80px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+    <!--DAB-->
+    <style>
+
+        .grid-row.headerRow {
+            font-weight: bold;
+            background-color: #5A5C69 !important;
+            color: white;
+            font-size: small;
+            padding: 0rem;
+            height: 45px;
+        }
+
+        .headerRow {
+            font-weight: bold;
+            color: white;
+            font-size: small;
+            padding: 0rem;
+            height: 45px;
+        }
+
+        .gridContainer {
+            padding: 0px;
+        }
+
+        .paddingzero {
+            padding: 0px;
+        }
+
+        .grid-row > div {
+            border-width: 0px 1px 1px 1px;
+            border-style: solid;
+            border-color: #e3e6f0;
+            padding: 0.03rem;
+            vertical-align: top;
+            color: #858796;
+        }
+
+        .grid-row {
+            width: 100%;
+        }
+
+            .grid-row:nth-of-type(odd) {
+                background-color: rgba(0,0,0,.05);
+            }
+
+            .grid-row:nth-of-type(even) {
+                background-color: whitesmoke;
+            }
+
+            .grid-row div:hover {
+                color: #858796;
+                background-color: rgba(0, 0, 0, 0.075);
+            }
+
+            .grid-row :hover {
+                color: #858796;
+                background-color: rgba(0, 0, 0, 0.075);
+            }
+
+        .inv {
+            display: none;
+        }
+
+        .noinv {
+            display: block;
+        }
+
+        .interline {
+            padding: 0px;
+        }
+
+        .editButton {
+            margin: 4px;
+        }
+
+        .deleteButton {
+        }
+
+        .saveButton {
+        }
+
+        .cancelButton {
+        }
+
+        .btn-sm {
+        }
+
+        .validation-message {
+            color: red;
+        }
+
+        .customcol {
+            text-align: left;
+        }
+
+        .customcolAction {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .form-control-label {
+            font-weight: bold;
+            margin-bottom: 0rem;
+        }
+
+        .sidebarcustom {
+            position: relative;
+        }
+
+        .modal-dialog {
+            margin-top: 0;
+            margin-left: auto;
+            margin-right: auto;
+            left: 0;
+            right: 0;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3e%3cpath stroke='rgba(0, 0, 0, 0.5)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+        }
+
+        .paginationControls {
+            width: auto;
+            float: left;
+        }
+
+        .paginationTotal {
+            width: auto;
+            float: left;
+        }
+
+        .inputgrid {
+            width: 90%;
+            background-color: white !important;
+        }
+
+        .inputgridNoBorder {
+            width: 90%;
+            background-color: white !important;
+            border: 0;
+        }
+
+        .inputinvalid {
+            background-color: lightpink !important;
+        }
+
+        .inputgrid2 {
+            width: 80% !important;
+            background-color: white !important;
+        }
+
+        .inputgrid3 {
+            width: 100% !important;
+            background-color: white !important;
+        }
+
+        .repeaContainer {
+            max-height: 800px;
+            overflow: auto;
+            min-height: 400px;
+            padding-left: 15px
+        }
+
+        .customlink {
+            cursor: pointer;
+            color: white !important;
+        }
+
+            .customlink:hover {
+                color: darkblue !important;
+            }
+
+
+        .linkcard {
+            padding-left: 10px;
+            padding-right: 0px;
+        }
+
+        @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aqu� van los estilos */
+
+            .row
+
+        {
+            display: block;
+        }
+
+        .grid-row {
+            border-bottom: 1px solid grey;
+            padding: 1px;
+        }
+
+        .modal-body {
+            padding: 0.5rem;
+        }
+
+        .gridContainer .col-sm-2 {
+            padding-left: 2rem;
+        }
+
+
+        .modal-dialog {
+            margin: 0rem;
+        }
+
+
+        .sidebarcustom {
+            max-height: 640px;
+        }
+
+        .gridContainer col:nth-child(3n+1) {
+            background: #CCC
+        }
+
+        .grid-row1.headerRow {
+            display: none;
+        }
+
+        .inv {
+            display: block;
+            font-weight: bolder !important;
+            font-size: 1rem;
+            text-align: left !important;
+        }
+
+        .noinv {
+            display: none;
+        }
+
+        .interline {
+            padding: 3px;
+        }
+
+
+
+        .sticky-top {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0 !important;
+            z-index: 1020;
+        }
+
+        .container, .container-fluid {
+            padding-left: 0rem !important;
+            padding-right: 0rem !important;
+        }
+
+        .card {
+            border: 0px solid #e3e6f0;
+            border-radius: .35rem;
+        }
+
+
+        .sidebar {
+            width: 0rem;
+        }
+
+        .customcol {
+            text-align: justify;
+        }
+
+        .customcolAction {
+            text-align: end;
+            font-weight: bold;
+        }
+
+        .paginationControls {
+            width: 100%;
+            float: left;
+        }
+
+        .paginationTotal {
+            width: 100%;
+            float: left;
+            display: none;
+        }
+
+        .page-item {
+            width: 100%;
+        }
+
+        footer.sticky-footer {
+            display: none !important;
+        }
+
+        .footer {
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            clear: both;
+            font-size: 16;
+            text-rendering: auto;
+            position: fixed;
+            height: 40px;
+        }
+
+        .sidebar .nav-item .collapse {
+            position: absolute;
+            left: 0px;
+            z-index: 1;
+            top: 50px;
+        }
+
+
+        .stepwizard {
+            display: none;
+        }
+
+        .WodContent {
+        }
+
+        .separadorbr {
+            display: none;
+        }
+
+        .condition {
+            float: left;
+            width: 30%;
+        }
+
+        .allWidth {
+            width: 100%;
+        }
+
+        .clearBoth {
+            clear: both;
+        }
+
+        .linearityCol {
+            width: 25%;
+            float: left;
+        }
+
+        .RepeaCol {
+            width: 18%;
+            float: left;
+        }
+
+
+        .inputgrid {
+            width: 100%;
+            background-color: white !important;
+        }
+
+        .buttonLin {
+            float: left;
+            width: auto;
+        }
+
+        .marginButton {
+            margin-bottom: 5px;
+        }
+
+        .repeaContainer {
+            max-height: 800px;
+            overflow: auto;
+            min-height: 400px;
+        }
+
+        .enumColumn {
+            width: 1%;
+            float: left;
+        }
+
+        .displayBlock {
+            display: block !important;
+        }
+
+        .displayFlex {
+            display: flex !important;
+        }
+
+        .LoginMessage {
+            margin-top: 50%;
+        }
+
+        #WorkOrderContainer {
+            overflow-y: scroll;
+            max-height: 600px;
+            margin-top: 60px;
+        }
+
+        card.collapse.show {
+            display: none;
+        }
+
+        .gridContainer {
+            max-height: calc(90vh-200px);
+        }
+
+        .container-fluid {
+            margin-top: 60px;
+        }
+
+        }
+
+        @@media only screen and (min-device-width : 560px) {
+            .blazored-modal
+
+        {
+            min-width: 800px;
+        }
+
+        }
+    </style>
+    <style>
+
+        .form-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control-placeholder {
+            position: absolute;
+            top: 0;
+            padding: 7px 0 0 13px;
+            transition: all 200ms;
+            opacity: 0.5 !important;
+        }
+
+        .form-control:focus + .form-control-placeholder {
+            font-size: 85%;
+            transform: translate3d(0, -100%, 0);
+            opacity: 1 !important;
+        }
+
+
+        .form-control:valid + .form-control-placeholder {
+            opacity: 0 !important;
+        }
+
+
+        .form-control:invalid + .form-control-placeholder {
+            opacity: 0.5 !important;
+        }
+    </style>
+    <style>
+        .blazored-modal {
+            padding: 0rem !important;
+        }
+
+        .sticky-top {
+            position: -webkit-sticky;
+            position: sticky;
+            top: initial;
+            z-index: 1020;
+        }
+
+        #toolbarmodal.container-fluid {
+            height: 30px
+        }
+    </style>
+    <style>
+
+        span.select2-container {
+            z-index: 10050;
+        }
+
+        .ContainerPage {
+            min-height: 400px;
+            padding: 25px !important;
+        }
+
+        .fullwidth {
+        }
+
+        .allWindow {
+            width: 100%;
+        }
+
+        .fullScreen {
+            min-width: 100%;
+            width: 100%;
+            height: 100%;
+            min-height: 98%;
+        }
+
+        .HScreen {
+            min-width: 74%;
+            width: 100%;
+            height: 70%;
+            min-height: 68%;
+            top: 10%
+        }
+
+        .largeWindow {
+            width: 80%;
+        }
+
+
+        .halfWindow {
+            width: 50%;
+            z-index: 20000 !important;
+        }
+
+        .minWindow {
+            width: 30%;
+        }
+
+        #content {
+        }
+
+        .warningcolor {
+            background-color: palevioletred;
+        }
+
+        @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aqu� van los estilos */
+
+            #page-top
+
+        {
+        }
+
+        .allWindow {
+            width: 100%;
+            height: 97%;
+            overflow-y: scroll;
+        }
+
+        .largeWindow {
+            width: 100%;
+            height: 97%;
+            overflow-y: scroll;
+        }
+
+
+        .halfWindow {
+            width: 100%;
+            height: 97%;
+            overflow-y: scroll;
+        }
+
+        .minWindow {
+            width: 100%;
+            height: 97%;
+            overflow-y: scroll;
+        }
+
+        .blazored-modal-scrollable {
+            display: flex;
+            max-height: calc(100% - 0rem);
+        }
+
+        .card-body {
+            flex: 1 1 auto;
+            padding: 0rem;
+        }
+
+        .static-top {
+            position: -webkit-sticky;
+            position: fixed;
+            top: initial;
+            z-index: 1020;
+        }
+
+        .static-top2 {
+            position: -webkit-sticky;
+            position: fixed;
+            top: initial;
+            z-index: 1020;
+            top: 100px;
+        }
+
+        #content {
+            margin-left: 0px;
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+
+        }
+    </style>
+    <style>
+        .topBar {
+            background-color: #563d7c !important;
+            min-height: 50px !important;
+            width: 100%;
+            z-index: 10;
+        }
+    </style>
+    <style>
+
+        @@media (min-width: 768px) and (max-width: 991px) {
+            .carousel-inner .active.col-md-4.carousel-item + .carousel-item + .carousel-item + .carousel-item
+
+        {
+            position: absolute;
+            top: 0;
+            right: -33.3333%;
+            z-index: -1;
+            display: block;
+            visibility: visible;
+        }
+
+        }
+
+        @@media (min-width: 576px) and (max-width: 768px) {
+            .carousel-inner .active.col-sm-6.carousel-item + .carousel-item + .carousel-item
+
+        {
+            position: absolute;
+            top: 0;
+            right: -50%;
+            z-index: -1;
+            display: block;
+            visibility: visible;
+        }
+
+        }
+
+        @@media (min-width: 576px) {
+            .carousel-item
+
+        {
+            margin-right: 0;
+        }
+
+        .carousel-inner .active + .carousel-item {
+            display: block;
+        }
+
+        .carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left),
+        .carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left) + .carousel-item {
+            transition: none;
+        }
+
+        .carousel-inner .carousel-item-next {
+            position: relative;
+            transform: translate3d(0, 0, 0);
+        }
+        /* left or forward direction */
+        .active.carousel-item-left + .carousel-item-next.carousel-item-left,
+        .carousel-item-next.carousel-item-left + .carousel-item,
+        .carousel-item-next.carousel-item-left + .carousel-item + .carousel-item {
+            position: relative;
+            transform: translate3d(-100%, 0, 0);
+            visibility: visible;
+        }
+        /* farthest right hidden item must be also positioned for animations */
+        .carousel-inner .carousel-item-prev.carousel-item-right {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            display: block;
+            visibility: visible;
+        }
+        /* right or prev direction */
+        .active.carousel-item-right + .carousel-item-prev.carousel-item-right,
+        .carousel-item-prev.carousel-item-right + .carousel-item,
+        .carousel-item-prev.carousel-item-right + .carousel-item + .carousel-item {
+            position: relative;
+            transform: translate3d(100%, 0, 0);
+            visibility: visible;
+            display: block;
+            visibility: visible;
+        }
+
+        }
+        /* MD */
+        @@media (min-width: 768px) {
+            /* show 3rd of 3 item slide */
+            .carousel-inner .active + .carousel-item + .carousel-item
+
+        {
+            display: block;
+        }
+
+        .carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left) + .carousel-item + .carousel-item {
+            transition: none;
+        }
+
+        .carousel-inner .carousel-item-next {
+            position: relative;
+            transform: translate3d(0, 0, 0);
+        }
+        /* left or forward direction */
+        .carousel-item-next.carousel-item-left + .carousel-item + .carousel-item + .carousel-item {
+            position: relative;
+            transform: translate3d(-100%, 0, 0);
+            visibility: visible;
+        }
+        /* right or prev direction */
+        .carousel-item-prev.carousel-item-right + .carousel-item + .carousel-item + .carousel-item {
+            position: relative;
+            transform: translate3d(100%, 0, 0);
+            visibility: visible;
+            display: block;
+            visibility: visible;
+        }
+
+        }
+        /* LG */
+        @@media (min-width: 991px) {
+            /* show 4th item */
+            .carousel-inner .active + .carousel-item + .carousel-item + .carousel-item
+
+        {
+            display: block;
+        }
+
+        .carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left) + .carousel-item + .carousel-item + .carousel-item {
+            transition: none;
+        }
+        /* Show 5th slide on lg if col-lg-3 */
+        .carousel-inner .active.col-lg-3.carousel-item + .carousel-item + .carousel-item + .carousel-item + .carousel-item {
+            position: absolute;
+            top: 0;
+            right: -25%; /*change this with javascript in the future*/
+            z-index: -1;
+            display: block;
+            visibility: visible;
+        }
+        /* left or forward direction */
+        .carousel-item-next.carousel-item-left + .carousel-item + .carousel-item + .carousel-item + .carousel-item {
+            position: relative;
+            transform: translate3d(-100%, 0, 0);
+            visibility: visible;
+        }
+        /* right or prev direction //t - previous slide direction last item animation fix */
+        .carousel-item-prev.carousel-item-right + .carousel-item + .carousel-item + .carousel-item + .carousel-item {
+            position: relative;
+            transform: translate3d(100%, 0, 0);
+            visibility: visible;
+            display: block;
+            visibility: visible;
+        }
+
+        }
+    </style>
+    <style>
+        .sortable {
+            position: initial;
+            cursor: pointer;
+        }
+
+        .actual {
+            color: red;
+        }
+
+        .sortable::after {
+            font-family: FontAwesome;
+            content: "\f0dc";
+            position: initial;
+            right: 8px;
+            color: #999;
+            margin-left: 0.7rem;
+        }
+
+        .sortable.asc::after {
+            content: "\f0d8";
+        }
+
+        .sortable.desc::after {
+            content: "\f0d7";
+        }
+
+        .sortable:hover::after {
+            color: #333;
+        }
+
+        .sortable2 {
+            position: initial;
+            cursor: pointer;
+        }
+    </style>
+    <style>
+
+        .file-row {
+            background-color: #e4e4e4;
+            padding: 1rem 1.5rem;
+            margin-top: 1rem;
+            border-radius: 0.6rem;
+            color: #555;
+            display: flex;
+            align-items: center;
+        }
+
+            .file-row h2 {
+                margin: 0.3rem 0 0.6rem 0;
+                font-weight: bold;
+                color: black;
+                font-size: 1.1rem;
+            }
+
+            .file-row > div {
+                flex-grow: 1;
+            }
+
+            .file-row button {
+                padding: 0.5rem 1rem;
+            }
+
+        .drag-drop-zone {
+            border: 3px dashed #e68710;
+            padding: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #eee;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.2);
+            color: #aeaeae;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin: 1.5rem 0 2rem 0;
+            position: relative;
+        }
+
+            .drag-drop-zone:hover {
+                background-color: #f5f5f5;
+            }
+
+            .drag-drop-zone input[type=file] {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+        pre {
+            background-color: #f0f0f0;
+            overflow: auto;
+            padding: 1rem;
+            height: 10rem;
+        }
+    </style>
+    <style>
+        .dot {
+            height: 15px;
+            width: 15px;
+            background-color: green;
+            border-radius: 50%;
+            display: inline-block;
+            margin-top: 25px;
+        }
+
+        .dot-off {
+            height: 15px;
+            width: 15px;
+            background-color: red;
+            border-radius: 50%;
+            display: inline-block;
+            margin-top: 25px;
+        }
+    </style>
+    <style id="Material">
+        .mat-label {
+            display: block;
+            font-size: 16px;
+            transform: translateY(25px);
+            color: #e2e2e2;
+            transition: all 0.5s;
+        }
+
+        .mat-input {
+            position: relative;
+            background: transparent;
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 8px 0;
+            font-size: 16px;
+        }
+
+        .mat-div {
+            padding: 0 0 0 0;
+            position: relative;
+        }
+
+            .mat-div:after, .mat-div:before {
+                content: "";
+                position: absolute;
+                display: block;
+                width: 100%;
+                background-color: #e2e2e2;
+                bottom: 0;
+                left: 0;
+                transition: all 0.5s;
+            }
+
+        .mat-div-sp {
+            height: 2px;
+        }
+
+        .mat-div::after {
+            background-color: #8E8DBE;
+            transform: scaleX(0);
+        }
+
+        .is-active::after {
+            transform: scaleX(1);
+        }
+
+        .is-active .mat-label {
+            color: #8E8DBE;
+        }
+
+        .is-completed .mat-label {
+            font-size: 12px;
+            transform: translateY(0);
+        }
+
+    </style>
+    <!--tooltip-->
+    <style>
+        .tooltip-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            width: 100%;
+        }
+
+        .tooltipspan {
+            visibility: hidden;
+            position: absolute;
+            width: 120px;
+            bottom: 100%;
+            left: 50%;
+            margin-left: -60px;
+            background-color: #363636;
+            color: #fff;
+            text-align: center;
+            padding: 5px 0;
+            border-radius: 6px;
+            z-index: 1;
+        }
+
+        tooltipspan::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+
+        .tooltip-wrapper:hover .tooltipspan {
+            visibility: visible;
+        }
+    </style>
+
+</head>
+<body id="page-top">
+    <EnhancedErrorBoundary>
+        <CalibrationSaaS.Infraestructure.Blazor.Routes @rendermode="@InteractiveAuto" />
+    </EnhancedErrorBoundary>
+    <script src="_framework/blazor.web.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+
+    <script>
+        // Service Worker Registration - Temporarily disabled due to missing files
+        console.log('Service Worker registration disabled - files not found');
+
+        // Unregister any existing service workers to prevent errors
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let registration of registrations) {
+                    registration.unregister();
+                    console.log('Unregistered existing service worker');
+                }
+            }).catch(error => {
+                console.log('Error unregistering service workers:', error);
+            });
+        }
+
+        // TODO: Re-enable service worker when files are properly configured
+        // if ('serviceWorker' in navigator) {
+        //     navigator.serviceWorker.register('service-worker.published.js')
+        //         .then(registration => {
+        //             console.log('Service Worker registered successfully:', registration);
+        //         })
+        //         .catch(error => {
+        //             console.log('Service Worker registration failed:', error);
+        //         });
+        // }
+    </script>
+    <script src="js/offline-detector.js"></script>
+    <script src="js/cache-warmer.js"></script>
+    <script>
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof window.initializeTheme === 'function') {
+                console.log('Initializing theme from DOMContentLoaded event');
+                window.initializeTheme();
+            } else {
+                console.warn('Theme initialization function not available yet');
+                // Try again after a short delay
+                setTimeout(function() {
+                    if (typeof window.initializeTheme === 'function') {
+                        console.log('Initializing theme after delay');
+                        window.initializeTheme();
+                    } else {
+                        console.error('Theme initialization function not found');
+                    }
+                }, 500);
+            }
+        });
+    </script>
+    <script>
+        // Global error handler for all JavaScript errors
+        window.addEventListener('error', function(event) {
+            console.warn('Global error handler caught error:', event.error || event.message);
+
+            // Check for renderer errors
+            if (event.error && event.error.message && event.error.message.includes('No interop methods are registered for renderer')) {
+                console.warn('Detected renderer error, attempting recovery...');
+
+                // Try to recover by reinitializing the renderer
+                if (typeof window.appInterop !== 'undefined' && typeof window.appInterop.handleRendererError === 'function') {
+                    window.appInterop.handleRendererError();
+                }
+
+                // Prevent the error from propagating further
+                event.preventDefault();
+                return false;
+            }
+
+            // Prevent the error from propagating
+            event.preventDefault();
+            return false;
+        }, true);
+
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            console.warn('Unhandled promise rejection:', event.reason);
+
+            // Check for renderer errors in promise rejections
+            if (event.reason && event.reason.message && event.reason.message.includes('No interop methods are registered for renderer')) {
+                console.warn('Detected renderer error in promise rejection, attempting recovery...');
+
+                // Try to recover by reinitializing the renderer
+                if (typeof window.appInterop !== 'undefined' && typeof window.appInterop.handleRendererError === 'function') {
+                    window.appInterop.handleRendererError();
+                }
+            }
+
+            // Prevent the error from propagating
+            event.preventDefault();
+            return false;
+        });
+
+        // Handle JSDisconnectedException specifically
+        window.handleJSDisconnectedException = function() {
+            console.warn('Handling JSDisconnectedException');
+            // Reload the page after a short delay
+            setTimeout(function() {
+                window.location.href = '/';
+            }, 1000);
+        };
+
+        // Patch Blazor methods to handle errors
+        window.addEventListener('load', function() {
+            try {
+                // Create a safe wrapper for invokeMethodAsync
+                if (typeof DotNet !== 'undefined' && DotNet.invokeMethodAsync) {
+                    const originalInvokeMethodAsync = DotNet.invokeMethodAsync;
+                    DotNet.invokeMethodAsync = function(assembly, method, ...args) {
+                        try {
+                            return originalInvokeMethodAsync(assembly, method, ...args)
+                                .catch(error => {
+                                    console.warn('Caught error in invokeMethodAsync:', error);
+                                    if (error && error.message && error.message.includes('JSDisconnectedException')) {
+                                        window.handleJSDisconnectedException();
+                                        return Promise.resolve(null);
+                                    }
+                                    return Promise.resolve(null);
+                                });
+                        } catch (error) {
+                            console.warn('Error in invokeMethodAsync wrapper:', error);
+                            if (error && error.message && error.message.includes('JSDisconnectedException')) {
+                                window.handleJSDisconnectedException();
+                            }
+                            return Promise.resolve(null);
+                        }
+                    };
+                    console.log('Patched DotNet.invokeMethodAsync to handle errors');
+                }
+
+                // Create a mock IStateFacade for components that require it
+                window.mockStateFacade = {
+                    loadResult: function(action, parameter) {
+                        console.log('Mock loadResult called with parameter:', parameter);
+                        return null;
+                    },
+                    loadTodos: function(action, parameter) {
+                        console.log('Mock loadTodos called with parameter:', parameter);
+                        return null;
+                    },
+                    loadTodos2: function(data, parameter, route) {
+                        console.log('Mock loadTodos2 called with data:', data, 'parameter:', parameter, 'route:', route);
+                        return null;
+                    }
+                };
+
+                // Patch Blazor's getRequiredService to return our mock for IStateFacade
+                if (typeof Blazor !== 'undefined' && Blazor._internal) {
+                    const originalGetRequiredService = Blazor._internal.getRequiredService;
+                    Blazor._internal.getRequiredService = function(serviceIdentifier) {
+                        if (serviceIdentifier && serviceIdentifier.includes('IStateFacade')) {
+                            console.log('Returning mock for IStateFacade');
+                            return window.mockStateFacade;
+                        }
+                        return originalGetRequiredService(serviceIdentifier);
+                    };
+                    console.log('Patched Blazor._internal.getRequiredService to handle IStateFacade');
+                }
+
+                // Add a global error handler for Blazor
+                window.Blazor = window.Blazor || {};
+                window.Blazor.defaultReconnectionHandler = {
+                    onConnectionDown: function() {
+                        console.warn('Blazor connection down');
+                    },
+                    onConnectionError: function(error) {
+                        console.warn('Blazor connection error:', error);
+                        if (error && error.message && error.message.includes('JSDisconnectedException')) {
+                            window.handleJSDisconnectedException();
+                        }
+                    }
+                };
+            } catch (error) {
+                console.warn('Failed to patch Blazor methods:', error);
+            }
+        });
+
+        window.startupParams = function () {
+            const url = new URL(window.location.href);
+            var str = url.toJSON();
+
+            // Check if we're in offline mode
+            const isOfflineMode = localStorage.getItem('calibrify_offline_mode') === 'true';
+
+            // For offline mode, we need to consider both the actual network status
+            // and whether the user has manually enabled offline mode
+            const effectiveOnlineStatus = isOfflineMode ? false : navigator.onLine;
+
+            console.log(`Startup params: URL=${str}, Online=${effectiveOnlineStatus}, OfflineMode=${isOfflineMode}`);
+
+            return [str, effectiveOnlineStatus.toString(), isOfflineMode ? 'offline' : 'online'];
+        };
+    </script>
+    <!-- Removed missing script reference -->
+    <app>
+        <!-- Empty app container -->
+    </app>
+
+    <!--Scripts-->
+    <!-- Authentication scripts removed -->
+
+    <script>
+        window.blazorCulture = {
+            get: () => window.localStorage['BlazorCulture'],
+            set: (value) => window.localStorage['BlazorCulture'] = value
+        };
+    </script>
+
+    <script src="js/moment.min.js"></script>
+    <!-- This is the glue between Blazor and Chart.js -->
+    <script src="_content/ChartJs.Blazor.Fork/ChartJsBlazorInterop.js"></script>
+
+
+    <!--from https://github.com/wtulloch/Blazor.IndexedDB-->
+    <script src="_content/TG.Blazor.IndexedDB/indexedDb.Blazor.js"></script>
+    <!--Blazor logging-->
+    <!-- Bootstrap core JavaScript-->
+    <script src="lib/jquery/dist/jquery.min.js"></script>
+    <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Core plugin JavaScript-->
+    <script src="lib/jquery-easing/jquery.easing.min.js"></script>
+    <!-- Custom scripts for all pages-->
+    <script src="js/sb-admin-2.js"></script>
+    <!-- Page level plugins -->
+    <script src="lib/chart.js/Chart.min.js"></script>
+
+
+
+    <script>
+        window.showProcessModal = (vbackdrop, vkeyboard, vstatic) => {
+            $('#pageProcessModal').modal('show', { backdrop: vstatic.toString(), keyboard: vkeyboard });
+        };
+    </script>
+
+    <script>
+        window.isinstalled = () => {
+            try {
+                var fg = false;
+
+                if (window.navigator.standalone) {
+                    fg = true;
+                }
+
+                // For Android
+                if (window.matchMedia('(display-mode: standalone)').matches) {
+                    fg = true;
+                }
+
+                return fg
+            } catch (error) {
+                console.log("error standalone");
+                console.log(error);
+                return false;
+            }
+
+        }
+    </script>
+
+    <script>
+        function closeModal(id) {
+            console.log('lego');
+            $('#' + id).modal('hide');
+        }
+
+        $("#dvModalCreateCustomer").on('click', '#cmdNextProcess', function () {
+            console.log('olw');
+            $('#pageProcessModal').modal('toggle');
+        });
+
+        window.closeProcessModal = () => {
+            $('#pageProcessModal').modal('hide');
+        };
+
+
+        window.closeModalWindow = (id) => {
+
+            $('#' + id).modal('hide');
+        };
+
+        window.showModal = (id) => {
+
+            $('#' + id).on('hide.bs.modal', function (e) {
+                console.log('cerrando')
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+            //$('#modalWindow').modal('show')
+            setTimeout(function () {
+
+                $('#' + id).on('hide.bs.modal', function (e) {
+                    console.log('cerrando')
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
+
+
+                $('#' + id).modal('show', { backdrop: 'static', keyboard: false })
+
+            }, 100);
+        };
+
+
+        window.removeValidClass = () => {
+            $(".form-control").removeClass("valid");
+            console.log('hello');
+        };
+
+        window.removeClass = (id) => {
+            setTimeout(function () {
+
+                $('#' + id).modal('hide');
+                $('.' + id).remove()
+                $('body').removeClass('modal-open')
+
+
+            }, 200);
+        };
+
+        var cuz = '';
+        window.hideElement = (id) => {
+
+            setTimeout(function () {
+                $('#' + id).css('opacity', '0.7');
+                cuz = $('#' + id).css('z-index');
+                $('#' + id).css('z-index', '1');
+
+            }, 200);
+        };
+
+
+        var cuz = '';
+        window.hideElement2 = (id) => {
+            setTimeout(function () {
+
+                $('#' + id).css('opacity', '0.7');
+                cuz = $('#' + id).css('z-index');
+                $('#' + id).css('z-index', '1');
+                $('#' + id).removeClass('show');
+                $('#' + id).css('display', 'none');
+
+
+            }, 200);
+        };
+
+        window.showElement = (id) => {
+            setTimeout(function () {
+                $('#' + id).css('opacity', '1');
+                $('#' + id).css('z-index', cuz);
+            }, 200);
+        };
+
+
+        window.showElement2 = (id) => {
+            setTimeout(function () {
+                $('#' + id).css('display', 'flex');
+                $('#' + id).css('opacity', '1');
+            }, 10);
+        };
+
+        window.showP = () =>
+        {
+
+            executeMethod("CloseButtonModal");
+            showProgressBar("progressBar");
+            showElement2("waitingring");
+
+        };
+
+        function isNumeric(n) {
+            return !isNaN(parseFloat(n)) && isFinite(n);
+        }
+
+        // The getDimensions function is now defined in offline-detector.js
+
+        // The toggleOfflineMode function is now defined in offline-detector.js
+
+        window.getOnline = function () {
+            alert(navigator.onLine)
+            return navigator.onLine
+        };
+
+        window.hideProgress = (id) => {
+            try {
+                setFocus();
+            }
+            catch (e) {
+                console.warn("Error in setFocus:", e);
+            }
+
+            setTimeout(function () {
+                try {
+                    $('#' + id).hide();
+                    // Remove the loading screen
+                    jsRemoveWindowLoad();
+                    console.log(`Progress bar ${id} hidden and loading screen removed`);
+                }
+                catch (e) {
+                    console.error("Error hiding progress:", e);
+                }
+            }, 300);
+        };
+
+        function setFocus() {
+            try {
+
+                if (focused == undefined || focused == null || focused.length == 0) {
+                    return;
+                }
+
+                $(findNextTabStop(focused, hor)).focus().select();
+                setTimeout(function () {
+                    if (nextelemnt == undefined || nextelemnt == null) {
+                        return;
+                    }console.log('tabb')
+                }, 100)
+            }
+            catch (err) {
+                log('setFocus')
+                log(err.message)
+            }
+        }
+
+        window.showProgressBar = (id, focus) => {
+            // Show the loading screen with the monochrome logo
+            jsShowWindowLoad("Loading...", focus);
+
+            setTimeout(function () {
+                try {
+                    $('#' + id).show();
+                    console.log(`Progress bar ${id} shown with loading screen`);
+                } catch (e) {
+                    console.error("Error showing progress bar:", e);
+                }
+            }, 20);
+        };
+        window.closeProgressBar = (id) => {
+            $('#' + id).hide();
+        };
+
+        var Base64 = '';
+
+        window.SetReport = (id) => {
+            Base64 = id;
+        };
+
+        window.OpenWindow = (id) => {
+            alert(id)
+            window.open(id, "_blank")
+
+        };
+        var focused;
+        var hor;
+        window.SetControlFocus = (id, _hor) => {
+            focused = id;
+            hor = _hor;
+        };
+
+        var nextelemnt;
+        function findTabStop(el) {
+            var universe = document.querySelectorAll("input[id*='Texbox_']"); //document.querySelectorAll('input, button, select, textarea, a[href]');
+            var list = Array.prototype.filter.call(universe, function (item) { return item.tabIndex >= "0" });
+            var index = list.indexOf(el);
+            nextelemnt = list[index + 1];
+            return list[index];// || list[0];
+        }
+        function findNextTabStop(control, _hor) {
+            var el = document.getElementById(control);
+
+            var filter = 'Texbox_';
+
+            if (_hor == true) {
+                filter = control.split("_")[0];
+            }
+            var universe = document.querySelectorAll("input[id*=" + filter + "]");
+            var list = Array.prototype.filter.call(universe, function (item) { return item.tabIndex >= "0" });
+            var index = list.indexOf(el);
+
+            return list[index + 1];// || list[0];
+        }
+
+        window.Collapse = (id) => {
+
+            $('#' + id).removeClass('show')
+
+        };
+
+    </script>
+    <script>
+        window.BlazorControls = {
+            assemblyname: 'Blazor.Controls',
+            setFocus: (element) => {
+                if (!element)
+                    return;
+
+                element.focus();
+            },
+            preventEnter: (element, disabled) => {
+                if (!element) {
+                    console.log("Error: preventEnter() element not found");
+                    return;
+                }
+
+                if (disabled)
+                    element.addEventListener('keydown', BlazorControls.preventEnterHandler);
+                else
+                    element.removeEventListener('keydown', BlazorControls.preventEnterHandler);
+            },
+            preventEnterHandler: (event) => {
+                const key = event.key;
+
+                if (key === "Enter") {
+                    event.preventDefault();
+                }
+            }
+
+        };
+
+        // Add missing JavaScript functions
+        window.removeValidClass = function() {
+            try {
+                $(".form-control").removeClass("valid");
+                console.log('Removed valid class from form controls');
+            } catch (e) {
+                console.log('Error in removeValidClass: ' + e);
+            }
+        };
+
+    </script>
+
+    <script>
+        window.topaccordion = function () {
+
+            setTimeout(function () {
+                try {
+                    accordion();
+                } catch (ex) {
+
+                }
+
+            }, 1000);
+
+        }
+
+
+        function accordion() {
+
+            $(document).ready(function () {
+
+
+                if ($('#accordion') == undefined || $('#accordion').length == 0) {
+
+                    return;
+                }
+
+                var size = $('#accordion').height();
+                console.log(size)
+
+                $('.contenido').css('max-height', size * 1.5)
+
+                $('.contenido').css('height', (size * 1.5) + 2)
+
+                $('.contenido').css('overflow', 'scroll')
+
+                $('.contenido').css('padding-top', '1px')
+
+                $('.collapse').on('shown.bs.collapse', function (e) {
+                    var $card = $(this).closest('.card');
+                    console.log($card)
+                    console.log($card.offset().top)
+                    console.log($card.height())
+                    var enca = $('#headermodal').height() + $('#toolbarmodal').height()
+                    console.log(enca)
+                    $('.contenido').animate({
+                        scrollTop: $card.offset().top - (enca + 50 * 2)//180 cargeader
+                    }, 500);
+                });
+            })
+        }
+
+    </script>
+
+    <script src="_content/Blazored.Modal/blazored.modal.js"></script>
+    <!-- Removed missing script references -->
+    <!-- <script src="_content/CEC.Routing/cec.routing.js"></script> -->
+    <script src="_content/BrowserInterop/scripts.js"></script>
+
+    <script>
+        window.executeMethod = (id) => {
+            setTimeout(function () {
+
+                $('#' + id).click();
+
+            }, 200);
+        };
+    </script>
+
+    <script>
+        function uuidv4() {
+            return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+                (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+            );
+        }
+
+        async function backupbase() {
+            {
+                const cache = await caches.open('SqliteWasmHelper');
+
+
+                const resp = await cache.match('/data/cache/things.db');
+
+
+                const blob = await resp.blob();
+
+                const backupPath = 'backup_' + uuidv4();
+
+
+                parent = document.getElementById('bklinkdownload');
+
+                if (parent != undefined) {
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = backupPath;
+                    a.target = "_self";
+                    a.innerText = `Download Database`;
+                    a.style = "color:white";
+                    parent.innerHTML = '';
+                    parent.appendChild(a);
+                    console.log('backupbase');
+                }
+            }
+        }
+    </script>
+
+    <script>
+        $.fn.modal.Constructor.prototype.enforceFocus = function () { };
+    </script>
+
+    <script>
+        // Track loading operations to prevent multiple loading screens
+        window.loadingOperations = 0;
+
+        function jsRemoveWindowLoad() {
+            // Only remove the loading screen if there are no active loading operations
+            window.loadingOperations = Math.max(0, window.loadingOperations - 1);
+            console.log(`Removing loading screen, remaining operations: ${window.loadingOperations}`);
+
+            if (window.loadingOperations === 0) {
+                $("#WindowLoad").remove();
+                console.log("All loading operations complete, removed loading screen");
+            } else {
+                console.log(`Loading screen remains visible for ${window.loadingOperations} operations`);
+            }
+        }
+
+        var scc;
+        function jsShowWindowLoad(mensaje, focus) {
+            // Increment the loading operations counter
+            window.loadingOperations++;
+            console.log(`Showing loading screen, active operations: ${window.loadingOperations}`);
+
+            // Only create a new loading screen if one doesn't already exist
+            if ($("#WindowLoad").length === 0) {
+                scc = $("body").css("overflow");
+
+                var elem = document.getElementById('page-top');
+                var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                var istop = false;
+                var position = $('.copyright').offset();
+
+                if (scrollTop > 200) {
+                    istop = true;
+                }
+
+            if (mensaje === undefined) mensaje = "Loading&amp;lt;br&amp;gt;Please Wait";
+
+            //centrar imagen gif
+            height = 20;//El div del titulo, para que se vea mas arriba (H)
+            var ancho = 0;
+            var alto = 0;
+
+            var scrollHeight = Math.max(
+                document.body.scrollHeight, document.documentElement.scrollHeight,
+                document.body.offsetHeight, document.documentElement.offsetHeight,
+                document.body.clientHeight, document.documentElement.clientHeight
+            );
+            //obtenemos el ancho y alto de la ventana de nuestro navegador, compatible con todos los navegadores
+            if (window.innerWidth == undefined) ancho = window.screen.width;
+            else ancho = window.innerWidth;
+
+            if (window.innerHeight == undefined) {
+                console.log("height 1");
+                alto = window.screen.height;
+            }
+            else {
+                console.log("height 2");
+                alto = window.innerHeight;
+            }
+
+            console.log("height");
+            var heightdivsito = alto / 2 - parseInt(height) / 2;//Se utiliza en el margen superior, para centrar
+
+            //imagen que aparece mientras nuestro div es mostrado y da apariencia de cargando
+            imgCentro = "<div style='text-align:center;height:" + alto + "px;'><div  style='color:#000;margin-top:" + heightdivsito + "px; font-size:20px;font-weight:bold'>" + mensaje + "</div><div style='display: flex; align-items:center; justify-content: center; width: 100%;' b-xkrr7evqik=''><!--!--><fluent-progress-ring id='f6c7f67e3' role='progressbar' _bl_6=''></fluent-progress-ring></div></div>";
+
+            //creamos el div que bloquea grande------------------------------------------
+            div = document.createElement("div");
+            div.id = "WindowLoad"
+            div.style.width = "100%";//ancho + "px";
+            div.style.height = "100%";//alto + "px";
+            div.style.minHeight = "100%";
+            div.style.maxHeight = "100%";
+
+            if (!istop) {
+                div.style.top = "0" + "px";
+            }
+
+
+
+            div.style.position = "absolute";
+            div.style.zIndex = "100000";
+            $("body").append(div);
+            console.log("focus");
+            if (focus == undefined || focus == true) {
+                //creamos un input text para que el foco se plasme en este y el usuario no pueda escribir en nada de atras
+                console.log("focus no");
+                input = document.createElement("input");
+                input.id = "focusInput";
+                input.type = "text"
+
+                //asignamos el div que bloquea
+                $("#WindowLoad").append(input);
+
+                //asignamos el foco y ocultamos el input text
+                $("#focusInput").focus();
+                $("#focusInput").hide();
+            }
+            console.log("focus end");
+            //centramos el div del texto
+            $("#WindowLoad").html(imgCentro);
+            } else {
+                console.log("Loading screen already exists, not creating a new one");
+            }
+        }
+    </script>
+
+    <script>
+        function showSideNav() {
+            $('#accordionSidebar').toggle();
+            $('#accordionSidebar').css("width", "auto");
+        }
+
+
+
+    </script>
+
+    <script>
+
+        function fixedDecimal(navId, ndecimal) {
+            $("#" + navId).change(function () {
+                $(this).val(parseFloat($(this).val()).toFixed(ndecimal));
+            });
+
+        }
+
+    </script>
+
+    <script>
+        function Nav_ScrollIntoView(navId) {
+            var elem = document.getElementById(navId);
+            if (elem === null) {
+                return
+            };
+
+            var a = elem.scrollTop;
+            var b = elem.scrollHeight - elem.clientHeight;
+            var c = a / b;
+
+            //alert(a);
+            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            //alert(scrollTop);
+            //alert(getScroll());
+            if (scrollTop > 400) {
+                //elem.scrollIntoView({ behavior: 'smooth' });
+                elem.scrollIntoView(false);
+            }
+        }
+
+    </script>
+
+    <script src="_content/BlazorInputFile/inputfile.js"></script>
+
+
+    <script src="js/dexie.min.js"></script>
+    <script src="js/dexie-export-import.js"></script>
+    <script src="js/download.min.js"></script>
+
+    <script>
+
+        window.BackUp = async (id) => {
+
+            await indexDBBackup();
+
+
+        };
+
+        async function indexDBBackup() {
+            try {
+
+                let db = new Dexie('CalibrationSaaSOfflineDB');
+                if (!(await Dexie.exists(db.name))) {
+                    console.log("Db does not exist");
+                    alert("Db does not exist");
+                    //db.version(1).stores({});
+                }
+                await db.open();
+                //let db = new Dexie('exportSample');
+                const blob = await db.export({ prettyJson: true, progressCallback });
+                download(blob, "CalibrationSaaSOfflineDB" + getHourDate() + ".json", "application/json");
+            } catch (error) {
+                console.error('' + error);
+            }
+
+            db.close();
+        }
+
+        function getHourDate() {
+            var currentdate = new Date();
+            var datetime = currentdate.getDate() + "_"
+                + (currentdate.getMonth() + 1) + "_"
+                + currentdate.getFullYear() + "_"
+                + currentdate.getHours() + "_"
+                + currentdate.getMinutes() + "_"
+                + currentdate.getSeconds();
+
+            return datetime;
+        }
+
+        function progressCallback({ totalRows, completedRows }) {
+            console.log(`Progress: ${completedRows} of ${totalRows} rows completed`);
+        }
+
+        function deleteDatabase() {
+            if (confirm('delete offline database')) {
+                //window.indexedDB.deleteDatabase('CalibrationSaaSOfflineDB')
+                var db = new Dexie('CalibrationSaaSOfflineDB');
+                db.delete().then(function () {
+                    console.log('Database successfully deleted: ', name);
+                }).catch(function (err) {
+                    console.error('Could not delete database: ', name, err);
+                }).finally(function () {
+                    console.log('Done. Now executing callback if passed.');
+                    if (typeof cb === 'function') {
+                        cb();
+                    }
+
+                });
+            }
+        }
+        function cb() {
+
+        }
+    </script>
+    <script id="material">
+
+        $(".mat-input").focus(function () {
+            $(this).parent().addClass("is-active is-completed");
+        });
+
+        $(".mat-input").focusout(function () {
+            if ($(this).val() === "")
+                $(this).parent().removeClass("is-completed");
+            $(this).parent().removeClass("is-active");
+        })
+    </script>
+    <script>
+        window.jsToDotNetSamples = {
+            dotNetReference: null,
+            setDotNetReference: function (dotNetReference) {
+                this.dotNetReference = dotNetReference;
+            },
+            printPersonFromDotNet: function () {
+                var person = this.dotNetReference.invokeMethod("GetPerson");
+                alert(JSON.stringify(person));
+            }
+        };
+    </script>
+
+
+    <script>
+
+        function inicoordcontrol() {
+
+            // Escuchar cambios en los campos y actualizar los valores decimales
+            const gradosInputs = document.querySelectorAll('.grados');
+            const minutosInputs = document.querySelectorAll('.minutos');
+            const segundosInputs = document.querySelectorAll('.segundos');
+
+
+
+            gradosInputs.forEach(input => input.addEventListener('input', actualizarValorDecimal));
+            minutosInputs.forEach(input => input.addEventListener('input', actualizarValorDecimal));
+            segundosInputs.forEach(input => input.addEventListener('input', actualizarValorDecimal));
+
+            // Escuchar cambios en el campo valorDecimal
+            //const valorDecimalInputs = document.querySelectorAll('.valorDecimal');
+            //valorDecimalInputs.forEach(input => input.addEventListener('input', actualizarCoordenadas));
+
+
+        }
+
+        function actualizarValorDecimal2(event) {
+            const indice = event.target.dataset.indice;
+            const grados = parseInt(document.querySelector(`.grados[data-indice="${indice}"]`).value);
+            const minutos = parseInt(document.querySelector(`.minutos[data-indice="${indice}"]`).value);
+            const segundos = parseFloat(document.querySelector(`.segundos[data-indice="${indice}"]`).value);
+
+            const valorDecimalInput = document.querySelector(`.valorDecimal[data-indice="${indice}"]`);
+
+            // Validar grados
+            if (grados < 0 || grados >= 360) {
+                valorDecimalInput.value = '0';
+                return;
+            }
+
+            // Validar minutos
+            if (minutos < 0 || minutos >= 60) {
+                valorDecimalInput.value = '0';
+                return;
+            }
+
+            // Realizar la conversi�n a valor decimal
+            const valorDecimal = grados + (minutos / 60) + (segundos / 3600);
+
+            // Mostrar el valor decimal en el campo de entrada
+            valorDecimalInput.value = valorDecimal;
+
+            const buttonvalorDecimalInput = document.querySelector(`.buttonvalorDecimal[data-indice="${indice}"]`);
+
+            buttonvalorDecimalInput.click();
+
+
+        }
+
+
+
+        function actualizarValorDecimal(event) {
+            const indice = event.target.dataset.indice;
+
+            //7727
+
+            var gradosinput = document.querySelector(`.grados[data-indice="${indice}"]`);
+
+            var minutosinput = document.querySelector(`.minutos[data-indice="${indice}"]`);
+
+            var segundosinput = document.querySelector(`.segundos[data-indice="${indice}"]`);
+
+            const grados = parseInt(gradosinput.value);
+            const minutos = parseInt(minutosinput.value);
+            const segundos = parseFloat(segundosinput.value);
+
+            const valorDecimalInput = document.querySelector(`.valorDecimal[data-indice="${indice}"]`);
+
+            const valordecimaltmp = parseFloat(valorDecimalInput.value);
+
+            // Validar grados
+            if (grados < 0 || grados >= 360) {
+                valorDecimalInput.value = '0';
+                return;
+            }
+
+            // Validar minutos
+            if (minutos < 0 || minutos >= 60) {
+                valorDecimalInput.value = '0';
+                return;
+            }
+
+
+
+
+            // Realizar la conversi�n a valor decimal
+            const valorDecimal = grados + (minutos / 60) + (segundos / 3600);
+
+
+
+
+            // Mostrar el valor decimal en el campo de entrada
+            valorDecimalInput.value = valorDecimal;
+
+            const buttonvalorDecimalInput = document.querySelector(`.buttonvalorDecimal[data-indice="${indice}"]`);
+
+            buttonvalorDecimalInput.click();
+        }
+
+        let observer = new MutationObserver(mutationRecords => {
+            //console.log(mutationRecords); // console.log(los cambios)
+
+            for (const record of mutationRecords) {
+                //log.textContent = `Target of mutation: ${record.target.id}`;
+                console.log('MutationObserver');
+                console.log(record.target.id);
+                actualizarCoordenadas2(record.target.id);
+
+            }
+        });
+
+        // observa todo exceptuando atributos
+        var config = { attributes: true, childList: true, characterData: true };
+
+        function observefield(indice) {
+            const valorDecimalInput = document.querySelector(`.valorDecimal[data-indice="${indice}"]`);
+
+            if (valorDecimalInput == null) {
+                return;
+            }
+
+            actualizarCoordenadas2(indice);
+
+            observer.observe(valorDecimalInput, config);
+        }
+
+        function actualizarCoordenadas(indice) {
+
+            console.log('actualizarCoordenadas ' + indice);
+            //const indice = event.target.dataset.indice;
+            //const valorDecimal = parseFloat(event.target.value);
+            const valorDecimalInput = document.querySelector(`.valorDecimal[data-indice="${indice}"]`);
+
+            const gradosInput = document.querySelector(`.grados[data-indice="${indice}"]`);
+            const minutosInput = document.querySelector(`.minutos[data-indice="${indice}"]`);
+            const segundosInput = document.querySelector(`.segundos[data-indice="${indice}"]`);
+
+            if (valorDecimalInput == null || gradosInput == null || minutosInput == null || segundosInput == null) {
+                return;
+            }
+
+
+
+            //$(valorDecimalInput).bind("propertychange change keyup paste input", function () {
+            //    // do stuff;
+
+            //    console.log('bindigconobjeto');
+
+            //});
+            //valorDecimalInput.addEventListener('input', actualizarCoord2);
+
+            gradosInput.addEventListener('change', actualizarValorDecimal);
+
+            minutosInput.addEventListener('change', actualizarValorDecimal);
+
+            segundosInput.addEventListener('change', actualizarValorDecimal);
+
+
+
+            if (valorDecimalInput.value == 0 || valorDecimalInput.value == '') {
+
+                gradosInput.value = 0;
+                minutosInput.value = 0;
+                segundosInput.value = 0;
+                return;
+            }
+
+            const valorDecimal = parseFloat(valorDecimalInput.value);
+            console.log(valorDecimal);
+            // Validar el valor decimal
+            if (isNaN(valorDecimal)) {
+                gradosInput.value = 0;
+                minutosInput.value = 0;
+                segundosInput.value = 0;
+                return;
+            }
+
+
+            // Calcular grados, minutos y segundos
+            const grados = Math.floor(valorDecimal);
+            const minutosDecimal = (valorDecimal - grados) * 60;
+            const minutos = Math.floor(minutosDecimal);
+            const segundos = (minutosDecimal - minutos) * 60;
+
+            // Mostrar las coordenadas en los campos de entrada
+            gradosInput.value = grados;
+            minutosInput.value = minutos;
+            segundosInput.value = segundos.toFixed(4); // Limitar los segundos a 4 decimales
+        }
+
+        function actualizarCoordenadas2(indice) {
+
+            console.log('actualizarCoordenadas ' + indice);
+            //const indice = event.target.dataset.indice;
+            //const valorDecimal = parseFloat(event.target.value);
+            const valorDecimalInput = document.querySelector(`.valorDecimal[data-indice="${indice}"]`);
+
+            const gradosInput = document.querySelector(`.grados[data-indice="${indice}"]`);
+            const minutosInput = document.querySelector(`.minutos[data-indice="${indice}"]`);
+            const segundosInput = document.querySelector(`.segundos[data-indice="${indice}"]`);
+
+            if (valorDecimalInput == null || gradosInput == null || minutosInput == null || segundosInput == null) {
+                return;
+            }
+
+
+            if (valorDecimalInput.value == 0 || valorDecimalInput.value == '') {
+
+                gradosInput.value = 0;
+                minutosInput.value = 0;
+                segundosInput.value = 0;
+                return;
+            }
+
+            const valorDecimal = parseFloat(valorDecimalInput.value);
+            console.log(valorDecimal);
+            // Validar el valor decimal
+            if (isNaN(valorDecimal)) {
+                gradosInput.value = 0;
+                minutosInput.value = 0;
+                segundosInput.value = 0;
+                return;
+            }
+
+            // Calcular grados, minutos y segundos
+            const grados = Math.floor(valorDecimal);
+            const minutosDecimal = (valorDecimal - grados) * 60;
+            const minutos = Math.floor(minutosDecimal);
+            const segundos = (minutosDecimal - minutos) * 60;
+
+            // Mostrar las coordenadas en los campos de entrada
+            gradosInput.value = grados;
+            minutosInput.value = minutos;
+            segundosInput.value = segundos.toFixed(4); // Limitar los segundos a 4 decimales
+        }
+
+        window.getSelectedStart = (element) => {
+
+            //var a=document.getElementById('textbox_id').value
+            var indice = element.id;
+            console.log('getSelectedStart' + indice);
+            console.log(element.value);
+            return element.value;
+
+
+
+        }
+    </script>
+
+    <script>
+        var enablelog = true;
+        window.setLog = function () {
+            (function () {
+                if (1 == 1) {
+                    var method;
+                    var noop = function noop() { };
+                    var methods = [
+                        'assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error',
+                        'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log',
+                        'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd',
+                        'timeStamp', 'trace', 'warn'
+                    ];
+                    var length = methods.length;
+                    var console = (window.console = window.console || {});
+
+                    while (length--) {
+                        method = methods[length];
+                        console[method] = noop;
+                    }
+                }
+
+            }());
+        };
+
+
+    </script>
+</body>
+
+</html>
+
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; }
+
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting() ? InteractiveAuto : null;
+
+    private string? _initialTheme;
+    private bool _isApplyingTheme = false;
+
+    protected override void OnInitialized()
+    {
+        if (HttpContext != null)
+        {
+            _initialTheme = HttpContext.Request.Cookies["CalibrifyTheme"];
+
+            if (!string.IsNullOrEmpty(_initialTheme))
+            {
+                // Just store the theme for now, we'll apply it in OnAfterRenderAsync
+                Console.WriteLine($"App.OnInitialized: Found theme {_initialTheme} in cookies");
+
+                // Set the theme property directly without JS interop
+                ThemeService.Theme = _initialTheme;
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // Initialize our renderer error handling
+                await JSRuntime.InvokeVoidAsync("appInterop.handleRendererError");
+
+                // Apply theme if needed
+                if (!string.IsNullOrEmpty(_initialTheme) && !_isApplyingTheme)
+                {
+                    _isApplyingTheme = true;
+
+                    // Now it's safe to call JavaScript interop
+                    await ThemeService.SetTheme(_initialTheme);
+                    Console.WriteLine($"App.OnAfterRenderAsync: Applied theme {_initialTheme} from cookies");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in OnAfterRenderAsync: {ex.Message}");
+            }
+            finally
+            {
+                _isApplyingTheme = false;
+            }
+        }
+    }
+}

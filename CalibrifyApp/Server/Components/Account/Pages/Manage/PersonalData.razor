@@ -1,0 +1,47 @@
+﻿@page "/Account/Manage/PersonalData"
+
+@using Microsoft.AspNetCore.Identity
+@using CalibrifyApp.Server.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IdentityUserAccessor UserAccessor
+
+<PageTitle>Personal Data</PageTitle>
+
+<RadzenText TextStyle="TextStyle.H4" class="rz-mb-3">Personal Data</RadzenText>
+<RadzenCard class="rz-p-4">
+    <RadzenText TextStyle="TextStyle.Body1" class="rz-mb-3">
+        Your account contains personal data that you have given us. This page allows you to download or delete that data.
+    </RadzenText>
+    <RadzenAlert AlertStyle="AlertStyle.Warning" Shade="Shade.Lighter" class="rz-mb-3">
+        <RadzenText TextStyle="TextStyle.Body1" class="rz-mb-0">
+            <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
+        </RadzenText>
+    </RadzenAlert>
+
+    <RadzenButton ButtonStyle="ButtonStyle.Secondary" class="rz-mr-2" Click="OnDownloadClick" Text="Download" />
+    <RadzenButton ButtonStyle="ButtonStyle.Danger" Click="OnDeleteClick" Text="Delete" />
+</RadzenCard>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private async Task OnDownloadClick()
+    {
+        var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var personalDataProps = typeof(ApplicationUser).GetProperties().Where(prop => 
+            Attribute.IsDefined(prop, typeof(PersonalDataAttribute)));
+        var personalData = personalDataProps.ToDictionary(p => p.Name, p => p.GetValue(user)?.ToString() ?? "null");
+
+        HttpContext.Response.Headers.ContentDisposition = "attachment; filename=PersonalData.json";
+        await HttpContext.Response.WriteAsJsonAsync(personalData);
+    }
+
+    private void OnDeleteClick()
+    {
+        HttpContext.Response.Redirect("Account/Manage/PersonalData/Delete");
+    }
+}

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "validate": {
+      "commandName": "Project",
+      "commandLineArgs": "\"$(targetDir)..\\..\\..\\..\\..\\test\\validatetests\\data\\rowterminator-testfile-1.csv\" --with \"$(targetDir)..\\..\\..\\..\\..\\test\\validatetests\\data\\configuration\\testfile-configuration.json\""
+    }
+  }
+}

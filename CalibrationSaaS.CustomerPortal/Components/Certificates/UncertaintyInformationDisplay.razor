@@ -1,0 +1,176 @@
+@using CalibrationSaaS.CustomerPortal.Models.Certificates
+
+<RadzenRow>
+    <RadzenColumn Size="12" SizeMD="6">
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="precision_manufacturing" Style="color: var(--rz-info);" />
+                    <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0">Measurement Uncertainty</RadzenText>
+                </RadzenStack>
+                
+                @if (Certificate.MeasurementUncertainty.HasValue)
+                {
+                    <RadzenText TextStyle="TextStyle.H4" Class="rz-color-info">
+                        ±@Certificate.MeasurementUncertainty.Value.ToString("F4") @Certificate.MeasurementUncertaintyUnit
+                    </RadzenText>
+                    
+                    @if (Certificate.ConfidenceLevel.HasValue)
+                    {
+                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">
+                            Confidence Level: @Certificate.ConfidenceLevel.Value%
+                        </RadzenText>
+                    }
+                    
+                    @if (Certificate.CoverageFactor.HasValue)
+                    {
+                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">
+                            Coverage Factor: k = @Certificate.CoverageFactor.Value.ToString("F2")
+                        </RadzenText>
+                    }
+                }
+                else
+                {
+                    <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">
+                        No uncertainty information available
+                    </RadzenText>
+                }
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenColumn>
+
+    <RadzenColumn Size="12" SizeMD="6">
+        <RadzenCard>
+            <RadzenStack Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="analytics" Style="color: var(--rz-success);" />
+                    <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0">Uncertainty Analysis</RadzenText>
+                </RadzenStack>
+                
+                @if (!string.IsNullOrEmpty(Certificate.UncertaintyMethod))
+                {
+                    <RadzenFormField Text="Method" Variant="Variant.Outlined">
+                        <RadzenTextBox Value="@Certificate.UncertaintyMethod" ReadOnly="true" />
+                    </RadzenFormField>
+                }
+                
+                @if (!string.IsNullOrEmpty(Certificate.UncertaintyStandard))
+                {
+                    <RadzenFormField Text="Standard" Variant="Variant.Outlined">
+                        <RadzenTextBox Value="@Certificate.UncertaintyStandard" ReadOnly="true" />
+                    </RadzenFormField>
+                }
+                
+                @if (Certificate.DegreesOfFreedom.HasValue)
+                {
+                    <RadzenFormField Text="Degrees of Freedom" Variant="Variant.Outlined">
+                        <RadzenNumeric Value="@Certificate.DegreesOfFreedom.Value" ReadOnly="true" />
+                    </RadzenFormField>
+                }
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenColumn>
+</RadzenRow>
+
+@if (!string.IsNullOrEmpty(Certificate.UncertaintyNotes))
+{
+    <RadzenRow Style="margin-top: 1rem;">
+        <RadzenColumn Size="12">
+            <RadzenCard>
+                <RadzenStack Gap="0.5rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenIcon Icon="notes" Style="color: var(--rz-warning);" />
+                        <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0">Uncertainty Notes</RadzenText>
+                    </RadzenStack>
+                    <RadzenText TextStyle="TextStyle.Body2">
+                        @Certificate.UncertaintyNotes
+                    </RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+}
+
+@if (Certificate.UncertaintyComponents.Any())
+{
+    <RadzenRow Style="margin-top: 1rem;">
+        <RadzenColumn Size="12">
+            <RadzenCard>
+                <RadzenStack Gap="1rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenIcon Icon="account_tree" Style="color: var(--rz-primary);" />
+                        <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0">Uncertainty Components</RadzenText>
+                    </RadzenStack>
+                    
+                    <RadzenDataGrid Data="@Certificate.UncertaintyComponents" TItem="UncertaintyComponentDto" 
+                                  AllowSorting="true" AllowFiltering="false" AllowPaging="false"
+                                  GridLines="DataGridGridLines.Both">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="UncertaintyComponentDto" Property="Source" 
+                                                Title="Source" Width="200px" />
+                            
+                            <RadzenDataGridColumn TItem="UncertaintyComponentDto" Property="Type" 
+                                                Title="Type" Width="100px" />
+                            
+                            <RadzenDataGridColumn TItem="UncertaintyComponentDto" Property="Value" 
+                                                Title="Value" Width="120px">
+                                <Template Context="component">
+                                    @component.Value.ToString("F4") @component.Unit
+                                </Template>
+                            </RadzenDataGridColumn>
+                            
+                            <RadzenDataGridColumn TItem="UncertaintyComponentDto" Property="Distribution" 
+                                                Title="Distribution" Width="120px" />
+                            
+                            <RadzenDataGridColumn TItem="UncertaintyComponentDto" Property="Divisor" 
+                                                Title="Divisor" Width="80px">
+                                <Template Context="component">
+                                    @if (component.Divisor.HasValue)
+                                    {
+                                        <text>@component.Divisor.Value.ToString("F2")</text>
+                                    }
+                                    else
+                                    {
+                                        <text>N/A</text>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+                            
+                            <RadzenDataGridColumn TItem="UncertaintyComponentDto" Property="StandardUncertainty" 
+                                                Title="Standard Uncertainty" Width="150px">
+                                <Template Context="component">
+                                    @component.StandardUncertainty.ToString("F4") @component.Unit
+                                </Template>
+                            </RadzenDataGridColumn>
+                            
+                            <RadzenDataGridColumn TItem="UncertaintyComponentDto" Property="SensitivityCoefficient" 
+                                                Title="Sensitivity" Width="120px">
+                                <Template Context="component">
+                                    @if (component.SensitivityCoefficient.HasValue)
+                                    {
+                                        <text>@component.SensitivityCoefficient.Value.ToString("F4")</text>
+                                    }
+                                    else
+                                    {
+                                        <text>N/A</text>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+}
+
+@if (!Certificate.MeasurementUncertainty.HasValue && !Certificate.UncertaintyComponents.Any() && string.IsNullOrEmpty(Certificate.UncertaintyNotes))
+{
+    <RadzenAlert AlertStyle="AlertStyle.Info" Icon="info" Title="No Uncertainty Information">
+        No measurement uncertainty information is available for this certificate.
+    </RadzenAlert>
+}
+
+@code {
+    [Parameter] public CertificateDto Certificate { get; set; } = new();
+}

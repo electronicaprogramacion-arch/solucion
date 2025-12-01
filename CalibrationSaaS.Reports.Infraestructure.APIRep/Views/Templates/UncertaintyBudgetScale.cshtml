@@ -1,0 +1,460 @@
+﻿@model Reports.Domain.ReportViewModels.UncertaintyViewModel
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Report Uncertainty</title>
+    <style>
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 10px;
+            font-size: 10px;
+            line-height: 24px;
+            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            color: #555;
+        }
+
+            .invoice-box table {
+                width: 100%;
+                line-height: inherit;
+                text-align: center;
+                border-collapse: collapse;
+                border-spacing: unset;
+                text-indent: unset;
+            }
+
+                .invoice-box table td {
+                    vertical-align: top;
+                }
+
+
+                .invoice-box table tr.top table td.title {
+                    font-size: 45px;
+                    line-height: 45px;
+                    color: #333;
+                }
+
+                .invoice-box table tr.information table td {
+                    padding-bottom: 20px;
+                }
+
+                .invoice-box table tr.heading td {
+                    background: #eee;
+                    border: 1px solid #0c0c0c;
+                    font-weight: bold;
+                }
+
+        .table-header {
+            text-align: left;
+        }
+
+        aside {
+            float: right;
+            width: 40%;
+            text-align: center;
+        }
+
+        table {
+            margin-top: 10px;
+        }
+
+        section {
+            float: left;
+            width: 60%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="invoice-box" >
+        <div style="page-break-inside: avoid">
+            <h2 style="font-family:'Lucida Sans Unicode', 'Lucida Grande'; text-align:center"><i><strong>UNCERTAINTY BUDGET</strong></i></h2>
+
+            @if (Model.UncertaintyOfRerences != null)
+            {
+
+                <table border="1" >
+                    <tr>
+                        <th colspan="8">Uncertainty of Reference</th>
+                    </tr>
+                    <tr class="heading">
+                        <td>
+                            WEIGHT:
+                        </td>
+
+                        <td>
+                            MAGNITUDE
+                        </td>
+                        <td>
+                            UNITS
+                        </td>
+                        <td>
+                            TYPE
+                        </td>
+                        <td>
+                            DISTRIBUTION
+                        </td>
+                        <td>
+                            DIVISOR
+                        </td>
+                        <td>
+                            QUOTIENT
+                        </td>
+                        <td>
+                            SQUARE
+                        </td>
+
+                    </tr>
+
+                    @foreach (var item in Model.UncertaintyOfRerences)
+                    {
+                        <tr class="item">
+                            <td>
+                                @item.Weigth
+                            </td>
+                            <td>
+                                @item.Magnitude
+                            </td>
+                            <td>
+                                @item.Units
+                            </td>
+                            <td>
+                                @item.Type
+                            </td>
+                            <td>
+                                @item.Distribution
+                            </td>
+                            <td>
+                                @item.Divisor
+                            </td>
+                            <td>
+                                @item.Quotient
+                            </td>
+                            <td>
+                                @item.Square
+                            </td>
+
+                        </tr>
+
+                    }
+                </table>
+            }
+            @if (Model.RepeatabilityOfBalances != null)
+            {
+
+                <table border="1" style="page-break-inside:avoid">
+                    <tr>
+                        <th colspan="8">Repeatability of Balance</th>
+                    </tr>
+                    <tr class="heading">
+                        <td>
+                            WEIGHT:
+                        </td>
+
+                        <td>
+                            MAGNITUDE
+                        </td>
+                        <td>
+                            UNITS
+                        </td>
+                        <td>
+                            TYPE
+                        </td>
+                        <td>
+                            DISTRIBUTION
+                        </td>
+                        <td>
+                            DIVISOR
+                        </td>
+                        <td>
+                            QUOTIENT
+                        </td>
+                        <td>
+                            SQUARE
+                        </td>
+
+                    </tr>
+
+                    @foreach (var item in Model.RepeatabilityOfBalances)
+                    {
+                        <tr class="item">
+                            <td>
+                                @item.Weigth
+                            </td>
+                            <td>
+                                @item.Magnitude
+                            </td>
+                            <td>
+                                @item.Units
+                            </td>
+                            <td>
+                                @item.Type
+                            </td>
+                            <td>
+                                @item.Distribution
+                            </td>
+                            <td>
+                                @item.Divisor
+                            </td>
+                            <td>
+                                @item.Quotient
+                            </td>
+                            <td>
+                                @item.Square
+                            </td>
+
+                        </tr>
+
+                    }
+                </table>
+            }
+            @if (Model.CornerloadEccentricities != null)
+            {
+
+                <table border="1" style="page-break-inside:avoid">
+                    <tr>
+                        <th colspan="7">Cornerload of Balance (Eccentricity)</th>
+                    </tr>
+                    <tr class="heading">
+                        <td>
+                            MAGNITUDE
+                        </td>
+                        <td>
+                            UNITS
+                        </td>
+                        <td>
+                            TYPE
+                        </td>
+                        <td>
+                            DISTRIBUTION
+                        </td>
+                        <td>
+                            DIVISOR
+                        </td>
+                        <td>
+                            QUOTIENT
+                        </td>
+                        <td>
+                            SQUARE
+                        </td>
+
+                    </tr>
+
+                    @foreach (var item in Model.CornerloadEccentricities)
+                    {
+                        <tr class="item">
+                            <td>
+                                @item.Magnitude
+                            </td>
+                            <td>
+                                @item.Units
+                            </td>
+                            <td>
+                                @item.Type
+                            </td>
+                            <td>
+                                @item.Distribution
+                            </td>
+                            <td>
+                                @item.Divisor
+                            </td>
+                            <td>
+                                @item.Quotient
+                            </td>
+                            <td>
+                                @item.Square
+                            </td>
+
+                        </tr>
+
+                    }
+                </table>
+            }
+            @if (Model.EnvironmentalFactors != null)
+            {
+
+                <table border="1" style="page-break-inside:avoid">
+                    <tr>
+                        <th colspan="7">Enviromental Factors (Eccentricity)</th>
+                    </tr>
+                    <tr class="heading">
+                        <td>
+                            MAGNITUDE
+                        </td>
+                        <td>
+                            UNITS
+                        </td>
+                        <td>
+                            TYPE
+                        </td>
+                        <td>
+                            DISTRIBUTION
+                        </td>
+                        <td>
+                            DIVISOR
+                        </td>
+                        <td>
+                            QUOTIENT
+                        </td>
+                        <td>
+                            SQUARE
+                        </td>
+
+                    </tr>
+
+                    @* @foreach (var item in Model.EnvironmentalFactors)
+                {*@
+                    <tr class="item">
+                        <td>
+                            @Model.EnvironmentalFactors.Magnitude
+                        </td>
+                        <td>
+                            @Model.EnvironmentalFactors.Units
+                        </td>
+                        <td>
+                            @Model.EnvironmentalFactors.Type
+                        </td>
+                        <td>
+                            @Model.EnvironmentalFactors.Distribution
+                        </td>
+                        <td>
+                            @Model.EnvironmentalFactors.Divisor
+                        </td>
+                        <td>
+                            @Model.EnvironmentalFactors.Quotient
+                        </td>
+                        <td>
+                            @Model.EnvironmentalFactors.Square
+                        </td>
+
+                    </tr>
+
+                    @*}*@
+                </table>
+            }
+            @if (Model.Resolutions != null)
+            {
+                <table border="1" style="page-break-inside:avoid">
+                    <tr>
+                        <th colspan="7">Resolution</th>
+                    </tr>
+                    <tr class="heading">
+                        <td>
+                            MAGNITUDE
+                        </td>
+                        <td>
+                            UNITS
+                        </td>
+                        <td>
+                            TYPE
+                        </td>
+                        <td>
+                            DISTRIBUTION
+                        </td>
+                        <td>
+                            DIVISOR
+                        </td>
+                        <td>
+                            QUOTIENT
+                        </td>
+                        <td>
+                            SQUARE
+                        </td>
+
+                    </tr>
+
+                    @* @foreach (var item in Model.Resolutions)
+                {*@
+                    <tr class="item">
+                        <td>
+                            @Model.Resolutions.Magnitude
+                        </td>
+                        <td>
+                            @Model.Resolutions.Units
+                        </td>
+                        <td>
+                            @Model.Resolutions.Type
+                        </td>
+                        <td>
+                            @Model.Resolutions.Distribution
+                        </td>
+                        <td>
+                            @Model.Resolutions.Divisor
+                        </td>
+                        <td>
+                            @Model.Resolutions.Quotient
+                        </td>
+                        <td>
+                            @Model.Resolutions.Square
+                        </td>
+
+                    </tr>
+
+                   
+                </table>
+            }
+            <table border="1" style="page-break-inside:avoid">
+                <tr>
+                    <td colspan="10">
+                        Sum Of Squares
+                    </td>
+                    <td colspan="2">
+                        @Model.Totales.SumOfSquares
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="10">
+                        Total Uncertainty
+                    </td>
+                   
+                        <td colspan="2">
+                            @Model.Totales.TotalUncerainty
+                        </td>
+                    
+                </tr>
+                <tr>
+                    <td colspan="10">
+                        Expanded Uncertainty
+                    </td>
+                    @if (@Model.cmcValuesReplace != null)
+                    {
+                        <td colspan="2">
+                            @Model.Totales.ExpandedUncertainty.ToString() *
+                        </td>
+                    }
+                    else
+                    {
+                    <td colspan="2">
+                        @Model.Totales.ExpandedUncertainty
+                    </td>
+                    }
+                </tr>
+            </table>
+            @if (@Model.cmcValuesReplace != null)
+            {
+                <div class="invoice-box">
+                    <table style="border:solid; border-width:1px; page-break-inside:avoid">
+
+                        <tr>
+                            <td style="text-align:left">
+                                @Model.cmcValuesReplace
+                            </td>
+                        </tr>
+
+                    </table>
+
+                </div>
+            }
+        </div>
+       
+    </div>
+    
+</body>
+</html>
+

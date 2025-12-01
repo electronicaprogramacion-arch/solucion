@@ -1,0 +1,682 @@
+﻿@page "/SecurityCreate"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Security
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Company 
+@inherits Security_CreateBase
+@implements IDisposable
+@using System.Linq.Expressions
+@using Blazed.Controls
+
+@using Microsoft.AspNetCore.Authorization
+@*@attribute [Authorize]*@
+
+
+@{
+
+
+    SetEnabled();
+
+
+}
+
+
+<div class="col-md">
+
+
+
+
+    <HeaderComponent Title="Technician" ActionBar="true" Enabled="true"></HeaderComponent>
+
+
+    @if (eq != null)
+    {<div class="accordion" id="accordionExample">
+            <EditForm OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <SubmitComponent>
+
+                </SubmitComponent>
+
+
+                <div class="accordion-item">
+                    <div class="accordion-header" id="headingOne">
+                        <h5 class="mb-0">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                Basic Info
+                            </button>
+                        </h5>
+                    </div>
+
+                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-bs-target="#accordionExample">
+                        <div class="card-body">
+
+
+                            <div class="form-row">
+                                <div class="col-md p-2">
+
+                                    <div class="form-group" style="margin-top:0px;margin-bottom:0rem">
+
+                                        <label class="form-control-label">User Name</label>
+                                        <SearchButtonComponent FormType="typeof(User_Search)"
+                                        ID="@eq?.UserID.ToString()" Type="search"
+                                        Size="@ModalSize.MediumWindow"
+                                        Text="@NameUser"
+                                        AllWidth="true"
+                                        Enabled="false"
+                                        Parameters="parameters"
+                                        CloseWindow="@CloseWindow">
+
+                                        </SearchButtonComponent>
+                                    </div>
+                                </div>
+                                <div class="col-md p-2">
+
+                                    <TextInput @bind-Value="eq.LastName"
+                                    IsDisabled="!Enabled"
+                                    Label="Last Name"
+                                    LabelDown="@LabelDown"
+                                    ValidationFor="(()=> eq.LastName)"
+                                    Type="@Types.text">
+
+                                    </TextInput>
+
+
+
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col-md p-2">
+
+
+                                    <TextInput @bind-Value="eq.Email"
+                                    IsDisabled="!Enabled"
+                                    Label="Email"
+                                    LabelDown="@LabelDown"
+                                    ValidationFor="(()=> eq.Email)"
+                                    Type="@Types.text">
+                                    </TextInput>
+
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" id="headingThree">
+                        <h5 class="mb-0">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Assign Roles, Permission & Password
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                        <div class="card-body" style="min-height:550px">
+                            <div class="row">
+                                <div class="col">
+
+                                    <TextInput @bind-Value="eq.UserName"
+                                    IsDisabled="!Enabled"
+                                    Label="User Name"
+                                    LabelDown="@LabelDown"
+                                    ValidationFor="(()=> eq.UserName)"
+                                    Type="@Types.text">
+                                    </TextInput>
+
+
+                                </div>
+
+                                @if (IsEdit)
+                                {
+                                    <div class="col">
+
+                                        <TextInput @bind-Value="eq.OldPassWord"
+                                                   IsDisabled="!Enabled"
+                                                   Label="Current Password"
+                                                   LabelDown="@LabelDown"
+                                                   ValidationFor="(()=> eq.PassWord)"
+                                                   Type="@Types.PassWord">
+                                        </TextInput>
+
+
+                                    </div>
+                                }
+                               
+                                <div class="col">
+
+                                    <TextInput @bind-Value="eq.PassWord"
+                                    IsDisabled="!Enabled"
+                                    Label="Password"
+                                    LabelDown="@LabelDown"
+                                    ValidationFor="(()=> eq.PassWord)"
+                                    Type="@Types.PassWord">
+                                    </TextInput>
+
+
+                                </div>
+
+                                <div class="col">
+
+                                    <TextInput @bind-Value="PassWordConfirm"
+                                    IsDisabled="!Enabled"
+                                    Label="Confirm Password"
+                                    LabelDown="@LabelDown"
+                                    Type="@Types.PassWord">
+                                    </TextInput>
+
+
+                                </div>
+
+                            </div>
+                            <div class="row">
+
+                                <div class="col-md-3">
+                                    @*<div class="custom-control custom-switch">
+                    <InputCheckbox @bind-Value="eq.PasswordReset" placeholder="IsEnable" class="custom-control-input" id="customSwitch1" />
+                    <label class="custom-control-label" for="customSwitch1">PasswordReset</label>
+                </div>*@
+
+                                    <TextInput @bind-Value="eq.PasswordReset"
+                                    IsDisabled="!Enabled"
+                                    Label="Password Reset"
+                                    LabelDown="@LabelDown"
+                                    ValidationFor="(()=> eq.PasswordReset)"
+                                    Type="@Types.Switch"
+                                    OnChangeControl="@(async (arg) => await ChangeReset())">
+
+                                    </TextInput>
+                                </div>
+                                <div class="col-md-3">
+                                    @*<div class="custom-control custom-switch">
+                    <InputCheckbox @bind-Value="eq.IsEnabled" placeholder="IsEnable" class="custom-control-input" id="customSwitch1" />
+                    <label class="custom-control-label" for="customSwitch1">IsEnable</label>
+                </div>*@
+                                    <TextInput @bind-Value="eq.IsEnabled"
+                                    IsDisabled="!Enabled"
+                                    Label="Enabled"
+                                    LabelDown="@LabelDown"
+                                    ValidationFor="(()=> eq.IsEnabled)"
+                                    Type="@Types.Switch"
+                                    OnChangeControl="@(async (arg) => await Change())">
+
+                                    </TextInput>
+                                </div>
+                            </div>
+                            <div class="row" style="min-height:20px"></div>
+                            <div class="row" style="min-height:30px"></div>
+                            <div class="row"></div>
+
+                            @if(eq != null )
+                            {
+
+                                <div class="row">
+                                    <div class="col">
+                                        <label class="form-control-label">Assign Role & Permissions</label>
+                                        <ResponsiveTable ItemsDataSource="@eq.RolesList"
+                                        PageSize="20"
+                                        HasAction="true"
+                                        Context="Entity"
+                                        @ref="@GridPermissions"
+                                        GridID="gridPermissions"
+                                        InLineEdit="true"
+                                        RowEditClass=""
+                                        RowNewClass=""
+                                        TableItem="Rol"
+                                        EnabledSearch="true"
+                                        editContext="@CurrentEditContext"
+                                        EnabledModal="false"
+                                        HasDelete="true"
+                                        Component="@Component"
+                                        NewItemDefaultItem="DefaultNew">
+
+
+                                            <ChildContent>
+
+                                                <GridColumns>
+                                                    @*<GridColumn TableItem="Rol" Field="@GridRol.GetPropertyName(() => Rol.RolID)" DefaultSort="true" />*@
+                                                    <GridColumn TableItem="Rol" Field="@GridRol.GetPropertyName(() => Rol.Name)" DefaultSort="true" />
+                                                    <GridColumn TableItem="Rol" Field="@GridRol.GetPropertyName(() => Rol.Permission)" />
+
+
+
+                                                </GridColumns>
+
+
+                                            </ChildContent>
+
+
+
+
+                                            <GridRow>
+
+                                            </GridRow>
+
+                                            <GridEdit>
+                                                <div class="row" style="min-height:350px">
+
+                                                    <div class="col-3 customcol">
+                                                        <TextInput @bind-Value="@Entity.Name" Label="Name" Validate="false" ValidationFor="@(()=> Entity.Name)" IsDisabled="!Enabled"
+                                                        LabelDown="false">
+
+
+                                                            @foreach (var item in AppSecurity.RolesList)
+                                                            {
+                                                                <option value="@item.Name">@item.Name</option>
+                                                            }
+
+
+
+                                                        </TextInput>
+                                                        @GridRol.GetErrorMessage(nameof(Entity.Name))
+
+                                                    </div>
+
+
+                                                    <div class="col">
+                                                        <label class="form-control-label">Permission</label>
+                                                        <Typeahead SearchMethod="@SearchPermissions" Disabled="!Enabled"
+                                                        Items="@PermissionsList"
+                                                        @bind-Values="Entity.PermissionList"
+                                                        Placeholder="Permission">
+                                                            <SelectedTemplate Context="user">
+                                                                @user.Key
+                                                            </SelectedTemplate>
+                                                            <ResultTemplate Context="user">
+                                                                @user.Key
+                                                            </ResultTemplate>
+                                                        </Typeahead>
+                                                    </div>
+
+
+
+
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md customcol">
+                                                        @*<TextInput @bind-Value="@Entity.Description"
+                                                Label="Name" Validate="false" ValidationFor="@(()=> Entity.Description)" Type="@Types.TextArea" IsDisabled="!Enabled"
+                                                LabelDown="false">
+
+                                                </TextInput>
+                                                @GridRol.GetErrorMessage(nameof(Entity.Description))*@
+
+                                                    </div>
+                                                </div>
+                                                @BoundValues2(Entity)
+                                            </GridEdit>
+                                        </ResponsiveTable>
+                                    </div>
+                                </div>
+
+                            }
+
+
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingRolesandPermissions">
+                    <h5 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRolesandPermissions"
+                        aria-expanded="false" aria-controls="collapseThree">
+                            Roles and Permissions
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseRolesandPermissions" class="collapse" aria-labelledby="headingRolesandPermissions" data-bs-parent="#accordionExample">
+                    <div class="card-body" style="min-height:550px">
+
+                        <EditForm OnSubmit="FormSubmitted" EditContext="@RolEditContext">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <SubmitComponent>
+
+                            </SubmitComponent>
+
+                            <ResponsiveTable ItemsDataSource="@ListRol"
+                            PageSize="20"
+                            HasAction="true"
+                            Context="Entity"
+                            @ref="@GridRol"
+                            GridID="gridRol"
+                            InLineEdit="true"
+                            RowEditClass=""
+                            RowNewClass=""
+                            TableItem="Rol"
+                            EnabledSearch="true"
+                            editContext="@RolEditContext"
+                            EnabledModal="false"
+                            HasDelete="true"
+                            DeleteAction="Delete"
+                            Component="@Component">
+
+
+                                <ChildContent>
+
+                                    <GridColumns>
+
+                                        <GridColumn TableItem="Rol" Field="@GridRol.GetPropertyName(() => Rol.Name)" DefaultSort="true"  />
+                                        <GridColumn TableItem="Rol" Field="@GridRol.GetPropertyName(() => Rol.DefaultPermissions)"  Title="Default Permissions"/>
+
+
+
+                                    </GridColumns>
+
+
+                                </ChildContent>
+
+
+
+
+                                <GridRow>
+
+                                </GridRow>
+
+                                <GridEdit>
+                                    <div class="row">
+                                        <div class="col-3 customcol">
+                                            <TextInput @bind-Value="@Entity.Name" Label="Name" Validate="false" ValidationFor="@(()=> Entity.Name)" IsDisabled="!Enabled"
+                                            LabelDown="false">
+
+                                            </TextInput>
+                                            @GridRol.GetErrorMessage(nameof(Entity.Name))
+
+                                        </div>
+
+
+                                        <div class="col">
+                                            <label class="form-control-label">Default Permission</label>
+                                            <Typeahead SearchMethod="@SearchPermissions" Disabled="!Enabled"
+                                            Items="@PermissionsList"
+                                            @bind-Values="Entity.DefaultPermissionList"
+                                            Placeholder="Permission"
+                                            TValue="KeyValue"
+                                            TItem="KeyValue">
+                                                <SelectedTemplate Context="user">
+                                                    @user.Key
+                                                </SelectedTemplate>
+                                                <ResultTemplate Context="user">
+                                                    @user.Key
+                                                </ResultTemplate>
+                                            </Typeahead>
+                                        </div>
+
+
+
+
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md customcol">
+                                            <TextInput @bind-Value="@Entity.Description"
+                                            Label="Description" Validate="false" ValidationFor="@(()=> Entity.Description)" Type="@Types.TextArea" IsDisabled="!Enabled"
+                                            LabelDown="false">
+
+                                            </TextInput>
+                                            @GridRol.GetErrorMessage(nameof(Entity.Description))
+
+                                        </div>
+                                    </div>
+                                    @BoundValues3(Entity)
+                                </GridEdit>
+
+
+
+
+                            </ResponsiveTable>
+
+
+
+                        </EditForm>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    }
+
+</div>
+
+
+@code{
+
+
+    public string NameUser { get; set; } = "Find User";
+
+
+    Rol DefaultNew()
+    {
+        var r= new Rol();
+
+
+
+        return r;
+
+    }
+
+
+    async Task<bool> DeletePermissions(User_Rol r)
+    {
+
+        //BasicsServiceGRPC basic = new BasicsServiceGRPC(Client);
+
+        //var a = await basic.DeleteRole(r);
+        return true;
+
+    }
+
+    async Task<bool> Delete(Rol r)
+    {
+
+        BasicsServiceGRPC basic = new BasicsServiceGRPC(Client);
+
+        var a = await basic.DeleteRole(r);
+
+        AppSecurity.RolesList.Remove(r);
+
+        return true;
+
+    }
+
+    public async Task<IEnumerable<Rol>> SearchRol(string searchText)
+    {
+        //yppp
+        CalibrationSaaS.Infraestructure.Blazor.Services.BasicsServiceGRPC basics = new CalibrationSaaS.Infraestructure.Blazor.Services.BasicsServiceGRPC(_basicsServices);
+
+        var resultset = await basics.GetRoles(new CallContext());
+
+
+        if (resultset.Roles != null && resultset.Roles.Count > 0)
+        {
+
+            var result = resultset.Roles
+                .Where(x => x.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+               .ToList();
+
+            return (result);
+
+
+        }
+        return null;
+
+    }
+
+
+    public string BoundValues3(Rol model)
+    {
+
+        if (string.IsNullOrEmpty(model.Name))
+        {
+            return "";
+        }
+
+
+        var a = AppSecurity.RolesList.Where(x => x.Name == model.Name).FirstOrDefault();
+        string per = "";
+
+        if (model?.DefaultPermissionList != null)
+            foreach (var item in model.DefaultPermissionList)
+            {
+                per = per + item.Key + ",";
+            }
+        if(a != null)
+        {
+            a.DefaultPermissions = per;
+            a.PermissionList = model.PermissionList;
+            a.DefaultPermissionList = model.DefaultPermissionList;
+
+            model.CopyPropertiesFrom(a);
+
+
+        }
+        else
+        {
+            model.DefaultPermissions = per;
+        }
+
+
+        return "";
+
+    }
+
+
+    public string BoundValues2(Rol model)
+    {
+        if (string.IsNullOrEmpty(model.Name))
+        {
+            return "";
+        }
+
+        var isnew = false;
+        if (model.RolID == 0 && (model.PermissionList == null || model?.PermissionList?.Count == 0))
+        {
+            isnew = true;
+        }
+
+
+        var a=  AppSecurity.RolesList.Where(x => x.Name == model.Name).FirstOrDefault();
+        string per = "";
+
+        if(isnew)
+            model.PermissionList = a.DefaultPermissionList;
+
+
+        if (model.PermissionList != null)
+            foreach (var item in model.PermissionList)
+            {
+                per = per + item.Key +  ",";
+            }
+        a.Permission = per;
+        a.PermissionList = model.PermissionList;
+        a.DefaultPermissionList = model.DefaultPermissionList;
+        a.DefaultPermissions = model.DefaultPermissions;
+        model.CopyPropertiesFrom(a);
+
+        if (isnew)
+        {
+            StateHasChanged();
+        }
+
+        return "";
+    }
+
+    public string BoundValues(User model)
+    {
+        if (model == null || model.RolesList == null || model.RolesList.Count == 0)
+        {
+            model.Roles = string.Empty;
+            return String.Empty;
+        }
+
+        string roles = "";
+        string per = "";
+        foreach (var item in model.RolesList)
+        {
+            roles += item.Name + ",";
+            if(item?.PermissionList?.Count > 0)
+                per = string.Join(",", item.PermissionList);
+            item.Permission = per;
+        }
+
+
+        model.Roles = roles;
+
+
+
+
+
+        return "";
+    }
+
+
+    public Task<IEnumerable<KeyValue>> SearchPermissions(string searchText)
+    {
+
+        var pol = AppSecurity.Permissions;
+
+        var res = pol.Where(x => x.Key == searchText).ToList();
+
+        //foreach (int value in Enum.GetValues(typeof(DaysOfWeek)))
+        //{
+        //    Console.WriteLine(((DaysOfWeek)value).ToString());
+        //}
+
+
+        //var result = pol.Where(x => x.);
+
+
+        return Task.FromResult<IEnumerable<KeyValue>>(res);
+    }
+
+    public bool IsEdit { get; set; }
+    async Task CloseWindow(ChangeEventArgs arg)
+    {
+
+        await ShowProgress();
+        if (arg.Value != null)
+        {
+            var a = (ModalResult)arg.Value;
+            if (a.Data != null)
+            {
+                eq = (User)a.Data;
+                EntityID = eq.UserID.ToString();
+                NameUser = eq.UserID + " - " + eq.Name + " (" + eq.UserName + ")   ";
+
+
+                BasicsServiceGRPC bas = new BasicsServiceGRPC(Client);
+                eq.IsFromAPI = true;
+
+                var us= await bas.CreateUser(eq);
+
+                us.IsFromAPI = false;
+
+                eq = us;
+
+                await LoadIni();
+                //LoadET(ET);
+                IsEdit = true;
+
+            }
+        }
+
+        await CloseProgress();
+
+        StateHasChanged();
+
+
+
+    }
+
+   
+
+}

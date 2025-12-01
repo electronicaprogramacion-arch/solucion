@@ -1,0 +1,178 @@
+﻿@using Blazed.Controls
+@namespace BlazorApp1.Blazor.Pages.AssetsBasics
+@inherits WorkOrderDetailHist_SearchBase
+
+@using BlazorApp1.Blazor.Pages.AssetsBasics
+@using CalibrationSaaS.Domain.Aggregates.Entities
+
+
+@inject ILogger<WorkOrderDetailHist_Search> Logger
+@*<EditForm style="margin:10px" OnValidSubmit="Submit" Model="@eq" Context="CurrenEditContext">
+    <DataAnnotationsValidator />*@
+@if (LIST1 != null && LIST1.Count > 0)
+{
+   
+
+        <ResponsiveTable ItemsDataSource="@LIST1"
+                         PageSize="5"
+                         HasAction="false"
+                         Context="Entity"
+                         @ref="@Grid"
+                         GridID="gridWorkOrderDetailHist"
+                         RowEditClass=""
+                         RowNewClass=""
+                         InLineEdit=false
+                         TableItem="WorkOrderDetail"
+                         EnabledSearch="false"
+                         editContext="@CurrentEditContext"
+                         OnChangeWindow="ClearList"
+                         HasEdit="false"
+                         HasDelete="false"
+                         Component="@Component">
+
+
+            <ChildContent>
+
+                <GridColumns>
+
+                    <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailUserID)" Title="ID" DefaultSort="true" />
+
+                    <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOrderID)"  />
+
+                    <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.CalibrationDate)" Title="Calibration Date" />
+
+                    <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.TechnicianComment)"  />
+
+                    <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.CurrentStatus.Name)" Title="Status" />
+
+                    <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" Title="Detail">
+                     
+                        <ResponsiveTemplate>
+                            @{ 
+                                var entity = context as WorkOrderDetail;
+
+                                
+
+                            }
+                            <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton col-sm"
+                               type="button" data-dismiss="modal" href="WorkOrderItem/@entity?.WorkOrderDetailID.ToString()">
+                                <span aria-hidden="true">Detail</span>
+                            </a>
+                        </ResponsiveTemplate>
+
+                       
+
+                    </GridColumn>
+
+                </GridColumns>
+            </ChildContent>
+
+            @*<GridHeader>
+            <div class="col-sm customcol"></div>
+            <div class="col-sm customcol">CalibrationDate</div>
+            <div class="col-sm customcol">WorkOrder</div>
+            <div class="col-sm customcol">WorkOrderDetail</div>
+            <div class="col-sm customcol">TechnicianComments</div>
+            <div class="col-sm customcol">Status</div>
+            <div class="col-sm customcol">Select</div>
+
+        </GridHeader>*@
+
+            <GridRow>
+                @*<div class="col-sm customcol">@Entity.CalibrationDate</div>
+                <div class="col-sm customcol">@Entity.WorkOrderID</div>
+                <div class="col-sm customcol">@Entity.WorkOrderDetailID</div>
+                <div class="col-sm customcol">@Entity.TechnicianComment</div>
+                <div class="col-sm customcol">@Entity.CurrentStatus.Name</div>            
+                <td>
+                    <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton col-sm"
+                       type="button" data-dismiss="modal" href="WorkOrderItem/@Entity?.WorkOrderDetailID.ToString()">
+                        <span aria-hidden="true">Detail</span>
+                    </a>
+                   
+                </td>*@
+            </GridRow>
+        </ResponsiveTable>
+   
+}
+
+@*</EditForm>*@
+
+@code
+{
+   [Parameter]
+    public List<WorkOrderDetail> LIST1 { get; set; }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        //eq = Grid.currentEdit;
+        //CurrentEditContext = Grid.editContext;
+
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        //editContex = new EditContext(user);
+
+        await base.OnInitializedAsync();
+
+
+    }
+
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        return base.OnParametersSetAsync();
+    }
+
+
+
+    public string _strroles { get; set; }
+
+    //IList<Rol> result= GetRoles(_strroles)
+
+
+
+    protected async Task Submit(EditContext editContext)
+    {
+
+    }
+
+
+    public void ClearList(EventArgs arg)
+    {
+        List.Clear();
+
+    }
+
+    public async void Show(List<WorkOrderDetail> group)
+    {
+        if (Grid != null && group != null)
+        {
+            LIST1 = group;
+
+
+            //gger.LogDebug(group.Count().ToString());
+
+            //foreach (var item in group)
+            //{
+            //    await Grid.SaveNewItem(item); //Add(item);
+            //}
+
+            //Grid.Items = group;
+            StateHasChanged();
+            //Logger.LogDebug(RT.ItemsDataSource.Count());
+        }
+
+
+    }
+
+
+
+}
+
+

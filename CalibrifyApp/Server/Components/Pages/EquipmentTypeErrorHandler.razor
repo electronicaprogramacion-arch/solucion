@@ -1,0 +1,81 @@
+@page "/EquipmentTypeError"
+@page "/EquipmentTypeError/Routing"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Logging
+@inject NavigationManager NavigationManager
+@inject ILogger<EquipmentTypeErrorHandler> Logger
+
+<PageTitle>Equipment Type Error</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header">
+                    <h3 class="text-center font-weight-light my-4">Equipment Type Error</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="alert-heading">@GetErrorTitle()</h4>
+                        <p>@GetErrorMessage()</p>
+                        <hr>
+                        @if (IsRoutingError())
+                        {
+                            <p>Technical details: AmbiguousMatchException - The request matched multiple endpoints.</p>
+                            <p class="mb-0">This routing conflict has been resolved. Please try one of the following options:</p>
+                        }
+                        else
+                        {
+                            <p class="mb-0">Please try one of the following options:</p>
+                        }
+                        <ul>
+                            <li>Wait a moment and try again</li>
+                            <li>Clear your browser cache</li>
+                            <li>Contact your administrator if the problem persists</li>
+                        </ul>
+                        <div class="mt-3">
+                            <button class="btn btn-primary" @onclick="GoToHome">Go to Home</button>
+                            <button class="btn btn-secondary ml-2" @onclick="TryAgain">Try Again</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Logger.LogInformation("EquipmentTypeErrorHandler page initialized for route: {Route}", NavigationManager.Uri);
+    }
+
+    private bool IsRoutingError()
+    {
+        return NavigationManager.Uri.Contains("/EquipmentTypeError/Routing");
+    }
+
+    private string GetErrorTitle()
+    {
+        return IsRoutingError()
+            ? "Routing Conflict Resolved"
+            : "Error Loading Equipment Type";
+    }
+
+    private string GetErrorMessage()
+    {
+        return IsRoutingError()
+            ? "There was a routing conflict that has been resolved. The Equipment Type page should now load correctly."
+            : "There was an error loading the Equipment Type page. This could be due to a connection issue or a missing dependency.";
+    }
+
+    private void GoToHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void TryAgain()
+    {
+        NavigationManager.NavigateTo("/EquipmentType");
+    }
+}

@@ -1,0 +1,324 @@
+﻿@using  Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using BlazorApp1.Blazor.Blazor.Helper
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@namespace BlazorApp1.Blazor.Blazor.GenericMethods
+@using CalibrationSaaS.Domain.Aggregates.Querys 
+@typeparam Target
+@*@onchange="@(async (e) => await AddItem(e,item))"*@
+<div class="container" style="max-height:200px;overflow:auto">
+
+    <div class="row">
+        @*<div class="col-sm-12 d-inline-block">*@
+        <div class="col-sm" style="width:25%">
+        </div>
+        <div class="col-sm" style="width:25%">
+
+            <label>Value</label>
+        </div>
+        <div class="col-sm" style="width:15%">
+
+            <label>UoM</label>
+        </div>
+        <div class="col-sm">
+
+            <label>Weight Set ID</label>
+        </div>
+        <div class="col-sm">
+
+            <label>#Ref</label>
+        </div>
+
+
+
+    </div>
+
+
+    @if (DataSource != null)
+    {
+
+
+
+
+        cont = 0;
+        //TODO duplicate posible no se muy bien revisar parametros
+        var aaa = DataSource.GroupBy(i => i.WeightSetID).Select(group => group.First());
+
+        @foreach (var item in aaa)
+        {
+            var exis = SelectWeight.Where(x => x.PieceOfEquipmentID == item.PieceOfEquipmentID && x.WeightSetID == item.WeightSetID).FirstOrDefault();
+
+            if (exis!= null)
+            {
+                item.Check = true;
+            }
+            else
+            {
+                item.Check = false;
+            }
+
+        }
+        @foreach (var item in aaa.OrderByDescending(x=>x.Check==true).OrderBy(x=>x.WeightNominalValue))
+        {
+            if (item != null)
+            {
+
+                <div class="row">
+                    @*<div class="col-sm-12 d-inline-block">*@
+                    <div class="col-sm" style="width:25%">
+
+                        @*@{
+
+                            var exis = SelectWeight
+                                .Where(x => x.PieceOfEquipmentID == item.PieceOfEquipmentID && x.WeightSetID == item.WeightSetID).FirstOrDefault();
+
+                        }*@
+
+
+                        @if (item.Check)
+                        {
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input"
+                                       value="@item" checked="checked"
+                                       @onchange="async eventArgs => { await AddItem( eventArgs.Value,item);}"
+                                       id="@item.PieceOfEquipmentID + @cont">
+
+                                <label class="custom-control-label" for="@item.PieceOfEquipmentID + @cont"></label>
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" value="@item"
+                                       id="@item.PieceOfEquipmentID + @cont"
+                                       @onchange="async eventArgs => { await AddItem( eventArgs.Value,item);}">
+
+                                <label class="custom-control-label" for="@item.PieceOfEquipmentID + @cont"></label>
+
+                            </div>
+                        }
+
+
+                    </div>
+                    <div class="col-sm" style="width:25%">
+
+                        <label>@item.WeightNominalValue</label>
+                    </div>
+                    <div class="col-sm" style="width:15%">
+
+                        <label>@GetName(@item.UnitOfMeasureID.ToString())</label>
+                    </div>
+                    <div class="col-sm">
+
+                        <label>@item.PieceOfEquipmentID</label>
+                    </div>
+                    <div class="col-sm">
+
+                        <label>@item.Reference</label>
+                    </div>
+
+                    @*</div>*@
+                </div>
+
+                cont = cont + 1;
+            }
+        }
+
+    }
+
+    @*@onclick="@(async () => await SelectModal())"*@
+</div>
+        <div class="form-row">
+            <div class="col-sm-12">
+                @LabelConversion
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col-6">
+                <button class="btn btn-sm btn-success shadow-sm my-2 my-sm-0 btn-block" type="button" 
+                        @onclick="@(async () => await SelectModal())"
+                        @onclick:stopPropagation @onclick:preventDefault>
+
+                    <span aria-hidden="true">Save</span>
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-sm btn-secondary shadow-sm my-2 my-sm-0 btn-block" type="button" 
+                        @onclick="@(async () => await Clear())"
+                        @onclick:stopPropagation @onclick:preventDefault>
+
+                    <span aria-hidden="true">Clear</span>
+                </button>
+            </div>
+        </div>
+
+@code {
+
+    [Parameter]
+    public bool AllowZero { get; set; }
+
+    [Parameter]
+    public List<WeightSet> SelectWeight { get; set; }
+
+    [Parameter]
+    public TestPoint TestPoint { get; set; }
+
+    public string LabelConversion { get; set; }
+
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+
+    int cont = 0;
+
+    [Parameter]
+    public Target target { get; set; } = new Target();
+
+    [Parameter]
+    public List<WeightSet> SelectItem { get; set; } = new List<WeightSet>();
+
+    [Parameter]
+    public List<WeightSet> DesSelectItem { get; set; } = new List<WeightSet>();
+
+    [Parameter]
+    public List<WeightSet> DataSource { get; set; } = new List<WeightSet>();
+
+
+    [Inject] CalibrationSaaS.Domain.Aggregates.Shared.AppStateCompany AppState { get; set; }
+
+    public ResponsiveTable<WeightSet>
+                 RT
+    { get; set; } = new ResponsiveTable<WeightSet>();
+
+
+    public string ErrorMessage { get; set; }
+
+
+    protected void ChangeWindow(ChangeEventArgs item)
+    {
+        ChangeEventArgs e = new ChangeEventArgs();
+
+        e.Value = item.Value;
+
+        //OnChangeControl.InvokeAsync(e);
+    }
+    double result = 0;
+    Calculate c = new Calculate();
+    public async Task AddItem(object e, WeightSet add)
+    {
+        string UOMABB = "";
+        try
+        {
+            bool remove = false;
+            bool additem = false;
+            if (SelectItem.Where(x=>x.WeightSetID==add.WeightSetID && x.PieceOfEquipmentID==add.PieceOfEquipmentID).FirstOrDefault()==null)
+            {
+                SelectItem.Add(add);
+                additem = true;
+
+            }
+            else
+            {
+                SelectItem.Remove(add);
+                remove = true;
+            }
+
+            if (remove)
+            {
+                DesSelectItem.Add(add);
+            }
+
+            if (additem)
+            {
+                var c1 = DesSelectItem.Where(x => x.PieceOfEquipmentID == add.PieceOfEquipmentID && x.WeightSetID == add.WeightSetID).FirstOrDefault();
+
+                if(c1 != null)
+                {
+                    DesSelectItem.Remove(c1);
+                }
+            }
+
+
+            Calculate c = new Helper.Calculate();
+
+            result = 0;
+            foreach (var item in SelectItem)
+            {
+
+
+                result = result + item.ConversionMethod(TestPoint, AppState.UnitofMeasureList, out UOMABB);
+
+
+            }
+        }
+        catch (Exception ex)
+        {
+            LabelConversion = ex.Message;
+            return;
+        }
+        LabelConversion = result.ToString() + " " + UOMABB;
+    }
+
+
+    public async Task Clear()
+    {
+
+        SelectWeight.Clear();
+        SelectItem.Clear();
+
+    }
+
+
+    public async Task SelectModal()
+    {
+
+        Calculate c = new Helper.Calculate();
+
+        if (c.LinearityValidation(SelectItem, target))
+        {
+            WeightSetResult res = new WeightSetResult();
+
+            res.WeightSetList = SelectItem;
+            res.CalculateWeight = result;
+            res.RemoveList = DesSelectItem;
+            await BlazoredModal.CloseAsync(ModalResult.Ok(res));
+
+        }
+        else
+        {
+            ErrorMessage = "No valid";
+
+        }
+    }
+
+
+    public string GetName(string item)
+    {
+
+        if (string.IsNullOrEmpty(item))
+        {
+            return "";
+        }
+
+        var res = AppState.UnitofMeasureList.Where(x => x.UnitOfMeasureID == Convert.ToInt32(item)).FirstOrDefault();
+
+
+        if(res != null)
+        {
+            return res.Abbreviation;
+        }
+
+        return "N/A";
+
+            }
+
+
+            protected override async Task OnParametersSetAsync()
+            {
+                SelectItem= SelectWeight;
+            }
+
+        }

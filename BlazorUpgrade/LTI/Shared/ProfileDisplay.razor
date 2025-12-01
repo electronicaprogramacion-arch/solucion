@@ -1,0 +1,17 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
+
+<AuthorizeView>
+    <Authorized>
+        <span class="mr-2 d-none d-lg-inline text-gray-600 small">Hello, @context.User.Identity.Name!</span>
+        @*<img class="img-profile rounded-circle" src="http://www.iso17025consulting.com/Content/kim/profile.JPG">*@
+    </Authorized>
+    <NotAuthorized>
+        <span class="mr-2 d-none d-lg-inline text-gray-600 small"></span>
+        @*<span class="mr-2 d-none d-lg-inline text-gray-600 small">Click here to log in</span>*@
+        @*<img class="img-profile rounded-circle" src="https://source.unsplash.com/QAB-WJcbgJk/60x60">*@
+    </NotAuthorized>
+</AuthorizeView>

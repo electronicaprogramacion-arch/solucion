@@ -1,0 +1,39 @@
+﻿@page "/"
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using CalibrationSaaS.Infraestructure.Blazor
+@inherits FComponentBase
+
+
+
+
+@if (AppSecurity.IsOffline)
+{
+
+    <HomeWasm @rendermode=InteractiveWebAssembly>
+
+
+    </HomeWasm>
+}
+else if(AppSecurity.IsNotGrpc == false)
+{
+
+    <Home>
+
+
+
+    </Home>
+}
+else
+{
+    
+    <div>not found</div>
+}
+
+@code {
+
+
+
+   
+
+
+}

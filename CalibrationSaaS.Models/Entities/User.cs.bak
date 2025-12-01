@@ -1,0 +1,354 @@
+﻿using Helpers.Controls;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
+using System.Security.Claims;
+using System.Text;
+
+
+namespace CalibrationSaaS.Domain.Aggregates.Entities
+{
+
+   
+    [DataContract]
+    public class User:IGeneric
+    {
+        public User()
+        {
+           
+        }        
+        
+        [Key]
+        [DataMember(Order = 1)]
+        public int UserID { get; set; }
+        
+        [DataMember(Order = 2)]        
+        [Required(AllowEmptyStrings =false, ErrorMessage = "Required")]
+        [StringLength(50, ErrorMessage = "Name is too long.")]
+        public string Name { get; set; }
+
+        [DataMember(Order = 3)]
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [StringLength(50, ErrorMessage = "Name is too long.")]
+        public string LastName { get; set; }
+
+
+        //[DataMember(Order = 4)]       
+        //[StringLength(50, ErrorMessage = "Name is too long.")]
+        //public string TechnicianCode { get; set; }
+
+
+        [DataMember(Order = 4)]
+        [StringLength(50, ErrorMessage = "Name is too long.")]
+        public string UserTypeID { get; set; }
+
+        [NotMapped]
+        [Display(Name= "PasswordReset")]
+        [DataMember(Order = 5)]       
+        public bool PasswordReset { get; set; }
+
+
+        //[DataMember(Order = 7)]
+        //public string  RoleID { get; set; }
+        [NotMapped]
+        [DataMember(Order = 6)]
+        public bool IsEnabled { get; set; }
+
+
+        
+        [DataMember(Order = 7)]
+        public string UserName { get; set; }
+
+
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Email Required")]
+        [EmailAddress(ErrorMessage = "Ivalid Email")]
+        [DataMember(Order =8)]
+        public string Email { get; set; }
+
+
+        [NotMapped]
+        [DataMember(Order = 9)]
+        public virtual List<Rol> RolesList { get; set; }
+
+
+
+        //[Required(AllowEmptyStrings = false, ErrorMessage = "Rol Required")]
+        [DataMember(Order = 10)]
+        public string Roles { get; set; }
+
+        //[DataMember(Order = 13)]
+        //public IEnumerable<Rol> Roles1 { get; set; }
+
+
+        [DataMember(Order = 11)]
+        public string Occupation { get; set; }
+
+        [IgnoreDataMember]
+      
+        public string Description { get; set; }
+
+        [DataMember(Order = 12)]
+        public virtual ICollection<User_Rol> UserRoles { get; set; }
+
+        [IgnoreDataMember]
+        public virtual ICollection<User_WorkOrder> UserWorkOrders { get; set; }
+
+        [IgnoreDataMember]
+       
+        public virtual ICollection<WorkOrderDetail> WorkOrderDetails { get; set; }
+
+
+        [IgnoreDataMember]
+
+        public virtual ICollection<WorkDetailHistory> WorkDetailHistories { get; set; }
+
+
+        [DataMember(Order = 13)]
+        public virtual ICollection<TechnicianCode> TechnicianCodes { get; set; }
+
+        [IgnoreDataMember]
+        public virtual ICollection<POE_User> POE_Users { get; set; }
+
+
+        //[Required]
+        [DataMember(Order = 14)]
+        public string  PassWord { get; set; }
+
+        [DataMember(Order = 15)]
+        public string IdentityID { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 16)]
+        public string Message { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 17)]
+        public virtual List<Rol> RolesList2 { get; set; }
+
+
+
+        //[Required(AllowEmptyStrings = false, ErrorMessage = "Rol Required")]
+        [NotMapped]
+        [DataMember(Order = 18)]
+        public string Roles2 { get; set; }
+
+        [DataMember(Order = 19)]
+        public bool IsDelete { get; set; }
+
+    }
+
+    [DataContract]
+    public class Rol : IGeneric
+    {
+        public Rol()
+        {
+
+        }
+
+       
+        public Rol(int id,string _Name)
+        {
+            RolID = id;
+            Name = _Name;
+        }
+
+
+        [Required]
+        [DataMember(Order = 1)]
+        public int RolID { get; set; }
+
+        [Required]
+        [DataMember(Order = 2)]
+        public string Name { get; set; }
+
+        
+        [DataMember(Order = 3)]
+        public string Description { get; set; }
+
+        [DataMember(Order = 4)]
+        public virtual ICollection<User_Rol> UserRoles { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 5)]
+        public virtual IList<KeyValue> DefaultPermissionList { get; set; }
+
+        
+        [DataMember(Order = 6)]
+        public virtual string DefaultPermissions { get; set; }
+
+
+
+        [NotMapped]
+        [DataMember(Order = 7)]
+        public virtual IList<KeyValue> PermissionList { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 8)]
+        public  string Permission { get; set; }
+
+
+        [DataMember(Order = 9)]
+        public bool IsDelete { get; set; }
+
+        //[DataMember(Order = 5)]
+        //public bool View { get; set; }
+
+        //[DataMember(Order = 6)]
+        //public bool Edit { get; set; }
+
+        //[DataMember(Order = 7)]
+        //public bool Create { get; set; }
+
+        //[DataMember(Order = 8)]
+        //public bool Delete { get; set; }
+
+    }
+
+
+    [DataContract]
+    public class Component_Rol : IGeneric
+    {
+        public Component_Rol()
+        {
+
+        }       
+
+
+        [Required]
+        [DataMember(Order = 1)]
+        public int Component_RolID { get; set; }
+
+        [Required]
+        [DataMember(Order = 1)]
+        public int RolID { get; set; }
+
+        [Required]
+        [DataMember(Order = 1)]
+        public int Name { get; set; }
+
+
+
+    }
+
+    [DataContract]
+    public class Permission : IGeneric
+    {
+        public Permission()
+        {
+
+        }
+
+
+        [Required]
+        [DataMember(Order = 1)]
+        public int PermissionID { get; set; }
+
+        [Required]
+        [DataMember(Order = 1)]
+        public string Page { get; set; }
+
+        [Required]
+        [DataMember(Order = 2)]
+        public string Component { get; set; }
+
+        
+
+    }
+
+    [DataContract]
+    public class CustomClaim : IGeneric
+    {
+        public CustomClaim()
+        {
+
+        }
+
+
+        [Required]
+        [DataMember(Order = 1)]
+        public string Type { get; set; }
+
+        [Required]
+        [DataMember(Order = 2)]
+        public string Value { get; set; }
+
+      
+
+    }
+
+    //[DataContract]
+    //public class Component : IGeneric
+    //{
+    //    public Component()
+    //    {
+
+    //    }
+
+
+    //    [Required]
+    //    [DataMember(Order = 1)]
+    //    public int ComponentID { get; set; }
+
+    //    [Required]
+    //    [DataMember(Order = 1)]
+    //    public string Loacation { get; set; }
+
+    //    [Required]
+    //    [DataMember(Order = 2)]
+    //    public string Name { get; set; }
+
+
+    //    [Required]
+    //    [DataMember(Order =3)]
+    //    public string Group { get; set; }
+
+
+    //    [Required]
+    //    [DataMember(Order = 4)]
+    //    public Policies Permission { get; set; }
+
+    //    [Required]
+    //    [DataMember(Order = 3)]
+    //    public string DefaultView { get; set; }
+
+
+    //}
+    //public static class Policies
+    //{
+    //    public const string HasFullacces = "hasfullaccess";
+
+    //    public const string HasView = "hasview";
+
+    //    public const string HasEdit = "hasedit";
+
+    //    public const string HasDelete = "hasdelete";
+
+    //    public const string HasNew = "hasnew";
+
+    //    public const string HasSelect = "hasselect";
+
+    //    public const string HasSave = "hassave";
+    //}
+
+
+    //public enum Policies : int
+    //{
+
+    //    HasFullAccess = 1,
+    //    HasView = 2,
+    //    HasEdit = 3,
+    //    HasDelete = 4,
+    //    HasNew=5,
+    //    HasSelect=6,
+    //    HasSave=7,
+    //    ContractReview = 8,
+    //    ReadyforCalibration=9,
+    //    TechnicalReview=10,
+    //    Override = 11,
+    //    ViewAssignationsOnly=12
+
+    //}
+
+}

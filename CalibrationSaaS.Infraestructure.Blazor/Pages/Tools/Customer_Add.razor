@@ -1,0 +1,102 @@
+﻿@page "/AddCustomer"
+@inherits CalibrationSaaS.Infraestructure.Blazor.Pages.Tools.Customer_AddBase
+
+@using Blazed.Controls
+@using Bogus
+<h3>Create Customer</h3>
+
+@if (customer == null || !FirstGenerate)
+{
+    <div>cargando</div>
+}
+else if(FirstGenerate)
+{
+    <div class="card mb-3">
+        <div class="row no-gutters">
+            <div class="col-md-4">
+                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;" src="img/undraw_launch_day_4e04.svg" alt="">
+            </div>
+            <div class="col-md-8">
+                <EditForm Model="@customer" style="margin:10px" OnValidSubmit="CreateCustomer">
+
+
+                    <div class="form-row">
+                        <div class="col-md-12 mb-3">
+
+                            @*<input type="text" class="form-control" id="validationServer01" placeholder="Customer Name" value="" required>*@
+                            <TextInput2 TValue="string" TInstance="Customer"
+                                                                        Fake="@exa"
+                                                                        Type=@Types.text
+                                                                        @bind-Value="customer.Name"
+                                                                        placeholder="Customer Name"
+                                                                        class="form-control"
+                                                                        ValidationFor="(()=> customer.Name)" />
+                            <div class="valid-feedback">
+                                Looks good!
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-12 mb-3">
+                            <TextInput2 TValue="string" TInstance="Customer"
+                                                                        Fake="@exa"
+                                                                        Type=@Types.text
+                                                                        @bind-Value="customer.Description"
+                                                                        placeholder="Customer Name"
+                                                                        class="form-control"
+                                                                        ValidationFor="(()=> customer.Description)" />
+                            @*<input type="text" class="form-control" id="validationServer01" placeholder="Customer Name" value="" required>*@
+                            @*<TextInput2 TValue="string"
+        TInstance="Customer"
+        Fake="@exa"
+        Type=@Types.Button
+        TypeButton="search"
+        @bind-Value="customer.Description"
+        placeholder="Customer Description"
+        class="form-control"
+        ValidationFor="(()=> customer.Description)"
+        FormType="typeof(CalibrationSaaS.Infraestructure.Blazor.Pages.Basics.BasicInformationComponent)" />*@
+                            <div class="valid-feedback">
+                                Looks good!sssssssyyyyyar
+                            </div>
+                        </div>
+
+
+
+
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-md-12 mb-3">
+
+                            @*<input type="text" class="form-control" id="validationServer01" placeholder="Customer Name" value="" required>*@
+                            @*<TextInput2 TValue="int"
+                                TInstance="Customer"
+                                Fake="@exa"
+                                Type=@Types.select
+                                @bind-Value="customer.CustomerID"
+                                placeholder="Customer ID"
+                                class="form-control"
+                                ValidationFor="(()=> customer.CustomerID)"
+                                />*@
+                            <div class="valid-feedback">
+                                Looks good!sssssssyyyyyar
+                            </div>
+                        </div>
+
+
+
+
+                    </div>
+
+                    <button class="btn btn-primary" type="submit">Submit form</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+
+<div id="dvModalCreateCustomer">
+    <StandardModal @ref="child"></StandardModal>
+</div>

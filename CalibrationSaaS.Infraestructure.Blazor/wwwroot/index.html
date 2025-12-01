@@ -1,0 +1,2668 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <!--<meta name="viewport" id="testViewport" content="width=device-width, initial-scale=0.75, maximum-scale=0.75, user-scalable=no" />-->
+    <meta name="viewport" id="testViewport" content="width=device-width, initial-scale=0.75, maximum-scale=0.75" />
+    <title>Phoenix Calibration</title>
+    <meta name="description" content="Cloud Based Calibration Management System">
+    <meta name="author" content="Kavoku, LLC">
+    <base href="/" />
+
+    <link href="manifest.json" rel="manifest" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+    <!--Style-->
+    <!-- Custom fonts for this template-->
+    <link href="lib/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <!-- Custom styles for this template-->
+    <!--<link href="lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />-->
+    <link href="css/sb-admin-2.css" rel="stylesheet">
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="_content/Blazored.Modal/blazored-modal.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!--Reports Script-->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.0.943/pdf.min.js"></script>-->
+    <script src="js/pdf.min.js"></script>
+    <script src="js/pdf.worker.min.js"></script>
+    <script src="js/getReportCanvasDemo.js?v3"></script>
+    <link href="css/BlazorControls.css" rel="stylesheet">
+    <script src="js/print.min.js"></script>
+    <link href="css/print.min.css" rel="stylesheet" />
+
+    <!-- Radzen Blazor CSS -->
+    <link href="_content/Radzen.Blazor/css/material-base.css" rel="stylesheet" />
+    <script src="_content/Fluxor.Blazor.Web/scripts/index.js"></script>
+   
+
+    <script>
+        if (window.location.hostname === 'bit-staging-calibration-cdn.azureedge.net') {
+            (function (w, d, s) {
+                var a = d.getElementsByTagName('head')[0];
+                var r = d.createElement('script');
+                r.async = 1;
+                r.src = s;
+                r.setAttribute('id', 'usetifulScript');
+                r.dataset.token = "97b72d29ea44723f57a87f13480620bb";
+                a.appendChild(r);
+            })(window, document, "https://www.usetiful.com/dist/usetiful.js");
+        }
+    </script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+            integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer">
+
+    </script>-->
+    <!--<style>
+
+
+
+        .form-control:invalid {
+            border-color: #e74a3b;
+            padding-right: calc(1.5em + .75rem);
+            background-image: url(data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23e74a3b' viewBox='-2 -2 7 7'%3e%3cpath stroke='%23e74a3b' d='M0 0l3 3m0-3L0 3'/%3e%3ccircle r='.5'/%3e%3ccircle cx='3' r='.5'/%3e%3ccircle cy='3' r='.5'/%3e%3ccircle cx='3' cy='3' r='.5'/%3e%3c/svg%3E);
+            background-repeat: no-repeat;
+            background-position: center right calc(.375em + .1875rem);
+            background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+        }
+
+        .form-control:valid {
+            border-color: #1cc88a;
+            padding-right: calc(1.5em + .75rem);
+            background-image: url(data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%231cc88a' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e);
+            background-repeat: no-repeat;
+            background-position: center right calc(.375em + .1875rem);
+            background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+        }
+
+
+
+        .footermessage:valid {
+            display: none;
+        }
+
+
+        .footermessage:invalid {
+            display: block !important;
+            color: red;
+        }
+
+        .footermessage.invalid {
+            display: block !important;
+            color: red;
+        }
+
+        .footermessage {
+            display: none;
+        }
+    </style>-->
+
+
+    <style>
+        /* .tableresponsive :nth-child(odd) {
+            background-color: aliceblue;
+        }*/
+
+        /*  .tableresponsive .table-row :nth-child(even) {
+            background-color: lightblue;
+        }*/
+        .row-striped:nth-of-type(odd) {
+            background-color: #efefef;
+        }
+
+        .row-striped:nth-of-type(even) {
+            background-color: #ffffff;
+        }
+
+        .tableresponsive {
+            /*width: 100vw;
+        height: 100vh;
+            min-width: 400px;*/
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow-x: auto;
+        }
+
+        .table-row {
+            padding: 2px;
+            width: 100%;
+            height: 10%;
+            display: flex;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .responsivetable-header {
+            font-weight: bold;
+            background-color: #5A5C69;
+            color: white;
+        }
+
+        .table-row div:first-child {
+            width: 2% !important;
+        }
+
+        .table-row-column {
+            min-width: 80px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+    <!--DAB-->
+    <style>
+
+        /*.mb-4, .my-4 {
+            margin-bottom: 0rem !important;
+        }*/
+
+        .grid-row.headerRow {
+            font-weight: bold;
+            background-color: #5A5C69 !important;
+            color: white;
+            font-size: small;
+            padding: 0rem;
+            height: 45px;
+        }
+
+        .headerRow {
+            font-weight: bold;
+            /*background-color: #5A5C69 !important;*/
+            color: white;
+            font-size: small;
+            padding: 0rem;
+            height: 45px;
+        }
+
+        .gridContainer {
+            padding: 0px;
+        }
+
+        .paddingzero {
+            padding: 0px;
+        }
+
+        .grid-row > div {
+            border-width: 0px 1px 1px 1px;
+            border-style: solid;
+            border-color: #e3e6f0;
+            /*padding: 1px;*/
+            padding: 0.03rem;
+            vertical-align: top;
+            color: #858796;
+        }
+
+        .grid-row {
+            width: 100%;
+        }
+
+            .grid-row:nth-of-type(odd) {
+                background-color: rgba(0,0,0,.05);
+            }
+
+            .grid-row:nth-of-type(even) {
+                background-color: whitesmoke;
+            }
+
+            .grid-row div:hover {
+                color: #858796;
+                background-color: rgba(0, 0, 0, 0.075);
+            }
+
+            .grid-row :hover {
+                color: #858796;
+                background-color: rgba(0, 0, 0, 0.075);
+            }
+
+        .inv {
+            display: none;
+        }
+
+        .noinv {
+            display: block;
+        }
+
+        .interline {
+            padding: 0px;
+        }
+
+        .editButton {
+            margin: 4px;
+        }
+
+        .deleteButton {
+        }
+
+        .saveButton {
+        }
+
+        .cancelButton {
+        }
+
+        .btn-sm {
+            /*padding: 10px 20px;
+            font-size: 12px;
+            border-radius: 3px;
+            width: 50%;*/
+        }
+
+        /* .gridContainer .col-sm-2 {
+            padding-left: 0px;
+        }*/
+
+
+        .validation-message {
+            color: red;
+        }
+
+        .customcol {
+            /*margin-top: 15px;*/
+            text-align: left;
+            /*font-weight: bold;*/
+        }
+
+
+        .customcolAction {
+            /*margin-top: 15px;*/
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .form-control-label {
+            font-weight: bold;
+            margin-bottom: 0rem;
+        }
+
+        .sidebarcustom {
+            position: relative;
+        }
+
+        .modal-dialog {
+            margin-top: 0;
+            margin-left: auto;
+            margin-right: auto;
+            left: 0;
+            right: 0;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3e%3cpath stroke='rgba(0, 0, 0, 0.5)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        .center {
+            display: flex;
+            justify-content: center;
+        }
+
+        .paginationControls {
+            width: auto;
+            float: left;
+        }
+
+        .paginationTotal {
+            width: auto;
+            float: left;
+        }
+
+        .inputgrid {
+            width: 90%;
+            background-color: white !important;
+        }
+
+        .inputgridNoBorder {
+            width: 90%;
+            background-color: white !important;
+            border: 0;
+        }
+
+        .inputinvalid {
+            background-color: lightpink !important;
+        }
+
+        .inputgrid2 {
+            width: 80% !important;
+            background-color: white !important;
+        }
+
+        .inputgrid3 {
+            width: 100% !important;
+            background-color: white !important;
+        }
+
+        .repeaContainer {
+            max-height: 800px;
+            overflow: auto;
+            min-height: 400px;
+            padding-left: 15px
+        }
+
+        .customlink {
+            cursor: pointer;
+            color: white !important;
+        }
+
+            .customlink:hover {
+                color: darkblue !important;
+            }
+
+
+        .linkcard {
+            padding-left: 10px;
+            padding-right: 0px;
+        }
+
+        @media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+
+            .row {
+                display: block;
+            }
+
+            .grid-row {
+                border-bottom: 1px solid grey;
+                padding: 1px;
+            }
+
+            .modal-body {
+                padding: 0.5rem;
+            }
+
+            .gridContainer .col-sm-2 {
+                padding-left: 2rem;
+            }
+
+
+            .modal-dialog {
+                margin: 0rem;
+            }
+
+
+            .sidebarcustom {
+                /*position: absolute;*/
+                max-height: 640px;
+            }
+
+            .gridContainer col:nth-child(3n+1) {
+                background: #CCC
+            }
+
+            .grid-row1.headerRow {
+                display: none;
+            }
+
+            .inv {
+                display: block;
+                font-weight: bolder !important;
+                font-size: 1rem;
+                text-align: left !important;
+            }
+
+            .noinv {
+                display: none;
+            }
+
+            .interline {
+                padding: 3px;
+            }
+
+
+
+            .sticky-top {
+                position: -webkit-sticky;
+                position: sticky;
+                top: 0 !important;
+                z-index: 1020;
+            }
+
+            .container, .container-fluid {
+                padding-left: 0rem !important;
+                padding-right: 0rem !important;
+            }
+
+            .card {
+                /*position: relative;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                word-wrap: break-word;
+                background-color: #fff;
+                background-clip: border-box;*/
+                border: 0px solid #e3e6f0;
+                border-radius: .35rem;
+            }
+
+
+            .sidebar {
+                width: 0rem;
+            }
+
+            .customcol {
+                /*margin-top: 15px;*/
+                text-align: justify;
+                /*font-weight: bold;*/
+            }
+
+            .customcolAction {
+                /*margin-top: 15px;*/
+                text-align: end;
+                font-weight: bold;
+            }
+
+            .paginationControls {
+                width: 100%;
+                float: left;
+            }
+
+            .paginationTotal {
+                width: 100%;
+                float: left;
+                display: none;
+            }
+
+            .page-item {
+                width: 100%;
+            }
+
+            footer.sticky-footer {
+                display: none !important;
+            }
+
+            .footer {
+                /* position: absolute;
+                bottom: 0;
+                width: 100%;*/
+
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                clear: both;
+                /* height: 190px; */
+                /* margin-top: -151px; */
+                font-size: 16;
+                text-rendering: auto;
+                position: fixed;
+                /* background-repeat: no-repeat; */
+                height: 40px;
+            }
+
+            .sidebar .nav-item .collapse {
+                position: absolute;
+                left: 0px;
+                z-index: 1;
+                top: 50px;
+            }
+
+
+            .stepwizard {
+                display: none;
+            }
+
+            .WodContent {
+            }
+
+            .separadorbr {
+                display: none;
+            }
+
+            .condition {
+                float: left;
+                width: 30%;
+            }
+
+            .allWidth {
+                width: 100%;
+            }
+
+            .clearBoth {
+                clear: both;
+            }
+
+            .linearityCol {
+                width: 25%;
+                float: left;
+                /*font-size:smaller;*/
+            }
+
+            .RepeaCol {
+                width: 18%;
+                float: left;
+                /*font-size:smaller;*/
+            }
+
+
+            .inputgrid {
+                width: 100%;
+                background-color: white !important;
+            }
+
+            .buttonLin {
+                float: left;
+                width: auto;
+            }
+
+            .marginButton {
+                margin-bottom: 5px;
+            }
+
+            .repeaContainer {
+                max-height: 800px;
+                overflow: auto;
+                min-height: 400px;
+            }
+
+            .enumColumn {
+                width: 1%;
+                float: left;
+            }
+
+            .displayBlock {
+                display: block !important;
+            }
+
+            .displayFlex {
+                display: flex !important;
+            }
+
+            .LoginMessage {
+                margin-top: 50%;
+            }
+
+            #WorkOrderContainer {
+                overflow-y: scroll;
+                max-height: 600px;
+                margin-top: 60px;
+            }
+            /* .modified-accordion .collapse:not(.show) {
+                display: none;
+            }
+
+            .modified-accordion .card-header:after {
+                display: none;
+            }*/
+
+            card.collapse.show {
+                display: none;
+            }
+
+            .gridContainer {
+                max-height: calc(90vh-200px);
+            }
+
+            .container-fluid {
+                margin-top: 60px;
+            }
+        }
+
+        @media only screen and (min-device-width : 560px) { /* Aquí van los estilos */
+
+            .blazored-modal {
+                min-width: 800px;
+            }
+        }
+    </style>
+
+
+    <style>
+
+
+
+        .form-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control-placeholder {
+            position: absolute;
+            top: 0;
+            padding: 7px 0 0 13px;
+            transition: all 200ms;
+            opacity: 0.5 !important;
+        }
+
+        .form-control:focus + .form-control-placeholder {
+            font-size: 85%;
+            transform: translate3d(0, -100%, 0);
+            opacity: 1 !important;
+        }
+
+
+        .form-control:valid + .form-control-placeholder {
+            /*font-size: 75%;
+            transform: translate3d(0, -100%, 0);
+            opacity: 1;*/
+            opacity: 0 !important;
+        }
+
+
+        .form-control:invalid + .form-control-placeholder {
+            /*font-size: 75%;
+            transform: translate3d(0, -100%, 0);
+            opacity: 1;*/
+            opacity: 0.5 !important;
+        }
+    </style>
+
+
+    <style>
+        .blazored-modal {
+            padding: 0rem !important;
+        }
+
+        .sticky-top {
+            position: -webkit-sticky;
+            position: sticky;
+            top: initial;
+            z-index: 1020;
+        }
+
+        #toolbarmodal.container-fluid {
+            height: 30px
+        }
+    </style>
+
+
+
+    <style>
+
+        span.select2-container {
+            z-index: 10050;
+        }
+
+        .ContainerPage {
+            min-height: 400px;
+            padding: 25px !important;
+        }
+
+        .fullwidth {
+        }
+
+        .allWindow {
+            width: 100%;
+        }
+
+        .fullScreen {
+            min-width: 100%;
+            width: 100%;
+            height: 100%;
+            min-height: 98%;
+        }
+
+        .HScreen {
+            min-width: 74%;
+            width: 100%;
+            height: 70%;
+            min-height: 68%;
+            top: 10%
+        }
+
+        .largeWindow {
+            width: 80%;
+        }
+
+
+        .halfWindow {
+            width: 50%;
+            z-index: 20000 !important;
+        }
+
+        .minWindow {
+            width: 30%;
+        }
+
+        #content {
+            /*margin-left: 200px;
+            padding-left: 2rem;*/
+        }
+
+        .warningcolor {
+            background-color: palevioletred;
+        }
+
+        @media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+
+            #page-top {
+                /*overflow-y: hidden;*/
+            }
+
+            .allWindow {
+                width: 100%;
+                height: 97%;
+                overflow-y: scroll;
+            }
+
+            .largeWindow {
+                width: 100%;
+                height: 97%;
+                overflow-y: scroll;
+            }
+
+
+            .halfWindow {
+                width: 100%;
+                height: 97%;
+                overflow-y: scroll;
+            }
+
+            .minWindow {
+                width: 100%;
+                height: 97%;
+                overflow-y: scroll;
+            }
+
+            .blazored-modal-scrollable {
+                display: flex;
+                max-height: calc(100% - 0rem);
+            }
+
+            .card-body {
+                flex: 1 1 auto;
+                padding: 0rem;
+            }
+
+            .static-top {
+                position: -webkit-sticky;
+                position: fixed;
+                top: initial;
+                z-index: 1020;
+            }
+
+            .static-top2 {
+                position: -webkit-sticky;
+                position: fixed;
+                top: initial;
+                z-index: 1020;
+                top: 100px;
+            }
+
+            #content {
+                margin-left: 0px;
+                padding-left: 0.25rem;
+                padding-right: 0.25rem;
+            }
+        }
+    </style>
+
+    <style>
+        .topBar {
+            background-color: #563d7c !important;
+            min-height: 50px !important;
+            width: 100%;
+            z-index: 10;
+        }
+    </style>
+
+    <style>
+
+        /*
+            code by Iatek LLC 2018 - CC 2.0 License - Attribution required
+            code customized by Azmind.com
+        */
+        @media (min-width: 768px) and (max-width: 991px) {
+            /* Show 4th slide on md if col-md-4*/
+            .carousel-inner .active.col-md-4.carousel-item + .carousel-item + .carousel-item + .carousel-item {
+                position: absolute;
+                top: 0;
+                right: -33.3333%; /*change this with javascript in the future*/
+                z-index: -1;
+                display: block;
+                visibility: visible;
+            }
+        }
+
+        @media (min-width: 576px) and (max-width: 768px) {
+            /* Show 3rd slide on sm if col-sm-6*/
+            .carousel-inner .active.col-sm-6.carousel-item + .carousel-item + .carousel-item {
+                position: absolute;
+                top: 0;
+                right: -50%; /*change this with javascript in the future*/
+                z-index: -1;
+                display: block;
+                visibility: visible;
+            }
+        }
+
+        @media (min-width: 576px) {
+            .carousel-item {
+                margin-right: 0;
+            }
+            /* show 2 items */
+            .carousel-inner .active + .carousel-item {
+                display: block;
+            }
+
+            .carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left),
+            .carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left) + .carousel-item {
+                transition: none;
+            }
+
+            .carousel-inner .carousel-item-next {
+                position: relative;
+                transform: translate3d(0, 0, 0);
+            }
+            /* left or forward direction */
+            .active.carousel-item-left + .carousel-item-next.carousel-item-left,
+            .carousel-item-next.carousel-item-left + .carousel-item,
+            .carousel-item-next.carousel-item-left + .carousel-item + .carousel-item {
+                position: relative;
+                transform: translate3d(-100%, 0, 0);
+                visibility: visible;
+            }
+            /* farthest right hidden item must be also positioned for animations */
+            .carousel-inner .carousel-item-prev.carousel-item-right {
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: -1;
+                display: block;
+                visibility: visible;
+            }
+            /* right or prev direction */
+            .active.carousel-item-right + .carousel-item-prev.carousel-item-right,
+            .carousel-item-prev.carousel-item-right + .carousel-item,
+            .carousel-item-prev.carousel-item-right + .carousel-item + .carousel-item {
+                position: relative;
+                transform: translate3d(100%, 0, 0);
+                visibility: visible;
+                display: block;
+                visibility: visible;
+            }
+        }
+        /* MD */
+        @media (min-width: 768px) {
+            /* show 3rd of 3 item slide */
+            .carousel-inner .active + .carousel-item + .carousel-item {
+                display: block;
+            }
+
+            .carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left) + .carousel-item + .carousel-item {
+                transition: none;
+            }
+
+            .carousel-inner .carousel-item-next {
+                position: relative;
+                transform: translate3d(0, 0, 0);
+            }
+            /* left or forward direction */
+            .carousel-item-next.carousel-item-left + .carousel-item + .carousel-item + .carousel-item {
+                position: relative;
+                transform: translate3d(-100%, 0, 0);
+                visibility: visible;
+            }
+            /* right or prev direction */
+            .carousel-item-prev.carousel-item-right + .carousel-item + .carousel-item + .carousel-item {
+                position: relative;
+                transform: translate3d(100%, 0, 0);
+                visibility: visible;
+                display: block;
+                visibility: visible;
+            }
+        }
+        /* LG */
+        @media (min-width: 991px) {
+            /* show 4th item */
+            .carousel-inner .active + .carousel-item + .carousel-item + .carousel-item {
+                display: block;
+            }
+
+            .carousel-inner .carousel-item.active:not(.carousel-item-right):not(.carousel-item-left) + .carousel-item + .carousel-item + .carousel-item {
+                transition: none;
+            }
+            /* Show 5th slide on lg if col-lg-3 */
+            .carousel-inner .active.col-lg-3.carousel-item + .carousel-item + .carousel-item + .carousel-item + .carousel-item {
+                position: absolute;
+                top: 0;
+                right: -25%; /*change this with javascript in the future*/
+                z-index: -1;
+                display: block;
+                visibility: visible;
+            }
+            /* left or forward direction */
+            .carousel-item-next.carousel-item-left + .carousel-item + .carousel-item + .carousel-item + .carousel-item {
+                position: relative;
+                transform: translate3d(-100%, 0, 0);
+                visibility: visible;
+            }
+            /* right or prev direction //t - previous slide direction last item animation fix */
+            .carousel-item-prev.carousel-item-right + .carousel-item + .carousel-item + .carousel-item + .carousel-item {
+                position: relative;
+                transform: translate3d(100%, 0, 0);
+                visibility: visible;
+                display: block;
+                visibility: visible;
+            }
+        }
+    </style>
+
+    <style>
+        .sortable {
+            position: initial;
+            cursor: pointer;
+        }
+
+        .actual {
+            color: red;
+        }
+
+        .sortable::after {
+            font-family: FontAwesome;
+            content: "\f0dc";
+            position: initial;
+            right: 8px;
+            color: #999;
+            margin-left: 0.7rem;
+        }
+
+        .sortable.asc::after {
+            content: "\f0d8";
+        }
+
+        .sortable.desc::after {
+            content: "\f0d7";
+        }
+
+        .sortable:hover::after {
+            color: #333;
+        }
+
+        .sortable2 {
+            position: initial;
+            cursor: pointer;
+        }
+    </style>
+
+    <style>
+
+        .file-row {
+            background-color: #e4e4e4;
+            padding: 1rem 1.5rem;
+            margin-top: 1rem;
+            border-radius: 0.6rem;
+            color: #555;
+            display: flex;
+            align-items: center;
+        }
+
+            .file-row h2 {
+                margin: 0.3rem 0 0.6rem 0;
+                font-weight: bold;
+                color: black;
+                font-size: 1.1rem;
+            }
+
+            .file-row > div {
+                flex-grow: 1;
+            }
+
+            .file-row button {
+                padding: 0.5rem 1rem;
+            }
+
+        .drag-drop-zone {
+            border: 3px dashed #e68710;
+            padding: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #eee;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.2);
+            color: #aeaeae;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin: 1.5rem 0 2rem 0;
+            position: relative;
+        }
+
+            .drag-drop-zone:hover {
+                background-color: #f5f5f5;
+            }
+
+            .drag-drop-zone input[type=file] {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+        pre {
+            background-color: #f0f0f0;
+            overflow: auto;
+            padding: 1rem;
+            height: 10rem;
+        }
+    </style>
+
+
+
+    <style>
+        .dot {
+            height: 15px;
+            width: 15px;
+            background-color: green;
+            border-radius: 50%;
+            display: inline-block;
+            margin-top: 25px;
+        }
+
+        .dot-off {
+            height: 15px;
+            width: 15px;
+            background-color: red;
+            border-radius: 50%;
+            display: inline-block;
+            margin-top: 25px;
+        }
+    </style>
+
+
+    <style id="Material">
+        .mat-label {
+            display: block;
+            font-size: 16px;
+            transform: translateY(25px);
+            color: #e2e2e2;
+            transition: all 0.5s;
+        }
+
+        .mat-input {
+            position: relative;
+            background: transparent;
+            width: 100%;
+            border: none;
+            outline: none;
+            padding: 8px 0;
+            font-size: 16px;
+            /*border-bottom: solid;
+            border-bottom-width: 1px;*/
+        }
+
+        .mat-div {
+            padding: 0 0 0 0;
+            position: relative;
+        }
+
+            .mat-div:after, .mat-div:before {
+                content: "";
+                position: absolute;
+                display: block;
+                width: 100%;
+                /*height: 2px;*/
+                background-color: #e2e2e2;
+                bottom: 0;
+                left: 0;
+                transition: all 0.5s;
+            }
+
+        .mat-div-sp {
+            height: 2px;
+        }
+
+        .mat-div::after {
+            background-color: #8E8DBE;
+            transform: scaleX(0);
+        }
+
+        .is-active::after {
+            transform: scaleX(1);
+        }
+
+        .is-active .mat-label {
+            color: #8E8DBE;
+        }
+
+        .is-completed .mat-label {
+            font-size: 12px;
+            transform: translateY(0);
+        }
+
+        /* button {
+            background-color: #93E1D8;
+            border: none;
+            display: block;
+            margin: 35px auto;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+        }*/
+    </style>
+    <!--tooltip-->
+    <style>
+        .tooltip-wrapper {
+            position: relative;
+            display: inline-block;
+            /*border-bottom: 1px dotted black;*/
+            cursor: help;
+            width: 100%;
+        }
+
+        .tooltipspan {
+            visibility: hidden;
+            position: absolute;
+            width: 120px;
+            bottom: 100%;
+            left: 50%;
+            margin-left: -60px;
+            background-color: #363636;
+            color: #fff;
+            text-align: center;
+            padding: 5px 0;
+            border-radius: 6px;
+            z-index: 1;
+        }
+
+        tooltipspan::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+
+        .tooltip-wrapper:hover .tooltipspan {
+            visibility: visible;
+        }
+
+        /*body::-webkit-scrollbar {
+            width: 12px;*/ /* width of the entire scrollbar */
+        /*}
+
+        body::-webkit-scrollbar-track {
+            background: orange;*/ /* color of the tracking area */
+        /*}
+
+        body::-webkit-scrollbar-thumb {
+            background-color: blue;*/ /* color of the scroll thumb */
+        /*border-radius: 20px;*/ /* roundness of the scroll thumb */
+        /*border: 3px solid orange;*/ /* creates padding around scroll thumb */
+        /*}*/
+
+    </style>
+    <style>
+
+        @media only screen and (min-device-width : 620px) and (max-device-width : 1800px) {
+
+            body {
+                zoom: 75%;
+                -moz-transform: scale(0.75);
+                -moz-transform-origin: left top;
+            }
+        }
+    </style>
+    <!-- <link href="_content/Microsoft.FluentUI.AspNetCore.Components/css/reboot.css" rel="stylesheet" /> -->
+
+</head>
+
+<body id="page-top">
+    <script>
+
+       
+
+
+
+        window.startupParams = function () {
+
+            const url = new URL(
+                window.location.href,
+            );
+
+
+            var str = url.toJSON();
+
+            console.log(str);
+
+            var onl = navigator.onLine.toString();
+
+            return [str, onl, 'third'];
+        };
+    </script>
+    <script src="_content/Blazor.Extensions.Logging/blazor.extensions.logging.js" defer></script>
+    <app id="wrapper">
+        <div style="position:absolute; top:30vh; width:100%; text-align:center">
+            <h1>Calibration Management System</h1>
+            <p><i class="fas fa-spin fa-spinner"></i> The application is loading...</p>
+        </div>
+    </app>
+    <!--<app id="wrapper">Loading...</app>-->
+    <!--<div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>-->
+    <!--Scripts-->
+    <script src="_content/Microsoft.Authentication.WebAssembly.Msal/AuthenticationService.js"></script>
+    <!--https://github.com/dotnet/aspnetcore/issues/25152-->
+    <!--<script src="js/BlazorEnvironment.js"></script>-->
+    <!--<script>
+        const originalFetch = fetch;
+        fetch = async (url, options) => {
+            const response = await originalFetch(url, options);
+            return url.endsWith('/blazor.boot.json')
+                ? new Response(await response.blob(), { headers: { 'blazor-environment': 'Development' } })
+                //? new Response(await response.blob(), { headers: { 'blazor-environment': window.BlazorEnvironment } })
+                : response;
+        };
+    </script>-->
+    <script src="_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/AuthenticationService.js"></script>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script>
+        window.blazorCulture = {
+            get: () => window.localStorage['BlazorCulture'],
+            set: (value) => window.localStorage['BlazorCulture'] = value
+        };
+    </script>
+    <!--<script autostart="true">
+        Blazor.start({
+            applicationCulture: 'en-US'
+        });
+    </script>-->
+    <!--<script src="js/Chart.min.js"></script>-->
+    <script src="js/moment.min.js"></script>
+    <!-- This is the glue between Blazor and Chart.js -->
+    <script src="_content/ChartJs.Blazor.Fork/ChartJsBlazorInterop.js"></script>
+    <!--<script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script>
+        const environmentName = 'Staging';
+        Blazor.start({
+            loadBootResource: function (type, name, defaultUri, integrity) {
+                // Adds a custom HTTP header to the outbound requests https://jkdev.me/blazor-appsettings/
+                // To retain the default integrity checking behavior, it's necessary to pass through the 'integrity' parameter
+                return fetch(defaultUri, {
+                    cache: 'no-cache',
+                    integrity: integrity,
+                    headers: { 'blazor-environment': environmentName }
+                });
+            }
+        });
+    </script>-->
+    <!--<script src="_framework/blazor.webassembly.js" autostart="false"></script>-->
+    <script>
+        Blazor.start({
+            applicationCulture: 'en-US'
+        });
+    </script>
+
+    <script>navigator.serviceWorker.register('service-worker.js');</script>
+
+    <!--from https://github.com/wtulloch/Blazor.IndexedDB-->
+    <script src="_content/TG.Blazor.IndexedDB/indexedDb.Blazor.js"></script>
+    <!--Blazor logging-->
+    <!-- Bootstrap core JavaScript-->
+    <script src="lib/jquery/dist/jquery.min.js"></script>
+
+    <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">-->
+    <!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>-->
+
+    <script src="lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="lib/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="js/sb-admin-2.js"></script>
+    <script src="js/site.js"></script>
+
+    <!-- Page level plugins -->
+    <!--<script src="lib/chart.js/Chart.js"></script>-->
+    <script src="lib/chart.js/Chart.min.js"></script>
+    <!-- Page level custom scripts -->
+    <!--<script src="js/demo/chart-area-demo.js"></script>
+    <script src="js/demo/chart-pie-demo.js"></script>-->
+    <!--Report Script-->
+
+
+    <script>
+        window.showProcessModal = (vbackdrop, vkeyboard, vstatic) => {
+            //$('#pageProcessModal').modal('show');
+            //$('#pageProcessModal').modal({ backdrop: vbackdrop, keyboard: vkeyboard, show: true });
+            //$('#pageProcessModal').data('bs.modal').options.backdrop = vstatic;
+            // console.log(vstatic);
+            // console.log(vkeyboard);
+            //$('#pageProcessModal').modal({ backdrop: vstatic.toString(), keyboard: vkeyboard, show: true });
+
+            $('#pageProcessModal').modal('show', { backdrop: vstatic.toString(), keyboard: vkeyboard });
+        };
+    </script>
+
+    <!--load a javascript dinamically-->
+    <!--<script>
+        window.loadReportCanvas = (file) => {
+            // DOM: Create the script element
+            var jsElm = document.createElement("script");
+            // set the type attribute
+            jsElm.type = "application/javascript";
+            // make the script element load file
+            jsElm.src = file;
+            // finally insert the element to the body element in order to load the script
+            document.body.appendChild(jsElm);
+        };
+    </script>-->
+
+    <script>
+        window.isinstalled = () => {
+            try {
+                var fg = false;
+                //alert('isinstalled');
+                // For iOS
+                if (window.navigator.standalone) {
+                    fg = true;
+                }
+
+                // For Android
+                if (window.matchMedia('(display-mode: standalone)').matches) {
+                    fg = true;
+                }
+                //alert(fg);
+                // If neither is true, it's not installed
+                return fg
+            } catch (error) {
+                console.log("error standalone");
+                console.log(error);
+                return false;
+            }
+
+        }
+    </script>
+
+    <script>
+        function closeModal(id) {
+            console.log('lego');
+            $('#' + id).modal('hide');
+        }
+
+        $("#dvModalCreateCustomer").on('click', '#cmdNextProcess', function () {
+            //$("#dvModalCreateCustomer").on('click', "a[ data-window='external']", function () {
+            console.log('olw');
+            $('#pageProcessModal').modal('toggle');
+        });
+
+        window.closeProcessModal = () => {
+            $('#pageProcessModal').modal('hide');
+        };
+
+
+        window.closeModalWindow = (id) => {
+
+            $('#' + id).modal('hide');
+        };
+
+        window.showModal = (id) => {
+
+            $('#' + id).on('hide.bs.modal', function (e) {
+                console.log('cerrando')
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+            //$('#modalWindow').modal('show')
+            setTimeout(function () {
+
+                $('#' + id).on('hide.bs.modal', function (e) {
+                    console.log('cerrando')
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
+
+
+                $('#' + id).modal('show', { backdrop: 'static', keyboard: false })
+
+            }, 100);
+        };
+
+
+        window.removeValidClass = () => {
+            $(".form-control").removeClass("valid");
+            //console.log('hello');
+        };
+
+        window.removeClass = (id) => {
+
+            //$('#modalWindow').modal('show')
+            setTimeout(function () {
+
+                $('#' + id).modal('hide');
+                $('.' + id).remove()
+                $('body').removeClass('modal-open')
+
+
+            }, 200);
+        };
+
+        var cuz = '';
+        window.hideElement = (id) => {
+
+            //$('#modalWindow').modal('show')
+            setTimeout(function () {
+
+                $('#' + id).css('opacity', '0.7');
+                cuz = $('#' + id).css('z-index');
+                $('#' + id).css('z-index', '1');
+                //$('#' + id).removeClass('show');
+                //$('#' + id).css('display','none');
+
+
+            }, 200);
+        };
+
+
+        var cuz = '';
+        window.hideElement2 = (id) => {
+
+            //$('#modalWindow').modal('show')
+            setTimeout(function () {
+
+                $('#' + id).css('opacity', '0.7');
+                cuz = $('#' + id).css('z-index');
+                $('#' + id).css('z-index', '1');
+                $('#' + id).removeClass('show');
+                $('#' + id).css('display', 'none');
+
+
+            }, 200);
+        };
+
+        window.showElement = (id) => {
+
+            //$('#modalWindow').modal('show')
+            setTimeout(function () {
+
+
+
+                //$('#' + id).addClass('show');
+                //$('#' + id).css('display', 'block');
+                $('#' + id).css('opacity', '1');
+                //cuz = $('#' + id).css('z-index');
+                $('#' + id).css('z-index', cuz);
+
+
+            }, 200);
+        };
+
+       
+        window.showElement2 = (id) => {
+
+            
+            //$('#modalWindow').modal('show')
+            setTimeout(function ()
+            {   //$('#' + id).addClass('show');
+                $('#' + id).css('display', 'flex');
+                $('#' + id).css('opacity', '1');
+            }, 10);
+        };
+
+        window.showP = () =>
+        {
+
+            executeMethod("CloseButtonModal");
+            showProgressBar("progressBar");
+            showElement2("waitingring");
+           
+        };
+
+
+
+
+        function isNumeric(n) {
+            return !isNaN(parseFloat(n)) && isFinite(n);
+        }
+
+
+        window.getDimensions = function () {
+
+            var scroll2 = 0;
+            var scroll1 = window.pageYOffset || document.documentElement.scrollTop;
+
+
+            if (isNumeric(scroll1)) {
+                scroll2 = Math.round(scroll1);
+
+            }
+
+
+            return {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                online: navigator.onLine,
+                scroll: scroll2,
+                install: isinstalled()
+
+            };
+        };
+
+
+
+        window.getOnline = function () {
+            alert(navigator.onLine)
+            return navigator.onLine
+
+
+        };
+
+
+
+        window.hideProgress = (id) => {
+            try {
+
+                setFocus();
+            }
+            catch (e) {
+
+            }
+
+            //$('#modalWindow').modal('show')
+            setTimeout(function () {
+                try {
+
+                    $('#' + id).hide();
+
+                    jsRemoveWindowLoad();
+
+
+                }
+
+                catch (e) {
+
+                }
+            }, 300);
+
+
+
+
+
+        };
+
+        function setFocus() {
+            try {
+
+                if (focused == undefined || focused == null || focused.length == 0) {
+                    return;
+                }
+
+                $(findNextTabStop(focused, hor)).focus().select();
+                setTimeout(function () {
+                    if (nextelemnt == undefined || nextelemnt == null) {
+                        return;
+                    }
+                    //$(findTabStop(nextelemnt)).focus().select();
+                    /*$(findTabStop(nextelemnt)).focus().select();*/
+                    console.log('tabb')
+                    //alert(focused);
+                    //focused = undefined;
+                    //nextelemnt = undefined;
+                }, 100)
+            }
+            catch (err) {
+                log('setFocus')
+                log(err.message)
+            }
+        }
+
+        //window.showToast = (id) => {
+        //    console.log(id.toString());
+        //    $('#'+id.toString()).toast('show');
+        //};
+
+        //progressBar shared componente
+        //var inheritwod = false;
+        window.showProgressBar = (id, focus) => {
+
+            setTimeout(function () {
+                try {
+
+                   
+                        $('#' + id).show();
+                    
+                   
+                    //jsShowWindowLoad('Loading', focus);
+                } catch (e) {
+
+                }
+            }, 20);
+        };
+        window.closeProgressBar = (id) => {
+            $('#' + id).hide();
+            //document.getElementById(id).style.display = 'none';
+        };
+
+
+        var Base64 = '';
+
+        window.SetReport = (id) => {
+
+            Base64 = id;
+
+        };
+
+        window.OpenWindow = (id) => {
+            alert(id)
+            window.open(id, "_blank")
+
+        };
+        var focused;
+        var hor;
+        window.SetControlFocus = (id, _hor) => {
+
+            focused = id;
+            hor = _hor;
+
+        };
+
+        var nextelemnt;
+        function findTabStop(el) {
+            var universe = document.querySelectorAll("input[id*='Texbox_']"); //document.querySelectorAll('input, button, select, textarea, a[href]');
+            var list = Array.prototype.filter.call(universe, function (item) { return item.tabIndex >= "0" });
+            var index = list.indexOf(el);
+            nextelemnt = list[index + 1];
+            return list[index];// || list[0];
+        }
+        function findNextTabStop(control, _hor) {
+            var el = document.getElementById(control);
+
+            var filter = 'Texbox_';
+
+            if (_hor == true) {
+                filter = control.split("_")[0];
+            }
+            //input[id*='Texbox_']
+            //alert(filter);
+            //alert(hor);
+            var universe = document.querySelectorAll("input[id*=" + filter + "]");
+            var list = Array.prototype.filter.call(universe, function (item) { return item.tabIndex >= "0" });
+            var index = list.indexOf(el);
+
+            return list[index + 1];// || list[0];
+        }
+
+        window.Collapse = (id) => {
+
+            $('#' + id).removeClass('show')
+
+        };
+
+
+    </script>
+    <script>
+        window.BlazorControls = {
+            assemblyname: 'Blazor.Controls',
+            setFocus: (element) => {
+                if (!element)
+                    return;
+
+                element.focus();
+            },
+            preventEnter: (element, disabled) => {
+                if (!element) {
+                    console.log("Error: preventEnter() element not found");
+                    return;
+                }
+
+                if (disabled)
+                    element.addEventListener('keydown', BlazorControls.preventEnterHandler);
+                else
+                    element.removeEventListener('keydown', BlazorControls.preventEnterHandler);
+            },
+            preventEnterHandler: (event) => {
+                const key = event.key;
+
+                if (key === "Enter") {
+                    event.preventDefault();
+                }
+            }
+
+        };
+
+    </script>
+
+    <script>
+        window.topaccordion = function () {
+
+            setTimeout(function () {
+                try {
+                    accordion();
+                } catch (ex) {
+
+                }
+
+            }, 1000);
+
+        }
+
+
+        function accordion() {
+
+            $(document).ready(function () {
+
+
+                if ($('#accordion') == undefined || $('#accordion').length == 0) {
+
+                    return;
+                }
+
+                var size = $('#accordion').height();
+                console.log(size)
+
+                //$('.blazored-modal-content').css('max-height', size * 3)
+                //$('.blazored-modal-content').css('height', size * 3)
+
+                $('.contenido').css('max-height', size * 1.5)
+
+                $('.contenido').css('height', (size * 1.5) + 2)
+
+                $('.contenido').css('overflow', 'scroll')
+
+                $('.contenido').css('padding-top', '1px')
+
+
+
+                //$('.contenido').animate({ height: size * 3 }, 100);
+
+                $('.collapse').on('shown.bs.collapse', function (e) {
+                    var $card = $(this).closest('.card');
+                    console.log($card)
+                    //$('.blazored-modal-content').animate({ height: size * 2 }, 100);
+                    console.log($card.offset().top)
+                    console.log($card.height())
+                    var enca = $('#headermodal').height() + $('#toolbarmodal').height()
+                    console.log(enca)
+                    $('.contenido').animate({
+                        scrollTop: $card.offset().top - (enca + 50 * 2)//180 cargeader
+                    }, 500);
+                });
+            })
+        }
+
+    </script>
+
+    <!--<script>
+
+        $('#carousel-example').on('slide.bs.carousel', function (e) {
+            /*
+                CC 2.0 License Iatek LLC 2018 - Attribution required
+            */
+            var $e = $(e.relatedTarget);
+            var idx = $e.index();
+            var itemsPerSlide = 5;
+            var totalItems = $('.carousel-item').length;
+
+            if (idx >= totalItems - (itemsPerSlide - 1)) {
+                var it = itemsPerSlide - (totalItems - idx);
+                for (var i = 0; i < it; i++) {
+                    // append slides to end
+                    if (e.direction == "left") {
+                        $('.carousel-item').eq(i).appendTo('.carousel-inner');
+                    }
+                    else {
+                        $('.carousel-item').eq(0).appendTo('.carousel-inner');
+                    }
+                }
+            }
+        });
+    </script>-->
+
+    <script src="_content/Blazored.Modal/blazored.modal.js"></script>
+
+    <!-- Radzen Blazor JavaScript -->
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+
+    <!--<script src="js/BlazorControls.js"></script>-->
+    <!--<script src="inputfile.js"></script>-->
+    <script src="_content/CEC.Routing/cec.routing.js"></script>
+    <script src="_content/BrowserInterop/scripts.js"></script>
+
+    <script>
+
+        window.executeMethod = (id) => {
+
+            setTimeout(function () {
+
+                $('#' + id).click();
+
+            }, 200);
+
+
+
+            //document.getElementById(id).style.display = 'none';
+        };
+
+
+    </script>
+
+    <script>
+
+        function uuidv4() {
+            return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+                (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+            );
+        }
+
+        async function backupbase() {
+            {
+                const cache = await caches.open('SqliteWasmHelper');
+
+
+                const resp = await cache.match('/data/cache/things.db');
+
+
+                const blob = await resp.blob();
+
+                const backupPath = 'backup_' + uuidv4();
+
+
+
+                parent = document.getElementById('bklinkdownload');
+
+                if (parent != undefined) {
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = backupPath;
+                    a.target = "_self";
+                    a.innerText = `Download Database`;
+                    a.style = "color:white";
+                    parent.innerHTML = '';
+                    parent.appendChild(a);
+                    console.log('backupbase');
+                }
+
+
+            }
+        }
+
+
+
+    </script>
+
+    <script>
+
+        $.fn.modal.Constructor.prototype.enforceFocus = function () { };
+
+
+    </script>
+
+    <script>
+
+        function jsRemoveWindowLoad() {
+            // eliminamos el div que bloquea pantalla
+
+            $("#WindowLoad").remove();
+
+
+
+        }
+
+        var scc;
+        function jsShowWindowLoad(mensaje, focus) {
+
+            //if (focus == false) {
+
+            //    focused = document.activeElement;
+            //    if (!focused || focused == document.body)
+            //        focused = null;
+
+
+            //        focused = document.querySelector(":focus");
+            //}
+
+
+            scc = $("body").css("overflow");
+
+            //eliminamos si existe un div ya bloqueando
+            jsRemoveWindowLoad();
+
+
+            var elem = document.getElementById('page-top');
+            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            var istop = false;
+            ////alert(scrollTop);
+            ////alert(getScroll());
+            var position = $('.copyright').offset();
+
+            console.log(position.top);
+
+            if (scrollTop > 200) {
+                //elem.scrollIntoView({ behavior: 'smooth' });
+                //elem.scrollIntoView(false);
+                istop = true;
+            }
+            //if (istop) {
+            //    $("body").css("overflow", "visible");
+            //} else {
+            //    $("body").css("overflow", "hidden");
+            //}
+            //si no enviamos mensaje se pondra este por defecto
+            if (mensaje === undefined) mensaje = "Loading&amp;lt;br&amp;gt;Please Wait";
+
+            //centrar imagen gif
+            height = 20;//El div del titulo, para que se vea mas arriba (H)
+            var ancho = 0;
+            var alto = 0;
+
+
+            //var height2 = Math.max(body.scrollHeight, body.offsetHeight,
+            //    html.clientHeight, html.scrollHeight, html.offsetHeight);
+
+            var scrollHeight = Math.max(
+                document.body.scrollHeight, document.documentElement.scrollHeight,
+                document.body.offsetHeight, document.documentElement.offsetHeight,
+                document.body.clientHeight, document.documentElement.clientHeight
+            );
+            //obtenemos el ancho y alto de la ventana de nuestro navegador, compatible con todos los navegadores
+            if (window.innerWidth == undefined) ancho = window.screen.width;
+            else ancho = window.innerWidth;
+
+            if (window.innerHeight == undefined) {
+                console.log("height 1");
+                alto = window.screen.height;
+            }
+            else {
+                console.log("height 2");
+                alto = window.innerHeight;
+            }
+
+            console.log("height");
+            //console.log(height2);
+            //operación necesaria para centrar el div que muestra el mensaje
+            var heightdivsito = alto / 2 - parseInt(height) / 2;//Se utiliza en el margen superior, para centrar
+
+            //imagen que aparece mientras nuestro div es mostrado y da apariencia de cargando
+            imgCentro = "<div style='text-align:center;height:" + alto + "px;'><div  style='color:#000;margin-top:" + heightdivsito + "px; font-size:20px;font-weight:bold'>" + mensaje + "</div><div style='display: flex; align-items:center; justify-content: center; width: 100%;' b-xkrr7evqik=''><!--!--><fluent-progress-ring id='f6c7f67e3' role='progressbar' _bl_6=''></fluent-progress-ring></div></div>";
+
+            //creamos el div que bloquea grande------------------------------------------
+            div = document.createElement("div");
+            div.id = "WindowLoad"
+            div.style.width = "100%";//ancho + "px";
+            div.style.height = "100%";//alto + "px";
+            div.style.minHeight = "100%";
+            div.style.maxHeight = "100%";
+
+            if (!istop) {
+                div.style.top = "0" + "px";
+            }
+
+
+
+            div.style.position = "absolute";
+            div.style.zIndex = "100000";
+            $("body").append(div);
+            console.log("focus");
+            if (focus == undefined || focus == true) {
+                //creamos un input text para que el foco se plasme en este y el usuario no pueda escribir en nada de atras
+                console.log("focus no");
+                input = document.createElement("input");
+                input.id = "focusInput";
+                input.type = "text"
+
+                //asignamos el div que bloquea
+                $("#WindowLoad").append(input);
+
+                //asignamos el foco y ocultamos el input text
+                $("#focusInput").focus();
+                $("#focusInput").hide();
+            }
+            console.log("focus end");
+            //centramos el div del texto
+            $("#WindowLoad").html(imgCentro);
+
+
+        }
+    </script>
+
+
+    <script>
+        function showSideNav() {
+            $('#accordionSidebar').toggle();
+            $('#accordionSidebar').css("width", "auto");
+        }
+
+
+
+    </script>
+
+
+
+
+    <!--delete database-->
+    <script>
+        //alert('delete db');
+        // Credit to @steobrien from https://gist.github.com/rmehner/b9a41d9f659c9b1c3340#gistcomment-2940034
+        // for modern browsers, this works:
+        //const dbs = window.indexedDB.databases()
+        //dbs.forEach(db => { window.indexedDB.deleteDatabase('CalibrationSaaSOfflineDB') })
+        //if (confirm('delete db'))
+        //{
+        //    window.indexedDB.deleteDatabase('CalibrationSaaSOfflineDB')
+        //}
+
+        // for older browsers, have a look at previous revisions of this gist.
+    </script>
+
+
+    <script>
+
+        function fixedDecimal(navId, ndecimal) {
+            $("#" + navId).change(function () {
+                $(this).val(parseFloat($(this).val()).toFixed(ndecimal));
+            });
+
+        }
+
+
+    </script>
+
+    <script>
+
+        //document.getScroll = function () {
+        //    if (window.pageYOffset != undefined) {
+        //        return [pageXOffset, pageYOffset];
+        //    } else {
+        //        var sx, sy, d = document,
+        //            r = d.documentElement,
+        //            b = d.body;
+        //        sx = r.scrollLeft || b.scrollLeft || 0;
+        //        sy = r.scrollTop || b.scrollTop || 0;
+        //        return [sx, sy];
+        //    }
+        //}
+
+
+
+        function Nav_ScrollIntoView(navId) {
+
+            //setTimeout(function () {
+
+            var elem = document.getElementById(navId);
+            if (elem === null) {
+                return
+            };
+
+
+            var a = elem.scrollTop;
+            var b = elem.scrollHeight - elem.clientHeight;
+            var c = a / b;
+
+            //alert(a);
+            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            //alert(scrollTop);
+            //alert(getScroll());
+            if (scrollTop > 400) {
+                //elem.scrollIntoView({ behavior: 'smooth' });
+                elem.scrollIntoView(false);
+            }
+
+
+            //}, 20);
+
+
+
+
+
+        }
+
+
+
+
+    </script>
+
+    <script src="_content/BlazorInputFile/inputfile.js"></script>
+
+
+    <script src="js/dexie.min.js"></script>
+    <script src="js/dexie-export-import.js"></script>
+    <script src="js/download.min.js"></script>
+
+    <script>
+
+        window.BackUp = async (id) => {
+
+            await indexDBBackup();
+
+
+        };
+
+        async function indexDBBackup() {
+            try {
+
+                let db = new Dexie('CalibrationSaaSOfflineDB');
+                if (!(await Dexie.exists(db.name))) {
+                    console.log("Db does not exist");
+                    alert("Db does not exist");
+                    //db.version(1).stores({});
+                }
+                await db.open();
+                //let db = new Dexie('exportSample');
+                const blob = await db.export({ prettyJson: true, progressCallback });
+                download(blob, "CalibrationSaaSOfflineDB" + getHourDate() + ".json", "application/json");
+            } catch (error) {
+                console.error('' + error);
+            }
+
+            db.close();
+        }
+
+        function getHourDate() {
+            var currentdate = new Date();
+            var datetime = currentdate.getDate() + "_"
+                + (currentdate.getMonth() + 1) + "_"
+                + currentdate.getFullYear() + "_"
+                + currentdate.getHours() + "_"
+                + currentdate.getMinutes() + "_"
+                + currentdate.getSeconds();
+
+            return datetime;
+        }
+
+        function progressCallback({ totalRows, completedRows }) {
+            console.log(`Progress: ${completedRows} of ${totalRows} rows completed`);
+        }
+
+        function deleteDatabase() {
+            if (confirm('delete offline database')) {
+                //window.indexedDB.deleteDatabase('CalibrationSaaSOfflineDB')
+                var db = new Dexie('CalibrationSaaSOfflineDB');
+                db.delete().then(function () {
+                    console.log('Database successfully deleted: ', name);
+                }).catch(function (err) {
+                    console.error('Could not delete database: ', name, err);
+                }).finally(function () {
+                    console.log('Done. Now executing callback if passed.');
+                    if (typeof cb === 'function') {
+                        cb();
+                    }
+
+                });
+            }
+        }
+        function cb() {
+
+        }
+    </script>
+    <script id="material">
+
+        $(".mat-input").focus(function () {
+            $(this).parent().addClass("is-active is-completed");
+        });
+
+        $(".mat-input").focusout(function () {
+            if ($(this).val() === "")
+                $(this).parent().removeClass("is-completed");
+            $(this).parent().removeClass("is-active");
+        })
+    </script>
+    <script>
+        window.jsToDotNetSamples = {
+            dotNetReference: null,
+            setDotNetReference: function (dotNetReference) {
+                this.dotNetReference = dotNetReference;
+            },
+            printPersonFromDotNet: function () {
+                var person = this.dotNetReference.invokeMethod("GetPerson");
+                alert(JSON.stringify(person));
+            }
+        };
+    </script>
+
+
+    <script>
+
+        function inicoordcontrol() {
+
+
+            // Escuchar cambios en los campos y actualizar los valores decimales
+            const gradosInputs = document.querySelectorAll('.grados');
+            const minutosInputs = document.querySelectorAll('.minutos');
+            const segundosInputs = document.querySelectorAll('.segundos');
+
+
+
+            gradosInputs.forEach(input => input.addEventListener('input', actualizarValorDecimal));
+            minutosInputs.forEach(input => input.addEventListener('input', actualizarValorDecimal));
+            segundosInputs.forEach(input => input.addEventListener('input', actualizarValorDecimal));
+
+            // Escuchar cambios en el campo valorDecimal
+            //const valorDecimalInputs = document.querySelectorAll('.valorDecimal');
+            //valorDecimalInputs.forEach(input => input.addEventListener('input', actualizarCoordenadas));
+
+
+        }
+
+        function actualizarValorDecimal2(event) {
+            const indice = event.target.dataset.indice;
+            const grados = parseInt(document.querySelector(`.grados[data-indice="${indice}"]`).value);
+            const minutos = parseInt(document.querySelector(`.minutos[data-indice="${indice}"]`).value);
+            const segundos = parseFloat(document.querySelector(`.segundos[data-indice="${indice}"]`).value);
+
+            const valorDecimalInput = document.querySelector(`.valorDecimal[data-indice="${indice}"]`);
+
+            // Validar grados
+            if (grados < 0 || grados >= 360) {
+                valorDecimalInput.value = '0';
+                return;
+            }
+
+            // Validar minutos
+            if (minutos < 0 || minutos >= 60) {
+                valorDecimalInput.value = '0';
+                return;
+            }
+
+            // Realizar la conversión a valor decimal
+            const valorDecimal = grados + (minutos / 60) + (segundos / 3600);
+
+            // Mostrar el valor decimal en el campo de entrada
+            valorDecimalInput.value = valorDecimal;
+
+            const buttonvalorDecimalInput = document.querySelector(`.buttonvalorDecimal[data-indice="${indice}"]`);
+
+            buttonvalorDecimalInput.click();
+
+
+        }
+
+
+
+        function actualizarValorDecimal(event) {
+            const indice = event.target.dataset.indice;
+
+            //7727
+
+            var gradosinput = document.querySelector(`.grados[data-indice="${indice}"]`);
+
+            var minutosinput = document.querySelector(`.minutos[data-indice="${indice}"]`);
+
+            var segundosinput = document.querySelector(`.segundos[data-indice="${indice}"]`);
+
+            const grados = parseInt(gradosinput.value);
+            const minutos = parseInt(minutosinput.value);
+            const segundos = parseFloat(segundosinput.value);
+
+            const valorDecimalInput = document.querySelector(`.valorDecimal[data-indice="${indice}"]`);
+
+            const valordecimaltmp = parseFloat(valorDecimalInput.value);
+
+            // Validar grados
+            if (grados < 0 || grados >= 360) {
+                valorDecimalInput.value = '0';
+                return;
+            }
+
+            // Validar minutos
+            if (minutos < 0 || minutos >= 60) {
+                valorDecimalInput.value = '0';
+                return;
+            }
+
+
+
+
+            // Realizar la conversión a valor decimal
+            const valorDecimal = grados + (minutos / 60) + (segundos / 3600);
+
+
+
+            // Mostrar el valor decimal en el campo de entrada
+            valorDecimalInput.value = valorDecimal;
+
+            const buttonvalorDecimalInput = document.querySelector(`.buttonvalorDecimal[data-indice="${indice}"]`);
+
+            buttonvalorDecimalInput.click();
+        }
+
+        let observer = new MutationObserver(mutationRecords => {
+            //console.log(mutationRecords); // console.log(los cambios)
+
+            for (const record of mutationRecords) {
+                //log.textContent = `Target of mutation: ${record.target.id}`;
+                console.log('MutationObserver');
+                console.log(record.target.id);
+                actualizarCoordenadas2(record.target.id);
+
+            }
+        });
+
+        // observa todo exceptuando atributos
+        var config = { attributes: true, childList: true, characterData: true };
+
+        function observefield(indice) {
+            const valorDecimalInput = document.querySelector(`.valorDecimal[data-indice="${indice}"]`);
+
+            if (valorDecimalInput == null) {
+                return;
+            }
+
+            actualizarCoordenadas2(indice);
+
+            observer.observe(valorDecimalInput, config);
+        }
+
+        function actualizarCoordenadas(indice) {
+
+            console.log('actualizarCoordenadas ' + indice);
+            //const indice = event.target.dataset.indice;
+            //const valorDecimal = parseFloat(event.target.value);
+            const valorDecimalInput = document.querySelector(`.valorDecimal[data-indice="${indice}"]`);
+
+            const gradosInput = document.querySelector(`.grados[data-indice="${indice}"]`);
+            const minutosInput = document.querySelector(`.minutos[data-indice="${indice}"]`);
+            const segundosInput = document.querySelector(`.segundos[data-indice="${indice}"]`);
+
+            if (valorDecimalInput == null || gradosInput == null || minutosInput == null || segundosInput == null) {
+                return;
+            }
+
+
+
+            //$(valorDecimalInput).bind("propertychange change keyup paste input", function () {
+            //    // do stuff;
+
+            //    console.log('bindigconobjeto');
+
+            //});
+            //valorDecimalInput.addEventListener('input', actualizarCoord2);
+
+            gradosInput.addEventListener('change', actualizarValorDecimal);
+
+            minutosInput.addEventListener('change', actualizarValorDecimal);
+
+            segundosInput.addEventListener('change', actualizarValorDecimal);
+
+
+
+            if (valorDecimalInput.value == 0 || valorDecimalInput.value == '') {
+
+                gradosInput.value = 0;
+                minutosInput.value = 0;
+                segundosInput.value = 0;
+                return;
+            }
+
+            const valorDecimal = parseFloat(valorDecimalInput.value);
+            console.log(valorDecimal);
+            // Validar el valor decimal
+            if (isNaN(valorDecimal)) {
+                gradosInput.value = 0;
+                minutosInput.value = 0;
+                segundosInput.value = 0;
+                return;
+            }
+
+
+            // Calcular grados, minutos y segundos
+            const grados = Math.floor(valorDecimal);
+            const minutosDecimal = (valorDecimal - grados) * 60;
+            const minutos = Math.floor(minutosDecimal);
+            const segundos = (minutosDecimal - minutos) * 60;
+
+            // Mostrar las coordenadas en los campos de entrada
+            gradosInput.value = grados;
+            minutosInput.value = minutos;
+            segundosInput.value = segundos.toFixed(4); // Limitar los segundos a 4 decimales
+        }
+
+
+        function actualizarCoordenadas2(indice) {
+
+            console.log('actualizarCoordenadas ' + indice);
+            //const indice = event.target.dataset.indice;
+            //const valorDecimal = parseFloat(event.target.value);
+            const valorDecimalInput = document.querySelector(`.valorDecimal[data-indice="${indice}"]`);
+
+            const gradosInput = document.querySelector(`.grados[data-indice="${indice}"]`);
+            const minutosInput = document.querySelector(`.minutos[data-indice="${indice}"]`);
+            const segundosInput = document.querySelector(`.segundos[data-indice="${indice}"]`);
+
+            if (valorDecimalInput == null || gradosInput == null || minutosInput == null || segundosInput == null) {
+                return;
+            }
+
+
+
+            //$(valorDecimalInput).bind("propertychange change keyup paste input", function () {
+            //    // do stuff;
+
+            //    console.log('bindigconobjeto');
+
+            //});
+            //valorDecimalInput.addEventListener('input', actualizarCoord2);
+
+            //gradosInput.addEventListener('change', actualizarValorDecimal);
+
+            //minutosInput.addEventListener('change', actualizarValorDecimal);
+
+            //segundosInput.addEventListener('change', actualizarValorDecimal);
+
+
+
+            if (valorDecimalInput.value == 0 || valorDecimalInput.value == '') {
+
+                gradosInput.value = 0;
+                minutosInput.value = 0;
+                segundosInput.value = 0;
+                return;
+            }
+
+            const valorDecimal = parseFloat(valorDecimalInput.value);
+            console.log(valorDecimal);
+            // Validar el valor decimal
+            if (isNaN(valorDecimal)) {
+                gradosInput.value = 0;
+                minutosInput.value = 0;
+                segundosInput.value = 0;
+                return;
+            }
+
+
+            // Calcular grados, minutos y segundos
+            const grados = Math.floor(valorDecimal);
+            const minutosDecimal = (valorDecimal - grados) * 60;
+            const minutos = Math.floor(minutosDecimal);
+            const segundos = (minutosDecimal - minutos) * 60;
+
+            // Mostrar las coordenadas en los campos de entrada
+            gradosInput.value = grados;
+            minutosInput.value = minutos;
+            segundosInput.value = segundos.toFixed(4); // Limitar los segundos a 4 decimales
+        }
+
+
+
+
+        window.getSelectedStart = (element) => {
+
+            //var a=document.getElementById('textbox_id').value
+            var indice = element.id;
+            //const gradosInput = document.querySelector(`.grados[data-indice="${indice}"]`);
+            //const minutosInput = document.querySelector(`.minutos[data-indice="${indice}"]`);
+            //const segundosInput = document.querySelector(`.segundos[data-indice="${indice}"]`);
+            //const valorDecimal = parseFloat(element.value);
+            //console.log(valorDecimal);
+            //// Validar el valor decimal
+            //if (isNaN(valorDecimal)) {
+            //    gradosInput.value = 0;
+            //    minutosInput.value = 0;
+            //    segundosInput.value = 0;
+            //    return;
+            //}
+
+
+            //// Calcular grados, minutos y segundos
+            //const grados = Math.floor(valorDecimal);
+            //const minutosDecimal = (valorDecimal - grados) * 60;
+            //const minutos = Math.floor(minutosDecimal);
+            //const segundos = (minutosDecimal - minutos) * 60;
+
+            //// Mostrar las coordenadas en los campos de entrada
+            //gradosInput.value = grados;
+            //minutosInput.value = minutos;
+            //segundosInput.value = segundos.toFixed(4); // Limitar los segundos a 4 decimales
+
+
+
+            console.log('getSelectedStart' + indice);
+            console.log(element.value);
+            return element.value;
+
+
+
+        }
+
+
+
+    </script>
+    <!--<script>
+        window.onload = function () {
+            if (screen.width > 740) {
+                var mvp = document.getElementById('testViewport');
+                mvp.setAttribute('content', 'width=140');
+            }
+        }
+    </script>-->
+    <!--<script>
+          //
+          // Declare Database and pre-populate it
+          //
+          let db = new Dexie('CalibrationSaaSOfflineDB');
+          //db.version(1).stores({
+          //    foos: 'id'
+          //});
+          //db.on('populate', () => {
+          //    return db.foos.bulkAdd([
+          //        {
+          //            id: 1,
+          //            foo: 'foo',
+          //            date: new Date(), // Dates, Blobs, ArrayBuffers, etc are supported
+          //        }, {
+          //            id: 2,
+          //            foo: 'bar',
+          //        }
+          //    ]);
+          //});
+
+          //
+          // When document is ready, bind export/import funktions to HTML elements
+          //
+          document.addEventListener('DOMContentLoaded', () => {
+              showContent().catch(err => console.error('' + err));
+              const dropZoneDiv = document.getElementById('dropzone');
+              const exportLink = document.getElementById('exportLink');
+
+              // Configure exportLink
+              exportLink.onclick = async () => {
+                  try {
+                      const blob = await db.export({ prettyJson: true, progressCallback });
+                      download(blob, "dexie-export.json", "application/json");
+                  } catch (error) {
+                      console.error('' + error);
+                  }
+              };
+
+              // Configure dropZoneDiv
+              dropZoneDiv.ondragover = event => {
+                  event.stopPropagation();
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = 'copy';
+              };
+
+              // Handle file drop:
+              dropZoneDiv.ondrop = async ev => {
+                  ev.stopPropagation();
+                  ev.preventDefault();
+
+                  // Pick the File from the drop event (a File is also a Blob):
+                  const file = ev.dataTransfer.files[0];
+                  try {
+                      if (!file) throw new Error(`Only files can be dropped here`);
+                      console.log("Importing " + file.name);
+                      await db.delete();
+                      db = await Dexie.import(file, {
+                          progressCallback
+                      });
+                      console.log("Import complete");
+                      await showContent();
+                  } catch (error) {
+                      console.error('' + error);
+                  }
+              }
+          });
+
+          function progressCallback({ totalRows, completedRows }) {
+              console.log(`Progress: ${completedRows} of ${totalRows} rows completed`);
+          }
+
+          async function showContent() {
+              const tbody = document.getElementsByTagName('tbody')[0];
+
+              const tables = await Promise.all(db.tables.map(async table => ({
+                  name: table.name,
+                  count: await table.count(),
+                  primKey: table.schema.primKey.src
+              })));
+              tbody.innerHTML = `
+      <tr>
+        <th>Database Name</th>
+        <td colspan="2">${db.name}</th>
+      </tr>
+      ${tables.map(({ name, count, primKey }) => `
+        <tr>
+          <th>Table: "${name}"</th>
+          <td>Primary Key: ${primKey}</td>
+          <td>Row count: ${count}</td>
+        </tr>`)}
+    `;
+          }
+      </script>-->
+    <script>
+        //window.allowConsole = false;
+        //if (process.env.NODE_ENV === "development")
+
+        var enablelog = true;
+        window.setLog = function () {
+            //alert('xxxxxxxxx');
+            /*enablelog = false;*/
+            (function () {
+                if (1 == 1) {
+                    var method;
+                    var noop = function noop() { };
+                    var methods = [
+                        'assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error',
+                        'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log',
+                        'markTimeline', 'profile', 'profileEnd', 'table', 'time', 'timeEnd',
+                        'timeStamp', 'trace', 'warn'
+                    ];
+                    var length = methods.length;
+                    var console = (window.console = window.console || {});
+
+                    while (length--) {
+                        method = methods[length];
+                        console[method] = noop;
+                    }
+                }
+
+            }());
+        };
+
+        //if (1 == 1) {
+        //    console.log = function () { };
+        //}
+
+
+
+
+
+
+    </script>
+
+</body>
+
+</html>

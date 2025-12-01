@@ -1,0 +1,1318 @@
+﻿@page "/repeatibility/{EntityID}"
+@using Blazed.Controls
+@inject HttpClient Http
+
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Domain.Aggregates.Shared;
+@using CalibrationSaaS.Infraestructure.Blazor
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+@using CalibrationSaaS.Infraestructure.Blazor.Helper
+@namespace BlazorApp1.Blazor.Pages.Order.Calibrations
+@inherits KavokuComponentBase<int>
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using System.Timers
+@using CalibrationSaaS.Infraestructure.Blazor.Shared
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+@using Helpers
+@using Radzen
+@using Radzen.Blazor
+
+<style>
+
+    .grid-row1.headerRow {
+        height: 55% !important;
+    }
+
+
+
+
+    .noedit {
+    }
+
+
+
+
+    @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+
+
+        .editcolumn {
+        }
+
+        .container, .container-fluid {
+            padding-left: 0rem;
+            padding-right: 0rem;
+        }
+
+        .container-fluid {
+            width: 100%;
+            padding-right: 0rem;
+            padding-left: 0rem;
+            margin-right: auto;
+            margin-left: auto;
+        }
+    }
+</style>
+
+<div class="" style="min-height:600px;overflow:auto;padding-left:5px;width:100%;overflow-y:scroll">
+@if (LIST != null)
+{
+
+
+    <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion" style="display:none">
+        <div class="card-body">
+            @if (WeightSetList2 != null)
+            {
+                <div class="" style="max-height:300px;overflow:auto;width:100%">
+
+                    <BlazorApp1.Blazor.LTI.Scale.WeightSetComponent Component="Component" @ref="@WeightSetComponent" ChangeAdd="ChangeDescripcion">
+
+                    </BlazorApp1.Blazor.LTI.Scale.WeightSetComponent>
+                </div>
+            }
+        </div>
+    </div>
+
+
+
+
+    <div class="row">
+
+
+        <div class="col" style="max-height:500px">
+          @*   <EditForm Model="@Entity"> *@
+                <ResponsiveTable ItemsDataSource="LIST"
+                                 PageSize="20"
+                                 HasAction="false"
+                                 HasSelect="false"
+                                 HasDelete="false"
+                                 HasEdit="false"
+                                 @ref="@RT"
+                                 EnabledModal="true"
+                                 Context="ITEM"
+                                 TableItem="CalibrationSaaS.Domain.Aggregates.Entities.BasicCalibrationResult"
+                                 ForceNEwButton="false"
+                                 ClientPagination="true"
+                                 DisabledRowHover="true"
+                                 InLineEdit="true"
+                                 NewItemDefaultItem="DefaultNew"
+                                 ColActionHeaderCSS="col-sm-2"
+                                 ColActionCSS="col-sm-2"
+                                 EnabledSearch="false"
+                                     HeaderRowClass="row grid-row1 headerRow displayFlex bg-dark"
+                                 Component="@Component"
+                                 AfterAction="@TaskAfterSave"
+                                 RowAfterRender="@RowAfterRender">
+
+                    <GridHeader>
+
+                        @*<div class="displayFlex noinv">*@
+                        <div class="col"></div>
+                        <div class="col">Weight Applied</div>
+                        <div class="col">Low<br /> Tolerance</div>
+                        <div class="col">High<br />Tolerance</div>
+                        <div class="col">UOM</div>
+                        <div class="col">As Found</div>
+                        <div class="col">Result</div>
+                        <div class="col">As Left</div>
+                        <div class="col">Result</div>
+                        <div class="col"></div>
+
+
+
+                    </GridHeader>
+
+
+                    <NewButton>
+
+
+
+                        <div class="row" style="width:100%">
+                            <div class="col marginButton">
+                                <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" style="width:100%" @onclick=@(async () => await AddNewItem()) @onclick:stopPropagation @onclick:preventDefault
+                                        aria-expanded="false" aria-controls="collapseTwo">
+                                    <span>
+                                        New Repeatability
+                                        @*<i class="fas fa-plus fa-sm"></i>*@
+                                    </span>
+
+                                </button>
+                            </div>
+                            <div class="col marginButton">
+                                <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" style="width:100%" @onclick=@(async () => await SelectWeight(Entity)) @onclick:stopPropagation @onclick:preventDefault
+                                        aria-expanded="false" aria-controls="collapseTwo">
+                                    Set Weights
+                                </button>
+                            </div>
+
+                            <div class="col">
+                                <div class="input-group mb-3">
+                                    <input id="txtName" @bind-value="@TextValue" type="number" disabled="@eq.IsAccredited" class="form-control" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                                    <div class="input-group-append">
+                                        <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled="@eq.IsAccredited" @onclick=@(async () => await SaveACC()) @onclick:stopPropagation @onclick:preventDefault
+                                                aria-expanded="false" aria-controls="collapseTwo">
+                                            Assign Weight
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @*<div class="col">
+                                    <input id="txtName" @bind-value="@TextValue" type="number" disabled="@eq.IsAccredited" />
+                                </div>
+                                <div class="col">
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled="@eq.IsAccredited" @onclick=@(async () => await SaveACC()) @onclick:stopPropagation @onclick:preventDefault
+                                            aria-expanded="false" aria-controls="collapseTwo">
+                                        Assign Weight
+                                     </button>
+                                 </div>*@
+                        </div>
+                    </NewButton>
+                    <GridRow>
+                        @{
+                            var Decimals = 0;
+                            var Resolution = "";
+                            if (Entity.TestPoint != null)
+                            {
+                                Decimals = Entity.TestPoint.DecimalNumber;
+                                Resolution = Entity.TestPoint.Resolution.ToString();
+                            }
+                            else
+                            {
+                                Decimals = eq.DecimalNumber;
+                                Resolution = eq.Resolution.ToString();
+                            }
+                        }
+                        <div class="" style="width:100%">
+
+                            <div class="row displayFlex">
+                                <div class="col">
+                                    <MaterializeComponent>
+                                        <Content>
+                                            @ITEM.Position
+                                        </Content>
+                                    </MaterializeComponent>
+
+
+                                </div>
+
+                                <div class="col">
+                                    <MaterializeComponent>
+                                        <Content>
+                                            @*@ITEM.WeightApplied*@
+                                            <TextInput @bind-Value="@ITEM.WeightApplied"
+                                                       Type=@Types.numberdecimal
+                                                       Validate="false"
+                                                       ValidationFor="()=> ITEM.WeightApplied"
+                                                       TValue="double"
+                                                       IsDisabled="false"
+                                                       LabelDown="true"
+                                                       StepResol="@Resolution"
+                                                       DecimalNumbers="@Decimals">
+                                            </TextInput>
+                                        </Content>
+                                    </MaterializeComponent>
+                                </div>
+
+                                <div class="col">
+                                    <TextInput @bind-Value="@ITEM.LowerTolerance"
+                                               Type=@Types.numberdecimal
+                                               Validate="false"
+                                               OnChangeControl="@(async (e) => ChangeValue("LowerTolerance", e))"
+                                               ValidationFor="() => ITEM.LowerTolerance"
+                                               TValue="double"
+                                               IsDisabled="true"
+                                               LabelDown="true"
+                                               StepResol="@Resolution"
+                                               DecimalNumbers="@Decimals">
+
+                                    </TextInput>
+                                </div>
+
+                                <div class="col">
+                                    <TextInput @bind-Value="@ITEM.UpperTolerance"
+                                               Type=@Types.numberdecimal
+                                               Validate="false"
+                                               OnChangeControl="@(async (e) => ChangeValue("UpperTolerance", e))"
+                                               ValidationFor="() => ITEM.UpperTolerance"
+                                               TValue="double"
+                                               IsDisabled="true"
+                                               LabelDown="true"
+                                               StepResol="@Resolution"
+                                               DecimalNumbers="@Decimals">
+
+                                    </TextInput>
+                                </div>
+
+                                <div class="col noedit">
+
+                                    <MaterializeComponent>
+                                        <Content>
+                                            @ITEM?.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList).Abbreviation
+                                        </Content>
+                                    </MaterializeComponent>
+
+                                </div>
+
+                                <div class="col">
+                                    <TextInput @bind-Value="@ITEM.AsFound"
+                                               OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                               Type=@Types.numberdecimal
+                                               Validate="false"
+                                               ValidationFor="()=> ITEM.AsFound"
+                                               TValue="double"
+                                               IsDisabled="!Enabled"
+                                               LabelDown="false"
+                                               StepResol="@Resolution"
+                                               DecimalNumbers="@Decimals"
+                                               DecimalRoundType="RoundType.RoundToResolution"
+                                               EnableToastMessage="true"
+                                               CSSClass="inputgrid"
+                                               Id="@("repAsFoundTexbox_" + ITEM.SequenceID.ToString())"
+                                           IsValid="@(GetClass(@ITEM, @ITEM.AsFound))"
+                                               ToastMessage=@("in Repeatability  (As Found) the typed value {0} was rounded to {1}")>
+                                    </TextInput>
+
+                                </div>
+                                <div class="col">
+                                    <MaterializeComponent>
+                                        <Content>
+                                            <TextInput @bind-Value="@ITEM.InToleranceFound"
+                                                       Type=@Types.text
+                                                       Validate="false"
+                                                       ValidationFor="() => ITEM.InToleranceFound"
+                                                       TValue="string"
+                                                       IsDisabled="true"
+                                                       CSSClass="inputgrid"
+                                                       LabelDown="true">
+
+                                            </TextInput>
+                                        </Content>
+                                    </MaterializeComponent>
+                                </div>
+                                <div class="col">
+                                    <TextInput @bind-Value="@ITEM.AsLeft"
+                                               OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                               Type=@Types.numberdecimal
+                                               Validate="false"
+                                               ValidationFor="()=> ITEM.AsLeft"
+                                               TValue="double"
+                                               IsDisabled="!Enabled"
+                                               LabelDown="false"
+                                               StepResol="@Resolution"
+                                               DecimalNumbers="@Decimals"
+                                               DecimalRoundType="RoundType.RoundToResolution"
+                                               EnableToastMessage="true"
+                                               CSSClass="inputgrid"
+                                               Id="@("repAsLeftTexbox_" + ITEM.SequenceID.ToString())"
+                                           IsValid="@(GetClass(@ITEM, @ITEM.AsLeft))"
+                                               ToastMessage=@("in Repeatability  (As Found) the typed value {0} was rounded to {1}")>
+                                    </TextInput>
+
+                                </div>
+                                <div class="col">
+                                    <MaterializeComponent>
+                                        <Content>
+                                            <TextInput @bind-Value="@ITEM.InToleranceLeft"
+                                                       Type=@Types.text
+                                                       Validate="false"
+                                                       ValidationFor="() => ITEM.InToleranceLeft"
+                                                       TValue="string"
+                                                       IsDisabled="true"
+                                                       LabelDown="true">
+
+                                            </TextInput>
+                                        </Content>
+                                    </MaterializeComponent>
+                                </div>
+                                <div class="col">
+                                    <MaterializeComponent>
+                                        <Content>
+
+                                            @if (RT.TotalRenderRow > 0 && RT.TotalRenderRow - 1 == RT.CurrentRenderIndexRow)
+                                            {
+
+                                                @*<button class="btn btn-sm btn-warning shadow-sm"
+                                                            id="" @onclick=@(async () => await  DeleteI(ITEM))
+                                                            @onclick:stopPropagation @onclick:preventDefault>
+                                                        Delete
+                                                    </button>*@
+
+                                                <a class="btn btn-sm btn-danger shadow-sm customlink"
+                                                   id="" @onclick=@(async () => await  DeleteI(ITEM))
+                                                   @onclick:stopPropagation @onclick:preventDefault disabled="@(!Enabled)">
+                                                    Delete
+                                                </a>
+
+                                            }
+                                            else
+                                            {
+
+                                                <button class="btn btn-sm btn-danger shadow-sm" disabled
+                                                        id="" @onclick=@(async () => await  RT.DeleteItem(ITEM))
+                                                        @onclick:stopPropagation @onclick:preventDefault>
+                                                    Delete
+                                                </button>
+
+                                            }
+
+                                        </Content>
+                                    </MaterializeComponent>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </GridRow>
+
+
+
+                    <GridSelect>
+                        
+                        @if (!EnableWeightSet)
+                        {
+                            <button class="btn btn-sm btn-primary shadow-sm editButton" disabled
+                                    id="setw"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+                                Weight
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-primary shadow-sm editButton"
+                                    id="setw" @onclick=@(async () => await  SelectWeight(Entity))
+                                    @onclick:stopPropagation @onclick:preventDefault>
+                                Weight
+                            </button>
+                        }
+
+                    </GridSelect>
+
+                    <GridEdit>
+
+                        <div class="form-row" style="width:100%">
+                            <div class="col-sm">
+                                <div class="row">
+
+                                    <div class="col-sm-1 linearityCol inv noedit">Weight Applied</div>
+                                    <div class="col-sm-1 linearityCol noedit">@ITEM.WeightApplied</div>
+                                    <div class="col-sm-1 linearityCol inv noedit">Repeatability Number</div>
+                                    <div class="col-sm-1 ">@ITEM.Position</div>
+                                    <div class="col-sm-1 linearityCol inv noedit">UOM</div>
+                                    <div class="col-sm-1 linearityCol">@ITEM?.UnitOfMeasure?.Abbreviation</div>
+                                    <div class="col-sm-1 linearityCol inv editcolumn">AsFound</div>
+                                    <div class="col-sm-2 linearityCol editcolumn">
+                                        <TextInput @bind-Value="@ITEM.AsFound"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.number
+                                                   Validate="false"
+                                                   ValidationFor="@(()=> @ITEM.AsFound)"
+                                                   TValue="double"
+                                                   IsDisabled="!Enabled">
+                                        </TextInput>
+                                    </div>
+                                    <div class="col-sm-1 linearityCol inv editcolumn">AsLeft</div>
+                                    <div class="col-sm-2 linearityCol editcolumn">
+                                        <TextInput @bind-Value="@ITEM.AsLeft"
+                                                   CSSClass="inputgrid"
+                                                   Type=@Types.number
+                                                   Validate="false"
+                                                   ValidationFor="@(()=> @ITEM.AsLeft)"
+                                                   TValue="double"
+                                                   IsDisabled="!Enabled">
+                                        </TextInput>
+
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </GridEdit>
+                </ResponsiveTable>
+          @*   </EditForm> *@
+
+        </div>
+
+        </div>
+
+
+
+
+
+
+
+
+
+
+    }
+    else
+    {
+        <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+            <div class="row" style="width:100%,display:flex;flex-dirección:columna;justify-content: center;">
+                <div class="col">
+                </div>
+                <div class="col">
+                    <p><em>Loading...</em></p>
+                      <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+
+                </div>
+                <div class="col">
+                </div>
+
+
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+
+    [CascadingParameter(Name = "CascadeParam1")]
+    public dynamic WorkOrderItemCreate { get; set; }
+
+    async Task DeleteI(BasicCalibrationResult res)
+    {
+
+
+        await RT.DeleteItem(res);
+        if (RT.Items != null)
+        {
+            int conti = 1;
+            foreach (var it in RT.Items)
+            {
+                it.Position = conti;
+                conti = conti + 1;
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    public string TextValue { get; set; }
+
+    [Parameter]
+    public bool Enabled { get; set; } = false;
+
+    [Parameter]
+    public CalibrationSaaS.Domain.Aggregates.Entities.Status CurrentStatus { get; set; }
+
+    public string Description { get; set; } = "";
+
+    //[Inject] public Application.Services.IAssetsServices<CallContext> _assetsServices { get; set; }
+
+    public bool LabelDown { get; set; } = false;
+
+    [Parameter]
+    public ResponsiveTable<BasicCalibrationResult> RT { get; set; } = new ResponsiveTable<BasicCalibrationResult>();
+
+
+
+
+
+    public Repeatability Entity { get; set; } = new Repeatability();
+
+    [Inject]
+    public AppStateCompany AppState { get; set; }
+
+    //[Parameter]
+    //public Status CurrentStatus { get; set; } = new Status();
+
+    public EditContext editContext { get; set; }
+
+
+    public WorkOrderDetail eq 
+
+    {
+
+        get { return WorkOrderItemCreate.eq; }
+
+        set { WorkOrderItemCreate.eq = value; }
+
+
+    }
+
+
+    public List<BasicCalibrationResult> LIST { get; set; } = new List<CalibrationSaaS.Domain.Aggregates.Entities.BasicCalibrationResult>();
+
+
+    public BlazorApp1.Blazor.LTI.Scale.WeightSetComponent WeightSetComponent { get; set; } = new BlazorApp1.Blazor.LTI.Scale.WeightSetComponent();
+
+    public PieceOfEquipment poq { get; set; } = new PieceOfEquipment();
+
+    public bool EnableWeightSet { get; set; } = true;
+
+    [Parameter]
+    public List<WeightSet> WeightSetList2 { get; set; } = new List<WeightSet>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        //var resultsetw = await _assetsServices.GetWeightSetXPoE(poq);
+
+        //WeightSetList2 = resultsetw.ToList();
+
+        //StateHasChanged();
+    }
+
+
+    int WeightSetListCount = 0;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            WeightSetList2 = new List<WeightSet>();
+
+            if (firstRender && eq != null && WorkOrderItemCreate.eq.WOD_Weights != null)
+            {
+
+
+
+                if (WeightSetComponent != null && WeightSetList2 != null)
+                {
+
+
+                    await WeightSetComponent.Show(WeightSetList2);
+
+                }
+
+
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+
+        //if (firstRender && eq != null && (eq?.BalanceAndScaleCalibration?.Repeatability?.BasicCalibrationResult != null))
+        //{
+        //    Entity = Querys.WOD.GetRepeatabilityList(eq);//eq.BalanceAndScaleCalibration.Eccentricity;
+        //    LIST = Entity.BasicCalibrationResult.ToList();
+
+        //    RT.Clear();
+        //    foreach (var item in LIST)
+        //    {
+        //        RT.SaveNewItem(item);
+        //    }
+
+        //    if (!IsWeightLoaded)
+        //    {
+        //        //aTimer.Stop();
+        //        //aTimer.Start();
+        //        //IniCalculated = 2;
+        //        await Calculate();
+        //    }
+
+        //}
+        //else
+        //{
+        //    if (eq?.BalanceAndScaleCalibration?.Repeatability == null
+        //        && firstRender && eq != null
+        //        && eq.PieceOfEquipment != null
+        //        && eq.PieceOfEquipment.EquipmentTemplate != null
+        //   && eq.PieceOfEquipment.EquipmentTemplate.TestGroups != null
+        //   && eq.PieceOfEquipment.EquipmentTemplate.TestGroups.ElementAtOrDefault(0).TestPoints.Count > 0
+        //    && eq.PieceOfEquipment.EquipmentTemplate.TestGroups.ElementAtOrDefault(0).TestPoints
+        //   .Where(x => x.CalibrationType.ToLower() == "repeatability").FirstOrDefault() != null
+        //   || eq != null && eq?.BalanceAndScaleCalibration?.Repeatability == null && firstRender
+        //  && eq.PieceOfEquipment != null && eq?.PieceOfEquipment?.TestGroups != null
+        //  && eq.PieceOfEquipment.TestGroups.ElementAtOrDefault(0).TestPoints
+        //   .Where(x => x.CalibrationType.ToLower() == "repeatability").FirstOrDefault() != null
+        //  )
+        //    {
+
+
+        //        var re = Querys.WOD.CreateRepeatabilityList(eq);
+
+        //        if (re != null && re?.BasicCalibrationResult != null)
+        //        {
+        //            Entity = re;
+        //            LIST = Entity.BasicCalibrationResult.ToList();  //list[0].BasicCalibrationResult.ToList();
+
+        //            RT.Clear();
+        //            foreach (var item in LIST)
+        //            {
+        //                RT.SaveNewItem(item);
+        //            }
+        //        }
+
+        //        if (!IsWeightLoaded)
+        //        {
+        //            //aTimer.Stop();
+        //            //aTimer.Start();
+        //            //IniCalculated = 2;
+        //            await Calculate();
+        //        }
+
+
+        //    }
+
+        //}
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        editContext = new EditContext(Entity);
+
+        aTimer = new System.Timers.Timer(400);
+
+        aTimer.AutoReset = false;
+
+        aTimer.Elapsed += OnUserFinish;
+
+        await base.OnInitializedAsync();
+        if (eq != null && (eq?.BalanceAndScaleCalibration?.Repeatability?.TestPointResult != null))
+        {
+            Entity = Querys.WOD.GetRepeatabilityList(eq);//eq.BalanceAndScaleCalibration.Eccentricity;
+            LIST = Entity.TestPointResult.ToList();
+
+            RT.Clear();
+            foreach (var item in LIST)
+            {
+                RT.SaveNewItem(item);
+            }
+
+            if (!IsWeightLoaded)
+            {
+                //aTimer.Stop();
+                //aTimer.Start();
+                //IniCalculated = 2;
+                await Calculate();
+            }
+
+        }
+        else
+        {
+            if (eq != null && eq?.BalanceAndScaleCalibration?.Repeatability == null
+                && eq != null
+                && eq?.PieceOfEquipment != null
+                && eq?.PieceOfEquipment?.EquipmentTemplate != null
+           && eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups != null
+           && eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups?.ElementAtOrDefault(0)?.TestPoints.Count > 0
+            && eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups?.ElementAtOrDefault(0)?.TestPoints
+           .Where(x => x.CalibrationType.ToLower() == "repeatability").FirstOrDefault() != null
+           || eq != null && eq?.BalanceAndScaleCalibration?.Repeatability == null
+          && eq?.PieceOfEquipment != null && eq?.PieceOfEquipment?.TestGroups != null
+          && (ICollection<TestPoint>)(eq?.PieceOfEquipment?.TestGroups?.ElementAtOrDefault(0)?.TestPoints)
+           .Where(x => x.CalibrationType.ToLower() == "repeatability").FirstOrDefault() != null
+          )
+            {
+
+
+                var re = Querys.WOD.CreateRepeatabilityList(eq,!IsOnline);
+
+                if (re != null && re?.TestPointResult != null)
+                {
+                    Entity = re;
+                    LIST = Entity.TestPointResult.ToList();  //list[0].BasicCalibrationResult.ToList();
+
+                    RT.Clear();
+                    foreach (var item in LIST)
+                    {
+                        RT.SaveNewItem(item);
+                    }
+                }
+
+                if (!IsWeightLoaded)
+                {
+                    //aTimer.Stop();
+                    //aTimer.Start();
+                    //IniCalculated = 2;
+                    await Calculate();
+                }
+
+
+            }
+
+        }
+
+
+    }
+
+
+    //public List<Repeatability> FivePonints()
+    //{
+    //    List<Domain.Aggregates.Entities.Repeatability> listlienarity = new List<Domain.Aggregates.Entities.Repeatability>();
+
+    //    for (int i = 0; i < 5; i++)
+    //    {
+    //        listlienarity.Add(new Domain.Aggregates.Entities.Linearity { LinearityId = i });
+    //    }
+
+    //    listlienarity.ElementAtOrDefault(0).Label = "10";
+    //    listlienarity.ElementAtOrDefault(0).Label = "20";
+    //    listlienarity.ElementAtOrDefault(0).Label = "30";
+    //    listlienarity.ElementAtOrDefault(0).Label = "50";
+    //    listlienarity.ElementAtOrDefault(0).Label = "100";
+
+    //    return listlienarity;
+
+    //}
+
+    public List<CalibrationSaaS.Domain.Aggregates.Entities.BasicCalibrationResult> TenPonints()
+    {
+        List<CalibrationSaaS.Domain.Aggregates.Entities.BasicCalibrationResult> listlienarity = new List<CalibrationSaaS.Domain.Aggregates.Entities.BasicCalibrationResult>();
+
+        for (int i = 0; i < 5; i++)
+        {
+            listlienarity.Add(new CalibrationSaaS.Domain.Aggregates.Entities.BasicCalibrationResult { Position = i });
+        }
+
+
+        return listlienarity;
+
+
+    }
+
+    //public async Task SetFivePoints()
+    //{
+    //    LIST = await Task.FromResult(FivePonints());
+
+    //    StateHasChanged();
+    //}
+
+    public void ChangeWindow(ChangeEventArgs e)
+    {
+
+
+    }
+
+    [CascadingParameter] public IModalService Modal { get; set; }
+    public string _message { get; set; }
+    //Logger.LogDebug(Group.Name);
+    [Parameter]
+    public string HideElement { get; set; } = "modalRepeatibility";
+    public async Task SelectWeight(Repeatability item)
+    {
+        //Dictionary<string, object> EmptyValidationDictionary = new Dictionary<string, object>();
+        //List<EquipmentTemplate> listEquipment;
+
+        var parameters = new ModalParameters();
+        //parameters.Add("SelectOnly", true);
+        //parameters.Add("IsModal", true);
+
+
+
+        //parameters.Add("target", item);
+        WeightSetList2 = new List<WeightSet>();
+        foreach (var w in WorkOrderItemCreate.eq.WOD_Weights)
+        {
+            if (WorkOrderItemCreate.eq.PieceOfEquipment.UnitOfMeasure.UnitOfMeasureID == w.WeightSet.UnitOfMeasureID ||
+                   (w.WeightSet.UnitOfMeasure.UnitOfMeasureBase != null
+                    && w.WeightSet.UnitOfMeasure.UnitOfMeasureBase.UnitOfMeasureBaseID == WorkOrderItemCreate.eq.PieceOfEquipment.UnitOfMeasure.UnitOfMeasureBaseID) ||
+                    w.WeightSet.UnitOfMeasure != null && w.WeightSet.UnitOfMeasure.UnitOfMeasureBaseID == WorkOrderItemCreate.eq.PieceOfEquipment.UnitOfMeasure.UnitOfMeasureBaseID)
+            {
+                WeightSetList2.Add(w.WeightSet);
+            }
+
+        }
+
+        var lista = WeightSetList2;//WeightSetComponent.lstWeightSet;
+        parameters.Add("DataSource", lista);
+
+        TestPoint point = new TestPoint();
+
+        if (item.TestPoint == null || item.TestPoint.UnitOfMeasurementOut == null )
+        {
+            point = new TestPoint()
+                {
+                    UnitOfMeasurementOut = WorkOrderItemCreate.eq.PieceOfEquipment.UnitOfMeasure,
+                    UnitOfMeasurement = WorkOrderItemCreate.eq.PieceOfEquipment.UnitOfMeasure
+
+                };
+        }
+        else
+        {
+            point = item.TestPoint;
+        }
+        parameters.Add("TestPoint", point);
+
+
+        var SelWeightSetList = new List<WeightSet>();
+        if (RT != null)
+        {
+            //foreach (var w in RT.Items)
+            //{
+            if (Entity.WeightSets != null && Entity.WeightSets.Count > 0)
+            {
+                foreach (var iw in Entity.WeightSets)
+                {
+                    SelWeightSetList.Add(iw);
+                }
+            }
+
+
+            //}
+        }
+
+        parameters.Add("SelectWeight", SelWeightSetList);
+
+
+
+
+
+        if (JSRuntime != null && !string.IsNullOrEmpty(HideElement))
+        {
+            await JSRuntime.InvokeVoidAsync("hideElement", HideElement);
+        }
+
+        var messageForm = Modal.Show<CalibrationSaaS.Infraestructure.Blazor.LTI.Scale.WeightComponent<Repeatability>>("Select Weight", parameters);
+        var result = await messageForm.Result;
+
+        if (JSRuntime != null && !string.IsNullOrEmpty(HideElement))
+        {
+            await JSRuntime.InvokeVoidAsync("showElement", HideElement);
+        }
+
+        if (result.Cancelled)
+        {
+            return;
+        }
+
+        _message = result.Data?.ToString() ?? string.Empty;
+
+        WeightSetResult r = (WeightSetResult)result.Data;
+
+        List<WeightSet> WeightSetList = (List<WeightSet>)r.WeightSetList;
+
+        // List<WeightSet> WeightSetList = (List<WeightSet>)result.Data;
+
+
+        if (WeightSetList != null)
+        {
+            Calculate cal = new Calculate();
+
+            //item.AsLeft = 1223;
+            var calculate = cal.InlineCalculateRepeatibility(WeightSetList, item);
+
+            //item.WeightApplied = calculate.WeightApplied;
+
+            //item.Weights = WeightSetList;
+
+            //item.AsLeft = 23;
+
+            //RT.Items[RT.Items.FindIndex(ind => ind.LinearityId== item.LinearityId)] = cal.InlineCalculate(WeightSetList,item);
+
+            //var teamTotalScores =
+            //from player in WeightSetList
+            //group player by player.PieceOfEquipmentId into playerGroup
+            //select new
+            //{
+            //    Team = playerGroup.Key,
+            //    TotalScore = playerGroup.Sum(x => x.WeightValue),
+            //};
+
+            //int totalWeight = WeightSetList.Sum(pkg => pkg.WeightValue);
+
+            var decimalNumber = (int) WorkOrderItemCreate.eq.DecimalNumber;
+
+            foreach (var itemr in RT.Items)
+            {
+                itemr.WeightApplied = Math.Round(r.CalculateWeight, decimalNumber);//totalWeight;
+            }
+            Entity.WeightSets = WeightSetList;
+
+
+        }
+
+        StateHasChanged();
+
+
+
+
+
+    }
+
+    public double Prom { get; set; }
+
+    public double Prom2 { get; set; }
+
+    void ChangeValue(string Control, ChangeEventArgs arg)
+    {
+
+        try
+        {
+            var prome = RT.Items.Sum(x => x.AsFound);
+
+            var prome2 = RT.Items.Sum(x => x.AsLeft);
+
+
+            var div = RT.Items.Count;
+            if (div != 0)
+            {
+                Prom = prome / div;
+
+                Prom2 = prome2 / div;
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+
+
+
+
+
+    }
+
+
+    async Task ChangeDescripcion(ChangeEventArgs arg)
+    {
+
+        Description += ((PieceOfEquipment)arg.Value).PieceOfEquipmentID + " | ";
+
+        var w = ((PieceOfEquipment)arg.Value).WeightSets;
+        WeightSetList2 = w.ToList();
+
+        if (WeightSetList2 != null)
+        {
+
+
+            await WeightSetComponent.Show(w.ToList());
+
+        }
+
+    }
+
+    BasicCalibrationResult DefaultNew()
+    {
+
+        //if (string.IsNullOrEmpty(TextNewValue))
+        //{
+        //    return null;
+        //}
+
+        BasicCalibrationResult lin = new BasicCalibrationResult();
+
+        string confirmed = "0";
+
+        try
+        {
+            if (RT.Items != null && RT.Items.Count > 0)
+            {
+
+
+                confirmed = LIST[0].WeightApplied.ToString();
+
+            }
+            else
+            {
+                confirmed = "0";//await JSRuntime.InvokeAsync<string>("prompt", "Enter a value");
+
+            }
+
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        try
+        {
+            lin.WeightApplied = Convert.ToDouble(confirmed);
+        }
+        catch (Exception ex)
+        {
+
+        }
+        if (RT.Items != null && RT.Items.Count > 0)
+        {
+            lin.UnitOfMeasureID = RT.Items[0].UnitOfMeasureID;
+        }
+        else
+        {
+            lin.UnitOfMeasureID = eq.PieceOfEquipment.UnitOfMeasureID.Value;
+        }
+        int conti = 1;
+        foreach (var it in RT.Items)
+        {
+            it.Position = conti;
+            conti = conti + 1;
+        }
+
+        if (RT.Items != null)
+        {
+            lin.Position = conti;
+        }
+
+        lin.CalibrationSubTypeId = new Repeatability().CalibrationSubTypeId;
+        lin.SequenceID = conti;
+
+        IsNewItem = true;
+
+        return lin;
+
+    }
+
+
+    public async Task SaveACC()
+    {
+        await ShowProgress();
+        var tt = RT.Items;
+        string res = TextValue;//await RT.Prompt();
+        if (string.IsNullOrEmpty(res))
+        {
+            res = "0";
+        }
+        foreach (var item in tt)
+        {
+            try
+            {
+                var weigth = Convert.ToDouble(TextValue);
+                item.WeightApplied = weigth;
+            }
+            catch (Exception ex)
+            {
+            }
+
+        }
+
+        LIST = tt;
+        await Calculate();
+        StateHasChanged();
+        await CloseProgress();
+
+    }
+
+    public async Task AssignWeight()
+    {
+        //weightsets
+        //var a = WeightSetComponent..Items;
+
+        //var b = LIST;
+
+        ////var c = b.Select(x => x.TestPoint);
+
+
+        StateHasChanged();
+
+
+    }
+
+    string BoudValues(Linearity lin)
+    {
+
+
+
+        return "";
+
+    }
+
+    public async Task AddNewItem()
+    {
+
+        await RT.SaveNewItem(DefaultNew());
+        eq.BalanceAndScaleCalibration.Repeatability.TestPointResult = RT.Items;
+
+    }
+
+
+    public bool IsNewItem { get; set; }
+
+    public async Task Calculate()
+    {
+        int lineerror = 0;
+        try
+        {
+
+            IsNewItem = false;
+
+            if (RT == null || RT.Items == null || RT.Items.Count == 0)
+            {
+                return;
+            }
+
+            var linearities = RT.Items;
+            if (eq?.BalanceAndScaleCalibration == null)
+            {
+                eq.BalanceAndScaleCalibration = new BalanceAndScaleCalibration();
+                eq.BalanceAndScaleCalibration.Repeatability = new Repeatability();
+            }
+            if (eq?.BalanceAndScaleCalibration?.Repeatability == null)
+            {
+                eq.BalanceAndScaleCalibration.Repeatability = new Repeatability();
+            }
+            lineerror = 2;
+            eq.BalanceAndScaleCalibration.Repeatability.TestPointResult = linearities;
+            lineerror++;
+
+
+            if (!IsWeightLoaded)
+            {
+                //var p = new CallOptions();
+
+                //WorkOrderDetailGrpc wd = new WorkOrderDetailGrpc(Service, DbFactory, p);
+
+                //var resul = await wd.GetConfiguredWeights(eq);
+
+                //eq.BalanceAndScaleCalibration = resul.BalanceAndScaleCalibration;
+
+                IsWeightLoaded = true;
+            }
+
+            lineerror++;
+            var result = Querys.WOD.CalculateValuesByID(eq,AppState.UnitofMeasureList).GetAwaiter().GetResult();
+            lineerror++;
+            if (result != null)
+            {
+                eq.BalanceAndScaleCalibration = result.BalanceAndScaleCalibration;
+
+                RT.Clear();
+                lineerror++;
+                foreach (var item in eq.BalanceAndScaleCalibration.Repeatability.TestPointResult)
+                {
+                    RT.SaveNewItem(item);
+                }
+
+            }
+
+            lineerror++;
+
+            StateHasChanged();
+
+        }
+        catch (Exception ex)
+        {
+
+            await ShowError(ex, " repea " + lineerror);
+        }
+        finally
+        {
+            IsNewItem = false;
+        }
+
+
+
+    }
+
+    public int IniCalculated { get; set; }
+    private static System.Timers.Timer aTimer;
+    public bool IsWeightLoaded { get; set; }
+
+    public async Task ChangeControl2(ChangeEventArgs arg, BasicCalibrationResult lin, bool AddWeight = false)
+    {
+        try
+        {
+            if (arg == null || arg.Value.ToString() == "")
+            {
+                return;
+            }
+
+
+            var result = Convert.ToDouble(arg.Value);
+
+            //if (AddWeight)
+            //{
+            //    AddWeightset(lin, result);
+            //}
+
+            // remove previous one
+            aTimer.Stop();
+            // new timer
+            aTimer.Start();
+            //IniCalculated = 1;
+            //if (IniCalculated == 2)
+            //{
+
+            //    await Calculate();
+
+
+            //    IniCalculated = 1;
+            //}
+
+
+
+
+
+        }
+        catch
+        {
+
+        }
+
+
+
+    }
+
+    public async Task TaskAfterSave(BasicCalibrationResult item, string sav)
+    {
+        if (IsNewItem)
+        {
+            await Calculate();
+
+        }
+
+        IsNewItem = false;
+
+    }
+
+    private void OnUserFinish(Object source, ElapsedEventArgs e)
+    {
+
+        try
+        {
+            aTimer.Stop();
+            InvokeAsync(async () =>
+            {
+                await ShowProgress(false);
+                await Calculate();
+                await CloseProgress();
+            });
+
+            IniCalculated = 2;
+
+
+
+
+
+
+        }
+        catch
+        {
+
+        }
+    }
+
+    public CalibrationSaaS.Domain.Aggregates.Entities.BasicCalibrationResult RowAfterRender(CalibrationSaaS.Domain.Aggregates.Entities.BasicCalibrationResult lin)
+    {
+
+        IniCalculated = 1;
+
+        return lin;
+
+    }
+
+}
+
+            @code {
+
+    public bool GetClass(BasicCalibrationResult obj, double run1)
+    {
+        double nominal = obj.WeightApplied;
+        double run = run1;
+        int? toleranceType = WorkOrderItemCreate.eq.Tolerance.ToleranceTypeID;
+        double toleranceLow = obj.LowerTolerance;
+        double toleranceMax = obj.UpperTolerance;
+        
+
+        if (run >= toleranceLow && run <= toleranceMax)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
+    }
+
+
+}

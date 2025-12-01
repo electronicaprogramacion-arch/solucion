@@ -1,0 +1,687 @@
+﻿@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using CalibrationSaaS.Infraestructure.Blazor
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using Helpers
+@using Helpers.Models;
+@using LTIDomainLogic;
+@namespace BlazorApp1.Blazor.Shared
+@typeparam Entity
+@typeparam CalibrationItem
+@typeparam CalibrationItemResult
+@inherits FComponentBase
+
+@{
+    Console.WriteLine("CalibrationType");
+}
+
+
+@if (eq != null
+&& eq.CalibrationSubTypes != null
+&& eq.CalibrationSubTypes.Count() > 0)
+{
+    var cardclass = "card";
+    var bodyclass = "card-body";
+    var collapseclass = "collapse";
+    NumGroup = eq.CalibrationSubTypes.Where(x => x.CalibrationSubTypeView != null && x.Mandatory == true).Count();
+
+    ExistsCalibration = eq.CalibrationSubTypes.Where(x => x.CalibrationSubTypeView != null && x.CalibrationSubTypeView.Component == Component.Name).Count();
+    var subtypesList = eq.CalibrationSubTypes.Where(x => x.Enabled == true && x.CalibrationSubTypeView != null && !string.IsNullOrEmpty(x.CalibrationSubTypeView.Component)
+            && x.CalibrationSubTypeView.Component.ToLower() == Component.Name.ToLower() && x.CalibrationSubTypeView?.AccordionType != "Section").OrderBy(x => x.Position).ToList();
+    var sectionsList = eq.CalibrationSubTypes.Where(x => x.Enabled == true && x.CalibrationSubTypeView != null && !string.IsNullOrEmpty(x.CalibrationSubTypeView.Component)
+            && x.CalibrationSubTypeView.Component.ToLower() == Component.Name.ToLower() && x.CalibrationSubTypeView?.AccordionType == "Section").OrderBy(x => x.Position).ToList();
+
+    MaxNumberCopies = NumGroup * MaxNumberCopies;
+    NumSubTypes = eq.CalibrationSubTypes.Count();
+
+    if (CurrentSubTypes == 0 && NumGroup > 0)
+    {
+        CurrentSubTypes = NumGroup;
+    }
+    if (!string.IsNullOrEmpty(DomainEntityProp.Configuration) && NumGroup > 0)
+    {
+        CurrentSubTypes = Convert.ToInt32(DomainEntityProp.Configuration);
+    }
+
+    if (eq.ShowType.HasValue && eq.ShowType.Value == false)
+    {
+        cardclass = "";
+        bodyclass = "";
+        collapseclass = "";
+    }
+
+    int cont = 1;
+
+    @if (subtypesList?.Count() > 0 &&
+      (
+          subtypesList.Any(x => x.CalibrationSubTypeView?.Component != "WorkOrderItem")
+          || CurrentStatusId > 1
+      )
+   )
+    {
+
+        <div class="@cardclass">
+
+            @if (!string.IsNullOrEmpty(cardclass))
+            {
+                <div class="row">
+
+                    <div class="col">
+                        <div class="card-header" id="CalibrationHeader">
+                            <button class="btn btn-link" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#CalibrationHeaderBody" aria-expanded="true" aria-controls="CalibrationHeaderBody" @onclick=@(async () => await ShowTests(Argument))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                @{
+                                    var calibrationtype = "Calibration";
+
+                                    if (eq != null)
+                                    {
+                                        calibrationtype = eq.Name + " " + "Calibration";
+                                    }
+                                }
+
+                                @calibrationtype
+                            </button>
+                        </div>
+                    </div>
+                    @if (Component != null && Component.ConfigMode)
+                    {
+                        <div class="col">
+
+
+                            //Only for admin proposes
+                            <button class="d-sm-inline-block btn btn-sm btn-success" type="button" data-bs-toggle="collapse" @onclick=@(async () => await NewCalibration(eq.CalibrationTypeId.ToString()))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                Add New Calibration Config(Admin)
+                            </button>
+
+
+                        </div>
+                    }
+                    @if (eq.HasNew && NumGroup > 0)
+                    {
+                        <div class="col">
+
+
+
+
+                            <button class="d-sm-inline-block btn btn-sm btn-success" type="button" data-bs-toggle="collapse" @onclick=@(async () => await NewVisibleCalibration(eq.CalibrationTypeId.ToString()))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                Add Calibration
+                            </button>
+
+
+
+
+                        </div>
+                    }
+                    @if (eq.HasNew && NumGroup > 0)
+                    {
+                        <div class="col">
+
+
+
+
+                            <button class="d-sm-inline-block btn btn-sm btn-danger" type="button" data-bs-toggle="collapse" @onclick=@(async () => await DelVisibleCalibration(eq.CalibrationTypeId.ToString()))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                Delete Calibration
+                            </button>
+
+
+
+                        </div>
+                    }
+                    @if (Component != null && Component.ConfigMode)
+                    {
+                        <div class="col">
+                            <button class="d-sm-inline-block btn btn-sm btn-danger" type="button"
+                            data-bs-toggle="collapse" @onclick=@(async () => await CalibrationConfig(eq))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                +
+                            </button>
+                        </div>
+                    }
+
+                </div>
+
+
+            }
+            @{
+                if (Expanded)
+                {
+                    collapseclass = "collapse show";
+                }
+            }
+
+            <div id="CalibrationHeaderBody" class="@collapseclass" aria-labelledby="headingOne" data-bs-parent="@("#" + ParentAccordionID)">
+
+                <div class="@bodyclass">
+
+                    <div class="accordion" id="accordion">
+                        @{
+                            List<CalibrationSubType> listCa = new List<CalibrationSubType>();
+
+                            // var lst = eq.CalibrationSubTypes.Where(x => x.Enabled == true && x.CalibrationSubTypeView != null && !string.IsNullOrEmpty(x.CalibrationSubTypeView.Component)
+                            // && x.CalibrationSubTypeView.Component.ToLower() == Component.Name.ToLower() && x.CalibrationSubTypeView?.AccordionType != "Section").OrderBy(x => x.Position).ToList();
+
+                            if (CurrentSubTypes > 0)
+                            {
+                                listCa = subtypesList.Take(CurrentSubTypes).DistinctBy(x=>x.CalibrationSubTypeId).ToList();
+                            }
+                            else
+                            {
+                                listCa = subtypesList.DistinctBy(x => x.CalibrationSubTypeId).ToList();
+                            }
+
+                            // if((UseIsVisible && !IsVisible)){
+                            //     listCa = new List<CalibrationSubType>();
+                            // }
+                        }
+
+
+                        @foreach (var itemcs in listCa)
+                        {
+
+
+                            CreateModel createModel = itemcs.CreateModel();
+
+                            ErrorMessage += createModel.ErrorMessage;
+
+                            var styleform = createModel.Style;
+
+                            CalibrationSubType config = itemcs.GetStyle(itemcs, listCa.Count);
+
+
+
+                            string keyfilter = "";
+
+                            string CSSCard = "card";
+                            if (config.CalibrationSubTypeView.Style == "Tabs")
+                            {
+                                CSSCard = "";
+                            }
+
+                            bool ShowCardButton = config.CalibrationSubTypeView.ShowCardButton;
+
+                            if (!string.IsNullOrEmpty(config.CalibrationSubTypeView.FilterField))
+                            {
+                                var valuefilter = eq.GetPropValue(config.CalibrationSubTypeView.FilterField);
+                                keyfilter = valuefilter.ToString();
+                            }
+
+
+                            var iso = config.CalibrationSubTypeId;
+
+
+                            @if (string.IsNullOrEmpty(config.CalibrationSubTypeView.FilterField)
+                          || (!string.IsNullOrEmpty(keyfilter) && keyfilter.ToLower() == config.CalibrationSubTypeView.FilterValue.ToLower()))//(itemcs.DynamicPropertiesSchema != null && itemcs.DynamicPropertiesSchema.Count > 0)
+
+                            {
+                                //data-target="#EquipmentCondition"
+
+                                <div class="@CSSCard">
+
+                                    @if (ShowCardButton && (config.CalibrationSubTypeView.Style != "Tabs"))
+                                    {
+                                        <div class="card-header" id="CalibrationHeader2">
+                                            <div class="row">
+                                                <div class="col-6">
+
+
+                                                    @* <button class="btn btn-link collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="@("#" + iso.ToString() + "-modal" )" aria-expanded="false" aria-controls="collapseTwo">
+                                @itemcs.NameToShow
+                                </button>
+                                *@
+                                                    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="@("#" + iso.ToString() + "-modal" )"
+                                                    @onclick=@(async () => await ShowGenericCalibration(config))
+                                                    @onclick:stopPropagation @onclick:preventDefault>
+                                                        @itemcs.NameToShow
+                                                    </button>
+                                                </div>
+
+                                                <div class="col-2">
+                                                    @if (1 == 2 && itemcs.CalibrationSubTypeView.HasDeleteSubType && !itemcs.Mandatory && eq?.CalibrationSubTypes?.Count <= MaxNumberCopies)
+                                                    {//only for admin proposes
+                                                        <button class="d-sm-inline-block btn btn-sm btn-danger"
+                                                        type="button" data-bs-toggle="collapse" @onclick=@(async () => await DisableCalibration(config.CalibrationSubTypeId.ToString()))
+                                                        @onclick:stopPropagation @onclick:preventDefault>
+                                                            Disable
+                                                        </button>
+                                                    }
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    }
+                                    else if (ShowCardButton && (config.CalibrationSubTypeView.Style == "Tabs"))
+                                    {
+
+                                        @*  <li class="nav-item">
+                    <a class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" href="#pills-home" role="tab" aria-controls="pills-home" aria-selected="true">Home</a>
+                    </li> *@
+
+                                    }
+
+
+
+
+                                    @{
+                                        bool hide = true;
+                                        bool enable = false;
+                                        bool pn = false;
+                                        //if (!itemcs.CalibrationSubTypeView.ShowCardButton && itemcs.CalibrationSubTypeView.Style == "Panel")
+
+                                        if (config.CalibrationSubTypeView.Style == "Panel")
+                                        {
+                                            hide = false;
+                                            enable = true;
+                                            pn = true;
+                                        }
+
+                                        //if ( itemcs.CalibrationSubTypeView.Style == "Modal")
+                                        //{
+                                        //    hide = true;
+                                        //    enable = true;
+                                        //}
+                                        if (!Init)
+                                        {
+                                            InitComponent(itemcs);
+                                        }
+
+
+                                    }
+
+
+                                    <Blazed.Controls.Modal ID="@(iso.ToString() + "-modal")" 
+                                    Style="@config.CalibrationSubTypeView.Style"
+                                    ForceShow="true"
+                                    FullScreen="@config.CalibrationSubTypeView.FullScreen"
+                                    DefaultHide="true" 
+                                    @ref="@RefModal"
+                                    CloseWindow="CloseGenericWindow" 
+                                    ShowProgress="ShowProgress" 
+                                    JSInProcRuntime="JSInProcRuntime"
+                                    Title="@config.NameToShow" 
+                                    PanelNoHeader="@pn" 
+                                    ifNotShow="Closing">
+
+                                        <ContentBody>
+
+                                            @if (itemcs.CreateGroups.HasValue && itemcs.CreateGroups.Value==true)                                            
+                                            {
+                                                   <Header>
+                                                <MultiComponent Instance="DomainEntityProp" Policy="HasAccess" TTYPE="Entity">
+                                                    <Rules>
+                                                        <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                                                        TTYPE="WorkOrderDetail">
+                                                            <div> la regla no se cumple</div>
+                                                        </Rule>
+                                                        <RulesTemplate Context="Entity"
+                                                        TValue="string"
+                                                        TTYPE="Entity">
+                                                            <ValidConditionsTemplate>
+                                                                <div class="row w-100">
+                                                                    <div class="col-6">
+                                                                    </div>
+                                                                    <div class="col-3">
+                                                                       @*  <TextInput @bind-Value="@TestPointGroupName"
+                                                                                   IsDisabled="false"
+                                                                                   Label="Test Point Group Name"
+                                                                                   Type="@Types.text"
+                                                                        >
+                                                                        </TextInput> *@
+                                                                    </div>
+                                                                    <div class="col-3">
+                                                                        <button class="btn btn-primary w-100" type="button"
+                                                                        @onclick=@(async () => await NewVisibleTestPointGroup(eq.CalibrationSubTypes.Where(x => x.CalibrationSubTypeId == iso).FirstOrDefault()))
+                                                                        @onclick:stopPropagation @onclick:preventDefault>
+                                                                            Add Test Point Group
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </ValidConditionsTemplate>
+                                                            <InvalidConditionsTemplate>
+                                                            </InvalidConditionsTemplate>
+                                                        </RulesTemplate>
+                                                    </Rules>
+                                                </MultiComponent>
+                                            </Header>
+
+                                            }
+                                         
+
+                                            <MultiComponent Instance="DomainEntityProp" Policy="HasAccess" TTYPE="Entity">
+                                                <Rules>
+                                                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus(RuleValue).Compile())"
+                                                    TTYPE="WorkOrderDetail">
+                                                        <div> la regla no se cumple</div>
+                                                    </Rule>
+                                                    <RulesTemplate Context="Entity"
+                                                    TValue="string"
+                                                    TTYPE="Entity">
+                                                        <ValidConditionsTemplate>
+
+                                                      
+                                                            @if (itemcs.CreateGroups.HasValue == false || itemcs.CreateGroups.Value==false)
+                                                            {
+                                                                <GenericTestComponent CalibrationItem="CalibrationItem"
+                                                                                                                                    CalibrationItemResult="CalibrationItemResult"
+                                                                                                                                    DomainEntity="Entity"
+                                                                                                                                    @ref="@Ref"
+                                                                                                                                    OnChangeDescription="OnChangeDescription"
+                                                                                                                                    Enabled="@(true && !HasBeenCompleted)"
+                                                                                                                                    Component="@Component"
+                                                                                                                                    RefreshResolution="ChangeResolution"
+                                                                                                                                    CalibrationSubType="@config.CalibrationSubTypeId.ToString()"
+                                                                                                                                    HideElement="@(iso.ToString() + "-modal")"
+                                                                                                                                    cmcValues="cmcValues"
+                                                                                                                                    GroupName="TestPointResult"
+                                                                                                                                    IdGroup="@(iso.ToString() + "TestPointResult")"
+                                                                                                                                    DataLoad="UpdateData">
+
+                                                                </GenericTestComponent>
+                                                            }
+                                                            @if ((itemcs.CreateGroups.HasValue == true && itemcs.CreateGroups.Value == true && DicTestPointGroupsListS != null && DicTestPointGroupsListS.Count() > 0))
+                                                            {
+                                                                int conta = 1;
+
+                                                                var lst = DicTestPointGroupsListS.GetValueOrDefault(itemcs.CalibrationSubTypeId.ToString());
+                                                           
+                                                                       <div class="accordion" id="accordionGroups">
+
+                                                                        
+                                                                        @foreach (var item in lst)
+                                                                
+                                                                        {
+                                                                         
+                                                                        <div class="card">
+                                                                            <div class="card-header" id="@("heading" + conta)">
+                                                                                 <h2 class="mb-0">
+                                                                                    <button class="btn btn-link btn-block text-left" type="button" data-bs-toggle="collapse" data-bs-target="@("#collapse" + conta)" aria-expanded="true" aria-controls="@("collapse" + conta)">
+                                                                                    @item
+                                                                                </button>
+                                                                                </h2>
+                                                                            </div>
+                                                                            <div id="@("collapse" + conta)" class="collapse" aria-labelledby="@("heading" + conta)" data-bs-parent="#accordionGroups">
+                                                                                <div class="card-body">
+                                                                                    @if (1 == 1 || LoadTestComponent)
+
+                                                                                    {
+
+                                                                                       @*  Init = true; *@
+                                                                                        <GenericTestComponent CalibrationItem="CalibrationItem"
+                                                                                                                                                            CalibrationItemResult="CalibrationItemResult"
+                                                                                                                                                            DomainEntity="Entity"
+                                                                                                                                                            @ref="@Ref"
+                                                                                                                                                            OnChangeDescription="OnChangeDescription"
+                                                                                                                                                            Enabled="@(true && !HasBeenCompleted)"
+                                                                                                                                                            Component="@Component"
+                                                                                                                                                            RefreshResolution="ChangeResolution"
+                                                                                                                                                            CalibrationSubType="@config.CalibrationSubTypeId.ToString()"
+                                                                                                                                                            HideElement="@(iso.ToString() + "-modal")"
+                                                                                                                                                            cmcValues="cmcValues"
+                                                                                                                                                            GroupName=@item
+                                                                                                                                                            IdGroup="@(iso.ToString() +item)"
+                                                                                                                                                            DataLoad="UpdateData">
+
+                                                                                        </GenericTestComponent>
+
+                                                                                    }
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+
+
+
+                                                                        conta++;
+
+                                                                           @*  </RadzenAccordionItem> *@
+                                                                }
+                                                           
+                                                            @* </Items> *@
+                                                               
+                                                           @*  </RadzenAccordion> *@
+                                                                </div>
+                                                             }
+
+
+                                                        </ValidConditionsTemplate>
+                                                          
+                                                            <InvalidConditionsTemplate>
+                                                                <GenericTestComponent CalibrationItem="CalibrationItem"
+                                                                                                                                    CalibrationItemResult="CalibrationItemResult"
+                                                                                                                                    DomainEntity="Entity"
+                                                                                                                                    @ref="@Ref"
+                                                                                                                                    OnChangeDescription="OnChangeDescription"
+                                                                                                                                    Enabled="@(false)"
+                                                                                                                                    Component="@Component"
+                                                                                                                                    RefreshResolution="ChangeResolution"
+                                                                                                                                    CalibrationSubType="@config.CalibrationSubTypeId.ToString()"
+                                                                                                                                    HideElement="@(iso.ToString() + "-modal")"
+                                                                                                                                    cmcValues="cmcValues"
+                                                                                                                                    GroupName="GroupName"
+                                                                                                                                     IdGroup="@(iso.ToString() +"TestPointResult")"
+                                                                                                                                    DataLoad="UpdateData">
+
+                                                                </GenericTestComponent>
+                                                            </InvalidConditionsTemplate>
+                                                        </RulesTemplate>
+                                                    </Rules>
+                                                </MultiComponent>
+                                            </ContentBody>
+                                            <Footer>
+                                                <MultiComponent Instance="DomainEntityProp" Policy="HasAccess" TTYPE="Entity">
+                                                    <Rules>
+                                                        <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                                                              TTYPE="WorkOrderDetail">
+                                                            <div> la regla no se cumple</div>
+                                                        </Rule>
+                                                        <RulesTemplate Context="Entity"
+                                                                       TValue="string"
+                                                                       TTYPE="Entity">
+                                                            <ValidConditionsTemplate>
+                                                                <div class="row w-100">
+                                                                    <div class="col-8">
+                                                                    </div>
+                                                                    <div class="col-2">
+                                                                    </div>
+                                                                    <div class="col-2">
+                                                                        <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseGeneric())
+                                                                        @onclick:stopPropagation @onclick:preventDefault>
+                                                                            Save & Close
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </ValidConditionsTemplate>
+                                                            <InvalidConditionsTemplate>
+
+                                                            </InvalidConditionsTemplate>
+                                                        </RulesTemplate>
+                                                    </Rules>
+                                                </MultiComponent>
+
+                                            </Footer>
+
+                                        </Blazed.Controls.Modal>
+                                    
+                                    
+
+                                 
+
+
+                                </div>
+
+                            }
+
+
+
+                            cont++;
+                        }
+
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+        @*Sections  *@
+        @if (sectionsList.Count() > 0)
+        {
+            List<CalibrationSubType> listSections = new List<CalibrationSubType>();
+
+            @* var lstSections = eq.CalibrationSubTypes.Where(x => x.Enabled == true && x.CalibrationSubTypeView != null && !string.IsNullOrEmpty(x.CalibrationSubTypeView.Component)
+            && x.CalibrationSubTypeView.Component.ToLower() == Component.Name.ToLower() && x.CalibrationSubTypeView?.AccordionType == "Section").OrderBy(x => x.Position).ToList(); *@
+
+            if (CurrentSubTypes > 0)
+            {
+            listSections = sectionsList.Take(CurrentSubTypes).DistinctBy(x => x.CalibrationSubTypeId).ToList();
+            }
+            else
+            {
+            listSections = sectionsList.DistinctBy(x => x.CalibrationSubTypeId).ToList();
+            }
+
+            @if (listSections.Any())
+            {
+                var newSectionCollapseId = "NewSectionsCollapse";
+
+                <div class="card">
+                    <div class="card-header" id="NewSectionsHeader">
+                        <div class="row">
+                            <div class="col">
+                                <button class="btn btn-link" type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="@("#" + newSectionCollapseId)"
+                                        aria-expanded="true"
+                                        aria-controls="@newSectionCollapseId"
+                                @onclick:stopPropagation
+                                @onclick:preventDefault>
+                                    Calibration Additional Information
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="@newSectionCollapseId" class="collapse show" aria-labelledby="NewSectionsHeader" data-bs-parent="@("#" + ParentAccordionID)">
+                        <div class="card-body">
+                            <div class="accordion" id="accordion-new-sections">
+                                @foreach (var itemcs in listSections)
+                                {
+                                    CreateModel createModel = itemcs.CreateModel();
+                                    ErrorMessage += createModel.ErrorMessage;
+
+                                    CalibrationSubType config = itemcs.GetStyle(itemcs, listSections.Count);
+                                    var iso = config.CalibrationSubTypeId;
+
+                                    string keyfilter = "";
+                                    if (!string.IsNullOrEmpty(config.CalibrationSubTypeView.FilterField))
+                                    {
+                                        var valuefilter = eq.GetPropValue(config.CalibrationSubTypeView.FilterField);
+                                        keyfilter = valuefilter?.ToString();
+                                    }
+
+                                    bool matchesFilter = string.IsNullOrEmpty(config.CalibrationSubTypeView.FilterField)
+                                    || (!string.IsNullOrEmpty(keyfilter) &&
+                                    keyfilter.ToLower() == config.CalibrationSubTypeView.FilterValue.ToLower());
+
+                                    if (matchesFilter)
+                                    {
+                                        <div class="card">
+                                            <div class="card-header" id="@($"SectionHeader-{iso}")">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <button class="btn btn-link" type="button"
+                                                                data-bs-toggle="collapse"
+                                                                data-bs-target="@("#" + iso.ToString() + "-modal")"
+                                                                @onclick=@(async () => await ShowGenericCalibration(config))
+                                                        @onclick:stopPropagation
+                                                        @onclick:preventDefault>
+                                                            @itemcs.NameToShow
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Modal o contenido embebido aquí -->
+                                            <Blazed.Controls.Modal ID="@(iso.ToString() + "-modal")"
+                                                                   Style="@config.CalibrationSubTypeView.Style"
+                                                                   ForceShow="true"
+                                                                   FullScreen="@config.CalibrationSubTypeView.FullScreen"
+                                                                   DefaultHide="true"
+                                                                   @ref="@RefModal"
+                                                                   CloseWindow="CloseGenericWindow"
+                                                                   ShowProgress="ShowProgress"
+                                                                   JSInProcRuntime="JSInProcRuntime"
+                                                                   Title="@config.NameToShow"
+                                                                   PanelNoHeader="@(config.CalibrationSubTypeView.Style == "Panel")"
+                                                                   ifNotShow="Closing">
+                                                <ContentBody>
+                                                    <!-- Aquí tu lógica de reglas como en el código original -->
+                                                 
+                                                <GenericTestComponent CalibrationItem="CalibrationItem"
+                                                                                                                    CalibrationItemResult="CalibrationItemResult"
+                                                                                                                    DomainEntity="Entity"
+                                                                                                                    @ref="@Ref"
+                                                                                                                    OnChangeDescription="OnChangeDescription"
+                                                                                                                    Enabled="@(true && !HasBeenCompleted)"
+                                                                                                                    Component="@Component"
+                                                                                                                    RefreshResolution="ChangeResolution"
+                                                                                                                    CalibrationSubType="@config.CalibrationSubTypeId.ToString()"
+                                                                                                                    HideElement="@(iso.ToString() + "-modal")"
+                                                                                                                    cmcValues="cmcValues"
+                                                                                                                    GroupName=@itemcs.Name
+                                                                                                                    IdGroup="@(iso.ToString() + itemcs.Name)"
+                                                                                                                    DataLoad="UpdateData">
+
+                                                </GenericTestComponent>
+                                                </ContentBody>
+                                            </Blazed.Controls.Modal>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert alert-primary" role="alert">
+                @ErrorMessage
+            </div>
+
+
+
+        }
+
+    
+
+}
+
+
+
+
+
+
+
+
+@code {
+
+
+    string activeId = "accordion-1";
+
+   
+    
+}

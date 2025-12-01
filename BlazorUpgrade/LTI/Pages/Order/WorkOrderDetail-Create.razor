@@ -1,0 +1,981 @@
+﻿@page "/WorkOrderDetailCreate"
+@inject NavigationManager NavigationManager
+@inject Reports.Domain.ReportViewModels.Repeatability repeatability
+<!-- Horizontal Steppers -->
+<div class="row">
+        <div class="stepwizard">
+            <div class="stepwizard-row setup-panel">
+                <div class="stepwizard-step col-xs-3">
+                    <a href="#step-1" type="button" class="btn btn-success btn-circle">1</a>
+                    <p><small>Ready for Calibration</small></p>
+                </div>
+                <div class="stepwizard-step col-xs-3">
+                    <a href="#step-2" type="button" class="btn btn-success btn-circle" disabled="disabled">2</a>
+                    <p><small>Technical Review</small></p>
+                </div>
+                <div class="stepwizard-step col-xs-3">
+                    <a href="#step-3" type="button" class="btn btn-outline-secondary btn-circle" disabled="disabled">3</a>
+                    <p><small>Calibrated</small></p>
+                </div>
+                <div class="stepwizard-step col-xs-3">
+                    <a href="#step-4" type="button" class="btn btn-outline-secondary btn-circle" disabled="disabled">4</a>
+                    <p><small>Quality Review</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Actions</h1>
+        <div class="dropdown no-arrow">
+                <button class="btn btn-secondary dropdown-toggle btn-sm" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Save Status
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="#">Ready for Calibration</a>
+                    <a class="dropdown-item" href="#">Technical Review</a>
+                    <a class="dropdown-item" href="#">Calibrated</a>
+                    <a class="dropdown-item" href="#">Quality Review</a>
+                </div>
+        </div>
+            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm btn-icon-split" data-toggle="modal" data-target="#mdHistory"><span class="icon text-white-50"><i class="fas fa-history fa-sm text-white-50"></i></span>Check History</a>
+            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm btn-icon-split"><span class="icon text-white-50"><i class="fas fa-send fa-sm text-white-50"></i></span>Send Report</a>
+
+        <a href="GetReport/@customer.CustomerID" target="_blank" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm btn-icon-split"><span class="icon text-white-50"><i class="fas fa-file-download fa-sm text-white-50"></i></span>Download Report</a>
+
+        <a href="GetReport" target="_blank" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm btn-icon-split"><span class="icon text-white-50"><i class="fas fa-file-download fa-sm text-white-50"></i></span>Download Cal Sticker</a>
+</div>
+<br />
+<div class="accordion" id="accordionExample33">
+    <div class="card">
+        <div class="card-header" id="headingOne">
+            <h2 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne33" aria-expanded="true" aria-controls="collapseOne33">
+                    Work Order Detail: 457784 | Company: @customer.Name | Equipment Type: Bench Scale | Make: Toledo | Model: Bench 1000 lbs | Serial: TLD454-4
+                </button>
+            </h2>
+        </div>
+        <div id="collapseOne33" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+            <div class="card-body">
+                <div class="jumbotron">
+                    <h1 class="display-4">Work Order Detail</h1>
+                    <p class="lead">Job ID / Cal ID: 457784</p>
+                    <hr class="my-4">
+                    <p>Company: @customer.Name | Equipment Type: Bench Scale | Make: Toledo | Model: Bench 1000 lbs | Serial: TLD454-4</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<br />
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link" href="#home" data-toggle="tab">Additional Info.</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#profile" data-toggle="tab">Calibration Instructions</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#linearity" data-toggle="tab">Linearity & Accuracy</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#eccentricity" data-toggle="tab">Eccentricity</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#repeatability" data-toggle="tab">Repeatability</a>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="home">
+        <div class="accordion" id="accordionExample">
+            <div class="card shadow ">
+                <div class="card-header" id="headingOne">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            Info
+                        </button>
+                    </h2>
+                </div>
+
+                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+                    <div class="card-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="inputAddress2">Customer Equipment ID:</label>
+                                <input type="text" class="form-control" id="inputAddress2" value="ENG-4564" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="inputAddress">Address</label>
+                                <input type="text" class="form-control" id="inputAddress" value="1234 Main St" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="inputAddress2">Address 2</label>
+                                <input type="text" class="form-control" id="inputAddress2" placeholder="floor 1" disabled>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="inputCity">City</label>
+                                    <input type="text" class="form-control" id="inputCity" value="Philadelphia" disabled>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="inputState">State</label>
+                                    <select id="inputState" class="form-control" disabled>
+                                        <option selected>PA</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label for="inputZip">Zip</label>
+                                    <input type="text" class="form-control" id="inputZip" value="44144" disabled>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow">
+                <div class="card-header" id="headingTwo">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            Equipment Condition
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+                    <div class="card-body">
+                        <table class="table table-striped table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th scope="col"></th>
+                                    <th scope="col" colspan="2">Received Condition</th>
+                                    <th scope="col" colspan="2">Returned Condition</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Status</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">In Service</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">Out of Service</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">In Service</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">Out of Service</label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Clean</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">yes</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">no</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">yes</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">no</label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Level</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">yes</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">no</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">yes</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">no</label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Functioning</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">yes</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">no</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">yes</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">
+                                            <label class="custom-control-label" for="customSwitch2">no</label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow">
+                <div class="card-header" id="headingThree">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            Comments
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+                    <input type="text" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="profile">
+        <div class="accordion" id="accordionExample">
+            <div class="card shadow ">
+                <div class="card-header" id="headingOne">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOnex" aria-expanded="true" aria-controls="collapseOnex">
+                            Calibration Instructions
+                        </button>
+                    </h2>
+                </div>
+
+                <div id="collapseOnxe" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+                    <div class="card-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="inputState">Technician</label>
+                                <select id="inputState" class="form-control">
+                                    <option selected>Bob Sanders</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="inputState">Standards</label>
+                                <select id="inputState" class="form-control">
+                                    <option selected>Rice Lake | 120 Plus | J30019 | 1000 x 0.2 lb</option>
+                                    <option selected>Rice Lake | 120 Plus | J30018 | 1000 x 0.2 lb</option>
+                                    <option selected>Rice Lake | 120 Plus | J30017 | 1000 x 0.2 lb</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="inputCity">Humidity</label>
+                                    <input type="text" class="form-control">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="inputCity">Temperature</label>
+                                    <input type="text" class="form-control">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="linearity">
+        <div class="card-body">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <div class="d-sm-flex">
+                        <a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#mdSetupTestPoints"><i class="fas fa-magic fa-sm text-white-50"></i>Setup Test Points</a>
+                        <a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#"><i class="fas fa-save fa-sm text-white-50"></i>Save</a>
+                        <a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-warning shadow-sm" data-toggle="modal" data-target="#"><i class="fas fa-check-square fa-sm text-white-50"></i>Clear</a>
+                    </div>
+
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-sm" id="dataTable" width="100%" cellspacing="0">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th></th>
+                                    <th>Label</th>
+                                    <th>Test Point Weight</th>
+                                    <th>Weight Applied</th>
+                                    <th>UOM</th>
+                                    <th>As Found</th>
+                                    <th>Test Results</th>
+                                    <th>Low / High Tolerance</th>
+                                    <th>Direction</th>
+                                    <th>As Left</th>
+                                    <th>Test Result</th>
+                                    <th>Resolution</th>
+                                    <th>Uncertainty</th>
+                                    <th>U. UOM</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Set Weights</a></td>
+                                    <td><input value="Build 1" size="15" /></td>
+                                    <td>250</td>
+                                    <td></td>
+                                    <td>Lb</td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#mdDirection"><i class="fas fa-arrow-up fa-sm text-white-50"></i>Dir</a></td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Unc. Details</a></td>
+                                </tr>
+                                <tr>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Set Weights</a></td>
+                                    <td><input value="Build 2" size="15" /></td>
+                                    <td>500</td>
+                                    <td></td>
+                                    <td>Lb</td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#mdDirection"><i class="fas fa-arrow-up fa-sm text-white-50"></i>Dir</a></td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Unc. Details</a></td>
+                                </tr>
+                                <tr>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Set Weights</a></td>
+                                    <td><input value="Build 3" size="15" /></td>
+                                    <td>750</td>
+                                    <td></td>
+                                    <td>Lb</td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#mdDirection"><i class="fas fa-arrow-up fa-sm text-white-50"></i>Dir</a></td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Unc. Details</a></td>
+                                </tr>
+                                <tr>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Set Weights</a></td>
+                                    <td><input value="Build 4" size="15" /></td>
+                                    <td>1000</td>
+                                    <td></td>
+                                    <td>Lb</td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#mdDirection"><i class="fas fa-arrow-up fa-sm text-white-50"></i>Dir</a></td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Unc. Details</a></td>
+                                </tr>
+                                <tr>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Set Weights</a></td>
+                                    <td><input value="Decreasing" size="15" /></td>
+                                    <td>500</td>
+                                    <td></td>
+                                    <td>Lb</td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#mdDirection"><i class="fas fa-arrow-up fa-sm text-white-50"></i>Dir</a></td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Unc. Details</a></td>
+                                </tr>
+                                <tr>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Set Weights</a></td>
+                                    <td><input value="Return to Zero" size="15" /></td>
+                                    <td>0</td>
+                                    <td></td>
+                                    <td>Lb</td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#mdDirection"><i class="fas fa-arrow-up fa-sm text-white-50"></i>Dir</a></td>
+                                    <td><input size="15" /></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#mdAdvanced">Unc. Details</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="eccentricity">
+        <div class="card-body">
+            <div class="row no-gutters">
+                <div class="col-md-3">
+                    <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;" src="/img/box.png" alt="">
+                </div>
+                <div class="col-md-9">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <div class="d-sm-flex">
+                                <a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#"><i class="fas fa-save fa-sm text-white-50"></i>Save</a>
+                                <a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-warning shadow-sm" data-toggle="modal" data-target="#"><i class="fas fa-check-square fa-sm text-white-50"></i>Clear</a>
+                                <a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="modal" data-target="#"><i class="fas fa-copy fa-sm text-white-50"></i>Copy to As Left</a>
+                            </div>
+
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <div class="card-header py-3  mb-4">
+                                    <label for="exampleFormControlSelect1">Weight</label>
+                                    <select id="exampleFormControlSelect1" class="form-control">
+                                        <option>10 lb</option>
+                                        <option>100 lb</option>
+                                        <option>200 lb</option>
+                                        <option>custom</option>
+                                    </select>
+                                </div>
+                                <table class="table table-striped table-hover table-sm" id="dataTable" width="100%" cellspacing="0">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Seq</th>
+                                            <th>Weight Applied</th>
+                                            <th>As Found</th>
+                                            <th>As Left</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">1</th>
+                                            <td></td>
+                                            <td><input size="15" /></td>
+                                            <td><input size="15" /></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">2</th>
+                                            <td></td>
+                                            <td><input size="15" /></td>
+                                            <td><input size="15" /></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">3</th>
+                                            <td></td>
+                                            <td><input size="15" /></td>
+                                            <td><input size="15" /></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">4</th>
+                                            <td></td>
+                                            <td><input size="15" /></td>
+                                            <td><input size="15" /></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">5</th>
+                                            <td></td>
+                                            <td><input size="15" /></td>
+                                            <td><input size="15" /><i class="fas fa-trash fa-sm text-black-50 mb-4"></i></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="repeatability">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <div class="d-sm-flex">
+                    <a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm" data-toggle="modal" data-target="#"><i class="fas fa-save fa-sm text-white-50"></i>Save</a>
+                    <a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-warning shadow-sm" data-toggle="modal" data-target="#"><i class="fas fa-check-square fa-sm text-white-50"></i>Clear</a>
+                    <a href="#" style="margin:5px" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="modal" data-target="#"><i class="fas fa-copy fa-sm text-white-50"></i>Copy to As Left</a>
+
+                </div>
+
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <div class="card-header py-3  mb-4">
+                        <label for="exampleFormControlSelect1">Weight</label>
+                        <select id="exampleFormControlSelect1" class="form-control">
+                            <option>10 lb</option>
+                            <option>100 lb</option>
+                            <option>200 lb</option>
+                            <option>custom</option>
+                        </select>
+                    </div>
+
+                    <EditForm Model="@repeatability" style="margin:10px">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="form-row">
+                            <table class="table table-striped table-hover table-sm" id="dataTable" width="100%" cellspacing="0">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Seq</th>
+                                        <th>Weight Applied</th>
+                                        <th>As Found</th>
+                                        <th>As Left</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">1</th>
+                                        <td></td>
+                                        <td><InputText @bind-Value="repeatability.AsFound1" id="_AsFound1" placeholder="" class="form-control" style="width:150px" /></td>
+                                        <td><InputText @bind-Value="repeatability.AsLeft1" id="_AsLeft1" placeholder="" class="form-control" style="width:150px" /></td>
+
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">2</th>
+                                        <td></td>
+                                        <td><InputText @bind-Value="repeatability.AsFound2" id="_AsFound2" placeholder="" class="form-control" style="width:150px" /></td>
+                                        <td><InputText @bind-Value="repeatability.AsLeft2" id="_AsLeft2" placeholder="" class="form-control" style="width:150px" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">3</th>
+                                        <td></td>
+                                        <td><InputText @bind-Value="repeatability.AsFound3" id="_AsFound3" placeholder="" class="form-control" style="width:150px" /></td>
+                                        <td><InputText @bind-Value="repeatability.AsLeft3" id="_AsLeft3" placeholder="" class="form-control" style="width:150px" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">4</th>
+                                        <td></td>
+                                        <td><InputText @bind-Value="repeatability.AsFound4" id="_AsFound4" placeholder="" class="form-control" style="width:150px" /></td>
+                                        <td><InputText @bind-Value="repeatability.AsLeft4" id="_AsLeft5" placeholder="" class="form-control" style="width:150px" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">5</th>
+                                        <td></td>
+                                        <td><InputText @bind-Value="repeatability.AsFound5" id="_AsFound5" placeholder="" class="form-control" style="width:150px" /></td>
+                                        <td><InputText @bind-Value="repeatability.AsLeft5" id="_AsLeft5" placeholder="" class="form-control" style="width:150px" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">6</th>
+                                        <td></td>
+                                        <td><InputText @bind-Value="repeatability.AsFound6" id="_AsFound6" placeholder="" class="form-control" style="width:150px" /></td>
+                                        <td><InputText @bind-Value="repeatability.AsLeft6" id="_AsLeft6" placeholder="" class="form-control" style="width:150px" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">7</th>
+                                        <td></td>
+                                        <td><InputText @bind-Value="repeatability.AsFound7" id="_AsFound7" placeholder="" class="form-control" style="width:150px" /></td>
+                                        <td><InputText @bind-Value="repeatability.AsLeft7" id="_AsLeft7" placeholder="" class="form-control" style="width:150px" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">8</th>
+                                        <td></td>
+                                        <td><InputText @bind-Value="repeatability.AsFound8" id="_AsFound8" placeholder="" class="form-control" style="width:150px" /></td>
+                                        <td><InputText @bind-Value="repeatability.AsLeft8" id="_AsLeft8" placeholder="" class="form-control" style="width:150px" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">9</th>
+                                        <td></td>
+                                        <td><InputText @bind-Value="repeatability.AsFound9" id="_AsFound9" placeholder="" class="form-control" style="width:150px" /></td>
+                                        <td><InputText @bind-Value="repeatability.AsLeft9" id="_AsLeft9" placeholder="" class="form-control" style="width:150px" /></td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">10</th>
+                                        <td></td>
+                                        <td><input size="15" /></td>
+                                        <td><input size="15" /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <button class="btn btn-primary" type="submit" @onclick="GetReport">Submit form</button>
+
+                    </EditForm>
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- history Modal-->
+<div class="modal fade bd-example-modal-lg" id="mdHistory" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Current Calibration</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="page-header">
+                        <h1 id="">Timeline</h1>
+                    </div>
+                    <div id="timeline">
+                        <div class="row timeline-movement timeline-movement-top">
+                            <div class="timeline-badge timeline-future-movement">
+                                <a href="#">
+                                    <span class="glyphicon glyphicon-plus"></span>
+                                </a>
+                            </div>
+                            <div class="timeline-badge timeline-filter-movement">
+                                <a href="#">
+                                    <span class="glyphicon glyphicon-time"></span>
+                                </a>
+                            </div>
+
+                        </div>
+                        <div class="row timeline-movement">
+
+                            <div class="timeline-badge">
+                                <span class="timeline-balloon-date-day">18</span>
+                                <span class="timeline-balloon-date-month">APR</span>
+                            </div>
+
+
+                            <div class="col-sm-6  timeline-item">
+                                <div class="row">
+                                    <div class="col-sm-11">
+                                        <div class="timeline-panel credits">
+                                            <ul class="timeline-panel-ul">
+                                                <li><span class="importo">Ready for Calibration</span></li>
+                                                <li><span class="causale">Work Order Detail Created. </span> </li>
+                                                <li><p><small class="text-muted"><i class="glyphicon glyphicon-time"></i>Anne Sanders</small></p> </li>
+                                            </ul>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!--due -->
+
+                        <div class="row timeline-movement">
+
+
+                            <div class="timeline-badge">
+                                <span class="timeline-balloon-date-day">19</span>
+                                <span class="timeline-balloon-date-month">APR</span>
+                            </div>
+
+                            <div class="col-sm-offset-6 col-sm-6  timeline-item">
+                                <div class="row">
+                                    <div class="col-sm-offset-1 col-sm-11">
+                                        <div class="timeline-panel debits">
+                                            <ul class="timeline-panel-ul">
+                                                <li><span class="importo">Technical Review</span></li>
+                                                <li><span class="causale">Missing Resolution. </span> </li>
+                                                <li><p><small class="text-muted"><i class="glyphicon glyphicon-time"></i> Bob Tyler</small></p> </li>
+                                            </ul>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6  timeline-item">
+                                <div class="row">
+                                    <div class="col-sm-11">
+                                        <div class="timeline-panel credits">
+                                            <ul class="timeline-panel-ul">
+                                                <li><span class="importo">Technical Review</span></li>
+                                                <li><span class="causale">Resolution added </span> </li>
+                                                <li><p><small class="text-muted"><i class="glyphicon glyphicon-time"></i> Anne Sanders</small></p> </li>
+                                            </ul>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                        <div class="row timeline-movement">
+
+
+                            <div class="timeline-badge">
+                                <span class="timeline-balloon-date-day">20</span>
+                                <span class="timeline-balloon-date-month">APR</span>
+                            </div>
+
+
+
+                            <div class="col-sm-6  timeline-item">
+                                <div class="row">
+                                    <div class="col-sm-11">
+                                        <div class="timeline-panel credits">
+                                            <ul class="timeline-panel-ul">
+                                                <li><span class="importo">Calibration</span></li>
+                                                <li><span class="causale">In Spec. </span> </li>
+                                                <li><p><small class="text-muted"><i class="glyphicon glyphicon-time"></i> Roger Reredef </small></p> </li>
+                                            </ul>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                @*<a class="btn btn-primary" href="login.html">Create</a>*@
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal mdSetupTestPoints-->
+<div class="modal fade bd-example-modal-lg" id="mdSetupTestPoints" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Set Direction</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-striped table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th scope="col"></th>
+                                    <th scope="col"></th>
+                                    <th scope="col">Test Ponts?</th>
+                                    <th scope="col">Weight Delta?</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">How Many Test Points</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="customSwitch2443" checked>
+                                            <label class="custom-control-label" for="customSwitch2443">Ascending</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input size="10" value="4" />
+                                    </td>
+                                    <td>
+                                        <input size="10" value="250" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">How Many Test Points</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="customSwitch26576">
+                                            <label class="custom-control-label" for="customSwitch26576">Descending</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input size="10" value="0" />
+                                    </td>
+                                    <td>
+                                        <input size="10" value="0" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Return to Zero?</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="customSwitch26576">
+                                            <label class="custom-control-label" for="customSwitch26576">?</label>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        <input size="10" value="500" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" type="button" data-dismiss="modal">Save</button>
+                @*<a class="btn btn-primary" href="login.html">Create</a>*@
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- direction Modal-->
+<div class="modal fade bd-example-modal-lg" id="mdDirection" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Set Direction</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-striped table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th scope="col"></th>
+                                    <th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row">Direction</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="customSwitch2443">
+                                            <label class="custom-control-label" for="customSwitch2443">Up</label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Direction</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="customSwitch26576">
+                                            <label class="custom-control-label" for="customSwitch26576">Down</label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">Step</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input />
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                @*<a class="btn btn-primary" href="login.html">Create</a>*@
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- advanced Modal-->
+<div class="modal fade bd-example-modal-lg" id="mdAdvanced" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Set Direction</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        This feature is available in advanced mode only, talk to Kavoku for more info.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                @*<a class="btn btn-primary" href="login.html">Create</a>*@
+            </div>
+        </div>
+    </div>
+</div>
+
+@*<CalibrationSaaS.Infraestructure.Blazor.Pages.Report.Report_Base repeatabilityPar=repeatability />*@
+
+@code {
+    [Inject] Application.Services.ICustomerService<CallContext> Client { get; set; }
+
+    private Customer customer = new Customer();
+    //private Reports.Domain.ReportViewModels.Repeatability repeatability = new Reports.Domain.ReportViewModels.Repeatability();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Tenant tenant = new Tenant();
+        customer = null; //(await Client.GetCustomers(new Grpc.Core.CallOptions())).Customers.LastOrDefault();
+        //customer = (await Client.GetCustomers()).Customers.LastOrDefault();
+    }
+
+    protected async Task GetReport()  //YPPP 
+    {
+        NavigationManager.NavigateTo("GetReport/"+customer.CustomerID);
+    }
+
+}

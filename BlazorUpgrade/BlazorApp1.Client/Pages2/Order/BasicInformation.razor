@@ -1,0 +1,486 @@
+﻿@page "/WorkOrderItemBasicInfo/{EntityID}"
+@inject NavigationManager NavigationManager
+@inject Reports.Domain.ReportViewModels.Repeatability repeatability
+
+@using BlazorApp1.Client.Pages.AssetsBasics
+@using BlazorApp1.Client.Pages.Basics
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using System.Reflection
+@using Blazed.Controls
+@using BlazorApp1.Blazor.Blazor.Pages.AssetsBasics
+@using BlazorApp1.Blazor.Blazor.Pages.Customer
+@using CalibrationSaaS.Domain.Aggregates.Querys 
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using Microsoft.AspNetCore.Components
+@namespace BlazorApp1.Blazor.Pages.Order
+@inherits BlazorApp1.Blazor.Pages.Order.BasicInformationBase
+
+
+
+@* @if (editContext != null &&  CurrentStatus != null )
+{ *@
+    <EditForm Model="eq"   OnValidSubmit="Submit">
+        <DataAnnotationsValidator />
+        <div class="card-body">
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <dl class="param param-feature">
+                        <dt>Equipment Type</dt>
+                        <dd>
+                            @if (CurrentStatus != null && eq != null && eq.PieceOfEquipment.EquipmentTemplate.EquipmentTypeGroup != null) @* eq?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject != null) *@
+                            {
+                                EquipmentType = @eq?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeGroupID.ToString()
+                                + "-" + @eq?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeGroup.Name;
+
+
+                                <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                    <Rules>
+                                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                                        </Rule>
+                                        <RulesTemplate TValue="string"
+                                                       TTYPE="WorkOrderDetail">
+
+                                            <ValidConditionsTemplate Context="Entity">
+
+                                                @*<button  class="btn btn-primary btn-sm btn-block"
+                                        @onclick="@(()=> ShowEquipmentType())"
+                                        @onclick:stopPropagation @onclick:preventDefault>
+                                        @EquipmentType - @eq.PieceOfEquipment.EquipmentTemplate.EquipmentType
+                                        </button>*@
+
+                                                <SearchButtonComponent FormType="typeof(BlazorApp1.Blazor.Pages.Basics.EquipmentType_Detail)"
+                                                                       ID="@eq?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeGroupID.ToString()" Type="search"
+                                                                       Size="@ModalSize.MediumWindow"
+                                                                       Text="@(EquipmentType + " - " + eq?.PieceOfEquipment?.EquipmentTemplate?.DeviceClass)"
+                                                                       AllWidth="true"
+                                                                       Enabled="false">
+
+                                                </SearchButtonComponent>
+
+
+                                            </ValidConditionsTemplate>
+                                            <InvalidConditionsTemplate Context="condition">
+
+                                                <SearchButtonComponent FormType="typeof(BlazorApp1.Blazor.Pages.Basics.EquipmentType_Detail)"
+                                                                       ID="@eq?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeGroupID.ToString()" Type="search"
+                                                                       Size="@ModalSize.MediumWindow"
+                                                                       Text="@(EquipmentType + " - " + eq?.PieceOfEquipment?.EquipmentTemplate?.DeviceClass)"
+                                                                       AllWidth="true"
+                                                                       Enabled="false">
+
+                                                </SearchButtonComponent>
+
+
+                                            </InvalidConditionsTemplate>
+                                        </RulesTemplate>
+                                    </Rules>
+                                </MultiComponent>
+
+                            }
+
+                        </dd>
+                    </dl>
+                </div>
+
+                <div class="col-sm-6">
+                    <dl class="param param-feature">
+                        <dt>Equipment Template</dt>
+                        <dd>
+                            @if (CurrentStatus != null && eq != null)
+                            {
+
+                                EquipmentTemplate = eq?.PieceOfEquipment?.EquipmentTemplate?.Manufacturer + "-"
+                                + eq?.PieceOfEquipment?.EquipmentTemplate?.Model + "-" + eq?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeGroupID;
+
+                                <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                    <Rules>
+                                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile() )" TTYPE="WorkOrderDetail">
+
+                                        </Rule>
+
+                                        <RulesTemplate TValue="string"
+                                                       TTYPE="WorkOrderDetail">
+                                            <ValidConditionsTemplate Context="condition">
+
+
+                                                <SearchButtonComponent FormType="typeof(BlazorApp1.Blazor.Blazor.Pages.Basics.Equipment_Create)"
+                                                                       ID="@eq.PieceOfEquipment.EquipmentTemplate.EquipmentTemplateID.ToString()" 
+                                                                       Type="search"
+                                                                       Size="@ModalSize.FullScreen"
+                                                                       Text="@EquipmentTemplate"
+                                                                       Enabled="false"
+                                                                       AllWidth="true">
+
+                                                </SearchButtonComponent>
+
+                                            </ValidConditionsTemplate>
+                                            <InvalidConditionsTemplate Context="condition">
+                                                <SearchButtonComponent FormType="typeof(BlazorApp1.Blazor.Blazor.Pages.Basics.Equipment_Create)"
+                                                                       ID="@eq.PieceOfEquipment.EquipmentTemplate.EquipmentTemplateID.ToString()" Type="search"
+                                                                       Size="@ModalSize.FullScreen"
+                                                                       Text="@EquipmentTemplate"
+                                                                       Enabled="false"
+                                                                       AllWidth="true">
+
+                                                </SearchButtonComponent>
+                                            </InvalidConditionsTemplate>
+                                        </RulesTemplate>
+                                    </Rules>
+                                </MultiComponent>
+                                <ValidationMessage For="@(() => eq.PieceOfEquipment.EquipmentTemplate.EquipmentTypeGroupID)" />
+                            }
+
+                        </dd>
+                    </dl>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <dl class="param param-feature">
+                        <dt>Serial Number</dt>
+                        <dd>
+
+                            @if (CurrentStatus != null && eq != null)
+                            {
+                                <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                    <Rules>
+                                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())"
+                                              TTYPE="WorkOrderDetail">
+                                            <div> la regla no se cumple</div>
+                                        </Rule>
+                                        <RulesTemplate TValue="string"
+                                                       TTYPE="WorkOrderDetail">
+                                            <ValidConditionsTemplate Context="condition">
+                                                @*<button href="#" class="btn btn-primary btn-sm btn-block"
+                                        @onclick="@(()=> ShowSerial())"
+                                        @onclick:stopPropagation @onclick:preventDefault>
+                                        Serial: @eq.PieceOfEquipment.SerialNumber
+                                        </button>*@
+
+                                                <SearchButtonComponent FormType="typeof(PieceOfEquipment_Create)"
+                                                                       ID="@eq.PieceOfEquipmentId.ToString()" Type="search"
+                                                                       Size="@ModalSize.FullScreen"
+                                                                       Text="@eq.PieceOfEquipment.SerialNumber"
+                                                                       Enabled="false"
+                                                                       AllWidth="true">
+
+                                                </SearchButtonComponent>
+                                            </ValidConditionsTemplate>
+                                            <InvalidConditionsTemplate Context="condition">
+                                                @*<button href="#" class="btn btn-primary btn-sm btn-block"
+                                        @onclick="@(()=> ShowSerial())"
+                                        @onclick:stopPropagation @onclick:preventDefault>
+                                        Serial: @eq.PieceOfEquipment.SerialNumber
+                                        </button>*@
+                                                <SearchButtonComponent FormType="typeof(PieceOfEquipment_Create)"
+                                                                       ID="@eq.PieceOfEquipmentId.ToString()" Type="search"
+                                                                       Size="@ModalSize.FullScreen"
+                                                                       Text="@eq.PieceOfEquipment.SerialNumber"
+                                                                       Enabled="false"
+                                                                       AllWidth="true">
+
+                                                </SearchButtonComponent>
+                                            </InvalidConditionsTemplate>
+                                        </RulesTemplate>
+                                    </Rules>
+                                </MultiComponent>
+                                <ValidationMessage For="@(() => eq.PieceOfEquipment.SerialNumber)" />
+                            }
+
+                        </dd>
+                    </dl>
+                </div>
+
+                <div class="col-sm-6">
+                    <dl class="param param-feature">
+                        <dt>Equipment Number</dt>
+                        <dd>
+                            @if (CurrentStatus != null && eq != null)
+                            {
+                                <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                    <Rules>
+                                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())"
+                                              TTYPE="WorkOrderDetail">
+                                            <div> la regla no se cumple</div>
+                                        </Rule>
+                                        <RulesTemplate TValue="string"
+                                                       TTYPE="WorkOrderDetail">
+                                            <ValidConditionsTemplate Context="condition">
+                                                <button href="#" class="btn btn-primary btn-sm btn-block"
+                                                        @onclick="@(()=> ShowSerial())"
+                                                @onclick:stopPropagation @onclick:preventDefault>
+                                                    Number#: @eq.PieceOfEquipment.PieceOfEquipmentID
+                                                </button>
+                                            </ValidConditionsTemplate>
+                                            <InvalidConditionsTemplate Context="condition">
+
+                                                <button href="#" class="btn btn-primary btn-sm btn-block"
+                                                        @onclick="@(()=> ShowSerial())"
+                                                @onclick:stopPropagation @onclick:preventDefault>
+                                                    Number#: @eq.PieceOfEquipment.PieceOfEquipmentID
+                                                </button>
+                                            </InvalidConditionsTemplate>
+                                        </RulesTemplate>
+                                    </Rules>
+                                </MultiComponent>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <label>Customer</label>
+
+                    @if (CurrentStatus != null && eq != null)
+                    {
+                        <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())"
+                                      TTYPE="WorkOrderDetail">
+                                    <div> la regla no se cumple</div>
+                                </Rule>
+                                <RulesTemplate TValue="string"
+                                               TTYPE="WorkOrderDetail">
+                                    <ValidConditionsTemplate Context="condition">
+
+                                        <label class="form-control">@eq.WorkOder?.Customer?.Name</label>
+
+
+                                    </ValidConditionsTemplate>
+                                    <InvalidConditionsTemplate Context="condition">
+
+                                        <label class="form-control">@eq.WorkOder?.Customer?.Name</label>
+                                    </InvalidConditionsTemplate>
+                                </RulesTemplate>
+                            </Rules>
+                        </MultiComponent>
+                    }
+
+                </div>
+                <div class="col-sm-6">
+                    <dl class="param param-feature">
+
+                        <dd>
+                            @if (CurrentStatus != null && eq != null && _addressFiltered != null)
+                            {
+                                <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                    <Rules>
+                                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+                                            <div> la regla no se cumple</div>
+                                        </Rule>
+                                        <RulesTemplate TValue="int?"
+                                                       TTYPE="WorkOrderDetail"
+                                                       Context="Entity">
+
+
+                                            <ValidConditionsTemplate>
+                                                <TextInput OnChangeControl="ChangeList"
+                                                           TValue="int?"
+                                                           Label="Address Location"
+                                                           Type=@Types.select
+                                                           @bind-Value="@eq.AddressID"
+                                                           ValidationFor="@(() => eq.AddressID)">
+
+                                                    @foreach (Address item in _addressFiltered)
+                                                    {
+                                                        <option value="@item.AddressId">@item.StreetAddress1</option>
+                                                    }
+
+                                                </TextInput>
+                                            </ValidConditionsTemplate>
+                                            <InvalidConditionsTemplate>
+                                                <TextInput OnChangeControl="ChangeList"
+                                                           TValue="int?"
+                                                           Label="Address Location"
+                                                           Type=@Types.ReadOnlySelect
+                                                           @bind-Value="@eq.AddressID"
+                                                           ValidationFor="@(() => eq.AddressID)">
+
+                                                    @foreach (Address item in _addressFiltered)
+                                                    {
+                                                        <option value="@item.AddressId">@item.StreetAddress1</option>
+                                                    }
+
+                                                </TextInput>
+
+
+                                            </InvalidConditionsTemplate>
+
+                                        </RulesTemplate>
+                                    </Rules>
+                                </MultiComponent>
+                            }
+                            <ValidationMessage For="@(() => eq.PieceOfEquipment.AddressId)" />
+                        </dd>
+                    </dl>  <!-- item-property-hor .// -->
+                </div>
+            </div>
+
+            <div class="row">
+
+
+                <div class="col-sm-6">
+
+                    @if (CurrentStatus != null && eq != null && _addressFiltered != null)
+                    {
+                        <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                                </Rule>
+                                <RulesTemplate TValue="string"
+                                               TTYPE="WorkOrderDetail"
+                                               Context="Entity">
+
+                                    <ValidConditionsTemplate>
+                                        <TextInput TValue="string"
+                                                   Label="Install Location"
+                                                   Type=@Types.text
+                                                   IsDisabled="false"
+                                                   @bind-Value="@eq.PieceOfEquipment.InstallLocation"
+                                                   ValidationFor="@(() => eq.PieceOfEquipment.InstallLocation)">
+                                        </TextInput>
+                                    </ValidConditionsTemplate>
+                                    <InvalidConditionsTemplate>
+                                        <TextInput TValue="string"
+                                                   Label="Install Location"
+                                                   Type=@Types.text
+                                                   IsDisabled="true"
+                                                   @bind-Value="@eq.PieceOfEquipment.InstallLocation"
+                                                   ValidationFor="@(() => eq.PieceOfEquipment.InstallLocation)">
+                                        </TextInput>
+                                    </InvalidConditionsTemplate>
+
+                                </RulesTemplate>
+                            </Rules>
+                        </MultiComponent>
+                    }
+
+                </div>
+
+
+                <div class="col-sm-6">
+
+                    @if (CurrentStatus != null && eq != null && eq.TestCodeID > 0)
+                    {
+                        <SearchButtonComponent FormType="typeof(BlazorApp1.Blazor.Pages.Basics.TestCode_Create)"
+                                               ID="@eq.TestCodeID.ToString()" Type="search"
+                                               Size="@ModalSize.MediumWindow"
+                                               Text="@("Test Code-" + eq.TestCodeID)"
+                                               Enabled="false"
+                                               AllWidth="true"
+                                               Parameters="@ModalParameters">
+
+                        </SearchButtonComponent>
+                    
+                    }
+                    <div class="row">
+                        <div class="row w-100">
+                            <div class="col" >
+                                <label class="form-control-label" for="b6f18343-b9ec-498d-9622-5ee40a465af7">Procedures</label>
+                            </div>
+                        </div>
+                       
+                        <div class="row">
+                            <div class="col">
+
+                                @if(eq?.WOD_Procedure?.Count > 0)
+                                {
+                                    foreach (var itemp in eq.WOD_Procedure)
+                                    {
+
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Success">
+                                            @itemp.Procedure.Name
+                                        </RadzenBadge>
+
+                                    }
+
+                                }
+
+                               @*  <FluentBadge Appearance="Appearance.Accent">
+                                    Accent
+                                </FluentBadge>
+
+                                <FluentBadge Appearance="Appearance.Neutral">
+                                    Neutral
+                                </FluentBadge>
+
+                                <FluentBadge Fill="somevalue" BackgroundColor="red" Color="white">Red and White</FluentBadge>
+
+
+                                <FluentBadge Appearance="Appearance.Neutral" Fill="highlight" BackgroundColor="#ffd800;" Color="#000">Highlight</FluentBadge> *@
+
+                            </div>
+                        </div>
+                       
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <label>Customer Tool ID</label>
+
+                    @if (CurrentStatus != null && eq != null)
+                    {
+                        <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())"
+                                      TTYPE="WorkOrderDetail">
+                                    <div> la regla no se cumple</div>
+                                </Rule>
+                                <RulesTemplate TValue="string"
+                                               TTYPE="WorkOrderDetail">
+                                    <ValidConditionsTemplate Context="condition">
+
+                                        <label class="form-control">@eq.PieceOfEquipment?.CustomerToolId</label>
+
+                                    </ValidConditionsTemplate>
+                                    <InvalidConditionsTemplate Context="condition">
+
+                                        <label class="form-control">@eq.PieceOfEquipment?.CustomerToolId</label>
+                                    </InvalidConditionsTemplate>
+                                </RulesTemplate>
+                            </Rules>
+                        </MultiComponent>
+                    }
+
+                </div>
+            </div>
+           @*  @if (1 == 2)
+            {
+                <div class="col-sm-6">
+
+                    <dl class="param param-feature">
+                        <dd>
+                            <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" @onclick="@(()=> ShowModalPoEIndicator())" @onclick:stopPropagation @onclick:preventDefault>Select Indicator</button>
+                        </dd>
+                    </dl>
+
+                </div>
+                @if (_listPoEIndicator.SerialNumber != null)
+                {
+                    <CalibrationSaaS.Infraestructure.Blazor.Shared.Component.Indicator _listPoEIndicator="@_listPoEIndicator" Manufacturer="@_listPoEIndicator.EquipmentTemplate.Manufacturer" Model="@_listPoEIndicator.EquipmentTemplate.Model"></CalibrationSaaS.Infraestructure.Blazor.Shared.Component.Indicator>
+                }
+                <div class="col-sm-2" style="display:none">
+                    <dl class="param param-feature">
+                        <dt>E</dt>
+                        <dd>
+
+                            <InputNumber @bind-Value="eq.PieceOfEquipment.IndicatorPieceOfEquipmentID">
+                                
+                            </InputNumber>
+
+                        </dd>
+                    </dl>
+                </div>
+            } *@
+        </div>
+        <button class="btn btn-primary" type="submit" style="display:none">Submit form</button>
+
+    </EditForm>
+@* } *@

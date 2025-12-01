@@ -1,0 +1,17 @@
+﻿@namespace Blazed.Controls
+
+<CascadingValue Value="@this" >
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+
+        protected override async Task OnInitializedAsync()
+        {
+            await base.OnInitializedAsync();
+        }
+
+}

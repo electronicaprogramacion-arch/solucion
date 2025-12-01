@@ -1,0 +1,38 @@
+﻿<StatusMessage Message="@StatusMessage" />
+@if (RecoveryCodes is { Length: > 0 })
+{
+    <RadzenCard class="rz-p-4 rz-background-color-primary-lighter rz-mb-4">
+        <RadzenText TextStyle="TextStyle.H5" class="rz-mb-3">
+            <strong>Put these codes in a safe place.</strong>
+        </RadzenText>
+        <RadzenText TextStyle="TextStyle.Body1" class="rz-mb-3">
+            If you lose your device and don't have the recovery codes you will lose access to your account.
+        </RadzenText>
+        <div class="rz-p-3 rz-background-color-white rz-border-radius-4">
+            <div class="rz-grid">
+                @for (var row = 0; row < RecoveryCodes.Length; row += 2)
+                {
+                    <div class="rz-row">
+                        <div class="rz-col rz-p-1">
+                            <code class="recovery-code">@RecoveryCodes[row]</code>
+                        </div>
+                        @if (row + 1 < RecoveryCodes.Length)
+                        {
+                            <div class="rz-col rz-p-1">
+                                <code class="recovery-code">@RecoveryCodes[row + 1]</code>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </RadzenCard>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required string[] RecoveryCodes { get; set; }
+
+    [Parameter]
+    public string? StatusMessage { get; set; }
+}

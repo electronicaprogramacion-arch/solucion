@@ -1,0 +1,39 @@
+﻿@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@*@typeparam Entity*@
+
+@Title
+@Rols
+@code {
+
+    [CascadingParameter(Name = "TitleValue")] protected string Title { get; set; }
+
+    [Parameter]
+    public string Rols { get; set; }
+
+    [Parameter]
+    public RenderFragment fr { get; set; }
+
+
+
+    public string GetPropertyName<T>(Expression<Func<T>> propertyLambda)
+    {
+        var me = propertyLambda.Body as MemberExpression;
+
+        if (me == null)
+        {
+            throw new ArgumentException("You must pass a lambda of the form: '() => Class.Property' or '() => object.Property'");
+        }
+
+        return me.Member.Name;
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await Content.SetContentHeader(this);
+        //await base.OnInitializedAsync();
+    }
+}

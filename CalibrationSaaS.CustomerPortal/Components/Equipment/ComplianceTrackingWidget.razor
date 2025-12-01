@@ -1,0 +1,341 @@
+@using CalibrationSaaS.CustomerPortal.Models.Equipment
+@using CalibrationSaaS.CustomerPortal.Models.ViewModels
+@using CalibrationSaaS.CustomerPortal.Services.Equipment
+
+<RadzenCard Class="rz-p-4">
+    <RadzenStack Gap="1rem">
+        <!-- Header -->
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenText TextStyle="TextStyle.H6">Compliance Tracking</RadzenText>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <RadzenDropDown @bind-Value="@selectedPeriod" Data="@timePeriods" TextProperty="Text" ValueProperty="Value" 
+                               Change="@OnPeriodChanged" Style="width: 120px;" />
+                <RadzenButton Icon="refresh" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+                             Click="@LoadData" IsBusy="@isLoading" />
+            </RadzenStack>
+        </RadzenStack>
+
+        @if (isLoading)
+        {
+            <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-4">
+                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                <RadzenText TextStyle="TextStyle.Body2">Loading compliance data...</RadzenText>
+            </RadzenStack>
+        }
+        else if (summary != null)
+        {
+            <!-- Compliance Overview -->
+            <RadzenRow Gap="1rem">
+                <RadzenColumn Size="6">
+                    <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-success-lighter) 0%, var(--rz-success-light) 100%);">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="verified" Style="font-size: 2rem; color: var(--rz-success);" />
+                            <RadzenText TextStyle="TextStyle.H4" Class="rz-mb-0">@summary.ComplianceRate.ToString("F1")%</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Compliance Rate</RadzenText>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="6">
+                    <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-danger-lighter) 0%, var(--rz-danger-light) 100%);">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="error" Style="font-size: 2rem; color: var(--rz-danger);" />
+                            <RadzenText TextStyle="TextStyle.H4" Class="rz-mb-0">@summary.OverdueRate.ToString("F1")%</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Overdue Rate</RadzenText>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <!-- Detailed Metrics -->
+            <RadzenRow Gap="1rem">
+                <RadzenColumn Size="3">
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0" Style="color: var(--rz-primary);">
+                            @summary.TotalEquipment
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Total Equipment</RadzenText>
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="3">
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0" Style="color: var(--rz-success);">
+                            @summary.CurrentEquipment
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Current</RadzenText>
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="3">
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0" Style="color: var(--rz-warning);">
+                            @summary.ExpiringSoonEquipment
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Expiring Soon</RadzenText>
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="3">
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0" Style="color: var(--rz-danger);">
+                            @summary.OverdueEquipment
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Overdue</RadzenText>
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <!-- Compliance Progress Bar -->
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.Body2">Compliance Status Distribution</RadzenText>
+                <div class="compliance-progress-container">
+                    <div class="compliance-progress-bar">
+                        <div class="progress-segment current" 
+                             style="@($"width: {GetPercentage(summary.CurrentEquipment, summary.TotalEquipment)}%;")">
+                        </div>
+                        <div class="progress-segment expiring" 
+                             style="@($"width: {GetPercentage(summary.ExpiringSoonEquipment, summary.TotalEquipment)}%;")">
+                        </div>
+                        <div class="progress-segment overdue" 
+                             style="@($"width: {GetPercentage(summary.OverdueEquipment, summary.TotalEquipment)}%;")">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Legend -->
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" JustifyContent="JustifyContent.Center">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <div class="legend-color current"></div>
+                        <RadzenText TextStyle="TextStyle.Caption">Current (@summary.CurrentEquipment)</RadzenText>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <div class="legend-color expiring"></div>
+                        <RadzenText TextStyle="TextStyle.Caption">Expiring (@summary.ExpiringSoonEquipment)</RadzenText>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <div class="legend-color overdue"></div>
+                        <RadzenText TextStyle="TextStyle.Caption">Overdue (@summary.OverdueEquipment)</RadzenText>
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenStack>
+
+            <!-- Upcoming Due Dates -->
+            @if (summary.UpcomingDueDates?.Any() == true)
+            {
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText TextStyle="TextStyle.Body2">Upcoming Due Dates</RadzenText>
+                    <RadzenStack Gap="0.25rem">
+                        @foreach (var equipment in summary.UpcomingDueDates.Take(5))
+                        {
+                            <RadzenCard Class="rz-p-2" Style="@($"border-left: 3px solid {GetStatusColor(equipment.DueStatus)};")">
+                                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                                    <RadzenStack Gap="0.125rem">
+                                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-font-weight-bold">
+                                            @equipment.Description
+                                        </RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                                            @equipment.SerialNumber
+                                        </RadzenText>
+                                    </RadzenStack>
+                                    <RadzenStack AlignItems="AlignItems.End" Gap="0.125rem">
+                                        <RadzenText TextStyle="TextStyle.Caption">
+                                            @equipment.NextCalibrationDate?.ToString("MMM dd")
+                                        </RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                                            @equipment.DueDateDisplayText
+                                        </RadzenText>
+                                    </RadzenStack>
+                                </RadzenStack>
+                            </RadzenCard>
+                        }
+                    </RadzenStack>
+                    
+                    @if (summary.UpcomingDueDates.Count > 5)
+                    {
+                        <RadzenButton Text="@($"View All {summary.UpcomingDueDates.Count} Upcoming")" 
+                                     ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+                                     Click="@(() => OnViewAllUpcoming.InvokeAsync())" />
+                    }
+                </RadzenStack>
+            }
+
+            <!-- Trend Chart -->
+            @if (trendData?.Any() == true)
+            {
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText TextStyle="TextStyle.Body2">Compliance Trend (@selectedPeriod)</RadzenText>
+                    <div style="height: 200px;">
+                        <RadzenChart>
+                            <RadzenLineSeries Data="@trendData" CategoryProperty="Label" ValueProperty="CompletedCount" 
+                                            Title="Completed" Stroke="var(--rz-success)" />
+                            <RadzenLineSeries Data="@trendData" CategoryProperty="Label" ValueProperty="DueCount" 
+                                            Title="Due" Stroke="var(--rz-warning)" />
+                            <RadzenLineSeries Data="@trendData" CategoryProperty="Label" ValueProperty="OverdueCount" 
+                                            Title="Overdue" Stroke="var(--rz-danger)" />
+                            <RadzenCategoryAxis Padding="20" />
+                            <RadzenValueAxis>
+                                <RadzenGridLines Visible="true" />
+                                <RadzenAxisTitle Text="Count" />
+                            </RadzenValueAxis>
+                            <RadzenLegend Position="LegendPosition.Bottom" />
+                        </RadzenChart>
+                    </div>
+                </RadzenStack>
+            }
+
+            <!-- Action Buttons -->
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.Center">
+                <RadzenButton Text="View All Equipment" Icon="inventory" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" 
+                             Click="@(() => OnViewAllEquipment.InvokeAsync())" />
+                <RadzenButton Text="Overdue Report" Icon="error" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" 
+                             Click="@(() => OnViewOverdue.InvokeAsync())" />
+                <RadzenButton Text="Export Report" Icon="file_download" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" 
+                             Click="@(() => OnExportReport.InvokeAsync())" />
+            </RadzenStack>
+        }
+    </RadzenStack>
+</RadzenCard>
+
+<style>
+    .compliance-progress-container {
+        width: 100%;
+        height: 20px;
+        background-color: var(--rz-base-200);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .compliance-progress-bar {
+        display: flex;
+        height: 100%;
+        width: 100%;
+    }
+
+    .progress-segment {
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+
+    .progress-segment.current {
+        background-color: var(--rz-success);
+    }
+
+    .progress-segment.expiring {
+        background-color: var(--rz-warning);
+    }
+
+    .progress-segment.overdue {
+        background-color: var(--rz-danger);
+    }
+
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+    }
+
+    .legend-color.current {
+        background-color: var(--rz-success);
+    }
+
+    .legend-color.expiring {
+        background-color: var(--rz-warning);
+    }
+
+    .legend-color.overdue {
+        background-color: var(--rz-danger);
+    }
+</style>
+
+@code {
+    [Parameter] public int CustomerId { get; set; }
+    [Parameter] public EventCallback OnViewAllEquipment { get; set; }
+    [Parameter] public EventCallback OnViewAllUpcoming { get; set; }
+    [Parameter] public EventCallback OnViewOverdue { get; set; }
+    [Parameter] public EventCallback OnExportReport { get; set; }
+    [Inject] private IEquipmentDueDateService DueDateService { get; set; } = default!;
+    [Inject] private ILogger<ComplianceTrackingWidget> Logger { get; set; } = default!;
+
+    private DueDateDashboardSummary? summary;
+    private List<DueDateTrendData>? trendData;
+    private bool isLoading = false;
+    private string selectedPeriod = "6 Months";
+
+    private readonly List<DropdownItem<string>> timePeriods = new()
+    {
+        new("3 Months", "3 Months"),
+        new("6 Months", "6 Months"),
+        new("12 Months", "12 Months"),
+        new("24 Months", "24 Months")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            summary = await DueDateService.GetDueDateSummaryAsync(CustomerId);
+            
+            var months = selectedPeriod switch
+            {
+                "3 Months" => 3,
+                "6 Months" => 6,
+                "12 Months" => 12,
+                "24 Months" => 24,
+                _ => 6
+            };
+            
+            trendData = await DueDateService.GetDueDateTrendDataAsync(CustomerId, months);
+
+            Logger.LogInformation("Loaded compliance tracking data for customer {CustomerId}", CustomerId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading compliance tracking data for customer {CustomerId}", CustomerId);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnPeriodChanged(object value)
+    {
+        selectedPeriod = value?.ToString() ?? "6 Months";
+        await LoadData();
+    }
+
+    private double GetPercentage(int value, int total)
+    {
+        return total > 0 ? (double)value / total * 100 : 0;
+    }
+
+    private string GetStatusColor(DueDateStatus status)
+    {
+        return status switch
+        {
+            DueDateStatus.Current => "var(--rz-success)",
+            DueDateStatus.ExpiringSoon => "var(--rz-warning)",
+            DueDateStatus.Overdue => "var(--rz-danger)",
+            DueDateStatus.Unknown => "var(--rz-secondary)",
+            _ => "var(--rz-secondary)"
+        };
+    }
+
+    public class DropdownItem<T>
+    {
+        public T Value { get; set; }
+        public string Text { get; set; }
+        
+        public DropdownItem(T value, string text)
+        {
+            Value = value;
+            Text = text;
+        }
+    }
+}

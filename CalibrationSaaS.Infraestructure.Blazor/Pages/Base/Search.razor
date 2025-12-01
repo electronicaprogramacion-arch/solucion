@@ -1,0 +1,252 @@
+﻿@typeparam T
+@typeparam S
+@typeparam D
+
+@*@inject ILogger Logger*@
+@inherits Base_Search<T, S, D>
+@using Blazed.Controls
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Customer
+<!-- Page Heading -->
+
+@if (Header)
+{
+    <h1 class="h3 mb-2 text-gray-800">@FormName</h1>
+
+}
+
+
+<!-- DataTales Example -->
+<div class="card shadow mb-4">
+    <div class="card-header py-0">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            @if (!SelectOnly || HasNewButton)
+            {
+                @*<a class="btn btn-primary" href="@BaseCreateUrl/0">New</a>*@
+                @GridNew
+
+            }
+            @*<button class="btn btn-primary btn-sm" @onclick=@(async () => await GetContact()) @onclick:stopPropagation @onclick:preventDefault>Contact</button>*@
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#"></a>
+                    </li>
+                </ul>
+                <form class="form-inline my-2 my-lg-0">
+
+                    <input @bind-value="SearchTerm" @bind-value:event="oninput" @onkeyup=@(() => KeyEvent("Name",SearchTerm)) class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+
+
+                </form>
+            </div>
+        </nav>
+
+    </div>
+
+
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-striped" id="dataTable" width="100%" cellspacing="0">
+                <thead class="thead-dark">
+                    <tr>
+                        @GridHeader
+                        @if (!SelectOnly)
+                        {
+                            if (GridEdit != null)
+                            {
+                                <th class="centeredTd">Edit</th>
+                            }
+
+                            if (GridDelete != null)
+                            {
+                                <th class="centeredTd">Delete</th>
+                            }
+                        }
+
+                    </tr>
+
+
+                </thead>
+                <tfoot>
+                    <tr>
+                        @GridFooter
+                        @if (!SelectOnly)
+                        {
+                            @*<th>Edit</th>
+                                <th>Delete</th>*@
+                        }
+                    </tr>
+                </tfoot>
+                <tbody>
+                    @if (FilteredToDos != null)
+                    {
+                        @foreach (var item in FilteredToDos)
+                        {
+                            //Logger.LogDebug("searchgrid item");
+                            //var linkDetail = @BaseDetailUrl + "/" + @item.CustomerID;
+                            //var link = @BaseCreateUrl + "/" + @item.CustomerID;
+                            <tr class="@CSSClass">
+
+
+                                @if (@IsModal && GridModalSelection == null)
+                                {
+                                    //@GridModalSelection(item)
+                                    <div>
+                                        <button class="btn btn-primary btn-sm"
+                                                @onclick=@(async () => await SelectModal(item)) @onclick:stopPropagation @onclick:preventDefault>
+                                            Select
+                                        </button>
+                                    </div>
+
+                                }
+                                else if (@IsModal && GridModalSelection != null)
+                                {
+
+                                    GridModalSelection(item);
+                                }
+
+
+                                else
+                                {
+                                    if (AutomaticButtons)
+                                    {
+                                       
+                                    }
+                                    else
+                                    {
+                                        @GridSelect(item)
+                                    }
+
+
+                                }
+                                @GridRow(item)
+
+                                @if (!SelectOnly)
+                                {
+                                    if (AutomaticButtons)
+                                    {
+                                       
+                                    }
+                                    else
+                                    {
+                                        if (GridEdit != null)
+                                        {
+                                            @GridEdit(item)
+
+                                        }
+                                        if (GridDelete != null)
+                                        {
+                                            @GridDelete(item)
+                                        }
+                                    }
+
+
+
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <ProgressBar ID="genericProgressBar" @ref="progressBar"></ProgressBar>
+        @if (List != null && List.Count() > PageSize)
+        {
+            <ul class="pagination">
+
+                <li class="page-item">
+                    <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => SetPagerSize(b))
+                       @onclick:stopPropagation @onclick:preventDefault>&laquo;</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => await NavigateToPage(p))
+                       @onclick:stopPropagation @onclick:preventDefault>Previous</a>
+                </li>
+                @for (int i = startPage; i <= endPage; i++)
+                {
+                    var currentPage = i;
+                    <li class="page-item">
+                        <a class="page-link" href="#" tabindex="-1" @onclick=@(async () =>await updateList(currentPage))
+                           @onclick:stopPropagation @onclick:preventDefault>
+                            @currentPage
+                        </a>
+                    </li>
+                }
+
+                <li class="page-item">
+                    <a class="page-link" href="#" tabindex="-1" @onclick=@(async () =>await NavigateToPage("next"))
+                       @onclick:stopPropagation @onclick:preventDefault>Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => SetPagerSize("forward"))
+                       @onclick:stopPropagation @onclick:preventDefault>&raquo;</a>
+                </li>
+                <li class="page-item noinv">
+                    <span class="pagebutton btn btn-link disabled">Page @curPage of @totalPages</span>
+                </li>
+            </ul>
+        }
+    </div>
+</div>
+
+<div id="dvModalCreateCustomer">
+    <StandardModal @ref="child"></StandardModal>
+</div>
+@code
+{
+
+
+    [Parameter]
+    public bool HasNewButton { get; set; } 
+
+    [Parameter]
+    public bool Header { get; set; } = false;
+
+    public string CSSClass { get; set; }
+
+    [Parameter]
+    public RenderFragment GridNew { get; set; }
+
+    [Parameter]
+    public RenderFragment GridHeader { get; set; }
+
+    [Parameter]
+    public RenderFragment GridFooter { get; set; }
+
+    [Parameter]
+    public RenderFragment<T> GridRow { get; set; }
+
+    [Parameter]
+    public RenderFragment<T> GridEdit { get; set; }
+
+    [Parameter]
+    public RenderFragment<T> GridDelete { get; set; }
+
+    [Parameter]
+    public RenderFragment<T> GridSelect { get; set; }
+
+    [Parameter]
+    public RenderFragment<T> GridModalSelection { get; set; }
+
+    [Parameter]
+    public bool AutomaticButtons { get; set; }
+
+
+    [Parameter]
+    public Type FORM { get; set; }
+
+
+    /// <summary>
+    /// Size of each page of BlazorGrid. This is a required field.
+    /// </summary>
+
+
+}

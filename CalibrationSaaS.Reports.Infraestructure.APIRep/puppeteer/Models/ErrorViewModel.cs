@@ -1,0 +1,9 @@
+namespace CalibrationSaaS.Reports.Infraestructure.APIRep.Models
+{
+    public class ErrorViewModel
+    {
+        public string? RequestId { get; set; }
+
+        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+    }
+}

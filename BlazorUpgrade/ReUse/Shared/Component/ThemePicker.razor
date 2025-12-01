@@ -1,0 +1,186 @@
+@inject CalibrationSaaS.Infraestructure.Blazor.Services.ThemeService ThemeService
+@inject IJSRuntime JS
+@implements IDisposable
+@using Radzen.Blazor
+
+<style>
+    .theme-picker-container {
+        margin: 0;
+        padding: 0;
+    }
+
+    .theme-picker-container .rz-dropdown {
+        border-radius: 4px;
+    }
+</style>
+
+<div class="theme-picker-container">
+    <RadzenDropDown TValue="string"
+                   Data="@themes"
+                   TextProperty="Value"
+                   ValueProperty="Key"
+                   Value="@selectedTheme"
+                   Change="@OnThemeChange"
+                   Style="width: 100%; max-width: 200px;"
+                   Icon="palette"
+                   AllowClear="false"
+                   AllowFiltering="false" />
+</div>
+
+@code {
+    private string selectedTheme = "humanistic";
+    private string selectedThemeName = "TrueTune"; // Default theme name
+    private Dictionary<string, string> themes = new Dictionary<string, string>
+    {
+        { "default", "Precision Pro" },
+        { "dark", "CalibraSphere" },
+        { "software", "Exactitude" },
+        { "software-dark", "Exactitude Dark" },
+        { "humanistic-dark", "TrueTune Dark" },
+        { "humanistic", "TrueTune" },
+        { "standard", "Alignify" },
+        { "standard-dark", "Alignify Dark" },
+        { "material", "AxisPoint" },
+        { "material-dark", "AxisPoint Dark" }
+    };
+
+    protected override void OnInitialized()
+    {
+        // Set the selected theme to match the current theme
+        selectedTheme = ThemeService.Theme;
+        if (themes.ContainsKey(selectedTheme))
+        {
+            selectedThemeName = themes[selectedTheme];
+        }
+
+        // Subscribe to theme change events
+        ThemeService.ThemeChanged += OnThemeChanged;
+    }
+
+    // Track if we're currently processing a theme change to prevent loops
+    private bool _processingThemeChange = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // Initialize the theme service after rendering
+                // This is safe to call here because we're in OnAfterRenderAsync
+                await ThemeService.InitializeAsync();
+
+                // Update the UI if the theme changed during initialization
+                if (selectedTheme != ThemeService.Theme)
+                {
+                    _processingThemeChange = true;
+                    selectedTheme = ThemeService.Theme;
+                    if (themes.ContainsKey(selectedTheme))
+                    {
+                        selectedThemeName = themes[selectedTheme];
+                    }
+                    StateHasChanged();
+                    _processingThemeChange = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in ThemePicker.OnAfterRenderAsync: {ex.Message}");
+                _processingThemeChange = false;
+            }
+        }
+    }
+
+    private void OnThemeChanged(string theme)
+    {
+        // Prevent loops by checking if we're already processing a theme change
+        if (_processingThemeChange)
+            return;
+
+        _processingThemeChange = true;
+        try
+        {
+            // Don't do anything if the theme hasn't changed
+            if (selectedTheme == theme)
+                return;
+
+            Console.WriteLine($"ThemePicker.OnThemeChanged: Theme changed to {theme}");
+
+            selectedTheme = theme;
+            if (themes.ContainsKey(theme))
+            {
+                selectedThemeName = themes[theme];
+            }
+            StateHasChanged();
+        }
+        finally
+        {
+            _processingThemeChange = false;
+        }
+    }
+
+    // Debounce mechanism for theme changes
+    private string? _pendingThemeChange = null;
+    private bool _isChangingTheme = false;
+
+    private async Task OnThemeChange(object value)
+    {
+        try
+        {
+            // Prevent loops by checking if we're already processing a theme change
+            if (_processingThemeChange || _isChangingTheme)
+                return;
+
+            if (value == null)
+                return;
+
+            var theme = value.ToString();
+
+            if (string.IsNullOrEmpty(theme))
+                return;
+
+            // Don't do anything if the theme hasn't changed
+            if (selectedTheme == theme)
+                return;
+
+            Console.WriteLine($"ThemePicker.OnThemeChange: Changing theme to {theme}");
+
+            _isChangingTheme = true;
+            _processingThemeChange = true;
+
+            try
+            {
+                // Update the selected theme
+                selectedTheme = theme;
+                if (themes.ContainsKey(theme))
+                {
+                    selectedThemeName = themes[theme];
+                }
+
+                // Update our theme service (this will trigger the ThemeChanged event)
+                await ThemeService.SetTheme(theme);
+
+                // Update the UI
+                StateHasChanged();
+            }
+            finally
+            {
+                _isChangingTheme = false;
+                _processingThemeChange = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _isChangingTheme = false;
+            _processingThemeChange = false;
+            Console.WriteLine($"Error changing theme: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+        }
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from theme change events to prevent memory leaks
+        ThemeService.ThemeChanged -= OnThemeChanged;
+    }
+}

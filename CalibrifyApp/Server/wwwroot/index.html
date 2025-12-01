@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calibrify - Calibration Management System</title>
+    <base href="/" />
+
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Calibrify - Professional Calibration Management System for precision instruments and equipment">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Calibrify">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="icon-512.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Stylesheets -->
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="css/sb-admin-2.css" rel="stylesheet" />
+    <link href="lib/fontawesome-free/css/all.min.css" rel="stylesheet" />
+
+    <!-- Radzen Components -->
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css">
+
+    <!-- Custom Styles -->
+    <style>
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .loading-subtext {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .error-container {
+            max-width: 600px;
+            margin: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .retry-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+
+        .retry-button:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading Calibrify...</div>
+            <div class="loading-subtext">Initializing calibration management system</div>
+        </div>
+    </div>
+
+    <!-- Error handling for failed loads -->
+    <script>
+        // Track loading timeout
+        let loadingTimeout = setTimeout(function() {
+            const app = document.getElementById('app');
+            if (app && app.innerHTML.includes('loading-container')) {
+                app.innerHTML = `
+                    <div class="loading-container">
+                        <div class="error-container">
+                            <h2>Loading Taking Longer Than Expected</h2>
+                            <p>The application is taking longer to load than usual. This might be due to:</p>
+                            <ul style="text-align: left; display: inline-block;">
+                                <li>Slow network connection</li>
+                                <li>Server maintenance</li>
+                                <li>Browser compatibility issues</li>
+                            </ul>
+                            <button class="retry-button" onclick="window.location.reload()">
+                                Retry Loading
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }, 30000); // 30 seconds timeout
+
+        // Clear timeout when Blazor loads
+        window.addEventListener('DOMContentLoaded', function() {
+            // Check if Blazor has loaded
+            const checkBlazor = setInterval(function() {
+                if (window.Blazor) {
+                    clearTimeout(loadingTimeout);
+                    clearInterval(checkBlazor);
+                }
+            }, 1000);
+        });
+
+        // Global error handler
+        window.addEventListener('error', function(event) {
+            console.error('Global error:', event.error);
+
+            // If it's a critical error during loading, show error message
+            const app = document.getElementById('app');
+            if (app && app.innerHTML.includes('loading-container')) {
+                app.innerHTML = `
+                    <div class="loading-container">
+                        <div class="error-container">
+                            <h2>Application Failed to Load</h2>
+                            <p>An error occurred while loading the application:</p>
+                            <p style="font-family: monospace; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
+                                ${event.error ? event.error.message : 'Unknown error'}
+                            </p>
+                            <button class="retry-button" onclick="window.location.reload()">
+                                Reload Application
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    </script>
+
+    <!-- Blazor Scripts -->
+    <script>
+        // Add cache-busting and error handling for blazor.web.js
+        (function() {
+            const script = document.createElement('script');
+            script.src = '_framework/blazor.web.js?v=' + Date.now(); // Cache busting
+            script.onerror = function(error) {
+                console.error('Failed to load blazor.web.js:', error);
+                console.log('Attempting to reload without cache...');
+
+                // Try to load without cache
+                const retryScript = document.createElement('script');
+                retryScript.src = '_framework/blazor.web.js?nocache=' + Math.random();
+                retryScript.onerror = function(retryError) {
+                    console.error('Retry failed for blazor.web.js:', retryError);
+
+                    // Show user-friendly error
+                    const app = document.getElementById('app');
+                    if (app) {
+                        app.innerHTML = `
+                            <div class="loading-container">
+                                <div class="error-container">
+                                    <h2>Application Loading Error</h2>
+                                    <p>Failed to load the Blazor framework. This might be due to:</p>
+                                    <ul style="text-align: left; display: inline-block;">
+                                        <li>Service worker cache issues</li>
+                                        <li>Network connectivity problems</li>
+                                        <li>Server configuration issues</li>
+                                    </ul>
+                                    <button class="retry-button" onclick="window.swDebug.fullReset().then(() => window.location.reload())">
+                                        Clear Cache & Retry
+                                    </button>
+                                    <button class="retry-button" onclick="window.location.reload(true)" style="margin-left: 10px;">
+                                        Hard Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                };
+                document.head.appendChild(retryScript);
+            };
+            document.head.appendChild(script);
+        })();
+    </script>
+
+    <!-- Service Worker Debug Utilities (for development) -->
+    <script src="js/sw-debug.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        // Clear any problematic caches first
+        async function clearProblematicCaches() {
+            try {
+                const cacheNames = await caches.keys();
+                const problematicCaches = cacheNames.filter(name =>
+                    name.includes('offline-cache') ||
+                    name.includes('calibrify-cache') ||
+                    name.includes('blazor')
+                );
+
+                if (problematicCaches.length > 0) {
+                    console.log('Clearing problematic caches:', problematicCaches);
+                    await Promise.all(problematicCaches.map(name => caches.delete(name)));
+                    console.log('Problematic caches cleared');
+                }
+            } catch (error) {
+                console.warn('Error clearing caches:', error);
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async function() {
+                // Clear problematic caches first
+                await clearProblematicCaches();
+
+                // Use the published service worker for production
+                const swUrl = window.location.hostname === 'localhost' ? 'service-worker.js' : 'service-worker.published.js';
+
+                try {
+                    const registration = await navigator.serviceWorker.register(swUrl);
+                    console.log('ServiceWorker registration successful with', swUrl);
+
+                    // Handle service worker updates
+                    registration.addEventListener('updatefound', function() {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', function() {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('New service worker available, will activate on next page load');
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.log('ServiceWorker registration failed: ', error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

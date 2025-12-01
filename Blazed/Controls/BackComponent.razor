@@ -1,0 +1,13 @@
+﻿@namespace Blazed.Controls
+
+<div class="d-sm-inline-block form-inline mr-auto my-2 my-md-0 mw-100"style="margin-right:50px">
+    <button class="btn btn-outline-light active" @onclick=@(async () => await Back()) @onclick:stopPropagation @onclick:preventDefault>
+    <i class="fa fa-chevron-left"></i></button>
+    <button class="btn btn-outline-light active" @onclick=@(async () => await Forward()) disabled="@Disabled"
+            @onclick:stopPropagation @onclick:preventDefault><i class="fa fa-chevron-right"></i></button>
+</div>
+
+@code 
+{
+
+}

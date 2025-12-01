@@ -1,0 +1,104 @@
+﻿@page "/Account/ResendEmailConfirmation"
+@layout CalibrifyApp.Server.Components.Account.Shared.LoginLayout
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using CalibrifyApp.Server.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Resend Email Confirmation</PageTitle>
+
+<!-- Enhanced Resend Email Confirmation Form with Modern Layout -->
+<div class="modern-login-container">
+    <!-- Email Confirmation Section -->
+    <div class="login-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-envelope-open"></i>
+                Resend Email Confirmation
+            </h3>
+            <p class="section-subtitle">Enter your email to receive a new confirmation link</p>
+        </div>
+
+        <StatusMessage Message="@message" />
+
+        <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post" class="login-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="validation-summary" role="alert" />
+
+            <!-- Email Field -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-envelope"></i>
+                    Email Address
+                </label>
+                <div class="input-wrapper">
+                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Enter your email address" />
+                    <ValidationMessage For="() => Input.Email" class="field-validation" />
+                </div>
+            </div>
+
+            <!-- Resend Button -->
+            <div class="form-group">
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-paper-plane"></i>
+                    Resend Confirmation
+                </button>
+            </div>
+
+            <!-- Helper Links with JavaScript fallback -->
+            <div class="helper-links">
+                <a href="Account/Login" class="helper-link" onclick="window.location.href='Account/Login'; return false;">
+                    <i class="fas fa-arrow-left"></i>Back to Sign In
+                </a>
+                <a href="Account/Register" class="helper-link" onclick="window.location.href='Account/Register'; return false;">
+                    <i class="fas fa-user-plus"></i>Create new account
+                </a>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private string? message;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    private async Task OnValidSubmitAsync()
+    {
+        var user = await UserManager.FindByEmailAsync(Input.Email!);
+        if (user is null)
+        {
+            message = "Verification email sent. Please check your email.";
+            return;
+        }
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        message = "Verification email sent. Please check your email.";
+    }
+
+
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string? Email { get; set; }
+    }
+}

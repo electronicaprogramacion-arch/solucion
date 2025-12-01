@@ -1,0 +1,786 @@
+@page "/{tenant}/equipment/due-dates"
+@layout MainLayout
+@implements IDisposable
+@using CalibrationSaaS.CustomerPortal.Models.Equipment
+@using CalibrationSaaS.CustomerPortal.Models.ViewModels
+@using CalibrationSaaS.CustomerPortal.Models.Common
+@using CalibrationSaaS.CustomerPortal.Services.Equipment
+@using Microsoft.AspNetCore.Components.Authorization
+@using Radzen
+@using Radzen.Blazor
+@inject IEquipmentDueDateService DueDateService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+@inject NotificationService NotificationService
+@inject ILogger<EquipmentDueDateSearch> Logger
+
+<PageTitle>Equipment Due Dates - Customer Portal</PageTitle>
+
+<style>
+    /* Pagination Container */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 24px;
+        padding: 16px 20px;
+        border-top: 1px solid #e0e0e0;
+        background-color: #ffffff;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    .pagination-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .pagination-text {
+        font-size: 14px;
+        color: #757575;
+        font-weight: 500;
+    }
+
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+    }
+
+    /* Radzen Pager Styling */
+    .equipment-pager {
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .equipment-pager .rz-paginator {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    /* Hide empty pagination elements and extra buttons */
+    .equipment-pager .rz-paginator-page:empty,
+    .equipment-pager .rz-paginator-element:empty,
+    .equipment-pager .rz-paginator > span:empty,
+    .equipment-pager .rz-paginator > a:empty,
+    .equipment-pager .rz-paginator-first,
+    .equipment-pager .rz-paginator-last {
+        display: none !important;
+    }
+
+    /* Hide any extra elements beyond the expected page count */
+    .equipment-pager .rz-paginator > *:nth-child(n+20) {
+        display: none !important;
+    }
+
+    /* Ensure all pagination buttons have consistent styling */
+    .equipment-pager .rz-paginator > * {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .equipment-pager .rz-paginator-page,
+    .equipment-pager .rz-paginator-prev,
+    .equipment-pager .rz-paginator-next,
+    .equipment-pager .rz-paginator-first,
+    .equipment-pager .rz-paginator-last {
+        min-width: 36px !important;
+        height: 36px !important;
+        margin: 0 2px !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 6px !important;
+        background-color: #ffffff !important;
+        color: #374151 !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        transition: all 0.2s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+        cursor: pointer !important;
+        text-decoration: none !important;
+    }
+
+    .equipment-pager .rz-paginator-page:hover,
+    .equipment-pager .rz-paginator-prev:hover,
+    .equipment-pager .rz-paginator-next:hover,
+    .equipment-pager .rz-paginator-first:hover,
+    .equipment-pager .rz-paginator-last:hover {
+        background-color: #f3f4f6 !important;
+        border-color: #9ca3af !important;
+        color: #111827 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Active page styling - multiple selectors to ensure it works */
+    .equipment-pager .rz-paginator-page.rz-state-active,
+    .equipment-pager .rz-paginator-page.rz-state-highlight,
+    .equipment-pager .rz-paginator-page[aria-current="page"],
+    .equipment-pager .rz-paginator-page.rz-state-selected,
+    .equipment-pager .rz-paginator-page.rz-paginator-current {
+        background-color: #3b82f6 !important;
+        color: #ffffff !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3) !important;
+    }
+
+    /* Ensure non-active pages don't have active styling */
+    .equipment-pager .rz-paginator-page:not(.rz-state-active):not(.rz-state-highlight):not([aria-current="page"]):not(.rz-state-selected):not(.rz-paginator-current) {
+        background-color: #ffffff !important;
+        color: #374151 !important;
+        border-color: #d1d5db !important;
+    }
+
+    .equipment-pager .rz-paginator-page.rz-state-disabled,
+    .equipment-pager .rz-paginator-prev.rz-state-disabled,
+    .equipment-pager .rz-paginator-next.rz-state-disabled,
+    .equipment-pager .rz-paginator-first.rz-state-disabled,
+    .equipment-pager .rz-paginator-last.rz-state-disabled {
+        opacity: 0.4 !important;
+        cursor: not-allowed !important;
+        background-color: #f9fafb !important;
+        color: #9ca3af !important;
+        border-color: #e5e7eb !important;
+    }
+
+    .equipment-pager .rz-paginator-page.rz-state-disabled:hover,
+    .equipment-pager .rz-paginator-prev.rz-state-disabled:hover,
+    .equipment-pager .rz-paginator-next.rz-state-disabled:hover,
+    .equipment-pager .rz-paginator-first.rz-state-disabled:hover,
+    .equipment-pager .rz-paginator-last.rz-state-disabled:hover {
+        background-color: #f9fafb !important;
+        color: #9ca3af !important;
+        border-color: #e5e7eb !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .pagination-wrapper {
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+        }
+
+        .equipment-pager .rz-paginator-page,
+        .equipment-pager .rz-paginator-prev,
+        .equipment-pager .rz-paginator-next,
+        .equipment-pager .rz-paginator-first,
+        .equipment-pager .rz-paginator-last {
+            min-width: 32px !important;
+            height: 32px !important;
+            font-size: 13px !important;
+        }
+    }
+</style>
+
+<header class="stitch-header">
+    <h1>Equipment Due Dates</h1>
+    <p style="margin-top: 5px; margin-left: 16px;">Monitor and track equipment calibration due dates.</p>
+</header>
+
+<section class="stitch-section">
+    <div class="stitch-search-header">
+        <div class="stitch-search-controls">
+            <div class="stitch-search-field">
+                <input @bind="viewModel.SearchRequest.SearchTerm" @onkeypress="@OnSearchKeyPress"
+                       class="stitch-input"
+                       placeholder="Search by equipment type, model, or serial number" />
+            </div>
+            <div class="stitch-filter-controls">
+                <select class="stitch-select">
+                    <option>All Equipment Types</option>
+                </select>
+                <input type="date" class="stitch-input" placeholder="From Date" />
+                <input type="date" class="stitch-input" placeholder="To Date" />
+                <button @onclick="@(() => ExportData("excel"))" class="stitch-btn-secondary">
+                    Export Excel
+                </button>
+                <button @onclick="@(() => ExportData("pdf"))" class="stitch-btn-secondary">
+                    Export PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="stitch-table-container">
+        @if (viewModel.IsLoading)
+        {
+            <div class="stitch-loading">
+                <p>Loading equipment due dates...</p>
+            </div>
+        }
+        else if (viewModel.SearchResponse?.Equipment?.Any() == true)
+        {
+            <table class="stitch-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Serial Number</th>
+                        <th>Description</th>
+                        <th>Customer</th>
+                        <th>Cal Date</th>
+                        <th>Due Date</th>
+                        <th>Days Until Due</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var equipment in viewModel.SearchResponse.Equipment)
+                    {
+                        <tr>
+                            <td>@equipment.EquipmentId</td>
+                            <td>@equipment.SerialNumber</td>
+                            <td>@equipment.Description</td>
+                            <td>@equipment.CustomerName</td>
+                            <td>@(equipment.LastCalibrationDate?.ToString("MM/dd/yyyy") ?? "N/A")</td>
+                            <td>
+                                @{
+                                    var isOverdue = equipment.NextCalibrationDate.HasValue && equipment.NextCalibrationDate.Value < DateTime.Today;
+                                    var cssClass = isOverdue ? "text-danger font-weight-bold" : "";
+                                }
+                                <span class="@cssClass">@(equipment.NextCalibrationDate?.ToString("MM/dd/yyyy") ?? "N/A")</span>
+                            </td>
+                            <td>
+                                @{
+                                    var daysUntilDue = equipment.NextCalibrationDate.HasValue ? (equipment.NextCalibrationDate.Value - DateTime.Today).Days : 0;
+                                    var daysCssClass = daysUntilDue < 0 ? "text-danger font-weight-bold" :
+                                                      daysUntilDue <= 30 ? "text-warning font-weight-bold" : "";
+                                    var displayText = daysUntilDue < 0 ? $"Overdue by {Math.Abs(daysUntilDue)} days" : $"{daysUntilDue} days";
+                                }
+                                <span class="@daysCssClass">@(equipment.NextCalibrationDate.HasValue ? displayText : "N/A")</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            @if (viewModel.SearchResponse.TotalPages > 1)
+            {
+                <div class="pagination-wrapper">
+                    <div class="pagination-info">
+                        <span class="pagination-text">
+                            Showing @((viewModel.SearchResponse.Page - 1) * viewModel.SearchResponse.PageSize + 1)
+                            to @(Math.Min(viewModel.SearchResponse.Page * viewModel.SearchResponse.PageSize, viewModel.SearchResponse.TotalCount))
+                            of @viewModel.SearchResponse.TotalCount equipment items
+                        </span>
+                    </div>
+                    <div class="pagination-controls">
+                        <RadzenPager @ref="pagerRef"
+                                   PageIndex="@pagerIndex"
+                                   Count="@viewModel.SearchResponse.TotalCount"
+                                   PageSize="@viewModel.SearchResponse.PageSize"
+                                   PageNumbersCount="@viewModel.SearchResponse.TotalPages"
+                                   PageChanged="@OnPageChanged"
+                                   ShowPagingSummary="false"
+                                   ShowFirstLastButtons="false"
+                                   ShowPrevNextButtons="false"
+                                   Class="equipment-pager" />
+                    </div>
+                </div>
+            }
+        }
+        else if (!viewModel.IsLoading)
+        {
+            <div class="stitch-empty-state">
+                <h3>No Equipment Found</h3>
+                <p>Try adjusting your search criteria or filters</p>
+                <button @onclick="@ClearFilters" class="stitch-btn-primary">
+                    Clear Filters
+                </button>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter] public string? tenant { get; set; }
+
+    private DueDateViewModel viewModel = new();
+    private int customerId = 0;
+    private RadzenPager? pagerRef;
+    private int pagerIndex = 0;
+
+    // Current page index (0-based for RadzenPager). One-way bind; changes handled in OnPageChanged.
+    private int CurrentPageIndex => Math.Max(0, (viewModel?.SearchResponse?.Page ?? viewModel?.SearchRequest?.Page ?? 1) - 1);
+
+    // Dropdown data
+    private List<DropdownItem<DueDateStatus?>> dueDateStatuses = new()
+    {
+        new(null, "All Statuses"),
+        new(DueDateStatus.Current, "Current"),
+        new(DueDateStatus.ExpiringSoon, "Expiring Soon"),
+        new(DueDateStatus.Overdue, "Overdue"),
+        new(DueDateStatus.Unknown, "Unknown")
+    };
+
+    private List<DropdownItem<string>> viewModes = new()
+    {
+        new("grid", "Grid"),
+        new("cards", "Cards")
+    };
+
+    private List<int> pageSizes = new() { 10, 25, 50, 100 };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error initializing equipment due date search page");
+            viewModel.ErrorMessage = "Failed to load equipment due dates. Please try again.";
+        }
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            viewModel.IsLoading = true;
+            viewModel.ErrorMessage = null;
+            StateHasChanged();
+
+            // Get customer ID from authentication if not already set
+            if (customerId == 0)
+            {
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                if (authState.User.Identity?.IsAuthenticated == true)
+                {
+                    var customerIdValue = authState.User.GetCustomerId();
+                    if (customerIdValue.HasValue)
+                    {
+                        customerId = customerIdValue.Value;
+                    }
+                    else
+                    {
+                        viewModel.ErrorMessage = "Unable to determine your customer account.";
+                        return;
+                    }
+                }
+                else
+                {
+                    viewModel.ErrorMessage = "You must be logged in to view equipment due dates.";
+                    return;
+                }
+            }
+
+            // Set tenant ID in search request
+            viewModel.SearchRequest.TenantId = tenant;
+
+            // Demo: Use mock equipment due dates for demo purposes
+            viewModel.SearchResponse = GetMockEquipmentDueDatesResponse();
+
+            // Sync pager index with the loaded page (0-based for pager)
+            pagerIndex = Math.Max(0, viewModel.SearchResponse.Page - 1);
+
+            // Force the pager component to update its visual state
+            if (pagerRef != null)
+            {
+                await InvokeAsync(() => pagerRef.GoToPage(pagerIndex));
+            }
+
+            // Force component re-render to update pager
+            StateHasChanged();
+
+            Logger.LogInformation("Loaded {Count} equipment due dates",
+                viewModel.SearchResponse.Equipment.Count);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading equipment due dates");
+            viewModel.ErrorMessage = "Failed to load equipment due dates. Please try again.";
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Load Error",
+                Detail = "Failed to load equipment due dates.",
+                Duration = 5000
+            });
+        }
+        finally
+        {
+            viewModel.IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ApplyQuickFilter(string filter)
+    {
+        try
+        {
+            viewModel.ApplyQuickFilter(filter);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error applying quick filter: {Filter}", filter);
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        try
+        {
+            viewModel.ClearFilters();
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error clearing filters");
+        }
+    }
+
+    private async Task OnSearchKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task ChangePageSize(int pageSize)
+    {
+        try
+        {
+            viewModel.SetPageSize(pageSize);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error changing page size to {PageSize}", pageSize);
+        }
+    }
+
+    private async Task ChangePage(int page)
+    {
+        try
+        {
+            viewModel.GoToPage(page);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error changing to page {Page}", page);
+        }
+    }
+
+    private async Task ChangeSort(string sortBy)
+    {
+        try
+        {
+            viewModel.SetSortOrder(sortBy);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error changing sort to {SortBy}", sortBy);
+        }
+    }
+
+    private async Task ExportData(string format)
+    {
+        try
+        {
+            viewModel.IsExporting = true;
+            StateHasChanged();
+
+            ExportResult result;
+            if (format == "excel")
+            {
+                result = await DueDateService.ExportToExcelAsync(viewModel.SearchRequest, customerId);
+            }
+            else
+            {
+                result = await DueDateService.ExportToPdfAsync(viewModel.SearchRequest, customerId);
+            }
+
+            if (result.Success && result.FileData != null)
+            {
+                await JSRuntime.InvokeVoidAsync("downloadFile",
+                    result.FileName,
+                    result.ContentType,
+                    Convert.ToBase64String(result.FileData));
+
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Export Successful",
+                    Detail = $"Equipment due dates exported to {format.ToUpper()}.",
+                    Duration = 5000
+                });
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Export Failed",
+                    Detail = result.ErrorMessage ?? "Failed to export data.",
+                    Duration = 5000
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting data to {Format}", format);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Export Error",
+                Detail = "An error occurred while exporting data.",
+                Duration = 5000
+            });
+        }
+        finally
+        {
+            viewModel.IsExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private Task ExportSelected()
+    {
+        if (!viewModel.HasSelectedEquipment)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "No Selection",
+                Detail = "Please select equipment to export.",
+                Duration = 3000
+            });
+            return Task.CompletedTask;
+        }
+
+        // TODO: Implement export of selected equipment
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = "Export Selected",
+            Detail = $"Exporting {viewModel.SelectedCount} selected equipment...",
+            Duration = 3000
+        });
+
+        return Task.CompletedTask;
+    }
+
+    private void OnEquipmentSelected(EquipmentDueDateDto equipment, bool selected)
+    {
+        viewModel.SelectEquipment(equipment, selected);
+        StateHasChanged();
+    }
+
+    private void OnSelectAllChanged(bool selected)
+    {
+        viewModel.SelectAllEquipment(selected);
+        StateHasChanged();
+    }
+
+    private async Task OnPageChanged(PagerEventArgs args)
+    {
+        // Update request page from pager (args is 0-based)
+        viewModel.SearchRequest.Page = args.PageIndex + 1;
+        pagerIndex = args.PageIndex; // Set immediately to prevent visual lag
+
+        await LoadData();
+
+        // Ensure pager reflects the loaded page (guard against null)
+        var page = viewModel.SearchResponse?.Page ?? viewModel.SearchRequest.Page;
+        pagerIndex = Math.Max(0, page - 1);
+
+        // Force the pager component to update its visual state
+        if (pagerRef != null)
+        {
+            await InvokeAsync(() => pagerRef.GoToPage(pagerIndex));
+        }
+
+        StateHasChanged(); // Final state update
+    }
+
+    private string GetDueStatusBadgeStyle(DueDateStatus status)
+    {
+        return status switch
+        {
+            DueDateStatus.Current => "Success",
+            DueDateStatus.ExpiringSoon => "Warning",
+            DueDateStatus.Overdue => "Danger",
+            DueDateStatus.Unknown => "Secondary",
+            _ => "Secondary"
+        };
+    }
+
+    private string GetDueStatusIcon(DueDateStatus status)
+    {
+        return status switch
+        {
+            DueDateStatus.Current => "check_circle",
+            DueDateStatus.ExpiringSoon => "warning",
+            DueDateStatus.Overdue => "error",
+            DueDateStatus.Unknown => "help",
+            _ => "help"
+        };
+    }
+
+    private string GetAdvancedFiltersButtonText()
+    {
+        return viewModel.ShowAdvancedFilters ? "Hide Advanced" : "Show Advanced";
+    }
+
+    private string GetAdvancedFiltersButtonIcon()
+    {
+        return viewModel.ShowAdvancedFilters ? "expand_less" : "expand_more";
+    }
+
+    private string GetStatusClasses(DueDateStatus status)
+    {
+        return status switch
+        {
+            DueDateStatus.Current => "bg-green-100 text-green-800",
+            DueDateStatus.ExpiringSoon => "bg-yellow-100 text-yellow-800",
+            DueDateStatus.Overdue => "bg-red-100 text-red-800",
+            DueDateStatus.Unknown => "bg-gray-100 text-gray-800",
+            _ => "bg-gray-100 text-gray-800"
+        };
+    }
+
+    private string GetStatusText(DueDateStatus status)
+    {
+        return status switch
+        {
+            DueDateStatus.Current => "Future",
+            DueDateStatus.ExpiringSoon => "Due Soon",
+            DueDateStatus.Overdue => "Overdue",
+            DueDateStatus.Unknown => "Unknown",
+            _ => "Unknown"
+        };
+    }
+
+    /// <summary>
+    /// Demo: Returns mock equipment due dates response for demo purposes
+    /// </summary>
+    private DueDateSearchResponse GetMockEquipmentDueDatesResponse()
+    {
+        var mockEquipment = new List<EquipmentDueDateDto>
+        {
+            new EquipmentDueDateDto
+            {
+                EquipmentId = 201,
+                SerialNumber = "TH-201-2022",
+                Description = "Digital Thermometer",
+                Manufacturer = "Fluke",
+                Model = "1523",
+                EquipmentType = "Temperature",
+                Location = "Lab A",
+                LastCalibrationDate = DateTime.Now.AddMonths(-10),
+                NextCalibrationDate = DateTime.Now.AddDays(15),
+                CalibrationIntervalMonths = 12,
+                CalibrationStatus = "Due Soon",
+                DueStatus = DueDateStatus.ExpiringSoon,
+                DaysUntilDue = 15,
+                DaysOverdue = 0,
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            },
+            new EquipmentDueDateDto
+            {
+                EquipmentId = 202,
+                SerialNumber = "PR-202-2022",
+                Description = "Digital Pressure Transducer",
+                Manufacturer = "Honeywell",
+                Model = "STG94L",
+                EquipmentType = "Pressure",
+                Location = "Test Bay 1",
+                LastCalibrationDate = DateTime.Now.AddMonths(-11),
+                NextCalibrationDate = DateTime.Now.AddDays(22),
+                CalibrationIntervalMonths = 12,
+                CalibrationStatus = "Due Soon",
+                DueStatus = DueDateStatus.ExpiringSoon,
+                DaysUntilDue = 22,
+                DaysOverdue = 0,
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            },
+            new EquipmentDueDateDto
+            {
+                EquipmentId = 203,
+                SerialNumber = "SC-203-2022",
+                Description = "Precision Balance",
+                Manufacturer = "Sartorius",
+                Model = "Entris224-1S",
+                EquipmentType = "Mass",
+                Location = "Lab C",
+                LastCalibrationDate = DateTime.Now.AddMonths(-5),
+                NextCalibrationDate = DateTime.Now.AddDays(28),
+                CalibrationIntervalMonths = 6,
+                CalibrationStatus = "Due Soon",
+                DueStatus = DueDateStatus.ExpiringSoon,
+                DaysUntilDue = 28,
+                DaysOverdue = 0,
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            },
+            new EquipmentDueDateDto
+            {
+                EquipmentId = 204,
+                SerialNumber = "VM-204-2022",
+                Description = "Bench Multimeter",
+                Manufacturer = "Fluke",
+                Model = "8845A",
+                EquipmentType = "Electrical",
+                Location = "Electronics Lab",
+                LastCalibrationDate = DateTime.Now.AddMonths(-10),
+                NextCalibrationDate = DateTime.Now.AddDays(35),
+                CalibrationIntervalMonths = 12,
+                CalibrationStatus = "Current",
+                DueStatus = DueDateStatus.Current,
+                DaysUntilDue = 35,
+                DaysOverdue = 0,
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            },
+            new EquipmentDueDateDto
+            {
+                EquipmentId = 205,
+                SerialNumber = "FL-205-2022",
+                Description = "Ultrasonic Flow Meter",
+                Manufacturer = "Siemens",
+                Model = "SITRANS FUS1010",
+                EquipmentType = "Flow",
+                Location = "Utility Room",
+                LastCalibrationDate = DateTime.Now.AddMonths(-13),
+                NextCalibrationDate = DateTime.Now.AddDays(-5),
+                CalibrationIntervalMonths = 12,
+                CalibrationStatus = "Overdue",
+                DueStatus = DueDateStatus.Overdue,
+                DaysUntilDue = 0,
+                DaysOverdue = 5,
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            }
+        };
+
+        return new DueDateSearchResponse
+        {
+            Equipment = mockEquipment,
+            TotalCount = mockEquipment.Count,
+            Page = 1,
+            PageSize = 10
+        };
+    }
+
+    public void Dispose()
+    {
+        // Cleanup if needed
+    }
+}
+
+

@@ -1,0 +1,47 @@
+﻿@using Microsoft.Extensions.DependencyInjection
+@using Microsoft.JSInterop
+
+
+<div class="progress" style="display:none" id="@ID">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div>
+</div>
+
+@code {
+
+    [Inject]
+    IJSRuntime JSRuntime { get; set; }
+
+    [Parameter]
+    public string ID { get; set; }
+
+    public async Task ShowProgressBar()
+    {
+        if (JSRuntime != null)
+        await JSRuntime.InvokeVoidAsync("showProgressBar", ID);
+        StateHasChanged();
+    }
+
+    public async Task CloseProgressBar()
+    {
+        if (JSRuntime != null)
+        {
+            await JSRuntime.InvokeVoidAsync("closeProgressBar", ID);
+            StateHasChanged();
+        }
+      
+    }
+
+    [Inject]
+    IServiceProvider Services { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        //ISqliteWasmDbContextFactory
+        if (Services.GetService<IJSRuntime>() is { } env)
+        {
+            JSRuntime = env;
+        }
+
+        await base.OnInitializedAsync();
+    }
+}

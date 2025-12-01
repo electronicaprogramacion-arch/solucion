@@ -1,0 +1,4040 @@
+﻿using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Repositories;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.IO;
+using CalibrationSaaS.Domain.BusinessExceptions.WorkOrderDetail;
+using CalibrationSaaS.Domain.Aggregates.Querys;
+using System.Linq.Expressions;
+using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+using Helpers.Controls.ValueObjects;
+using Helpers.Controls;
+using Reports.Domain.ReportViewModels;
+using Newtonsoft.Json;
+using Helpers;
+using static CalibrationSaaS.Domain.Aggregates.Querys.Querys;
+using Bogus.DataSets;
+using Newtonsoft.Json.Linq;
+using CalibrationSaaS.Domain.Aggregates.Interfaces;
+using System.Net;
+using System.ComponentModel;
+using Microsoft.VisualBasic;
+using System.Text.RegularExpressions;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Text.Json.Nodes;
+using System.Dynamic;
+using CalibrationSaaS.Domain.Aggregates.Shared;
+using System.Net.NetworkInformation;
+using Jint;
+using Jint.Native;
+using Microsoft.Extensions.Primitives;
+using System.Reflection;
+using System.Collections;
+using System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics.Metrics;
+using static CalibrationSaaS.Domain.Aggregates.Querys.Querys.WOD;
+using System.Runtime.ConstrainedExecution;
+
+namespace CalibrationSaaS.Application.UseCases
+{
+    public class WorkOrderDetailUseCase
+    {
+        private readonly IWorkOrderDetailRepository Repository;
+        private readonly IIdentityRepository IdentityRepository;
+        private readonly IPieceOfEquipmentRepository PieceOfEquipmentRepository;
+        private readonly IAssetsRepository Assets;
+        private readonly IUOMRepository UoMRepository;
+        private readonly IBasicsRepository Basics;
+        private readonly HttpClient _httpClient;
+        private readonly PieceOfEquipmentUseCases Poe;
+
+        public WorkOrderDetailUseCase(IWorkOrderDetailRepository _Repository, IIdentityRepository _IdentityRepository,IPieceOfEquipmentRepository _PieceOfEquipmentRepository, IAssetsRepository _assets, IUOMRepository _UoMRepository, IBasicsRepository _Basics, IHttpClientFactory httpClientFactory, PieceOfEquipmentUseCases poe)
+        {
+
+            _httpClient = httpClientFactory.CreateClient();
+            Repository = _Repository;
+            this.IdentityRepository = _IdentityRepository;
+            PieceOfEquipmentRepository = _PieceOfEquipmentRepository;
+            Assets = _assets;
+            UoMRepository = _UoMRepository;
+            Basics = _Basics;
+            Poe = poe;
+        }
+
+        public async Task SaveCustomStatus()
+        {
+
+            Status first = new Status()
+            {
+                Name = "PoE Review",
+                IsDefault = true,
+                IsEnable = true,
+                Description= "",
+                Possibilities="2",
+                IsLast=false
+            };
+
+            await Repository.SaveStatus(first);
+
+            Status second = new Status()
+            {
+                Name = "Ready for Calibration",
+                IsDefault = false,
+                IsEnable = true,
+                Description = "",
+                Possibilities = "1;3"
+            };
+
+            await Repository.SaveStatus(second);
+
+            Status third = new Status()
+            {
+                Name = "Technical Review",
+                IsDefault = false,
+                IsEnable = true,
+                Description = "",
+                Possibilities = "1;2;4"
+            };
+            await Repository.SaveStatus(third);
+            //Status four = new Status()
+            //{
+            //    Name = "Calibrated",
+            //    IsDefault = false,
+            //    IsEnable = true,
+            //    Description = "",
+            //    Possibilities = "3;5"
+            //};
+            //await Repository.SaveStatus(four);
+            //Status Five = new Status()
+            //{
+            //    Name = "Quality Review",
+            //    IsDefault = false,
+            //    IsEnable = true,
+            //    Description = "",
+            //    Possibilities = "3;4;6"
+            //};
+            //await Repository.SaveStatus(Five);
+
+            Status six = new Status()
+            {
+                Name = "Completed",
+                IsDefault = false,
+                IsEnable = true,
+                Description = "",
+                IsLast = true,
+                //Possibilities = "3;4;6"
+            };
+            await Repository.SaveStatus(six);
+
+        }
+
+        public async  Task<IEnumerable<Status>> GetStatus()
+        {
+           List<Status> a= (List<Status>)await  Repository.GetStatus();
+
+            if(a == null || a.Count ==0)
+            {
+               await  SaveCustomStatus();
+
+            }
+
+            a = (List<Status>)await Repository.GetStatus();
+
+            return a;
+
+        }
+
+        public Task<IEnumerable<WorkOrderDetail>> GetAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<WorkOrderDetail> Create(WorkOrderDetail DTO)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<WorkOrderDetail> Delete(WorkOrderDetail DTO)
+        {
+
+            if (DTO.CurrentStatus.StatusId > 1)
+            {
+                return null;
+            }
+            else
+            {
+                var result = await Repository.Delete(DTO);
+                return DTO;
+            }
+
+
+            
+        }
+
+
+        public async Task<ResultSet<WorkOrderDetail>> GetByTechnicianPag(Pagination<WorkOrderDetail> pagination)
+        {
+            var a = await Repository.GetByTechnicianPag(pagination);
+
+
+            return a;
+
+        }
+
+        public async Task<List<CalibrationSubType>> GetCalibrationSubTypes() 
+        {
+             var calibrationSubTypes = await Repository.GetCalibrationSubType();
+            return calibrationSubTypes;
+        }
+        public async Task<ICollection<WorkOrderDetail>> GetByTechnician(User DTO)
+        {
+            var a = await Repository.GetByTechnician(DTO);
+
+
+            return a;
+
+        }
+
+        public async Task<WorkOrderDetail> GetByID(WorkOrderDetail DTO)
+        {
+            //se inicializan valores por defecto
+            var a = await Repository.GetByID(DTO);
+
+            if (a == null)
+            {
+                throw new Exception("Order not Found");
+            }
+
+            //YP
+            var equipmentTypeObject = await Basics.GetAllEquipmentType();
+            var eqGroup = equipmentTypeObject.AsQueryable().Where(x=>x.EquipmentTypeGroupID == a.PieceOfEquipment.EquipmentTemplate.EquipmentTypeGroupID && x.HasStandard == false).FirstOrDefault();
+            
+
+            if( a.CurrentStatusID == 0)
+            {
+
+                List<Status> statuslist = (List<Status>)await  GetStatus();
+
+                var defaultstatus = statuslist.Find(x => x.IsDefault == true);
+
+                a.CurrentStatus = defaultstatus;
+            }
+
+            if(a.BalanceAndScaleCalibration != null) 
+            {
+                //Load calibration
+
+                var wod = await GetWorkOrderDetailByID(DTO, eqGroup.DynamicConfiguration);  //yp a.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.DynamicConfiguration 
+            //    || a.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.DynamicConfiguration);//(wod?.BalanceAndScaleCalibration?.HasLinearity == true && wod?.BalanceAndScaleCalibration?.Linearities.Count() > 0)
+
+                if (wod != null && wod?.BalanceAndScaleCalibration != null )
+
+            {
+                a.BalanceAndScaleCalibration = wod.BalanceAndScaleCalibration;
+                a.WOD_Weights = wod.WOD_Weights;
+                    if(a.PieceOfEquipment != null)
+                    {
+                        a.PieceOfEquipment.Uncertainty = wod.PieceOfEquipment.Uncertainty;
+                       
+                    }
+                    if (a?.PieceOfEquipment?.EquipmentTemplate != null)
+                    {
+
+                        a.PieceOfEquipment.EquipmentTemplate.Uncertainty = wod.PieceOfEquipment.EquipmentTemplate.Uncertainty;
+
+                    }
+
+                    }
+            }
+
+            //Load Notes
+            if (a != null)
+            {
+                a.NotesWOD = await Repository.GetNotes(a.WorkOrderDetailID, 1);
+            }
+            return a;
+        }
+
+
+
+        public async Task<IEnumerable<WorkDetailHistory>> GetHistory(WorkOrderDetail DTO)
+        {
+            return await Repository.GetHistory(DTO);
+        }
+
+        public async Task<WorkOrderDetail> GetHeaderById(WorkOrderDetail DTO)
+        {
+            return await Repository.GetHeaderById(DTO);
+        }
+
+
+        private string ValidateWOD( Status NextStatus,ref WorkOrderDetail DTO, bool Calculate =false)
+        {
+
+           
+            var validation = Querys.WOD.ValidateWODList(NextStatus, ref DTO, Calculate);
+            
+            var a= string.Join(Environment.NewLine, validation.ToArray());
+
+            if (!string.IsNullOrEmpty(a))
+            {
+                return a;
+            }
+
+            if(NextStatus.StatusId >= 3) 
+            { 
+
+            try
+            {
+                var bc = DTO.BalanceAndScaleCalibration;
+
+                var bc2=  Repository.GetConfiguredWeights(DTO.WorkOrderDetailID,  bc).GetAwaiter().GetResult(); ;
+
+                DTO.BalanceAndScaleCalibration = bc2;
+
+                var result = Querys.WOD.CalculateValuesByID(DTO).GetAwaiter().GetResult();
+
+                DTO.BalanceAndScaleCalibration = result.BalanceAndScaleCalibration;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+
+            }
+
+
+            return "";
+
+        }
+
+
+        public async Task<WorkOrderDetail>  GetConfiguredWeights(WorkOrderDetail DTO)
+        {
+
+            var bc = DTO.BalanceAndScaleCalibration;
+
+            Repository.GetConfiguredWeights(DTO.WorkOrderDetailID, ref bc);
+
+            DTO.BalanceAndScaleCalibration = bc;
+
+            return DTO;
+
+        }
+
+
+
+
+        public async Task<WorkOrderDetail> ChangeStatus(WorkOrderDetail DTO, string userName=null, string Component = null)
+        {
+            //bussiness rules to validation change status
+
+            var s = await GetStatus();
+            Status nextStatus = Querys.WOD.GetNextStatus(DTO,s); //new Status();
+           
+
+            string validationMessage = null;
+            if (!nextStatus.IsLast)
+            { 
+                validationMessage = ValidateWOD( nextStatus, ref DTO);
+            }
+            else
+            {
+                DTO.HasBeenCompleted = true;
+            }
+            if (!string.IsNullOrEmpty(validationMessage))
+            {
+
+                throw new ChangeStatusException(validationMessage);
+            }
+
+            DTO.CurrentStatus = nextStatus;
+            DTO.CurrentStatusID = nextStatus.StatusId;
+            DTO.SelectedNewStatus = -1;
+
+            DTO.StatusDate = DateTime.Now;
+
+
+            if (!string.IsNullOrEmpty(DTO.TechnicianComment))
+            {
+                
+                var blog = DTO.TechnicianComment;
+
+                
+
+            }
+
+            var result = await Repository.ChangeStatus(DTO, Component);
+
+            if (nextStatus.IsLast)
+            { 
+            
+            }
+
+            DTO = await GetByID(DTO);
+
+            var hi = await SaveHistory(DTO,1,"Change Status " + DTO.CurrentStatusID.GetStatus(s),userName);
+
+            if (!hi)
+            {
+                throw new ChangeStatusException("Trace not save");
+            }
+
+          
+
+
+            return DTO;
+
+        }
+
+
+       
+        public async Task<WorkDetailHistory> ChangeStatusComplete(WorkDetailHistory DTO)
+        {
+            var result = await Repository.ChangeStatusComplete(DTO);
+            return result;
+        }
+
+        public async Task<Certificate> CreateCertificate(Certificate DTO)
+        {
+            var result = await Repository.CreateCertificate(DTO);
+            return result;
+        }
+ 
+            public async Task<bool> SaveHistory(WorkOrderDetail DTO, int version, string Action= "Change Status",string UserName=null)
+        {
+
+            try
+            {
+                if (!string.IsNullOrEmpty(UserName))
+                {
+                    var r2 = await IdentityRepository.ShowRecords(UserName);
+
+                    if (r2 != null)
+                    {
+                        UserName = r2.Name;
+                    }
+                }
+               
+            }
+            catch (Exception ex)
+            {
+
+            }
+           
+
+            if (DTO.CurrentStatusID > 10)
+            {
+                var options = new JsonSerializerOptions
+                {
+                    IgnoreNullValues = true,
+                    WriteIndented = true
+                };
+
+             
+                var serial  = System.Text.Json.JsonSerializer.Serialize(DTO, options);
+            }
+
+            
+
+            WorkDetailHistory wh = new WorkDetailHistory();
+
+            wh.WorkOrderDetailID = DTO.WorkOrderDetailID;
+
+
+            if (DTO.TechnicianID.HasValue)
+            {
+                wh.TechnicianID = DTO.TechnicianID.Value;
+            }          
+
+            if (DTO.Technician != null)
+            {
+                wh.Name = DTO.Technician.Name;
+            }
+
+            wh.StatusId = DTO.CurrentStatusID;
+
+            wh.Version = version;
+
+            wh.UserName = UserName;
+
+            wh.Action = Action;
+
+            wh.Date = DateTime.Now;
+
+           bool r= await Repository.CreateHistory(wh);
+
+           return r;
+        }
+
+        public async ValueTask<GenericHeader> GetGenericHeader(WorkOrderDetail workOrderDetail1)
+        {
+
+            
+            var workOrderDetail = workOrderDetail1;
+
+
+         
+            var workOrder = workOrderDetail1.WorkOder;
+            var customer = workOrder.Customer;
+
+            
+            var poe = workOrderDetail1.PieceOfEquipment;  
+
+            List<WeightSetHeader> listw = new List<WeightSetHeader>();
+
+            var poes = await PieceOfEquipmentRepository.GetAllWeightSets(poe);
+
+            if (workOrderDetail.WOD_Weights != null)
+            {
+                var testp = workOrderDetail.WOD_Weights.DistinctBy(x => x.WeightSet.PieceOfEquipmentID);
+
+                foreach (var item in testp)
+                {
+                    var poetmp = await PieceOfEquipmentRepository.GetPieceOfEquipmentByIDHeader(item.WeightSet.PieceOfEquipmentID);
+
+                    var _listCetificate = await Assets.GetCertificateXPoE(poetmp);
+
+
+                    CertificatePoE cert = _listCetificate.OrderByDescending(x => x.Version).FirstOrDefault();
+
+                    string certnumber = "";
+                    if (cert != null)
+                    {
+                        certnumber = cert.CertificateNumber;
+                    }
+
+                    
+                    WeightSetHeader ww = new WeightSetHeader()
+                    {
+
+                        PoE = poetmp.PieceOfEquipmentID,
+                        Serial = poetmp.SerialNumber,
+                        Ref = certnumber,
+                        CalibrationDueDate = poetmp.DueDate.ToString("yyyy-MM-dd"),
+                        Note = poetmp.Notes
+
+                    };
+                    listw.Add(ww);
+                }
+            }
+
+            string _AsLeftResult = "";
+            string _AsFoundResult = "";
+
+
+            var eqTemp = poe.EquipmentTemplate;
+            var weigthSets = poes.FirstOrDefault().WeightSets;
+           
+            string manufName;
+            if (eqTemp.Manufacturer1 != null)
+            {
+                manufName = eqTemp.Manufacturer1.Name;
+            }
+            else
+            {
+                manufName = null;
+            }
+
+
+            string customerOrder = "" ;
+            string customerPO = "";
+            string customerAddress1 = "";
+            string customerAddress2 = "";
+            string customerAddressCity = "";
+            string customerAddressCountry = "";
+            string customerAddressState = "";
+            string shipTo = "";
+            string shipVia = "";
+            var address = customer.Aggregates.FirstOrDefault().Addresses.FirstOrDefault();
+            if (!string.IsNullOrEmpty(poe.PieceOfEquipmentID))
+            { 
+                customerOrder = poe.PieceOfEquipmentID;
+                customerPO = poe.PieceOfEquipmentID;
+            }
+            if (!string.IsNullOrEmpty(address.StreetAddress1))
+                customerAddress1 = address.StreetAddress1;
+
+            if (!string.IsNullOrEmpty(address.StreetAddress2))
+                customerAddress2 = address.StreetAddress2;                                                                                                                                                                                                                         ;
+            
+            if (!string.IsNullOrEmpty(address.StreetAddress3))
+                customerAddressCity = address.StreetAddress3;
+            
+            if (!string.IsNullOrEmpty(address.Country))
+                customerAddressCountry = address.Country;
+           
+            if (!string.IsNullOrEmpty(address.State))
+                customerAddressState = address.State;
+
+           
+             GenericHeader header = new GenericHeader()
+            {
+                
+                CustomerOrder= customerOrder,
+                CustomerPO = customerPO,
+                CustomerAddress1 = customerAddress1,
+                CustomerAddress2 = customerAddress2,
+                CustomerAddressCity = customerAddressCity,
+                CustomerAddressCountry = customerAddressCountry,
+                CustomerAddressState = customerAddressState,
+                ShipTo = "",
+                ShipVia = "123"
+            };
+
+
+            
+            string headerJson = System.Text.Json.JsonSerializer.Serialize(header);
+
+      
+
+            string Title = "Header";
+            var titledJson = $"{{\"{Title}\":{headerJson}}}"; 
+            
+            
+            return header;
+
+        }
+
+
+        public async ValueTask<JObject> SplitProperties(string jobject)
+        { 
+       
+            JObject oldObject = JObject.Parse(jobject);
+            JObject newObject = new JObject();
+
+            foreach (var property in oldObject.Properties())
+            {
+                string newKey = Regex.Replace(property.Name, "(\\B[A-Z])", " $1");
+                JObject innerObject = new JObject();
+
+                foreach (var subProperty in property.Value)
+                {
+                    string newSubKey = Regex.Replace(subProperty.ToObject<JProperty>().Name, "(\\B[A-Z])", " $1").ToLower();
+                    innerObject.Add(newSubKey, subProperty.ToObject<JProperty>().Value);
+                }
+
+                newObject.Add(newKey, innerObject);
+            }
+         
+            return newObject;
+
+        }
+
+        public async ValueTask<List<GenericStandard>> GetGenericStandard(WorkOrderDetail wo)
+        {
+
+            string? html = "";
+            List<GenericStandard> listw = new List<GenericStandard>();
+            var wod = wo;
+
+            //YP
+            var equipmentTypeObject = await Basics.GetAllEquipmentType();
+            var eqGroup = equipmentTypeObject.AsQueryable().Where(x => x.EquipmentTypeGroupID == wod.PieceOfEquipment.EquipmentTemplate.EquipmentTypeGroupID && x.HasStandard == false).FirstOrDefault();
+
+            var wodStandar = await GetWorkOrderDetailByID(wo,eqGroup.DynamicConfiguration);//wod.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.DynamicConfiguration);
+
+            if (wodStandar.WOD_Standard != null)
+            {
+                var standards = wodStandar.WOD_Standard.ToList();
+
+                
+
+                var st = await PieceOfEquipmentRepository.GetPieceOfEquipmentByIDHeader(wodStandar.PieceOfEquipmentId);
+
+                if (standards != null && standards.Count() > 0)
+                {
+
+
+                    foreach (var item in standards)
+                    {
+                        var poetmp = await PieceOfEquipmentRepository.GetPieceOfEquipmentByIDHeader(item.PieceOfEquipmentID);
+
+                        var _listCetificate = await Assets.GetCertificateXPoE(poetmp);
+
+
+
+                        CertificatePoE cert = _listCetificate.OrderByDescending(x => x.Version).FirstOrDefault();
+
+                        string certnumber = "";
+                        string calibrationProvider = "";
+                        if (cert != null)
+                        {
+                 
+                            certnumber = cert.CertificateNumber;
+                            calibrationProvider = cert.CalibrationProvider;
+                        }
+
+
+                        string uom1;
+                        if (poetmp.UnitOfMeasure != null)
+                        {
+                            uom1 = poetmp.UnitOfMeasure.Abbreviation;
+                        }
+                        else
+                        {
+                            uom1 = "NA";
+                        }
+
+                        
+                        //var calibrationProvider = cert.CalibrationProvider;
+                        string description = "";
+                        if (poetmp.EquipmentTemplate.EquipmentTypeGroupID != 134)   //(poetmp.EquipmentTemplate.EquipmentTypeObject.EquipmentTypeID != 8)
+                            description = poetmp.EquipmentTemplate.EquipmentTypeGroup.Name + " - " + poetmp.Capacity + " - " + uom1 + " - " + calibrationProvider;
+                        else
+                            description = poetmp.EquipmentTemplate.EquipmentTypeGroup.Name;
+
+                        GenericStandard ww = new GenericStandard()
+                        {
+                            StandardId = poetmp.PieceOfEquipmentID,
+                            Description = description,
+                            DueDate = poetmp.DueDate.ToString("yyyy-MM-dd"),
+                            CalibrationDate = poetmp.CalibrationDate.ToString("yyyy-MM-dd")
+
+                        };
+                        listw.Add(ww);
+                    }
+
+
+                }
+                
+            }
+            if (wodStandar.WOD_Weights != null && wodStandar.WOD_Weights.Count() > 0)
+            {
+                var weights = wodStandar.WOD_Weights.ToList();
+                List<PieceOfEquipment> standards = new List<PieceOfEquipment>();
+                foreach (var w in weights)
+                {
+                    var weigth = await PieceOfEquipmentRepository.GetWeigthSetById(w.WeightSetID);
+                    if (weigth != null)
+                    {
+                        var standard = await PieceOfEquipmentRepository.GetPieceOfEquipmentByIDHeader(weigth.PieceOfEquipmentID);
+                        standards.Add(standard);
+                    }
+                    
+                }
+
+              
+                if (standards != null && standards.Count() > 0)
+                {
+
+
+                    foreach (var item in standards)
+                    {
+                        var poetmp = await PieceOfEquipmentRepository.GetPieceOfEquipmentByIDHeader(item.PieceOfEquipmentID);
+
+                        var _listCetificate = await Assets.GetCertificateXPoE(poetmp);
+
+
+                        CertificatePoE cert = _listCetificate.OrderByDescending(x => x.Version).FirstOrDefault();
+
+                        string certnumber = "";
+                        string calibrationProvider = "";
+                        if (cert != null)
+                        {
+                            certnumber = cert.CertificateNumber;
+                            calibrationProvider = cert.CalibrationProvider;
+                        }
+
+
+                        string uom1;
+                        if (poetmp.UnitOfMeasure != null)
+                        {
+                            uom1 = poetmp.UnitOfMeasure.Abbreviation;
+                        }
+                        else
+                        {
+                            uom1 = "NA";
+                        }
+
+                    
+                        string description = "";
+                       
+                        if (poetmp.EquipmentTemplate.EquipmentTypeGroupID != 134)   //(poetmp.EquipmentTemplate.EquipmentTypeObject.EquipmentTypeID != 8)
+                            description = poetmp.EquipmentTemplate.EquipmentTypeGroup.Name + " - " + poetmp.Capacity + " - " + uom1 + " - " + calibrationProvider;
+                        else
+                            description = poetmp.EquipmentTemplate.EquipmentTypeGroup.Name;
+                        GenericStandard ww = new GenericStandard()
+                        {
+                            StandardId = poetmp.PieceOfEquipmentID,
+                            Description = description,
+                            DueDate = poetmp.DueDate.ToString("yyyy-MM-dd"),
+                            CalibrationDate = poetmp.CalibrationDate.ToString("yyyy-MM-dd")
+
+                        };
+                        listw.Add(ww);
+                    }
+
+
+                }
+            }
+            else
+            {
+                if (wodStandar.CalibrationSubType_Standards != null)
+                {
+                    var standardsRock = wodStandar.CalibrationSubType_Standards.ToList();
+                    if (standardsRock != null && standardsRock.Count() > 0)
+                    {
+                        foreach (var item in standardsRock)
+                        {
+                            var poetmp = await PieceOfEquipmentRepository.GetPieceOfEquipmentByIDHeader(item.PieceOfEquipmentID);
+
+                            var _listCetificate = await Assets.GetCertificateXPoE(poetmp);
+                            string uom;
+                            if (item.Standard.UnitOfMeasure != null)
+                            {
+                                uom = item.Standard.UnitOfMeasure.Name;
+                            }
+                            else
+                            {
+                                uom = "NA";
+                            }
+                            CertificatePoE cert = _listCetificate.OrderByDescending(x => x.Version).FirstOrDefault();
+                            string certnumber = "";
+                            string calibrationProvider = "";
+                            if (cert != null)
+                            {
+                                certnumber = cert.CertificateNumber;
+                                calibrationProvider = cert.CalibrationProvider;
+                            }
+
+                            string description = "";
+                            if (poetmp.EquipmentTemplate.EquipmentTypeGroupID != 134)   //(poetmp.EquipmentTemplate.EquipmentTypeObject.EquipmentTypeID != 8)
+                                description = poetmp.EquipmentTemplate.EquipmentTypeGroup.Name + " - " + poetmp.Capacity + " - " + uom + " - " + calibrationProvider;
+                            else
+                                description = poetmp.EquipmentTemplate.EquipmentTypeGroup.Name;
+
+
+                            GenericStandard www = new GenericStandard()
+                            {
+                                StandardId = item.PieceOfEquipmentID.ToString(),
+                                Description = description,
+                                DueDate = item.Standard.DueDate.ToString("yyyy-MM-dd"),
+                                CalibrationDate = item.Standard.CalibrationDate.ToString("yyyy-MM-dd")
+
+                            };
+                            listw.Add(www);
+                        }
+
+
+                    }
+                }
+            }
+
+
+            PieceOfEquipment poeT = new PieceOfEquipment();
+            poeT.PieceOfEquipmentID = wod.TemperatureStandardId;
+            if (poeT.PieceOfEquipmentID != null)
+            {
+                var tempStandard = await PieceOfEquipmentRepository.GetPieceOfEquipmentByID(poeT.PieceOfEquipmentID);
+
+                var _listCetificate1 = await Assets.GetCertificateXPoE(tempStandard);
+
+
+                CertificatePoE cert1 = _listCetificate1.OrderByDescending(x => x.Version).FirstOrDefault();
+
+                string certnumber1 = "";
+                string calibrationProvider = "";
+                if (cert1 != null)
+                {
+                    certnumber1 = cert1.CertificateNumber;
+                    calibrationProvider = cert1.CalibrationProvider;
+                }
+                
+               
+                string uom;
+                if (tempStandard.UnitOfMeasure != null)
+                {
+                    uom = tempStandard.UnitOfMeasure.Name;
+                }
+                else
+                {
+                    uom = "NA";
+                }
+                string description = "";
+                if (tempStandard.EquipmentTemplate.EquipmentTypeGroupID != 134)
+                    description = tempStandard.EquipmentTemplate.EquipmentTypeGroup.Name + " - " + tempStandard.Capacity + " - " + uom + uom + " - " + calibrationProvider; 
+                else
+                    description = tempStandard.EquipmentTemplate.EquipmentTypeGroup.Name;
+
+                
+                GenericStandard ww1 = new GenericStandard()
+                {
+                    StandardId = tempStandard.PieceOfEquipmentID,
+                    Description = description,
+                    DueDate = tempStandard.DueDate.ToString("yyyy-MM-dd"),
+                    CalibrationDate = tempStandard.CalibrationDate.ToString("yyyy-MM-dd")
+
+                };
+               
+                listw.Add(ww1);
+
+            }
+
+            return listw;
+
+        }
+
+        public async ValueTask<string> GetGenericGrid(WorkOrderDetail wo)
+        
+        {
+            try
+            {
+                var wod = await GetWorkOrderDetailByID(wo,true);
+                var wod1  = await GetByID(wo);
+                //var genericCalibration = wod.BalanceAndScaleCalibration.GenericCalibration;
+                var genericCalibration = wod.BalanceAndScaleCalibration.GenericCalibration;
+                string jsonAgrupado = "";
+                List<string> keysToRemove = new List<string>();
+                
+                JObject newObjOrder = new JObject();
+                List<JObject> listJson = new List<JObject>();
+                if (genericCalibration != null)
+                {
+                    foreach (var item in genericCalibration)
+                    {
+                        Dictionary<string, JToken> newObj1 = new Dictionary<string, JToken>();
+                        string titledJson = "";
+                        if (item.BasicCalibrationResult.ExtendedObject != null && item.BasicCalibrationResult.Updated != null)
+                        {
+                            var extObj = item.BasicCalibrationResult.ExtendedObject;
+
+                            var obj = JsonConvert.DeserializeObject(extObj);
+
+                            var _extendedObject = JsonConvert.SerializeObject(obj);
+
+                            JObject obj1 = JObject.Parse(_extendedObject);
+
+
+
+                            foreach (var prop in obj1)
+                            {
+
+
+                                JArray arr = (JArray)prop.Value;
+
+
+
+                                if (arr.Count >= 4 && Convert.ToInt32(Convert.ToDecimal(arr[3])) == 0)
+                                {
+                                    arr[2] = arr[2].ToString() + " *";
+                                    arr.RemoveAt(3);
+                                }
+                                else if (arr.Count >= 4)
+                                {
+                                    arr.RemoveAt(3);
+                                }
+
+                                var key = arr[0].ToString();
+                                var value = prop.Value;
+
+                                newObj1[key] = value;
+
+
+                                arr.RemoveAt(0);
+
+                                arr[0] = arr[0].ToString();
+
+                            }
+
+                            JObject newObject = new JObject();
+                            foreach (var entry in newObj1)
+                            {
+                                newObject[entry.Key] = entry.Value;
+                            }
+
+                           
+                            obj1 = newObject;
+
+
+                            Dictionary<string, int> openWith = new Dictionary<string, int>();
+                            foreach (var prop in obj1)
+                            {
+                                JArray arr = (JArray)prop.Value;
+
+
+                                openWith.Add(prop.Key, Convert.ToInt16(arr[0]));
+                            }
+
+                            var orderedProperties = obj1.Properties()
+                                .OrderBy(p => openWith.ContainsKey(p.Name) ? openWith[p.Name] : int.MaxValue)
+                                .ToList();
+
+
+                            JObject newJsonObject = new JObject();
+                            
+                            foreach (var prop in orderedProperties)
+                            {
+                                JArray arr = (JArray)prop.Value;
+                                arr.RemoveAt(0);
+
+                                if (arr[0].Type != JTokenType.String)
+                                {
+                                    string numericValue = arr.ToString().Replace("[", "").Replace("]", "");
+                                    numericValue = numericValue.ToString().Replace("\r\n", "").Trim();
+                                    string stringValue = numericValue;
+                                    arr.First().Replace(stringValue.ToString());
+                                }
+
+                                newJsonObject.Add(prop.Name, prop.Value);
+          
+                            }
+
+
+
+                            var jsonActualizado = newJsonObject.ToString().Replace("[", "").Replace("]", "");
+                            
+                            var Title = wod1.GetCalibrationType().CalibrationSubTypes.FirstOrDefault(x => x.CalibrationSubTypeId == item.BasicCalibrationResult.CalibrationSubTypeId).NameToShow;
+                             titledJson = $"{{\"{Title}\":[{jsonActualizado}]}}";
+
+                            dynamic myJson = JsonConvert.DeserializeObject<ExpandoObject>(titledJson);
+                            myJson.position = wod1.GetCalibrationType().CalibrationSubTypes.FirstOrDefault(x => x.CalibrationSubTypeId == item.BasicCalibrationResult.CalibrationSubTypeId).Position;
+
+                            //   listJson.Add(JObject.Parse(titledJson));
+                            string updatedJson = JsonConvert.SerializeObject(myJson);
+                            listJson.Add(JObject.Parse(updatedJson));
+                        }
+                    }
+
+                    var order = listJson.OrderBy(j => (double)j.Property("position") );
+
+                    var grupos = order.GroupBy(
+                        j => (string)j.Properties().First().Name,
+                        j => j[(string)j.Properties().First().Name]
+                    );
+
+                   
+                    var dicc = grupos.ToDictionary(
+                        g => g.Key,
+                        g => g.SelectMany(j => (JArray)j).ToList()
+                    );
+
+                    //// Add Notes if Exist for each grid
+                    //// - Buscar las notas
+                    //var notes = await GetGenericStatement(wod1);
+                    //Dictionary<string, string> newElement = new Dictionary<string, string>();
+
+                    //foreach (var dicc1 in dicc)
+                    //{
+                    //   var notesforgrid = notes.Where(x=>x.DataGrid == dicc1.Key).ToList();
+
+                    //    if (notesforgrid != null)
+                    //    {
+                    //        foreach (var note in notesforgrid)
+                    //        {
+                    //                newElement = new Dictionary<string, string>
+                    //            {
+                    //                { "Statement: ", note.Statement.ToString()}
+                    //                };
+
+                    //            dicc1.Value.Add(JToken.FromObject(newElement));
+                    //            //List<JToken> tokenList = newElement.Values.Select(value => JToken.Parse(value)).ToList();
+                    //            //dicc.TryAdd(newElement.Keys.First(), tokenList);
+                    //        }
+                            
+                    //    }
+                        
+                    //}
+
+                    jsonAgrupado = JsonConvert.SerializeObject(dicc);
+                }
+            return jsonAgrupado;
+
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+
+        }
+
+        public async ValueTask<string> GetGenericGrid2(WorkOrderDetail wod)
+
+        {
+            try
+            {
+                
+                var wod1 = await GetByID(wod);
+                var genericCalibration = wod.BalanceAndScaleCalibration.TestPointResult.Where(x=>x.Updated != null).OrderBy(x=>x.Position).ToList();
+                string jsonAgrupado = "";
+                List<string> keysToRemove = new List<string>();
+               
+                JObject newObjOrder = new JObject();
+                List<JObject> listJson = new List<JObject>();
+                
+                string ComponentId = wod1.PieceOfEquipmentId;
+                var calibrationPoe = await PieceOfEquipmentRepository.GetPieceOfEquipmentByID(ComponentId);
+
+                List<GenericCalibrationResult2> genericCalibrationResult2Poe = new List<GenericCalibrationResult2>();
+                if (calibrationPoe != null )
+                {
+                     genericCalibrationResult2Poe = calibrationPoe.TestPointResult.Where(x => x.CalibrationSubTypeId == 39).ToList();
+
+                }
+                
+
+                if (genericCalibration != null)
+                {
+                    if (genericCalibrationResult2Poe.Count() > 0)
+                    {
+                        int pos = genericCalibration.Count();
+                        foreach (var gcr2 in genericCalibrationResult2Poe)
+                        {
+                            
+                            genericCalibration.Add(gcr2);
+                        }
+                    }
+                    
+                    foreach (var item in genericCalibration)
+                    {
+                        Dictionary<string, JToken> newObj1 = new Dictionary<string, JToken>();
+                        string titledJson = "";
+                        if (item.ExtendedObject != null)
+                        {
+                            var extObj = item.ExtendedObject;
+                               
+                            var obj = JsonConvert.DeserializeObject(extObj);
+
+                            var _extendedObject = JsonConvert.SerializeObject(obj);
+
+                            JObject obj1 = JObject.Parse(_extendedObject);
+
+
+
+                            foreach (var prop in obj1)
+                            {
+
+
+                                JArray arr = (JArray)prop.Value;
+
+
+
+                                if (arr.Count >= 4 && Convert.ToInt32(Convert.ToDecimal(arr[3])) == 0 )
+                                {
+                                    arr[2] = arr[2].ToString() + " *";
+                                    arr.RemoveAt(3);
+
+                                }
+                                else if (arr.Count >= 4)
+                                {
+                                    arr.RemoveAt(3);
+                                }
+                                //else if (arr.Count == 5 && Convert.ToInt32(Convert.ToDecimal(arr[4]))==0)
+                                //{
+                                //    arr[2] = arr[2].ToString() + " *";
+                                //    arr.RemoveAt(3);
+                                //    arr.RemoveAt(3);
+
+                                //}
+                                //else if (arr.Count == 5)
+                                //{
+                                    
+                                //    arr.RemoveAt(3);
+                                //    arr.RemoveAt(3);
+
+                                //}
+
+                                var key = arr[0].ToString();
+                                var value = prop.Value;
+
+                                newObj1[key] = value;
+
+
+                                arr.RemoveAt(0);
+
+                                arr[0] = arr[0].ToString();
+
+                            }
+
+                            JObject newObject = new JObject();
+                            foreach (var entry in newObj1)
+                            {
+                                newObject[entry.Key] = entry.Value;
+                            }
+
+
+                            obj1 = newObject;
+
+
+                            Dictionary<string, int> openWith = new Dictionary<string, int>();
+                            foreach (var prop in obj1)
+                            {
+                                JArray arr = (JArray)prop.Value;
+
+
+                                openWith.Add(prop.Key, Convert.ToInt16(arr[0]));
+                            }
+
+                            var orderedProperties = obj1.Properties()
+                                .OrderBy(p => openWith.ContainsKey(p.Name) ? openWith[p.Name] : int.MaxValue)
+                                .ToList();
+
+
+                            JObject newJsonObject = new JObject();
+
+                            foreach (var prop in orderedProperties)
+                            {
+                                JArray arr = (JArray)prop.Value;
+                                arr.RemoveAt(0);
+
+                                if (arr[0].Type != JTokenType.String)
+                                {
+                                    string numericValue = arr.ToString().Replace("[", "").Replace("]", "");
+                                    numericValue = numericValue.ToString().Replace("\r\n", "").Trim();
+                                    string stringValue = numericValue;
+                                    arr.First().Replace(stringValue.ToString());
+                                }
+
+                                newJsonObject.Add(prop.Name, prop.Value);
+
+                            }
+
+
+
+                            var jsonActualizado = newJsonObject.ToString().Replace("[", "").Replace("]", "");
+                            string Title = "";
+                            if (item.Position == -1)
+                            {
+                                Title = "Data " + wod1.GetCalibrationType().CalibrationSubTypes.FirstOrDefault(x => x.CalibrationSubTypeId == item.CalibrationSubTypeId).NameToShow; 
+                            }
+                            else
+                            {
+                                Title = wod1.GetCalibrationType().CalibrationSubTypes.FirstOrDefault(x => x.CalibrationSubTypeId == item.CalibrationSubTypeId).NameToShow;
+                            }
+                                titledJson = $"{{\"{Title}\":[{jsonActualizado}]}}";
+
+                            dynamic myJson = JsonConvert.DeserializeObject<ExpandoObject>(titledJson);
+                            myJson.position = wod1.GetCalibrationType().CalibrationSubTypes.FirstOrDefault(x => x.CalibrationSubTypeId == item.CalibrationSubTypeId).Position;
+
+                            //   listJson.Add(JObject.Parse(titledJson));
+                            string updatedJson = JsonConvert.SerializeObject(myJson);
+                            listJson.Add(JObject.Parse(updatedJson));
+                        }
+                    }
+
+                    var order = listJson.OrderBy(j => (double)j.Property("position"));
+
+                    var grupos = order.GroupBy(
+                        j => (string)j.Properties().First().Name,
+                        j => j[(string)j.Properties().First().Name]
+                    );
+
+
+                    var dicc = grupos.ToDictionary(
+                        g => g.Key,
+                        g => g.SelectMany(j => (JArray)j).ToList()
+                    );
+
+
+
+
+                    jsonAgrupado = JsonConvert.SerializeObject(dicc);
+                }
+                return jsonAgrupado;
+
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+
+        }
+        public async ValueTask<GenericCustomerInstrument> GetGenericInstrument(WorkOrderDetail wo)
+        {
+            var workOrderDetail1 = await GetByID(wo);
+            var workOrderDetail = workOrderDetail1;//await GetWorkOrderDetailByID(wo);
+
+            var workOrder = workOrderDetail1.WorkOder;
+            var customer = workOrder.Customer;
+
+            //var POE = await Logicpoe.GetPieceOfEquipmentByID(workOrderDetail1.PieceOfEquipment);
+
+            //var address = customer.Aggregates[0];
+            var poe = workOrderDetail1.PieceOfEquipment;  // customer.PieceOfEquipment.Where(x => x.WorOrderDetailID == wo.WorkOrderDetailID).FirstOrDefault();
+
+            List<WeightSetHeader> listw = new List<WeightSetHeader>();
+
+            var poes = await PieceOfEquipmentRepository.GetAllWeightSets(poe);
+
+            var eqTemp = poe.EquipmentTemplate;
+           
+
+            GenericCustomerInstrument model = new GenericCustomerInstrument();
+            string calibrationDate = "";
+            DateTime dueDate;
+            string due = "";
+            DateTime calDate;
+
+            
+            string accuracy = "";
+            string accuracy1 = "";
+            string certificatecomments = "";
+            string customerref = "";
+            string humidity = "";
+            string manufacturer = "";
+            string procedure = "";
+            string temperature = "";
+            string temperatureAfter = "";
+
+            if (!string.IsNullOrEmpty(poe.Tolerance.AccuracyPercentage.ToString()) && workOrderDetail.CertificationID != null)
+            {
+                var _accuracy = await Basics.GetCertifications();
+                accuracy = _accuracy.Where(x => x.ID == workOrderDetail.CertificationID && x.CalibrationTypeID == workOrderDetail.CalibrationTypeID ).FirstOrDefault().Name;
+            }
+            else
+            {
+                accuracy = "Customer";
+            }
+
+            if (!string.IsNullOrEmpty(workOrderDetail.CertificateComment))
+            {
+                certificatecomments = workOrderDetail.CertificateComment; 
+            }
+
+            if (!string.IsNullOrEmpty(poe.Customer.CustomerID.ToString()))
+            {
+                customerref = poe.Customer.CustomerID.ToString(); 
+            }
+
+            if (!string.IsNullOrEmpty(workOrderDetail.Humidity.ToString()))
+            {
+                humidity = workOrderDetail.Humidity.ToString("0.0");
+            }
+
+            if (poe.EquipmentTemplate.Manufacturer1 != null)
+            {
+                manufacturer = poe.EquipmentTemplate.Manufacturer1.Name;
+            }
+
+            if (workOrderDetail.TestCode.Procedure !=null && !string.IsNullOrEmpty(workOrderDetail.TestCode.Procedure.Name))
+            {
+                procedure = workOrderDetail.TestCode.Procedure.Name;
+            }
+            if (!string.IsNullOrEmpty(workOrderDetail.Temperature.ToString()))
+            {
+                temperature = workOrderDetail.Temperature.ToString("0.0");
+            }
+            if (!string.IsNullOrEmpty(workOrderDetail.TemperatureAfter.ToString()))
+            {
+                temperatureAfter = workOrderDetail.TemperatureAfter.ToString("0.0");
+            }
+            if (!string.IsNullOrEmpty(workOrderDetail?.Tolerance?.AccuracyPercentage.ToString()))
+            {
+                accuracy1 = workOrderDetail.Tolerance.AccuracyPercentage.ToString();
+            }
+
+            if (workOrderDetail.CalibrationCustomDueDate != null)
+            {
+                dueDate = (DateTime)workOrderDetail.CalibrationCustomDueDate;
+                due = dueDate.ToString("yyyy-MM-dd");
+            }
+            if (workOrderDetail.CalibrationDate != null)
+            {
+                calDate = (DateTime)workOrderDetail.CalibrationDate;
+                calibrationDate = calDate.ToString("yyyy-MM-dd");
+            }
+            UnitOfMeasure umm = new UnitOfMeasure();
+            umm.UnitOfMeasureID = poe.UnitOfMeasureID.Value;
+            var um1 = (await UoMRepository.GetByID(umm)).Abbreviation;
+
+            
+
+            string umTemp = "";
+            if (workOrderDetail.TemperatureUOMID != 0)
+            {
+                umm.UnitOfMeasureID = workOrderDetail.TemperatureUOMID;
+                umTemp = (await UoMRepository.GetByID(umm)).Abbreviation;
+            }
+            else
+                umTemp = "C";
+
+            var eqCondition = workOrderDetail.EquipmentCondition.ToList();
+            string received = "";
+            string returned = "";
+            foreach (var item in eqCondition)
+            {
+                if (item.IsAsFound)
+                {
+                    if (item.Value)
+                    {
+                        received = "In Service";
+                    }
+                    else
+                    {
+                        received = "Out of Service";
+                    }
+                }
+                else
+                {
+                    if (item.Value)
+                    {
+                        returned = "In Service";
+                    }
+                    else
+                    {
+                        returned = "Out of Service";
+                    }
+                }
+            }
+            model = new GenericCustomerInstrument()
+            {
+
+                Unit = poe.PieceOfEquipmentID,
+                Accuracy = accuracy1,
+                CalibrationDate = calibrationDate,
+                CalibrationDueDate = due,
+                CertificateComments = certificatecomments,
+                CustomerRef = poe.CustomerToolId ,
+                Description = poe.InstallLocation,
+                Humidity = humidity + " %RH",
+                Manufacturer = manufacturer,
+                Model = poe.EquipmentTemplate.Model,
+                Procedure = procedure ,
+                RangeRes = poe.Capacity.ToString() + " " + um1 + "/" + poe.Resolution.ToString(),
+                ReceivedCondition = received,
+                Temperature = "Before Cal: " + temperature + " " + umTemp + "/ After Cal: " + temperatureAfter + " " + umTemp,
+                AccuracySpecification = accuracy,
+                ReturnedCondition = returned
+            };
+
+
+            string headerJson = System.Text.Json.JsonSerializer.Serialize(model);
+            var newObject = SplitProperties(headerJson);
+            string Title = "Customer Instrument";
+            var titledJson = $"{{\"{Title}\":{newObject}}}";
+
+          
+            return model;
+        }
+
+
+        public async ValueTask<List<GenericStatement>> GetGenericStatement(WorkOrderDetail wo)
+        {
+            var workOrderDetail1 = wo;
+            var workOrderDetail = workOrderDetail1;
+
+            List <GenericStatement> genericStatements= new List<GenericStatement>();
+            genericStatements = await GetNotes(workOrderDetail.PieceOfEquipment, workOrderDetail);
+            
+
+            if (genericStatements != null)
+            {
+                
+                string statementJson = System.Text.Json.JsonSerializer.Serialize(genericStatements);
+
+
+
+                string Title = "Statements";
+                var titledJson = $"{{\"{Title}\":{statementJson}}}";
+
+                
+                JObject obj = JObject.Parse(titledJson);
+
+                
+                JArray statements = (JArray)obj["Statements"];
+
+                
+                foreach (JObject statement in statements)
+                {
+                    statement.Remove("Statement");
+                }
+
+                return genericStatements;
+            }
+            else
+                return null;
+
+        }
+
+        public async Task<List<GenericStatement>> GetNotes(PieceOfEquipment? _poe, WorkOrderDetail? wod)
+        {
+
+            List<Note> NotesEqTc = new List<Note>();
+            List<Note> notesEqType = new List<Note>();
+            List<Note> notesCalibrationType = new List<Note>();
+
+            if (_poe != null)
+            {
+                var eqType = await Basics.GetEquipmentTypeXId(_poe.EquipmentTemplate.EquipmentTypeID);
+                notesEqType = eqType.Notes.OrderBy(x => x.EquipmnetTypeId != null).ThenBy(z => z.Position).ToList();
+            }
+
+
+            List<Note> notesTestCode = new List<Note>();
+            var testCode = await GetTestCodeByID((int)wod.TestCodeID);
+            if (testCode != null && testCode.Notes != null)
+            {
+                notesTestCode = testCode.Notes.OrderBy(y => y.TestCodeID != null).ToList();
+
+            }
+            NotesEqTc = notesEqType.Concat(notesTestCode).ToList();
+            List<CalibrationSubType> calibrationSubTypes= new List<CalibrationSubType>();
+            calibrationSubTypes = await Repository.GetCalibrationSubType();
+            List<GenericStatement> genericStatements = new List<GenericStatement>();
+            List<Note> notesCondition = new List<Note>();
+            foreach (var note in NotesEqTc)
+            {
+
+                GenericStatement statement = new GenericStatement();
+                statement.Statement = note.Text;
+                
+                if (note.CalibrationSubtypeId != 0)
+                {
+                    statement.DataGrid = calibrationSubTypes.FirstOrDefault(x => x.CalibrationSubTypeId == note.CalibrationSubtypeId).NameToShow.ToString();
+                }
+                else
+                {
+                    statement.DataGrid = "";
+                }
+
+                //// Dynamic Statements
+                string noteText = "";
+                bool validation = true;
+                if (note.Validation != null)
+                {
+                    validation = await DynamicValidationNote(wod, note);
+                }
+           
+                if (note.Text.Contains("{"))
+                {
+                    noteText = await DynamicTextNote(wod, note);
+                }
+
+                if (validation && noteText != null && noteText != "")
+                {
+                    statement.Statement = noteText;
+                    
+                }
+
+                ////
+                if (note.Condition == 1 && validation)
+                {
+                    genericStatements.Add(statement);
+                }
+                else if (wod.IsAccredited == true && note.Condition == 4)
+                {
+                    genericStatements.Add(statement);
+                }
+                else if (wod.IsAccredited == false && note.Condition == 5)
+                {
+                    genericStatements.Add(statement);
+                }
+
+
+            }
+
+            List<NoteWOD> notesWOD = new List<NoteWOD>();
+            var notesWOD1 = await Repository.GetNotes(wod.WorkOrderDetailID, 1);
+            notesWOD = notesWOD1.OrderBy(x => x.Position).ToList();
+
+            foreach (var note in notesWOD1)
+            {
+                
+                GenericStatement statement = new GenericStatement();
+                statement.Statement = note.Text;
+                if (note.CalibrationSubtypeId != null && note.CalibrationSubtypeId != 0)
+                {
+                    statement.DataGrid = calibrationSubTypes.FirstOrDefault(x => x.CalibrationSubTypeId == note.CalibrationSubtypeId).NameToShow.ToString();
+                }
+                else
+                {
+                    statement.DataGrid = "";
+                }
+
+                genericStatements.Add(statement);
+
+            }
+
+            return genericStatements;
+        }
+
+        public async Task<bool> DynamicValidationNote(WorkOrderDetail Model, Note note)
+        {
+            string field = "";
+            bool res = false;
+
+            try
+            {
+                var engine2 = new Engine();
+                engine2.SetValue("model", Model);
+
+                
+                
+                if (!string.IsNullOrEmpty(note.Validation))
+                {
+                    field = field + "  error in validationformula  ";
+
+                    var obj = engine2.Evaluate(note.Validation).ToObject();
+
+                    note.ValidationResult = obj;
+
+                    try
+                    {
+                        res = Convert.ToBoolean(obj);
+
+                    
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("no boolean");
+                    }
+
+
+
+                }
+
+                return res;
+
+
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+
+            }
+
+
+        }
+        //public async Task<string> DynamicTextNote(WorkOrderDetail Model, Note note)
+        //{
+        //    string res = "";
+        //    var engine = new Engine();
+
+        //    try
+        //    {
+        //        string inputString = note.Text;
+        //        string script = $"`{inputString}`";
+
+        //        engine.SetValue("model", Model);
+
+        //        var result = engine.Execute(script);
+        //       // var x = result.get
+        //        string outputString = result.ToString(); // Convertir a cadena
+
+        //        return outputString;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return "";
+        //    }
+        //}
+        public async Task<string> DynamicTextNote(WorkOrderDetail Model, Note note)
+        {
+            string inputString = note.Text;
+
+            // Utilizar expresión regular para buscar los marcadores de posición entre {}
+            var regex = new Regex("{(.*?)}");
+            var matches = regex.Matches(inputString);
+
+            // Reemplazar los marcadores de posición con los valores correspondientes
+            foreach (Match match in matches)
+            {
+                string placeholder = match.Groups[1].Value;
+                string propertyValue = "";
+                if (placeholder == "TemperatureUOMID" || placeholder == "HumidityUOMID")
+                {
+                    var val = GetPropertyValue(Model, placeholder);
+
+                    UnitOfMeasure umm = new UnitOfMeasure();
+                    umm.UnitOfMeasureID = Convert.ToInt16(val);
+                    var prop = await UoMRepository.GetByID(umm);
+                    if (prop != null)
+                    {
+                        propertyValue = (await UoMRepository.GetByID(umm)).Abbreviation;  
+                    }
+                    else 
+                    {
+                        propertyValue = "";
+                    }
+
+                }
+                else
+                {
+                     propertyValue = GetPropertyValue(Model, placeholder); // Obtener el valor de la propiedad
+                }
+                inputString = inputString.Replace(match.Value, propertyValue);
+            }
+
+            return inputString;
+        }
+
+        private string GetPropertyValue(WorkOrderDetail Model, string propertyName)
+        {
+            var property = Model.GetType().GetProperty(propertyName);
+            if (property != null)
+            {
+                var value = property.GetValue(Model);
+                if (value != null)
+                {
+                    return value.ToString();
+                }
+            }
+            return "";
+        }
+        public async ValueTask<CalibratedBy> GetCalibratedBy(WorkOrderDetail wo)
+        {
+            var workOrderDetail1 = wo;
+            var workOrderDetail = workOrderDetail1;//await GetWorkOrderDetailByID(wo);
+
+            var workOrder = workOrderDetail1.WorkOder;
+            var customer = workOrder.Customer;
+
+            
+
+            CalibratedBy model = new CalibratedBy();
+
+            if (workOrderDetail.Technician != null)
+            {
+                model = new CalibratedBy()
+                {
+                    User = "User",
+                    Name = workOrderDetail.Technician.Name,
+                    Id = workOrderDetail.Technician.UserID.ToString(),
+                    CertificationNumber = "",
+                    State = ""
+
+                };
+
+
+                string headerJson = System.Text.Json.JsonSerializer.Serialize(model);
+                //var newObject = SplitProperties(headerJson);
+                string Title = "Calibrated By";
+                var titledJson = $"{{\"{Title}\":{headerJson}}}";
+
+
+               
+            }
+            
+                return model;
+        }
+        public async ValueTask<ApprovedBy> GetApprovedBy(WorkOrderDetail wo)
+        {
+            var workOrderDetail1 = wo; 
+            var workOrderDetail = workOrderDetail1;
+
+            var workOrder = workOrderDetail1.WorkOder;
+            var customer = workOrder.Customer;
+
+            var poe = workOrderDetail1.PieceOfEquipment;  
+
+            List<WeightSetHeader> listw = new List<WeightSetHeader>();
+
+            var poes = await PieceOfEquipmentRepository.GetAllWeightSets(poe);
+
+            var eqTemp = poe.EquipmentTemplate;
+
+
+            ApprovedBy model = new ApprovedBy();
+            string calibrationDate = "";
+            DateTime dueDate;
+            string due = "";
+            DateTime calDate;
+            if (workOrderDetail.CalibrationCustomDueDate != null)
+            {
+                dueDate = (DateTime)workOrderDetail.CalibrationCustomDueDate;
+                due = dueDate.ToString("yyyy-MM-dd");
+            }
+            if (workOrderDetail.CalibrationDate != null)
+            {
+                calDate = (DateTime)workOrderDetail.CalibrationDate;
+                calibrationDate = calDate.ToString("yyyy-MM-dd");
+            }
+            if (workOrderDetail.Technician != null)
+            {
+                model = new ApprovedBy()
+                {
+                    User = "User",
+                    Name = workOrderDetail.Technician.Name,
+                    Id = workOrderDetail.Technician.UserID.ToString(),
+                    CertificationNumber = "",
+                    State = ""
+
+                };
+
+
+                string headerJson = System.Text.Json.JsonSerializer.Serialize(model);
+                var newObject = SplitProperties(headerJson);
+                string Title = "Calibrated By";
+                var titledJson = $"{{\"{Title}\":{newObject}}}";
+
+            }
+            return model;
+        }
+
+        public async ValueTask<GenericReport> GetJsonGeneric(WorkOrderDetail wo, bool Save = false)
+        {
+            try
+            {
+                GenericReport genericReport = new GenericReport();
+                var wod = await GetWorkOrderDetailByID(wo, true);
+                var wodById = await GetByID(wo);
+
+                var header = await GetGenericHeader(wodById);
+                genericReport.Header = header;
+                var customerIntrument = await GetGenericInstrument(wod);
+                genericReport.CustomerInstrument = customerIntrument;
+
+                string grid = "";
+                if (wod.BalanceAndScaleCalibration != null && wod.BalanceAndScaleCalibration.TestPointResult != null && wod.BalanceAndScaleCalibration.TestPointResult.Count() > 0)
+                     grid = await GetGenericGrid2(wod);
+                else if (wod.BalanceAndScaleCalibration != null && wod.BalanceAndScaleCalibration.GenericCalibration != null && wod.BalanceAndScaleCalibration.GenericCalibration.Count() > 0)
+                    grid = await GetGenericGrid(wod);
+                if (grid != "")
+                genericReport.DataGrids = JObject.Parse(grid);
+                var standard = await GetGenericStandard(wodById);
+                genericReport.Standards = standard;
+                var statements = await GetGenericStatement(wodById);
+               // genericReport.Statements = statements;
+                genericReport.Statements = statements;
+                
+                var by = await GetCalibratedBy(wodById);
+                genericReport.CalibratedBy = by;
+                var approved = await GetApprovedBy(wodById);
+                genericReport.ApprovedBy = approved;
+                
+                
+                return genericReport; 
+
+            }
+            catch (Exception ex)
+            {
+                GenericReport genericReport = new GenericReport();
+                return genericReport;
+            }
+
+
+
+        }
+
+
+
+
+        public async ValueTask<Header> GetWorkOrderDetailXIdRepWithSave(WorkOrderDetail wo, string customer, bool Save = false)
+        {
+
+
+            var status = await GetStatus();
+
+            var history = await GetHistory(wo);
+
+
+            var laststatus = status.Where(x => x.IsLast == true).FirstOrDefault();
+
+            var aproveduserid = history.Where(x => x.StatusId == laststatus.StatusId).OrderByDescending(x => x.WorkDetailHistoryID).FirstOrDefault();
+
+            var reviewuserid = history.Where(x => x.StatusId == (laststatus.StatusId - 1)).OrderByDescending(x => x.WorkDetailHistoryID).FirstOrDefault();
+
+            //TODO NEW
+            string tecnameaproved = string.Empty;
+            User useraproved = null;
+            if (aproveduserid != null && aproveduserid.TechnicianID.HasValue)
+            {
+                useraproved = await Basics.GetUserById2(new User() { UserID = aproveduserid.TechnicianID.Value });
+                tecnameaproved = useraproved?.Name + " " + useraproved?.LastName;
+            }
+            string tecnreview = string.Empty;
+            if (reviewuserid != null && reviewuserid.TechnicianID.HasValue)
+            {
+                var userreview = await Basics.GetUserById2(new User() { UserID = reviewuserid.TechnicianID.Value });
+
+                tecnreview = userreview?.Name + " " + userreview?.LastName;
+
+            }
+
+            tecnameaproved = "123456";
+
+            Header a = new Header();
+            if (customer == "LTI")
+                 a = await GetWorkOrderDetailXIdRep2(wo, useraproved, tecnreview, Save);
+            else if (customer == "Bitterman")
+                 a = await GetWorkOrderDetailXIdRep2Bitterman(wo, useraproved, tecnreview, Save);
+
+
+
+
+            return a;
+
+        }
+
+        public async ValueTask<Header> GetWorkOrderDetailXIdRep2(WorkOrderDetail wo, User useraproved, string techreview = "", bool Save = false)
+        {
+
+            try
+            {
+
+
+                var ToleranceList = new Dictionary<string, string>();
+
+                ToleranceList.Add(1.ToString(), "Resolution");
+                ToleranceList.Add(2.ToString(), "Percentage + Resolution");
+                ToleranceList.Add(3.ToString(), "HB44");
+
+                var workOrderDetail1 = await GetByID(wo);
+                var workOrderDetail = workOrderDetail1;
+
+
+
+                var workOrder = workOrderDetail1.WorkOder;
+                var customer = workOrder.Customer;
+
+
+                var poe = workOrderDetail1.PieceOfEquipment;
+
+                List<WeightSetHeader> listw = new List<WeightSetHeader>();
+
+                var poes = await PieceOfEquipmentRepository.GetAllWeightSets(poe);
+
+                if (workOrderDetail.WOD_Weights != null)
+                {
+                    var testp = workOrderDetail.WOD_Weights.DistinctBy(x => x.WeightSet.PieceOfEquipmentID);
+
+                    foreach (var item in testp)
+                    {
+                        var poetmp = await PieceOfEquipmentRepository.GetPieceOfEquipmentByIDHeader(item.WeightSet.PieceOfEquipmentID);
+
+                        var _listCetificate = await Assets.GetCertificateXPoE(poetmp);
+
+
+                        CertificatePoE cert = _listCetificate.OrderByDescending(x => x.Version).FirstOrDefault();
+
+                        string certnumber = "";
+                        string calibrationProvider = "";
+                        if (cert != null)
+                        {
+                            ///
+                            calibrationProvider = cert.CalibrationProvider;
+                            ///
+                            certnumber = cert.CertificateNumber;
+                        }
+
+
+                        WeightSetHeader ww = new WeightSetHeader()
+                        {
+
+                            PoE = poetmp.PieceOfEquipmentID,
+                            Serial = poetmp.SerialNumber,
+                            Ref = certnumber + " - " + calibrationProvider,
+                            CalibrationDueDate = poetmp.DueDate.ToString("MM/dd/yyyy"),
+                            Note = poetmp.Notes
+
+                        };
+                        listw.Add(ww);
+                    }
+                }
+
+                string _AsLeftResult = "";
+                string _AsFoundResult = "";
+
+
+                var eqTemp = poe.EquipmentTemplate;
+                var weigthSets = poes.FirstOrDefault().WeightSets;
+                //var manu = eqTemp.Manufacturer;
+                string manufName;
+                if (eqTemp.Manufacturer1 != null)
+                {
+                    manufName = eqTemp.Manufacturer1.Name;
+                }
+                else
+                {
+                    manufName = null;
+                }
+
+
+                IEnumerable<BasicCalibrationResult> _repeatability = null;
+                IEnumerable<BasicCalibrationResult> _eccentricity = null;
+
+                if (workOrderDetail.BalanceAndScaleCalibration != null && workOrderDetail.BalanceAndScaleCalibration.Repeatability != null)
+                {
+                    _repeatability = workOrderDetail.BalanceAndScaleCalibration.Repeatability.TestPointResult.Where(x => x.CalibrationSubTypeId == 2);
+                }
+
+                if (workOrderDetail.BalanceAndScaleCalibration != null && workOrderDetail.BalanceAndScaleCalibration.Eccentricity != null)
+                {
+                    _eccentricity = workOrderDetail.BalanceAndScaleCalibration.Eccentricity.TestPointResult.Where(x => x.CalibrationSubTypeId == 3);
+                }
+
+                List<Linearity> _linearity = new List<Linearity>();
+
+                if (workOrderDetail.BalanceAndScaleCalibration != null && workOrderDetail.BalanceAndScaleCalibration.Linearities != null)
+                {
+                    _linearity = OrderAlgoritm(workOrderDetail.BalanceAndScaleCalibration.Linearities.ToList());
+                    var asLeftL = _linearity.Where(x => x.BasicCalibrationResult.InToleranceLeft.ToUpper() == "PASS".ToUpper());
+                    var asFoundL = _linearity.Where(x => x.BasicCalibrationResult.InToleranceFound.ToUpper() == "PASS".ToUpper());
+
+
+                    if (asFoundL.Count() == _linearity.Count())
+                    {
+                        _AsFoundResult = "PASS";
+                    }
+                    else
+                    {
+                        _AsFoundResult = "FAIL";
+                    }
+
+                    if (asLeftL.Count() == _linearity.Count())
+                    {
+                        _AsLeftResult = "PASS";
+                    }
+                    else
+                    {
+                        _AsLeftResult = "FAIL";
+                    }
+
+                }
+                var address = customer.Aggregates.FirstOrDefault().Addresses.FirstOrDefault();
+
+
+                string techAproved = "";
+                string tecertiied = "";
+                if (useraproved != null)
+                {
+                    techAproved = useraproved?.Name + " " + useraproved?.LastName;
+
+                    if (useraproved.TechnicianCodes != null && useraproved.TechnicianCodes.Count > 0)
+                    {
+
+                        var tecertiiedo = useraproved.TechnicianCodes.Where(z => z.StateID == address.StateID).FirstOrDefault();
+
+                        if (tecertiiedo != null)
+                        {
+                            tecertiied = tecertiiedo.Certification.Name;
+
+                        }
+                    }
+
+                }
+
+
+
+                var date = workOrderDetail1.StatusDate; // history.OrderByDescending(x => x.Date).FirstOrDefault().Date;
+                string ManInd;
+                string ModelInd;
+                string SerialInd;
+                if (poe.Indicator == null)
+                {
+                    ManInd = manufName;
+                    ModelInd = eqTemp.Model;
+                    SerialInd = poe.SerialNumber;
+                }
+                else
+                {
+                    ManInd = poe.Indicator != null && poe.Indicator.EquipmentTemplate != null && poe.Indicator.EquipmentTemplate.Manufacturer1 != null ? poe.Indicator.EquipmentTemplate.Manufacturer1.Name : string.Empty;
+                    ModelInd = poe.Indicator != null && poe.Indicator.EquipmentTemplate != null ? poe.Indicator.EquipmentTemplate.Model : string.Empty;
+                    SerialInd = poe.Indicator != null ? poe.Indicator.SerialNumber : string.Empty;
+                }
+
+                UnitOfMeasure umm = new UnitOfMeasure();
+                umm.UnitOfMeasureID = poe.UnitOfMeasureID.Value;
+                var um1 = (await UoMRepository.GetByID(umm)).Abbreviation;
+
+                UnitOfMeasure ummTemp = new UnitOfMeasure();
+                ummTemp.UnitOfMeasureID = workOrderDetail.TemperatureUOMID;
+                var umTemperatute = (await UoMRepository.GetByID(ummTemp)).Abbreviation;
+
+
+                // Notes 
+                //Notes Equipment Type
+                List<Note> notesEqType = new List<Note>();
+
+                var eqType = await Basics.GetEquipmentTypeXId(poe.EquipmentTemplate.EquipmentTypeID);
+                notesEqType = eqType.Notes.OrderBy(x => x.EquipmnetTypeId != null).ThenBy(y => y.TestCodeID != null).ThenBy(z => z.Position).ToList();
+
+
+                //Notes TestCode
+                List<Note> notesTestCode = new List<Note>();
+                if (workOrderDetail.TestCode != null && workOrderDetail.TestCode.TestCodeID != null)
+                {
+
+                    var testCode = await Repository.GetTestCodeByID((int)workOrderDetail.TestCodeID);
+                    if (testCode != null && testCode.Notes != null)
+                    {
+                        notesTestCode = testCode.Notes.OrderBy(y => y.TestCodeID != null).ToList();
+
+                    }
+                }
+                List<Note> NotesEqTc = new List<Note>();
+                NotesEqTc = notesEqType.Concat(notesTestCode).ToList();
+
+                //Validate Notes Condition
+                List<Note> notesCondition = new List<Note>();
+                foreach (var note in NotesEqTc)
+                {
+                    if (note.Condition == 1)
+                        notesCondition.Add(note);
+                    else if (workOrderDetail.IsAccredited == true && note.Condition == 4)
+                        notesCondition.Add(note);
+                    else if (workOrderDetail.IsAccredited == false && note.Condition == 5)
+                        notesCondition.Add(note);
+
+                }
+
+                //Notes WOD
+                List<NoteWOD> notesWOD = new List<NoteWOD>();
+                var notesWOD1 = await Repository.GetNotes(wo.WorkOrderDetailID, 1);
+                notesWOD = notesWOD1.OrderBy(x => x.Position).ToList();
+                NoteScale noteViewModel = new NoteScale();
+                noteViewModel.NotesEqScaleList = new List<NoteEqScale>();
+                noteViewModel.NoteWODScaleList = new List<NoteWODScale>();
+
+                try
+                {
+
+                    if (notesCondition != null && notesCondition.Count() > 0)
+                    {
+                        foreach (var itemet in notesCondition)
+                        {
+                            var noteEq = new NoteEqScale();
+                            noteEq.Text = itemet.Text;
+                            noteViewModel.NotesEqScaleList.Add(noteEq);
+
+
+                        }
+                    }
+
+                    if (notesWOD != null && notesWOD.Count() > 0)
+                    {
+                        foreach (var itemwod in notesWOD)
+                        {
+                            var notewod = new NoteWODScale();
+                            notewod.Text = itemwod.Text;
+                            noteViewModel.NoteWODScaleList.Add(notewod);
+
+
+                        }
+
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+                var eqCondition = workOrderDetail.EquipmentCondition.ToList();
+                string received = "";
+                string returned = "";
+                foreach (var item in eqCondition)
+                {
+                    if (item.IsAsFound)
+                    {
+                        if (item.Value)
+                        {
+                            received = "In Service";
+                        }
+                        else
+                        {
+                            received = "Out of Service";
+                        }
+                    }
+                    else
+                    {
+                        if (item.Value)
+                        {
+                            returned = "In Service";
+                        }
+                        else
+                        {
+                            returned = "Out of Service";
+                        }
+                    }
+                }
+
+                DateTime dueDate;
+                string due = "";
+                DateTime calDate;
+                string calibrationDate = "";
+                if (workOrderDetail.CalibrationCustomDueDate != null)
+                {
+                    dueDate = (DateTime)workOrderDetail.CalibrationCustomDueDate;
+                    due = dueDate.ToString("MM/dd/yyyy");
+                }
+                if (workOrderDetail.CalibrationDate != null)
+                {
+                    calDate = (DateTime)workOrderDetail.CalibrationDate;
+                    calibrationDate = calDate.ToString("MM/dd/yyyy");
+                }
+
+                Header header = new Header()
+                {
+                    Client = customer.Name,
+                    Address = address.StreetAddress1, // + " " + ' ' + address.City + ' ' + address.County + " " + address.Country + " " + address.ZipCode,
+                    Country = customer.Aggregates.FirstOrDefault().Addresses.FirstOrDefault().County,
+                    City = address.City,
+                    State = address.State,
+                    ZipCode = address.ZipCode,
+                    EquipmentLocation = poe.InstallLocation,
+                    EquipmentType = eqTemp.EquipmentType,
+                    NextCalDate = workOrderDetail.CalibrationDate.Value.ToString("MM/dd/yyyy"), //OJOO no está mapeado
+                    LastCalDate = date.Value.ToString("MM/dd/yyyy"), //OJOO no está mapeado
+                    ManufacturerInd = ManInd,
+                    ModelInd = ModelInd,
+                    SerialInd = SerialInd,
+                    CapInd = " ",
+                    ManufacturerReceiv = manufName,
+                    ModelIndReceiv = eqTemp.Model,
+                    SerialIndReceiv = poe.SerialNumber,
+                    CapIndReceiv = poe.Capacity.ToString() + " " + um1, //OJOO no está mapeado
+                    Class = poe.Class,
+                    Type = poe.EquipmentTemplate.DeviceClass, //OJOO no está mapeado
+                    PlatformSize = poe.EquipmentTemplate.PlatformSize,// null, //OJOO no está mapeado
+                    ServiceLocation = null, //OJOO no está mapeado
+                    UnitNumber = null, //OJOO no está mapeado
+                    TestingMethod = null, //OJOO no está mapeado
+                    CalID = poe.CustomerToolId, //OJOO no está mapeado
+                    Location = poe.InstallLocation, //OJOO no está mapeado
+                    AsLeftResult = _AsLeftResult, //OJOO no está mapeado
+                    AsFoundResult = _AsFoundResult, //OJOO no está mapeado
+                    CalibrtionDate = calibrationDate,
+                    Temperature = "Before Cal: " + workOrderDetail.Temperature + " " + umTemperatute + "/ After Cal: " + workOrderDetail.TemperatureAfter + " " + umTemperatute,
+                    Enviroment = workOrderDetail.Environment,
+                    Technician = techreview,//workOrderDetail1.Technician.Name + " " + workOrderDetail1.Technician.LastName
+                    TechnicianAprove = tecertiied,
+                    UnitOfMeasure = um1,
+                    Tolerance = ToleranceList.GetValueOrDefault(workOrderDetail.Tolerance.ToleranceTypeID.ToString()),
+                    Resolution = workOrderDetail.Resolution.ToString(),
+                    PieceOfEquipmentID = poe.PieceOfEquipmentID.ToString(),
+                    NoteScale = noteViewModel,
+                    Unit = poe.PieceOfEquipmentID,
+                    CustomerTool = poe.CustomerToolId,
+                    InstallLocation = poe.InstallLocation,
+                    ReceivedCondition = received,
+                    ReturnedCondition = returned,
+                    UoM = workOrderDetail.PieceOfEquipment.UnitOfMeasure.Abbreviation,
+                    Due = due,
+                    Humidity = workOrderDetail.Humidity.ToString() + " %RH",
+                };
+
+                if (workOrderDetail.IsAccredited.HasValue)
+                {
+                    header.IsAccredited = workOrderDetail.IsAccredited.Value;
+                }
+
+                #region Data CalCertBlank
+                List<AsFound> AsFoundList = new List<AsFound>();
+
+                foreach (var af in _linearity)
+                {
+                    var um = (await UoMRepository.GetByID(af.TestPoint.UnitOfMeasurement)).Abbreviation;
+
+                    double res = 0;
+                    if (af.BasicCalibrationResult.Resolution == 0)
+                    {
+                        res = workOrderDetail.Resolution;
+
+                    }
+
+                    IEnumerable<WeightSet> weightSets = new List<WeightSet>();
+                    weightSets = await PieceOfEquipmentRepository.GetWeigthSets();
+
+                    var totalUncertainty = await Poe.GetReportUncertaintyBudget(af, af.SequenceID, workOrderDetail1, workOrderDetail, poes.ToList(), weightSets.ToList());
+
+
+                    var value = QueryableExtensions2.Completezero(af.BasicCalibrationResult.AsFound.ToString(), NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(af.TestPoint.Resolution))) + " " + um;//af.BasicCalibrationResult.Uncertainty,
+
+                    var AsFoundLin = new Reports.Domain.ReportViewModels.AsFound
+                    {
+                        Standard = QueryableExtensions2.Completezero(af.TestPoint.NominalTestPoit.ToString(), NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(af.TestPoint.Resolution))) + " " + um,//af.TestPoint.NominalTestPoit + " " + um,
+
+
+                        Tolerance = af.TestPoint.LowerTolerance + "-" + af.TestPoint.UpperTolerance, //af.TestPoint.LowerTolerance,
+                        PassFail = af.BasicCalibrationResult.InToleranceFound,
+                        //Description = af.TestPoint.Description, 
+                        Indication = af.TestPoint.Description,
+                        Uncertainty = ((double)RoundFirstSignificantDigit(Convert.ToDecimal(totalUncertainty.Totales.ExpandedUncertainty))).ToString() + " " + um, //af.BasicCalibrationResult.Uncertainty,
+                        Range = 0, //OJOO no está mapeado
+                        Value = value
+
+                    };
+                    AsFoundList.Add(AsFoundLin);
+                }
+
+                List<AsLeft> AsLeftList = new List<AsLeft>();
+
+                if (_linearity != null && _linearity.Count > 0)
+                {
+                    foreach (var af in _linearity.OrderBy(x => x.TestPoint.Position).ToList())
+                    {
+                        var tolerance = "";
+                        if (workOrderDetail1.IsComercial)
+                        {
+                            tolerance = af.MinToleranceAsLeft.ToString() + "-" + af.MaxToleranceAsLeft.ToString();
+                        }
+                        else
+                        {
+                            tolerance = af.MinTolerance.ToString() + "-" + af.MinTolerance.ToString();
+                        }
+
+
+                        var totalUncertainty = await Poe.GetReportUncertaintyBudget(af, af.SequenceID, workOrderDetail1, workOrderDetail, poes.ToList(), null);
+
+                        var um = (await UoMRepository.GetByID(af.TestPoint.UnitOfMeasurement)).Abbreviation;
+                        var AsLeftLin = new Reports.Domain.ReportViewModels.AsLeft
+                        {
+                            Standard = QueryableExtensions2.Completezero(af.TestPoint.NominalTestPoit.ToString(), NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(af.TestPoint.Resolution))) + " " + um,// af.TestPoint.NominalTestPoit.ToString() + " " + um,
+
+                            Tolerance = tolerance,//af.TestPoint.LowerTolerance + "-" + af.TestPoint.UpperTolerance,
+                            PassFail = af.BasicCalibrationResult.InToleranceLeft,
+                            //Description = af.TestPoint.Description, 
+                            Indication = af.TestPoint.Description,
+                            Value = QueryableExtensions2.Completezero(af.BasicCalibrationResult.AsLeft.ToString(), NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(af.TestPoint.Resolution))) + " " + um,
+                            Range = 0,  //OJOO no está mapeado
+                            Uncertainty = ((double)RoundFirstSignificantDigit(Convert.ToDecimal(totalUncertainty.Totales.ExpandedUncertainty))).ToString() + " " + um
+                        };
+                        AsLeftList.Add(AsLeftLin);
+                    }
+                }
+
+
+
+
+                List<Reports.Domain.ReportViewModels.Excentricity> eccList = new List<Reports.Domain.ReportViewModels.Excentricity>();
+
+                if (_eccentricity != null)
+                {
+                    foreach (var ex in _eccentricity.OrderBy(x => x.SequenceID))
+                    {
+                        var um = (await UoMRepository.GetByID(ex.UnitOfMeasure)).Abbreviation;
+
+                        double res = 0;
+                        if (ex.Resolution == 0)
+                        {
+                            res = workOrderDetail.Resolution;
+
+                        }
+
+                        var ecc = new Reports.Domain.ReportViewModels.Excentricity
+                        {
+                            AsFound = QueryableExtensions2.Completezero(ex.AsFound.ToString(), NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(res))) + " " + um,// ex.AsFound.ToString() + " " + um,
+                            AsLeft = QueryableExtensions2.Completezero(ex.AsLeft.ToString(), NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(res))) + " " + um,//ex.AsLeft.ToString() + " " + um ,
+                            Position = ex.Position,
+                            Weight = QueryableExtensions2.Completezero(ex.WeightApplied.ToString(), NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(res))) + " " + um,// ex.WeightApplied.ToString() + " " + um
+                            PassFail = ex.InToleranceLeft,
+                        };
+                        eccList.Add(ecc);
+                    };
+                }
+
+                List<Reports.Domain.ReportViewModels.Repeteab> repetList = new List<Reports.Domain.ReportViewModels.Repeteab>();
+                bool _viewGrid = false;
+
+                if (_repeatability != null && _repeatability.Count() > 0)
+                {
+                    _viewGrid = true;
+                    var um = (await UoMRepository.GetByID(_repeatability.FirstOrDefault().UnitOfMeasure)).Abbreviation;
+                    foreach (var re in _repeatability)
+                    {
+                        double res = 0;
+                        if (re.Resolution == 0)
+                        {
+                            res = workOrderDetail.Resolution;
+
+                        }
+
+                        var rep = new Reports.Domain.ReportViewModels.Repeteab
+                        {
+                            AsFound = QueryableExtensions2.Completezero(re.AsFound.ToString(), NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(res))) + " " + um,// re.AsFound + " " + um,
+                            AsLeft = QueryableExtensions2.Completezero(re.AsLeft.ToString(), NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(res))) + " " + um,//re.AsLeft + " " + um,
+                            Position = re.Position,
+                            Standard = QueryableExtensions2.Completezero(re.WeightApplied.ToString(), NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(res))) + " " + um,// re.WeightApplied + " " + um, //OJOO no está mapeado//
+                            ViewGrid = _viewGrid,
+
+                        };
+                        repetList.Add(rep);
+                    };
+
+                }
+
+                List<Reports.Domain.ReportViewModels.ExcentricityDet> excentriDetList = new List<Reports.Domain.ReportViewModels.ExcentricityDet>();
+
+
+                foreach (var re in weigthSets)
+                {
+                    var exDet = new Reports.Domain.ReportViewModels.ExcentricityDet
+                    {
+                        Standard = re.WeightNominalValue.ToString(),
+                        Certificate = "TEST", //OJOO no está mapeado
+                        Description = re.Description, //OJOO no está mapeado
+                        CalDue = poe.CalibrationDate.ToString("MM/dd/yyyy"), //OJOO no está mapeado
+                    };
+                    excentriDetList.Add(exDet);
+                };
+
+                #endregion
+
+
+
+                header.RepeteabilityList = repetList;
+                header.eccList = eccList;
+                header.excentriDetList = excentriDetList;
+                header.AsFoundList = AsFoundList;
+                header.AsLeftList = AsLeftList;
+                header.WeightSetList = listw;
+
+
+                if (Save)
+                {
+                    var serialHash = header.SerialIndReceiv.GetSHA1Has();
+
+
+                    Certificate cert = new Certificate();
+                    cert.CertificateNumber = wo.WorkOrderDetailID.ToString() + "_" + wo.WorkOrderDetailHash;
+                    if (wo.CalibrationCustomDueDate.HasValue)
+                    {
+                        cert.DueDate = wo.CalibrationCustomDueDate.Value;
+                    }
+                    if (wo.CalibrationDate.HasValue)
+                    {
+                        cert.CalibrationDate = wo.CalibrationDate.Value;
+                    }
+                    //cert.PieceOfEquipmentId = 1;
+                    cert.Description = @"/Certificate/" + serialHash + ".pdf";
+                    cert.Version = Convert.ToInt32(wo.WorkOrderDetailHash);
+                    cert.WorkOrderDetailId = wo.WorkOrderDetailID;
+                    var serial = JsonConvert.SerializeObject(workOrderDetail1);
+
+                    cert.WorkOrderDetailSerialized = serial;
+                    var resultwhd = CreateCertificate(cert);
+                }
+
+
+
+                return header;
+
+
+            }
+            catch (TimeoutException ex)
+            {
+                throw new TimeoutException("TimeOut");
+            }
+
+        }
+
+        public async ValueTask<Header> GetWorkOrderDetailXIdRep2Bitterman(WorkOrderDetail wo, User useraproved,string techreview = "", bool Save = false)
+        {
+            //var workOrderDetail = await LogicSample.GetWorkOrderDetailXIdRep(wo.WorkOrderDetailID);
+            //wo.WorkOrderDetailID = 2;
+
+            var ToleranceList = new Dictionary<string, string>();
+
+            ToleranceList.Add(1.ToString(), "Resolution");
+            ToleranceList.Add(2.ToString(), "Percentage + Resolution");
+            ToleranceList.Add(3.ToString(), "HB44");
+
+            var workOrderDetail1 = await GetByID(wo);
+            var workOrderDetail = workOrderDetail1;//await GetWorkOrderDetailByID(wo);
+
+
+
+            var workOrder = workOrderDetail1.WorkOder;
+            var customer = workOrder.Customer;
+
+            //var POE = await Logicpoe.GetPieceOfEquipmentByID(workOrderDetail1.PieceOfEquipment);
+
+            //var address = customer.Aggregates[0];
+            var poe = workOrderDetail1.PieceOfEquipment;  // customer.PieceOfEquipment.Where(x => x.WorOrderDetailID == wo.WorkOrderDetailID).FirstOrDefault();
+
+            List<WeightSetHeader> listw = new List<WeightSetHeader>();
+
+            var poes = await PieceOfEquipmentRepository.GetAllWeightSets(poe);
+
+            if (workOrderDetail.WOD_Weights != null)
+            {
+                var testp = workOrderDetail.WOD_Weights.DistinctBy(x => x.WeightSet.PieceOfEquipmentID);
+
+                foreach (var item in testp)
+                {
+                    var poetmp = await PieceOfEquipmentRepository.GetPieceOfEquipmentByIDHeader(item.WeightSet.PieceOfEquipmentID);
+
+                    var _listCetificate = await Assets.GetCertificateXPoE(poetmp);
+
+
+                    CertificatePoE cert = _listCetificate.OrderByDescending(x => x.Version).FirstOrDefault();
+
+                    string certnumber = "";
+                    if (cert != null)
+                    {
+                        certnumber = cert.CertificateNumber;
+                    }
+
+                    //.CalibrationDate.Value.ToString("MM/dd/yyyy"),
+                    WeightSetHeader ww = new WeightSetHeader()
+                    {
+                        //Distribution = item.WeightSet.Distribution,
+                        //Value = item.WeightSet.WeightNominalValue.ToString(),
+                        //ActualValue = item.WeightSet.WeightActualValue.ToString(),
+                        // PoE=item.WeightSet.PieceOfEquipmentID,
+                        // Ref=item.WeightSet.Reference,
+                        // Note=item.WeightSet.Note,
+                        // Type=item.WeightSet.Type,
+                        //Uncertainty=item.WeightSet.CalibrationUncertValue.ToString(),
+                        PoE = poetmp.PieceOfEquipmentID,
+                        Serial = poetmp.SerialNumber,
+                        Ref = certnumber,
+                        CalibrationDueDate = poetmp.DueDate.ToString("MM/dd/yyyy"),
+                        Note = poetmp.Notes
+
+                    };
+                    listw.Add(ww);
+                }
+            }
+
+            string _AsLeftResult = "";
+            string _AsFoundResult = "";
+
+
+            var eqTemp = poe.EquipmentTemplate;
+
+            ICollection<WeightSet> weigthSets = null;
+
+            if (poes?.Count() > 0)
+            {
+                weigthSets = poes.FirstOrDefault().WeightSets;
+            }
+
+            //var manu = eqTemp.Manufacturer;
+            string manufName;
+            if (eqTemp.Manufacturer1 != null)
+            {
+                manufName = eqTemp.Manufacturer1.Name;
+            }
+            else
+            {
+                manufName = null;
+            }
+
+
+            IEnumerable<BasicCalibrationResult> _repeatability = null;
+            IEnumerable<BasicCalibrationResult> _eccentricity = null;
+
+
+            if (workOrderDetail?.BalanceAndScaleCalibration != null && workOrderDetail?.BalanceAndScaleCalibration?.Repeatability != null)
+            {
+                _repeatability = workOrderDetail.BalanceAndScaleCalibration.Repeatability.TestPointResult.Where(x => x.CalibrationSubTypeId == 2);
+                //_repeatability = workOrderDetail.BalanceAndScaleCalibration.Repeatability.BasicCalibrationResults.Where(x => x.CalibrationSubTypeId == 2);
+            }
+
+            if (workOrderDetail?.BalanceAndScaleCalibration != null && workOrderDetail?.BalanceAndScaleCalibration?.Eccentricity != null)
+            {
+                _eccentricity = workOrderDetail.BalanceAndScaleCalibration.Eccentricity.TestPointResult.Where(x => x.CalibrationSubTypeId == 3);
+                //_eccentricity = workOrderDetail.BalanceAndScaleCalibration.Eccentricity.BasicCalibrationResults.Where(x => x.CalibrationSubTypeId == 3);
+            }
+
+            List<Linearity> _linearity = new List<Linearity>();
+
+            if (workOrderDetail?.BalanceAndScaleCalibration != null && workOrderDetail?.BalanceAndScaleCalibration?.Linearities != null)
+            {
+                _linearity = OrderAlgoritm(workOrderDetail.BalanceAndScaleCalibration.Linearities.ToList());
+                var asLeftL = _linearity.Where(x => x.BasicCalibrationResult.InToleranceLeft.ToUpper() == "PASS".ToUpper());
+                var asFoundL = _linearity.Where(x => x.BasicCalibrationResult.InToleranceFound.ToUpper() == "PASS".ToUpper());
+
+
+                if (asFoundL.Count() == _linearity.Count())
+                {
+                    _AsFoundResult = "Pass";
+                }
+                else
+                {
+                    _AsFoundResult = "Fail";
+                }
+
+                if (asLeftL.Count() == _linearity.Count())
+                {
+                    _AsLeftResult = "Pass";
+                }
+                else
+                {
+                    _AsLeftResult = "Fail";
+                }
+
+            }
+
+
+            var address = customer.Aggregates.FirstOrDefault().Addresses.FirstOrDefault();
+
+
+            string techAproved = "";
+            string tecertiied = "";
+            if (useraproved != null)
+            {
+                techAproved = useraproved?.Name + " " + useraproved?.LastName;
+
+                if (useraproved.TechnicianCodes != null && useraproved.TechnicianCodes.Count > 0)
+                {
+
+                    var tecertiiedo = useraproved.TechnicianCodes.Where(z => z.StateID == address.StateID).FirstOrDefault();
+
+                    if (tecertiiedo != null && tecertiiedo.Certification != null)
+                    {
+                        tecertiied = tecertiiedo.Certification.Name;
+
+                    }
+                }
+
+            }
+
+            string lastCaldate = "";
+            if (workOrderDetail1.StatusDate != null)
+                lastCaldate = workOrderDetail1.StatusDate.Value.ToString("MM/dd/yyyy");
+
+            string ManInd;
+            string ModelInd;
+            string SerialInd;
+            if (poe.Indicator == null)
+            {
+                ManInd = manufName;
+                ModelInd = eqTemp.Model;
+                SerialInd = poe.SerialNumber;
+            }
+            else
+            {
+                ManInd = poe.Indicator != null && poe.Indicator.EquipmentTemplate != null && poe.Indicator.EquipmentTemplate.Manufacturer1 != null ? poe.Indicator.EquipmentTemplate.Manufacturer1.Name : string.Empty;
+                ModelInd = poe.Indicator != null && poe.Indicator.EquipmentTemplate != null ? poe.Indicator.EquipmentTemplate.Model : string.Empty;
+                SerialInd = poe.Indicator != null ? poe.Indicator.SerialNumber : string.Empty;
+            }
+
+            UnitOfMeasure umm = new UnitOfMeasure();
+            umm.UnitOfMeasureID = poe.UnitOfMeasureID.Value;
+            var um1 = (await UoMRepository.GetByID(umm)).Abbreviation;
+
+            double totLin = 0;
+            double totEcc = 0;
+            double totRep = 0;
+
+
+            if (_linearity?.Count > 0)
+            {
+                totLin = _linearity.Sum(x => x.BasicCalibrationResult.AsLeft);
+            }
+
+
+
+            if (_eccentricity?.Count() > 0)
+            {
+                totEcc = _eccentricity.Sum(x => x.AsLeft);
+            }
+
+
+
+            if (_repeatability?.Count() > 0)
+            {
+                totRep = _repeatability.Sum(x => x.AsLeft);
+            }
+
+            var county = "";
+            if (address.County != null)
+                county = address.County;
+
+            var addres = address.StreetAddress1 + " " + ' ' + address.City + ' ' + county + " " + address.Country + " " + address.ZipCode;
+
+            string Class = "";
+            if (poe != null && poe.Class != null)
+                Class = poe.Class;
+
+            string platSize = "";
+            if (poe.EquipmentTemplate != null && poe.EquipmentTemplate.PlatformSize != null)
+                platSize = poe.EquipmentTemplate.PlatformSize;
+
+            Header header = new Header()
+            {
+                Client = customer.Name,
+                Address = address.StreetAddress1 + " " + ' ' + address.City + ' ' + county + " " + address.Country + " " + address.ZipCode,
+                Country = customer.Aggregates.FirstOrDefault().Addresses.FirstOrDefault().Country,
+                EquipmentLocation = poe.InstallLocation,
+                EquipmentType = eqTemp.EquipmentTypeObject.Name,
+
+                NextCalDate = workOrderDetail.CalibrationCustomDueDate.Value.ToString("MM/dd/yyyy"),
+                LastCalDate = lastCaldate, //OJOO no está mapeado
+                ManufacturerInd = ManInd,
+                ModelInd = ModelInd,
+                SerialInd = SerialInd,
+                CapInd = eqTemp.Capacity.ToString(),
+                ManufacturerReceiv = manufName,
+                ModelIndReceiv = eqTemp.Model,
+                SerialIndReceiv = poe.SerialNumber,
+                CapIndReceiv = poe.Capacity.ToString() + " " + um1, //OJOO no está mapeado
+                Class = Class,
+                Type = poe.EquipmentTemplate.DeviceClass, //OJOO no está mapeado
+                PlatformSize = platSize,// null, //OJOO no está mapeado
+                ServiceLocation = "", //OJOO no está mapeado
+                UnitNumber = "", //OJOO no está mapeado
+                TestingMethod = "", //OJOO no está mapeado
+                CalID = poe.CustomerToolId, //OJOO no está mapeado
+                Location = poe.InstallLocation, //OJOO no está mapeado
+                AsLeftResult = _AsLeftResult, //OJOO no está mapeado
+                AsFoundResult = _AsFoundResult, //OJOO no está mapeado
+                CalibrtionDate = workOrderDetail.CalibrationDate.Value.ToString("MM/dd/yyyy"),
+                Temperature = workOrderDetail.Temperature.ToString() + "/" + workOrderDetail.Humidity.ToString(),
+                Enviroment = workOrderDetail.Environment,
+                Technician = techreview,//workOrderDetail1.Technician.Name + " " + workOrderDetail1.Technician.LastName
+                TechnicianAprove = tecertiied,
+                UnitOfMeasure = um1,
+                Tolerance = ToleranceList.GetValueOrDefault(workOrderDetail.ToleranceTypeID.ToString()),
+                Resolution = workOrderDetail.Resolution.ToString(),
+                EquipmentID = eqTemp.EquipmentTemplateID.ToString(),
+                Capacity = eqTemp.Capacity.ToString(),
+                TotalAsFoundEcc = totEcc,
+                TotalAsFoundLin = totLin,
+                TotalAsFoundRep = totRep
+
+            };
+
+            if (workOrderDetail.IsAccredited.HasValue)
+            {
+                header.IsAccredited = workOrderDetail.IsAccredited.Value;
+            }
+
+            #region Data CalCertBlank
+            List<AsFound> AsFoundList = new List<AsFound>();
+
+            foreach (var af in _linearity)
+            {
+                var um = (await UoMRepository.GetByID(af.TestPoint.UnitOfMeasurement)).Abbreviation;
+
+                double res = 0;
+                if (af.BasicCalibrationResult.Resolution == 0)
+                {
+                    res = workOrderDetail.Resolution;
+
+                }
+
+
+                var value = QueryableExtensions2.Completezero(af.BasicCalibrationResult.AsFound.ToString(), QueryableExtensions2.CalculateResolution(Convert.ToDecimal(af.TestPoint.Resolution))) + " " + um;//af.BasicCalibrationResult.Uncertainty,
+
+                var AsFoundLin = new Reports.Domain.ReportViewModels.AsFound
+                {
+                    Standard = QueryableExtensions2.Completezero(af.TestPoint.NominalTestPoit.ToString(), QueryableExtensions2.CalculateResolution(Convert.ToDecimal(af.TestPoint.Resolution))) + " " + um,//af.TestPoint.NominalTestPoit + " " + um,
+
+
+                    Tolerance = af.TestPoint.LowerTolerance + "-" + af.TestPoint.UpperTolerance, //af.TestPoint.LowerTolerance,
+                    PassFail = char.ToUpper(af.BasicCalibrationResult.InToleranceFound[0]) + af.BasicCalibrationResult.InToleranceFound.Substring(1),
+
+                    Indication = af.BasicCalibrationResult.Description,
+                    Uncertainty = af.TotalUncertainty + " " + um, //af.BasicCalibrationResult.Uncertainty,
+                    Range = 0, //OJOO no está mapeado
+                    Value = value
+
+                };
+                AsFoundList.Add(AsFoundLin);
+            }
+
+            List<AsLeft> AsLeftList = new List<AsLeft>();
+
+            if (_linearity != null && _linearity.Count > 0)
+            {
+                foreach (var af in _linearity.OrderBy(x => x.TestPoint.Position).ToList())
+                {
+                    var tolerance = "";
+                    if (workOrderDetail1.IsComercial)
+                    {
+                        tolerance = af.MinToleranceAsLeft.ToString() + "-" + af.MaxToleranceAsLeft.ToString();
+                    }
+                    else
+                    {
+                        tolerance = af.MinTolerance.ToString() + "-" + af.MinTolerance.ToString();
+                    }
+
+                    var um = (await UoMRepository.GetByID(af.TestPoint.UnitOfMeasurement)).Abbreviation;
+                    var AsLeftLin = new Reports.Domain.ReportViewModels.AsLeft
+                    {
+                        Standard = QueryableExtensions2.Completezero(af.TestPoint.NominalTestPoit.ToString(), QueryableExtensions2.CalculateResolution(Convert.ToDecimal(af.TestPoint.Resolution))) + " " + um,// af.TestPoint.NominalTestPoit.ToString() + " " + um,
+
+                        Tolerance = tolerance,//af.TestPoint.LowerTolerance + "-" + af.TestPoint.UpperTolerance,
+                        PassFail = char.ToUpper(af.BasicCalibrationResult.InToleranceLeft[0]) + af.BasicCalibrationResult.InToleranceLeft.Substring(1),
+
+                        //Description = af.TestPoint.Description, 
+                        Indication = af.BasicCalibrationResult.Description,
+                        Value = QueryableExtensions2.Completezero(af.BasicCalibrationResult.AsLeft.ToString(), QueryableExtensions2.CalculateResolution(Convert.ToDecimal(af.TestPoint.Resolution))) + " " + um,
+                        Range = 0,  //OJOO no está mapeado
+                        Uncertainty = af.TotalUncertainty.ToString() + " " + um
+                    };
+                    AsLeftList.Add(AsLeftLin);
+                }
+            }
+
+
+
+
+            List<Reports.Domain.ReportViewModels.Excentricity> eccList = new List<Reports.Domain.ReportViewModels.Excentricity>();
+            TestPoint toleranceEcc = new TestPoint();
+            if (eqTemp.TestGroups != null)
+            {
+                toleranceEcc = eqTemp.TestGroups.FirstOrDefault().TestPoints.Where(x => x.CalibrationType == "Eccentricity").FirstOrDefault();
+            }
+            if (_eccentricity != null && _eccentricity?.Count() > 0)
+            {
+                foreach (var ex in _eccentricity.OrderBy(x => x.SequenceID))
+                {
+                    var um = (await UoMRepository.GetByID(ex.UnitOfMeasure)).Abbreviation;
+
+
+                    double res = ex.Resolution;
+                    if (ex.Resolution == 0)
+                    {
+                        res = workOrderDetail.Resolution;
+
+                    }
+
+                    string AsFound = "";
+
+                    string AsLeft = "";
+
+                    int Position = 0;
+
+                    string Weight = "";
+
+                    string PassFailAsFound = "";
+
+                    string PassFailAsLeft = "";
+
+                    string Tolerance = "";
+
+                    if (ex != null)
+                    {
+
+                        AsFound = QueryableExtensions2.Completezero(ex.AsFound.ToString(), QueryableExtensions2.CalculateResolution(Convert.ToDecimal(res))) + " " + um;// ex.AsFound.ToString() + " " + um,
+                        AsLeft = QueryableExtensions2.Completezero(ex.AsLeft.ToString(), QueryableExtensions2.CalculateResolution(Convert.ToDecimal(res))) + " " + um;//ex.AsLeft.ToString() + " " + um ,
+                        Position = ex.Position;
+                        Weight = QueryableExtensions2.Completezero(ex.WeightApplied.ToString(), QueryableExtensions2.CalculateResolution(Convert.ToDecimal(res))) + " " + um;// ex.WeightApplied.ToString() + " " + um
+                        PassFailAsFound = char.ToUpper(ex.InToleranceFound[0]) + ex.InToleranceFound.Substring(1).ToLower();
+                        PassFailAsLeft = char.ToUpper(ex.InToleranceLeft[0]) + ex.InToleranceLeft.Substring(1).ToLower();
+
+                        if (toleranceEcc != null)
+                        {
+                            Tolerance = toleranceEcc.LowerTolerance + "-" + toleranceEcc.UpperTolerance;//ex.LowerTolerance + "-" + ex.UpperTolerance
+                        }
+
+                    }
+
+
+
+                    var ecc = new Reports.Domain.ReportViewModels.Excentricity
+                    {
+                        AsFound = AsFound,
+                        AsLeft = AsLeft,
+                        Position = Position,
+                        Weight = Weight,
+                        PassFailAsFound = PassFailAsFound,
+                        PassFailAsLeft = PassFailAsLeft,
+                        Tolerance = Tolerance,
+
+                    };
+                    eccList.Add(ecc);
+                };
+            }
+
+            List<Reports.Domain.ReportViewModels.Repeteab> repetList = new List<Reports.Domain.ReportViewModels.Repeteab>();
+            bool _viewGrid = false;
+
+            if (_repeatability != null && _repeatability.Count() > 0)
+            {
+                _viewGrid = true;
+                var um = (await UoMRepository.GetByID(_repeatability.FirstOrDefault().UnitOfMeasure)).Abbreviation;
+                foreach (var re in _repeatability)
+                {
+                    double res = re.Resolution;
+                    if (re.Resolution == 0)
+                    {
+                        res = workOrderDetail.Resolution;
+
+                    }
+                    var lowerTolerance = re.WeightApplied - re.Resolution;
+                    var upperTolerance = re.WeightApplied + re.Resolution;
+                    var rep = new Reports.Domain.ReportViewModels.Repeteab
+                    {
+                        AsFound = QueryableExtensions2.Completezero(re.AsFound.ToString(), QueryableExtensions2.CalculateResolution(Convert.ToDecimal(res))) + " " + um,// re.AsFound + " " + um,
+                        AsLeft = QueryableExtensions2.Completezero(re.AsLeft.ToString(), QueryableExtensions2.CalculateResolution(Convert.ToDecimal(res))) + " " + um,//re.AsLeft + " " + um,
+                        Position = re.Position,
+                        Standard = QueryableExtensions2.Completezero(re.WeightApplied.ToString(), QueryableExtensions2.CalculateResolution(Convert.ToDecimal(res))) + " " + um,// re.WeightApplied + " " + um, //OJOO no está mapeado//
+                        ViewGrid = _viewGrid,
+                        Tolerance = lowerTolerance + "-" + upperTolerance, //af.TestPoint.LowerTolerance,
+                        PassFailAsFound = char.ToUpper(re.InToleranceFound[0]) + re.InToleranceFound.Substring(1).ToLower(),
+                        PassFailAsLeft = char.ToUpper(re.InToleranceLeft[0]) + re.InToleranceLeft.Substring(1).ToLower(),
+                    };
+                    repetList.Add(rep);
+                };
+
+            }
+
+            List<Reports.Domain.ReportViewModels.ExcentricityDet> excentriDetList = new List<Reports.Domain.ReportViewModels.ExcentricityDet>();
+
+
+
+            if (weigthSets != null)
+            {
+                foreach (var re in weigthSets)
+                {
+                    var exDet = new Reports.Domain.ReportViewModels.ExcentricityDet
+                    {
+                        Standard = re.WeightNominalValue.ToString(),
+                        Certificate = "TEST", //OJOO no está mapeado
+                        Description = re.Description, //OJOO no está mapeado
+                        CalDue = poe.CalibrationDate.ToString("MM/dd/yyyy"), //OJOO no está mapeado
+
+                    };
+                    excentriDetList.Add(exDet);
+                };
+            }
+
+
+
+            var conditions = new List<Reports.Domain.ReportViewModels.Condition>();
+
+            if (workOrderDetail.EquipmentCondition != null && workOrderDetail?.EquipmentCondition?.Count() > 0)
+            {
+                foreach (var item in workOrderDetail.EquipmentCondition)
+                {
+                    var condition = new Reports.Domain.ReportViewModels.Condition()
+                    {
+                        Name = item.Name,
+                        Value = item.Value.ToString(),
+                        AsFound = item.IsAsFound.ToString(),
+                        Label = item.Label
+
+                    };
+                    conditions.Add(condition);
+                }
+            }
+
+            UnitOfMeasure umTemp = new UnitOfMeasure();
+            umTemp.UnitOfMeasureID = workOrderDetail.TemperatureUOMID;
+            var x = await UoMRepository.GetByID(umTemp);
+
+            string umTemperature = "";
+
+            if (x != null && workOrderDetail.Temperature != 0)
+            {
+                umTemperature = workOrderDetail.Temperature.ToString() + " " + x.Abbreviation;
+            }
+
+            UnitOfMeasure umHumid = new UnitOfMeasure();
+            umHumid.UnitOfMeasureID = workOrderDetail.HumidityUOMID;
+
+            var y = await UoMRepository.GetByID(umHumid);
+            string umHumidity = "";
+
+            if (y != null && workOrderDetail.Humidity != 0)
+            {
+                umHumidity = workOrderDetail.Humidity.ToString() + " " + y.Abbreviation;
+            }
+            var env = new Reports.Domain.ReportViewModels.Enviroment()
+            {
+                Temperature = umTemperature,
+                Humidity = umHumidity,
+                Conditions = conditions
+
+
+
+            };
+
+            #endregion
+
+
+            header.RepeteabilityList = repetList;
+            header.eccList = eccList;
+            header.excentriDetList = excentriDetList;
+            header.AsFoundList = AsFoundList;
+            header.AsLeftList = AsLeftList;
+            header.WeightSetList = listw;
+            header.Environment = env;
+
+
+            if (Save)
+            {
+                var serialHash = header.SerialIndReceiv.GetSHA1Has();
+
+
+                Certificate cert = new Certificate();
+                cert.CertificateNumber = wo.WorkOrderDetailID.ToString() + "_" + wo.WorkOrderDetailHash;
+                if (wo.CalibrationCustomDueDate.HasValue)
+                {
+                    cert.DueDate = wo.CalibrationCustomDueDate.Value;
+                }
+                if (wo.CalibrationDate.HasValue)
+                {
+                    cert.CalibrationDate = wo.CalibrationDate.Value;
+                }
+
+                cert.Description = @"/Certificate/" + serialHash + ".pdf";
+                cert.Version = Convert.ToInt32(wo.WorkOrderDetailHash);
+                cert.WorkOrderDetailId = wo.WorkOrderDetailID;
+                var serial = JsonConvert.SerializeObject(workOrderDetail1);
+
+                cert.WorkOrderDetailSerialized = serial;
+                var resultwhd = CreateCertificate(cert);
+            }
+
+
+
+            return header;
+
+
+        }
+        public List<Linearity> OrderAlgoritm(List<Linearity> Items)
+        {
+            //   if (lin.TestPoint.Position >= 100)
+            //{
+            //    return lin;
+            //}
+
+
+            var rr = new List<TestPoint>();
+
+
+            int cont = 100;
+
+            var aarrl = new List<Linearity>();
+
+
+
+            aarrl = Items.Where(x => x.TestPoint.CalibrationType.ToLower() == "linearity" && x.TestPoint.IsDescendant == false)
+                .OrderBy(x => x.TestPoint.NominalTestPoit).ToList();
+
+            aarrl.ForEach(item22 =>
+            {
+
+                item22.TestPoint.Position = cont;
+                cont++;
+
+            });
+
+
+            var aarr2 = Items.Where(x => x.TestPoint.CalibrationType.ToLower() == "linearity" && x.TestPoint.IsDescendant == true)
+                .OrderByDescending(x => x.TestPoint.NominalTestPoit).ToList();
+
+            aarr2.ForEach(item22 =>
+            {
+
+                item22.TestPoint.Position = cont;
+                cont++;
+
+            });
+
+            foreach (var item in aarr2)
+            {
+                aarrl.Add(item);
+            }
+
+
+            var arr3 = Items.Where(x => x.TestPoint.CalibrationType.ToLower() == "eccentricity").OrderBy(x => x.TestPoint.NominalTestPoit).OrderBy(x => x.TestPoint.IsDescendant).ToList();
+            arr3.ForEach(x =>
+            {
+                x.TestPoint.Position = cont;
+                cont++;
+            });
+
+            var arr4 = Items.Where(x => x.TestPoint.CalibrationType.ToLower() == "repeatability").OrderBy(x => x.TestPoint.NominalTestPoit).OrderBy(x => x.TestPoint.IsDescendant).ToList();
+            arr4.ForEach(y =>
+            {
+                y.TestPoint.Position = cont;
+                cont++;
+            });
+
+
+
+            foreach (var it in arr3)
+            {
+                aarrl.Add(it);
+            }
+
+            foreach (var it in arr4)
+            {
+                aarrl.Add(it);
+            }
+
+
+
+            return aarrl;
+
+        }
+        public Task<IEnumerable<WorkOrderDetail>> GetWorkOrderDetailXWorkOrder(CalibrationSaaS.Domain.Aggregates.Entities.WorkOrder DTO)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<WorkOrderDetail>> GetAllEnabled()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Status> SaveStatus(Status sta)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<WorkOrderDetail>> GetWorkOrderDetailXWorkOrder(int ID)
+        {
+
+            var result = await Repository.GetWorkOrderDetailByWorkOrderID(ID);
+
+            return result;
+
+        }
+
+        public async Task<WorkOrderDetail> GetWorkOrderDetailByID(WorkOrderDetail DTO,bool IsGeneric=false)
+        {
+            var workOrderDetail = await Repository.GetWorkOrderDetailByID(DTO.WorkOrderDetailID, IsGeneric);
+
+            return workOrderDetail;
+
+        }
+
+        public void UpdateWorkOrderDetail(WorkOrderDetail workOrderDetail)
+        {
+            Repository.UpdateWorkOrderDetail(workOrderDetail);
+        }
+
+        public async Task<WorkOrderDetail> SaveWod(WorkOrderDetail DTO,string Component)
+        {
+            var result = await Repository.ChangeStatus(DTO, Component);
+
+
+            if (DTO.NotesWOD != null && DTO.NotesWOD.Count > 0)
+            {
+                foreach (var item2 in DTO.NotesWOD)
+                {
+                    await Repository.SaveNotes(item2);
+                }
+            }
+            await Repository.RemoveNotes<WorkOrderDetail>(DTO.WorkOrderDetailID, DTO); 
+           return result;
+        }
+
+        public async Task<Certificate> GetCertificate(WorkOrderDetail DTO)
+        {
+            var result = await Repository.GetCertificate(DTO);
+
+            return result;
+        }
+
+
+
+        public void Save()
+        {
+            Repository.Save();
+        }
+
+        public async Task<IEnumerable<int>> GetChartPie()
+        {
+            var result = await Repository.GetChartPie();
+
+            return result;
+        }
+
+        public async Task<IEnumerable<int>> GetTotals()
+        {
+            var result = await Repository.GetTotals();
+
+            return result;
+        }
+
+        public async Task<IEnumerable<KeyValueDate>> GetWODCountPerDay()
+        {
+            var result = await Repository.GetWODCountPerDay();
+
+            return result;
+        }
+
+
+         public async  Task<ResultSet<TestCode>> GetTestCodes(Pagination<TestCode> pagination)
+        {
+           var result = await Repository.GetTestCodes(pagination);
+
+            return result;
+        }
+
+        public async Task<TestCode> CreateTestCode(TestCode item)
+        {
+            var result = await Repository.CreateTestCode(item);
+
+
+            if (item.Notes != null && item.Notes.Count > 0)
+            {
+                foreach (var item2 in item.Notes)
+                {
+                    await Basics.SaveNotes(item2);
+                }
+
+
+
+            }
+
+            await Basics.RemoveNotes<TestCode>(item.TestCodeID, item, 2);
+            return result;
+        }
+
+          public async Task<TestCode> GetTestCodeByID(int item)
+        {
+            var result = await Repository.GetTestCodeByID(item);
+
+            if(result != null)
+            {
+                result.Notes = await Basics.GetNotes(result.TestCodeID,2);
+            }
+
+
+
+            return result;
+        }
+
+        public async Task<TestCode> GetTestCodeXName(TestCode DTO)
+        {
+           
+            var result = await this.Repository.GetTestCodeXName(DTO);
+
+            ///
+            ////
+            if ((result != null && result.TestCodeID == DTO.TestCodeID && result.Code == DTO.Code) || result == null)
+            {
+                return new TestCode();
+            }
+            else
+            {
+                return result;
+            }
+            //
+
+        }
+
+        public async Task<TestCode> DeleteTestCode(TestCode item)
+        {
+            var result = await Repository.DeleteTestCode(item);
+
+            return result;
+        }
+
+        public async Task<ICollection<CalibrationSubType_Standard>> GetCalibrationSubType_StandardByWodI(int wodid)
+        {
+            var result = await Repository.GetCalibrationSubType_StandardByWodI(wodid);
+
+            return result;
+        }
+
+        public static decimal RoundFirstSignificantDigit(decimal numberInit)
+        {
+            try
+            {
+                ///
+                if (numberInit == 0)
+                    return 0;
+                int precision = 0;
+
+                long ints = 0;
+                string numberEnd;
+
+                decimal val = numberInit;
+                decimal aux;
+                string auxchar;
+
+                while (Math.Abs(val) < 1)
+                {
+                    val *= 10;
+                    precision++;
+                }
+
+                var hh = (long)numberInit;
+                var mm = Math.Log10(hh);
+                ints = (long)Math.Abs(numberInit); //(int)Math.Floor(Math.Log10(cedula) + 1);// len(abs(cast(@numberInit as bigint)))
+                ints = ints.ToString().Length;
+
+                if (precision < 1)
+                {
+                    if ((2 - ints) < 0)
+
+                        precision = (int)ints;
+                    else
+                        precision = (int)(2 + (2 - ints));
+
+                }
+
+                else
+                    precision = precision + 3;
+                aux = Math.Round(Convert.ToDecimal(numberInit), precision - 2);
+                auxchar = aux.ToString();
+
+                numberEnd = auxchar.ToString().Substring(0, precision);
+                var ssub = auxchar.ToString().Substring(0, precision);//substring(@auxchar, 1, @precision)
+                return Convert.ToDecimal(numberEnd);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return Math.Round(numberInit, 2);
+            }
+        }
+
+        public async Task<InstrumentThread> GetInstrumentThread(WorkOrderDetail wod)
+        {
+            bool res = false;
+            EquipmentTemplate et = new EquipmentTemplate();
+            et.EquipmentTemplateID = (int)wod.PieceOfEquipment.EquipmentTemplate.EquipmentTemplateParent;
+            var equipmentTemplateParent = await Basics.GetEquipmentByID(et);
+            var testPoints = equipmentTemplateParent.TestPointResult.ToList();
+            //var calibrationSubtypeChild= wod.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.CalibrationType.CalibrationSubTypes.FirstOrDefault();
+            //int CalibrationSubTypeIdChild = 0;
+            //if (calibrationSubtypeChild != null)
+            //CalibrationSubTypeIdChild = calibrationSubtypeChild.CalibrationSubTypeId;
+
+            string type = null;
+            string series = null;
+            string class_ = null;
+            string Gage_Function = null;
+            string Pitch_Diam_Size = null;
+            string Size_Range = null;
+            string Description = null;
+            string Calibrate_With_Type = null;
+            string NoGo_Pitch_Diam = null;
+            string fileName = GetFileName(wod.TestCode.CalibrationType.CalibrationSubTypes.FirstOrDefault().CalibrationSubTypeId);//GetFileName(wod.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.CalibrationType.CalibrationSubTypes.FirstOrDefault().CalibrationSubTypeId); 
+            var typeObject = testPoints.ToList().Where(x => x.CalibrationSubTypeId == 505 && x.KeyObject !=null).FirstOrDefault();
+            if (typeObject != null)
+            { 
+                var type_ = typeObject.ExtendedObject;
+                JObject obj = JObject.Parse(type_);
+
+                type = obj["ItemThreadType"][2].ToString();
+                // Extraer el primer elemento del array
+                
+            }
+            //series
+            var seriesObject = testPoints.ToList().Where(x => x.CalibrationSubTypeId == 506 && x.KeyObject != null).FirstOrDefault();
+            if (seriesObject != null)
+            {
+                var obj_ = seriesObject.ExtendedObject;
+                JObject obj = JObject.Parse(obj_);
+
+                series = obj["ItemThreadSeries"][2].ToString();
+                // Extraer el primer elemento del array
+
+            }
+
+            //class
+            var classObject = testPoints.ToList().Where(x => x.CalibrationSubTypeId == 500 && x.KeyObject != null).FirstOrDefault();
+            if (classObject != null)
+            {
+                var obj_ = classObject.ExtendedObject;
+                JObject obj = JObject.Parse(obj_);
+
+                class_ = obj["ItemThreadClass"][2].ToString();
+                // Extraer el primer elemento del array
+
+            }
+
+            //Gage_Function
+            var Gage_FunctionObject = testPoints.ToList().Where(x => x.CalibrationSubTypeId == 501 && x.KeyObject != null).FirstOrDefault();
+            if (Gage_FunctionObject != null)
+            {
+                var obj_ = Gage_FunctionObject.ExtendedObject;
+                JObject obj = JObject.Parse(obj_);
+
+                Gage_Function = obj["ItemThreadGageFunction"][2].ToString();
+                // Extraer el primer elemento del array
+
+            }
+
+            //Pitch_Diam_Size
+            var Pitch_Diam_SizeObject = testPoints.ToList().Where(x => x.CalibrationSubTypeId == 502 && x.KeyObject != null).FirstOrDefault();
+            if (Pitch_Diam_SizeObject != null)
+            {
+                var obj_ = Pitch_Diam_SizeObject.ExtendedObject;
+                JObject obj = JObject.Parse(obj_);
+
+                Pitch_Diam_Size = obj["ItemPitchDiameter"][2].ToString();
+                // Extraer el primer elemento del array
+
+            }
+
+
+            //Size Range
+            var Size_RangeObject = testPoints.ToList().Where(x => x.CalibrationSubTypeId == 504).FirstOrDefault();
+            if (Size_RangeObject != null)
+            {
+                var obj_ = Size_RangeObject.ExtendedObject;
+                JObject obj = JObject.Parse(obj_);
+
+                Size_Range = obj["Size"][2].ToString();
+                // Extraer el primer elemento del array
+
+            }
+
+
+            //Description
+            var DescriptionObject = testPoints.ToList().Where(x => x.CalibrationSubTypeId == 503).FirstOrDefault();
+            if (DescriptionObject != null)
+            {
+                var obj_ = DescriptionObject.ExtendedObject;
+                JObject obj = JObject.Parse(obj_);
+
+                Size_Range = obj["Description"][2].ToString();
+                // Extraer el primer elemento del array
+
+            }
+
+
+            InstrumentThread instrument = new InstrumentThread
+            { 
+                Id ="1",
+                InstrumentNumber = wod.PieceOfEquipment.PieceOfEquipmentID.ToString(),
+                CustomerNumber = wod.PieceOfEquipment.CustomerId.ToString(),
+                DefaultTestCode = wod.PieceOfEquipment.TestCodeID.ToString(),
+                Department = null,
+                InstrumentType = "",
+                InstrumentDescription = "",
+                Manufacturer = equipmentTemplateParent.Manufacturer,
+                Model = equipmentTemplateParent.Model,
+                SizeOrRange = "",
+                Accuracy = "0",
+                SerialNumber = wod.PieceOfEquipment.SerialNumber,
+                CustomerReference = wod.PieceOfEquipment.CustomerToolId,
+                CalibrationFrequency = "60",
+                CalibrationDate = wod.PieceOfEquipment.CalibrationDate.ToString(),
+                CalibrationDueDate = wod.PieceOfEquipment.DueDate.ToString(),
+                CalibratedBy = wod.TechnicianID.ToString(),
+                ProcedureName = "",
+                ProcedureRevision = "",
+                ProcedureAddenda = "",
+                UncertaintyCalibration = "0",
+                UncertaintyKFactor = "0",
+                Notes = "",
+                LTI_Active = "",
+                LTI_InServiceDate = "",
+                LTI_RetiredDate = "",
+                LTI_Department = "",
+                LTI_WorkCenter = "",
+                LTI_NIST = "",
+                LTI_TYPE = "",
+                LTI_SetPlugPitchDiam = "",
+                type = type,
+                series = series,
+                class_ = class_,
+                Gage_Function = Gage_Function,
+                Pitch_Diam_Size = Pitch_Diam_Size,
+                Size_Range = Size_Range,
+                Description = Description,
+                Calibrate_With_Type = Calibrate_With_Type,
+                NoGo_Pitch_Diam = NoGo_Pitch_Diam,
+                TestCode = "",
+                Cal_With_Instrument_Number = "",
+                Cal_With_Cal_Due_Date = "",
+                Cal_With_Set_Plug_Pitch_Diameter = "",
+                FileName = fileName, 
+                WodId = wod.WorkOrderDetailID.ToString(),
+                 
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(new[] { instrument });
+            // URL Power Automate
+            var urlFlujo = "https://prod-55.westus.logic.azure.com:443/workflows/2a9e97a766c1466fab675bdd56c3e4c4/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=SLFVQEyUSUF59355UYX47OwaVtl8gd5OzIczMoyXlvE";
+
+
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            //HTTP POST whit json data
+            var response = await _httpClient.PostAsync(urlFlujo, content);
+          
+            //
+            if (response.IsSuccessStatusCode)
+            {
+                
+                var responseContent = await response.Content.ReadAsStringAsync();
+                instrument.UrlWebFile = responseContent.ToString();
+                //save liknweb in WOD_Parameter
+                WOD_ParametersTable wodParameter = new WOD_ParametersTable()
+                {
+                    WorkOrderDetailID = wod.WorkOrderDetailID,
+                    urlWebOneDrive = instrument.UrlWebFile
+                };
+
+                await Repository.SaveWOD_Parameter(wodParameter);
+
+            }
+            else
+            {
+            
+                Console.WriteLine("Error al llamar al flujo:", response.StatusCode);
+
+            }
+          
+            //
+            return instrument;
+
+        }
+
+        public async Task<List<GenericCalibrationResult2>> GetResultsTable(WorkOrderDetail wod)
+        {
+            ResultsTable resultsTable = new ResultsTable();
+            int calibrationSubtypeId = wod.TestCode.CalibrationType.CalibrationSubTypes.FirstOrDefault().CalibrationSubTypeId; //wod.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.CalibrationType.CalibrationSubTypes.FirstOrDefault().CalibrationSubTypeId;
+            resultsTable.FileName = GetFileName(calibrationSubtypeId);
+           
+            resultsTable.WodId = wod.WorkOrderDetailID.ToString();
+
+            List<string> processedData;
+
+            var json = System.Text.Json.JsonSerializer.Serialize(new[] { resultsTable });
+            // URL del flujo de Power Automate
+            var urlFlujo = "https://prod-03.westus.logic.azure.com:443/workflows/29eb060ff16d42bdafd42ab53f278737/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=1jDsbKelCTEVzvbkOplK45j32bZjl8f1-Yr3j5QaZfg";
+
+
+            // Crear un contenido HTTP con el JSON
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            // Realizar la solicitud HTTP POST con el contenido JSON
+            var response = await _httpClient.PostAsync(urlFlujo, content);
+            string jsonResultsTable = ""; 
+            // Verificar el estado de la respuesta
+            if (response.IsSuccessStatusCode)
+            {
+                // Manejar la respuesta del flujo si es necesario
+                var responseContent = await response.Content.ReadAsStringAsync();
+                //resultsTable.JsonResults = responseContent.ToString();
+                jsonResultsTable = responseContent.ToString();
+                Console.WriteLine("Respuesta del flujo:", responseContent);
+            }
+            else
+            {
+                // Manejar el caso de una respuesta no exitosa
+                Console.WriteLine("Error al llamar al flujo:", response.StatusCode);
+            }
+
+            ////
+            ///
+            var jsonData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, List<Dictionary<string, object>>>>(jsonResultsTable);
+            var body = jsonData["body"];
+
+            processedData = new List<string>();
+            
+            
+            
+            int seq = 0;
+            var testPointResults = new List<GenericCalibrationResult2>();
+
+            foreach (var item in body)
+            {
+                seq++;
+                
+               
+                var itemJson = System.Text.Json.JsonSerializer.Serialize(item);
+                
+                GenericCalibrationResult2 genericCalibrationResult2 = new GenericCalibrationResult2()
+                {
+                    SequenceID = seq,
+                    CalibrationSubTypeId = calibrationSubtypeId,
+                    ComponentID = wod.WorkOrderDetailID.ToString(),
+                    Position = seq,
+                    Object = itemJson,
+                    Component = "WorkOrderItem",
+                    Updated = 1
+
+                };
+                testPointResults.Add(genericCalibrationResult2);
+                
+
+                
+            }
+            wod.TestPointResult = testPointResults;
+
+            await Repository.ChangeStatus(wod, "WorkOrderItem");
+           
+            return testPointResults;
+
+
+        }
+
+        public string GetFileName(int CalibrationSubTypeId )
+        {
+            if ( CalibrationSubTypeId == 507 )
+            { return "AcmeThreadRing"; }
+
+            if (CalibrationSubTypeId == 508 )
+            { return "NPTL1RingGage"; }
+
+            if (CalibrationSubTypeId == 509)
+            { return "StandardThreadRing"; }
+
+            if (CalibrationSubTypeId == 510)
+            { return "NPTL1Plug"; }
+
+            if (CalibrationSubTypeId == 511)
+            { return "ANPT3StepPlug"; } 
+
+            if (CalibrationSubTypeId == 512)
+            { return "DoubleStartWorkPlug"; }
+
+            if (CalibrationSubTypeId == 513)
+            { return "AcmeSettingPlug"; }
+            
+            if (CalibrationSubTypeId == 516)
+            { return "ThreadsetPlug"; }
+
+            if (CalibrationSubTypeId == 517)
+            { return "ThreadWorkPlug"; }
+
+            if (CalibrationSubTypeId == 518)
+            { return "ThreadWorkPlug-STI"; }
+
+            return "";
+        }
+
+        public async Task<WOD_ParametersTable> GetWOD_Parameter(WOD_ParametersTable item)
+        {
+            var result = await Repository.GetWOD_Parameter(item);
+            return result;
+
+        }
+
+        public async Task<WorkOrderDetail> CalculateValuesByID(WorkOrderDetail DTO)
+        {
+
+            int linenumber = 0;
+
+            try
+            {
+                var workOrderDetail = DTO;
+
+                double ecceALMax = 0;
+                double ecceALMin = 0;
+                double ecceAFMax = 0;
+                double ecceAFMin = 0;
+
+                List<double> ecceAFValues = new List<double>();
+                List<double> ecceALValues = new List<double>();
+                List<double> repeAFValues = new List<double>();
+                List<double> repeALValues = new List<double>();
+
+                int ecceCounter = 0;
+                int repeCounter = 0;
+                linenumber = 1;
+
+
+                if (workOrderDetail?.BalanceAndScaleCalibration?.Eccentricity?.TestPointResult != null)
+                {
+                    foreach (BasicCalibrationResult basicCalibrationResult in workOrderDetail.BalanceAndScaleCalibration.Eccentricity.TestPointResult)
+                    {
+                        ecceAFValues.Add(basicCalibrationResult.AsFound);
+
+                        ecceALValues.Add(basicCalibrationResult.AsLeft);
+                        if (ecceAFMin == 0)
+                        {
+                            ecceAFMin = ecceAFValues[ecceCounter];
+
+                        }
+                        if (ecceALMin == 0)
+                        {
+                            ecceALMin = ecceALValues[ecceCounter];
+
+                        }
+                        if (ecceAFValues[ecceCounter] < ecceAFMin && ecceAFValues[ecceCounter] > 0)
+                        {
+                            ecceAFMin = ecceAFValues[ecceCounter];
+                        }
+                        if (ecceAFValues[ecceCounter] >= ecceAFMax)
+                        {
+                            ecceAFMax = ecceAFValues[ecceCounter];
+                        }
+                        if (ecceALValues[ecceCounter] < ecceALMin && ecceALValues[ecceCounter] > 0)
+                        {
+                            ecceALMin = ecceALValues[ecceCounter];
+                        }
+                        if (ecceALValues[ecceCounter] >= ecceALMax)
+                        {
+                            ecceALMax = ecceALValues[ecceCounter];
+                        }
+                        ecceCounter++;
+                    }
+
+
+
+                }
+
+                if (workOrderDetail?.BalanceAndScaleCalibration?.Repeatability?.TestPointResult != null)
+                {
+                    foreach (BasicCalibrationResult basicCalibrationResult in workOrderDetail.BalanceAndScaleCalibration.Repeatability.TestPointResult)
+                    {
+                        repeAFValues.Add(basicCalibrationResult.AsFound);
+                        repeALValues.Add(basicCalibrationResult.AsLeft);
+                        repeCounter++;
+                    }
+                }
+                linenumber = 2;
+
+
+                linenumber = 3;
+                EquipmentTemplate et = workOrderDetail.PieceOfEquipment.EquipmentTemplate;
+                PieceOfEquipment POE = workOrderDetail.PieceOfEquipment;
+                if (workOrderDetail?.BalanceAndScaleCalibration?.Linearities != null)
+                {
+                    foreach (Linearity linearity in workOrderDetail.BalanceAndScaleCalibration.Linearities)
+                    {
+                        linearity.BalanceAndScaleCalibration = DTO.BalanceAndScaleCalibration;
+                       await calculateCalibrationResultValues(linearity, et, POE, workOrderDetail);
+                    }
+                }
+
+                linenumber = 4;
+                if (workOrderDetail?.BalanceAndScaleCalibration?.Repeatability?.TestPointResult != null
+                      && workOrderDetail?.BalanceAndScaleCalibration?.Repeatability?.TestPointResult?.Count > 0)
+                {
+                    workOrderDetail.BalanceAndScaleCalibration.Repeatability.RepeatabilityStdDeviationAsLeft = Stdev(repeALValues.ToArray());
+                    workOrderDetail.BalanceAndScaleCalibration.Repeatability.RepeatabilityStdDeviationAsFound = Stdev(repeAFValues.ToArray());
+                }
+                linenumber = 5;
+                if (workOrderDetail?.BalanceAndScaleCalibration?.Eccentricity != null
+                        && workOrderDetail?.BalanceAndScaleCalibration?.Eccentricity?.TestPointResult != null
+                        && workOrderDetail?.BalanceAndScaleCalibration?.Eccentricity?.TestPointResult?.Count > 0)
+                {
+                    linenumber = 51;
+                    workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityVarianceAsLeft = ecceALMax - ecceALMin;
+                    workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityVarianceAsFound = ecceAFMax - ecceAFMin;
+                    workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityMax = ecceALMax;
+                    workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityMin = ecceALMin;
+                    linenumber = 52;
+
+                    workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityUncertaintyValueUOMID = workOrderDetail.BalanceAndScaleCalibration.Eccentricity.TestPointResult.FirstOrDefault().UnitOfMeasureID;
+                    workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityUncertaintyType = "A";
+                    workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityUncertaintyDistribution = "Rectangular";
+                    workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityUncertaintyDivisor = 1.73;
+                    linenumber = 53;
+                    double eccentricityDeltaFinalUOM = 0;
+                    if (workOrderDetail?.BalanceAndScaleCalibration?.Eccentricity?.TestPointResult?.Count > 0
+                            && workOrderDetail?.BalanceAndScaleCalibration?.Eccentricity?.TestPointResult?.FirstOrDefault().UnitOfMeasure != null
+                            && workOrderDetail.BalanceAndScaleCalibration.Eccentricity.TestPointResult.FirstOrDefault().UnitOfMeasure.UncertaintyUnitOfMeasureID.requiresUncertantyConversion(workOrderDetail.BalanceAndScaleCalibration.Eccentricity.TestPointResult.FirstOrDefault().UnitOfMeasure.UnitOfMeasureID))
+                    {
+                        linenumber = 54;
+                        eccentricityDeltaFinalUOM = workOrderDetail.BalanceAndScaleCalibration.Eccentricity.TestPointResult.FirstOrDefault().UnitOfMeasure.ConversionValue.ConvertToUOM(workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityDelta, workOrderDetail.BalanceAndScaleCalibration.Eccentricity.TestPointResult.FirstOrDefault().UnitOfMeasure.UncertaintyUnitOfMeasure);
+                    }
+                    else
+                    {
+
+                        eccentricityDeltaFinalUOM = workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityDelta;
+                        linenumber = 55;
+                    }
+                    workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityQuotient = eccentricityDeltaFinalUOM / workOrderDetail.BalanceAndScaleCalibration.Eccentricity.EccentricityUncertaintyDivisor;
+                    linenumber = 6;
+
+                    await calculateEccentricityCalibrationResultValues(workOrderDetail?.BalanceAndScaleCalibration?.Eccentricity, et, POE, workOrderDetail);
+                    linenumber = 7;
+                }
+
+
+
+
+                linenumber = 8;
+
+                if (workOrderDetail?.BalanceAndScaleCalibration?.Repeatability != null && workOrderDetail?.BalanceAndScaleCalibration?.Repeatability?.TestPointResult != null && workOrderDetail.BalanceAndScaleCalibration.Repeatability.TestPointResult.FirstOrDefault()?.UnitOfMeasure?.UncertaintyUnitOfMeasure != null)
+                {
+                    workOrderDetail.BalanceAndScaleCalibration.Repeatability.RepeatabilityUncertaintyValueUOMID = workOrderDetail.BalanceAndScaleCalibration.Repeatability.TestPointResult.FirstOrDefault().UnitOfMeasure.UnitOfMeasureID; ;
+                    workOrderDetail.BalanceAndScaleCalibration.Repeatability.RepeatabilityUncertaintyType = "A";
+                    workOrderDetail.BalanceAndScaleCalibration.Repeatability.RepeatabilityUncertaintyDistribution = "Normal";
+                    workOrderDetail.BalanceAndScaleCalibration.Repeatability.RepeatabilityUncertaintyDivisor = 1;
+
+                    double repeatabilityStdDeviationAsLeftFinalUOM = 0;
+
+                    if (workOrderDetail.BalanceAndScaleCalibration.Repeatability.TestPointResult.FirstOrDefault().UnitOfMeasure.UncertaintyUnitOfMeasureID.requiresUncertantyConversion(workOrderDetail.BalanceAndScaleCalibration.Repeatability.TestPointResult.FirstOrDefault().UnitOfMeasure.UnitOfMeasureID))
+                    {
+                        repeatabilityStdDeviationAsLeftFinalUOM = workOrderDetail.BalanceAndScaleCalibration.Repeatability.TestPointResult.FirstOrDefault().UnitOfMeasure.ConversionValue.ConvertToUOM(workOrderDetail.BalanceAndScaleCalibration.Repeatability.RepeatabilityStdDeviationAsLeft, workOrderDetail.BalanceAndScaleCalibration.Repeatability.TestPointResult.FirstOrDefault().UnitOfMeasure.UncertaintyUnitOfMeasure);
+                    }
+                    else
+                    {
+                        repeatabilityStdDeviationAsLeftFinalUOM = workOrderDetail.BalanceAndScaleCalibration.Repeatability.RepeatabilityStdDeviationAsLeft;
+                    }
+                    workOrderDetail.BalanceAndScaleCalibration.Repeatability.RepeatabilityQuotient = repeatabilityStdDeviationAsLeftFinalUOM / workOrderDetail.BalanceAndScaleCalibration.Repeatability.RepeatabilityUncertaintyDivisor;
+
+
+                   await calculateRepeatCalibrationResultValues(workOrderDetail?.BalanceAndScaleCalibration?.Repeatability, et, POE, workOrderDetail);
+                }
+
+                linenumber = 9;
+
+                if (workOrderDetail?.BalanceAndScaleCalibration?.Linearities != null && workOrderDetail?.BalanceAndScaleCalibration?.Linearities?.FirstOrDefault()?.BasicCalibrationResult != null)
+                {
+                    workOrderDetail.BalanceAndScaleCalibration.ResolutionUncertaintyValueUOMID = workOrderDetail.BalanceAndScaleCalibration.Linearities.FirstOrDefault().BasicCalibrationResult.UnitOfMeasureID;
+                }
+
+                linenumber = 10;
+                if (workOrderDetail?.BalanceAndScaleCalibration != null)
+                {
+                    workOrderDetail.BalanceAndScaleCalibration.ResolutionUncertaintyType = "B";
+                    workOrderDetail.BalanceAndScaleCalibration.ResolutionUncertaintyDistribution = "Resolution";
+                    workOrderDetail.BalanceAndScaleCalibration.ResolutionUncertaintyDivisor = 3.46;
+
+                    workOrderDetail.BalanceAndScaleCalibration.ResolutionFormatted = 1 / (Math.Pow(10, 3));
+                }
+
+                linenumber = 11;
+
+                if (workOrderDetail?.BalanceAndScaleCalibration?.Linearities != null && workOrderDetail?.BalanceAndScaleCalibration?.Linearities?.FirstOrDefault()?.BasicCalibrationResult != null)
+                    workOrderDetail.BalanceAndScaleCalibration.EnvironmentalUncertaintyValueUOMID = workOrderDetail.BalanceAndScaleCalibration.Linearities.FirstOrDefault().BasicCalibrationResult.UnitOfMeasureID;
+                workOrderDetail.BalanceAndScaleCalibration.EnvironmentalUncertaintyType = "B";
+                workOrderDetail.BalanceAndScaleCalibration.EnvironmentalUncertaintyDistribution = "Rectangular";
+                workOrderDetail.BalanceAndScaleCalibration.EnvironmentalUncertaintyDivisor = 1.73;
+
+                workOrderDetail.BalanceAndScaleCalibration.EnvironmentalFactor = 0.004;
+
+
+                linenumber = 12;
+                return workOrderDetail;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message + "__ " + linenumber);
+            }
+
+
+
+        }
+
+        private async Task calculateCalibrationResultValues(Linearity linearity, EquipmentTemplate equipmentTemplate, PieceOfEquipment pieceOfEquipment, WorkOrderDetail workOrderDetail)
+        {
+            BasicCalibrationResult basicCalibrationResult = linearity.BasicCalibrationResult;
+
+            if (basicCalibrationResult == null)
+            {
+                return;
+            }
+
+
+            UnitOfMeasure testPointUnitOfMeasure = basicCalibrationResult.UnitOfMeasure;
+
+
+            var calibrationResultWeights = linearity.WeightSets;
+
+            double actualValue = 0;
+            double nominalTestPointValue = 0;
+            var test = nominalTestPointValue + 5;
+            double calibrationUncertaintyValue = 0;
+            int? unitOfMeasureId = null;
+            int? calibrationUncertaintyValueUnitOfMeasureId = null;
+            string calibrationUncertaintyType = "";
+            string calibrationUncertaintyDistribution = "";
+            double calibrationUncertaintyDivisor = 1;
+
+            double manualNominal = linearity.BasicCalibrationResult.WeightApplied;
+
+            
+            ///Uncertainty Calculate
+            ///Linearity li, int seq, WorkOrderDetail wod, List<PieceOfEquipment>? poes
+            var uncertainty = await Poe.GetReportUncertaintyBudget(linearity, linearity.SequenceID, null, null, null, null);
+            double totalUncertainty = uncertainty.Totales.TotalUncerainty; // Math.Sqrt(sumOfSquares);
+            double expandedUncertainty = uncertainty.Totales.ExpandedUncertainty;//totalUncertainty * 2;
+
+
+
+            basicCalibrationResult.FinalReadingStandard = nominalTestPointValue;
+            linearity.TotalNominal = nominalTestPointValue;
+            linearity.TotalActual = actualValue;
+            linearity.SumUncertainty = calibrationUncertaintyValue;
+            //linearity.Quotient =0 ;
+            //linearity.Square = square;
+            linearity.SumOfSquares = uncertainty.Totales.SumOfSquares;
+            linearity.TotalUncertainty = totalUncertainty;
+            linearity.ExpandedUncertainty = expandedUncertainty;
+            linearity.CalibrationUncertaintyType = calibrationUncertaintyType;
+            linearity.CalibrationUncertaintyDistribution = calibrationUncertaintyDistribution;
+            linearity.CalibrationUncertaintyDivisor = calibrationUncertaintyDivisor;
+            linearity.UnitOfMeasureId = unitOfMeasureId;
+            linearity.CalibrationUncertaintyValueUnitOfMeasureId = calibrationUncertaintyValueUnitOfMeasureId;
+            linearity.BasicCalibrationResult.Uncertainty = expandedUncertainty;
+            double tolerancePercentage = 0;
+            double resolutionValue = 0;
+
+            if (linearity.TestPoint != null)
+                nominalTestPointValue = linearity.TestPoint.NominalTestPoit;
+            double minTolerance = nominalTestPointValue;
+            double maxTolerance = nominalTestPointValue;
+
+
+            if (workOrderDetail.Tolerance.ToleranceTypeID == 0)
+            {
+                throw new Exception("Tolerance Type Not Found");
+            }
+
+            if (workOrderDetail.Ranges == null)
+            {
+                workOrderDetail.Ranges = new List<RangeTolerance>();
+            }
+
+
+            if (workOrderDetail.Tolerance.ToleranceTypeID == 2)
+            {
+
+                tolerancePercentage = workOrderDetail.Tolerance.AccuracyPercentage;
+                resolutionValue = workOrderDetail.Resolution;
+
+                var tolerance = workOrderDetail.Ranges.Where(x => x.ToleranceTypeID == 2 && x.MinValue <= nominalTestPointValue && nominalTestPointValue >= x.MaxValue).FirstOrDefault();
+
+                if (tolerance != null)
+                {
+                    tolerancePercentage = tolerance.Percent;
+                }
+
+                var resolution = workOrderDetail.Ranges.Where(x => x.ToleranceTypeID == 1 && x.MinValue <= nominalTestPointValue && nominalTestPointValue >= x.MaxValue).FirstOrDefault();
+
+                if (resolution != null)
+                {
+                    resolutionValue = resolution.Resolution;
+                }
+
+                if ((nominalTestPointValue * ((tolerancePercentage) / 100)) > resolutionValue)
+                {
+                    minTolerance = nominalTestPointValue - (nominalTestPointValue * ((tolerancePercentage) / 100));
+                    maxTolerance = nominalTestPointValue + (nominalTestPointValue * ((tolerancePercentage) / 100));
+                }
+                else
+                {
+                    minTolerance = nominalTestPointValue - resolutionValue;
+                    maxTolerance = nominalTestPointValue + resolutionValue;
+                }
+
+                linearity.MinTolerance = minTolerance;
+
+                linearity.MaxTolerance = maxTolerance;
+            }
+
+            if (workOrderDetail.Tolerance.ToleranceTypeID == 4)
+            {
+
+                tolerancePercentage = workOrderDetail.Tolerance.AccuracyPercentage;
+                resolutionValue = workOrderDetail.Resolution;
+
+                var tolerance = workOrderDetail.Ranges.Where(x => x.ToleranceTypeID == 4 && x.MinValue <= nominalTestPointValue && nominalTestPointValue >= x.MaxValue).FirstOrDefault();
+
+                if (tolerance != null)
+                {
+                    tolerancePercentage = tolerance.Percent;
+                }
+
+                minTolerance = nominalTestPointValue - (nominalTestPointValue * ((tolerancePercentage) / 100));
+                maxTolerance = nominalTestPointValue + (nominalTestPointValue * ((tolerancePercentage) / 100));
+
+
+                linearity.MinTolerance = minTolerance;
+
+                linearity.MaxTolerance = maxTolerance;
+            }
+
+
+
+            if (workOrderDetail.Tolerance.ToleranceTypeID == 1)
+            {
+                resolutionValue = workOrderDetail.Resolution;
+
+                var resolution = workOrderDetail.Ranges.Where(x => x.ToleranceTypeID == 1 && x.MinValue <= nominalTestPointValue && nominalTestPointValue >= x.MaxValue).FirstOrDefault();
+
+                if (resolution != null)
+                {
+                    resolutionValue = resolution.Resolution;
+                }
+
+                minTolerance = minTolerance - resolutionValue;
+                maxTolerance = maxTolerance + resolutionValue;
+
+                linearity.MinTolerance = minTolerance;
+
+                linearity.MaxTolerance = maxTolerance;
+            }
+
+
+            if (workOrderDetail.Tolerance.ToleranceTypeID == 3)
+            {
+                double grads = nominalTestPointValue / workOrderDetail.Resolution;
+                int toleranceGrads = grads.GetGradsHB44(workOrderDetail.ClassHB44);
+                double toleranceValue = (double)toleranceGrads * workOrderDetail.Resolution;
+                if (workOrderDetail.IsComercial)
+                {
+                    if (toleranceValue > workOrderDetail.Resolution)
+                    {
+
+                        linearity.MinTolerance = minTolerance - toleranceValue;
+
+                        linearity.MaxTolerance = maxTolerance + toleranceValue;
+                    }
+                    else
+                    {
+                        linearity.MinTolerance = minTolerance - workOrderDetail.Resolution;
+                        linearity.MaxTolerance = maxTolerance + workOrderDetail.Resolution;
+                    }
+
+
+
+
+                    int acceptanceToleranceGrads = toleranceGrads / 2;
+                    double toleranceAcceptanceValue = (double)acceptanceToleranceGrads * workOrderDetail.Resolution;
+
+                    if (toleranceAcceptanceValue > workOrderDetail.Resolution)
+                    {
+                        
+                        linearity.MinToleranceAsLeft = minTolerance - toleranceAcceptanceValue;
+                        linearity.MaxToleranceAsLeft = maxTolerance + toleranceAcceptanceValue;
+                    }
+                    else
+                    {
+                        linearity.MinToleranceAsLeft = minTolerance - workOrderDetail.Resolution;
+                        linearity.MaxToleranceAsLeft = maxTolerance + workOrderDetail.Resolution;
+                    }
+                }
+                else
+                {
+                    if (workOrderDetail.Multiplier == 0)
+                    {
+                        workOrderDetail.Multiplier = 1;
+                    }
+                    if ((toleranceValue * workOrderDetail.Multiplier) > workOrderDetail.Resolution)
+                    {
+
+                        linearity.MinTolerance = minTolerance - (toleranceValue * workOrderDetail.Multiplier);
+
+                        linearity.MaxTolerance = maxTolerance + (toleranceValue * workOrderDetail.Multiplier);
+                    }
+                    else
+                    {
+                        linearity.MinTolerance = minTolerance - workOrderDetail.Resolution;
+                        linearity.MaxTolerance = maxTolerance + workOrderDetail.Resolution;
+                    }
+
+                    ;
+                }
+            }
+
+            double asFound = basicCalibrationResult.AsFound;
+            if (asFound >= linearity.MinTolerance && asFound <= linearity.MaxTolerance)
+            {
+                basicCalibrationResult.InToleranceFound = "Pass";
+            }
+            else
+            {
+                basicCalibrationResult.InToleranceFound = "Fail";
+            }
+
+            double asLeft = basicCalibrationResult.AsLeft;
+            if (workOrderDetail.Tolerance.ToleranceTypeID == 3 && workOrderDetail.IsComercial)
+            {
+                if (asLeft >= linearity.MinToleranceAsLeft && asLeft <= linearity.MaxToleranceAsLeft)
+                {
+                    basicCalibrationResult.InToleranceLeft = "Pass";
+                }
+                else
+                {
+                    basicCalibrationResult.InToleranceLeft = "Fail";
+                }
+            }
+            else
+            {
+                if (asLeft >= linearity.MinTolerance && asLeft <= linearity.MaxTolerance)
+                {
+                    basicCalibrationResult.InToleranceLeft = "Pass";
+                }
+                else
+                {
+                    basicCalibrationResult.InToleranceLeft = "Fail";
+                }
+            }
+
+        }
+
+
+    }
+}

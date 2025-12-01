@@ -1,0 +1,94 @@
+﻿
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+@inject ILogger<Scales_CreateBase> Logger
+@using System.Linq;
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys 
+@namespace BlazorApp1.Blazor.Blazor.LTI.Rockwell
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@inherits BlazorApp1.Blazor.Blazor.LTI.Rockwell.Scales_CreateBase
+@if (LIST1 != null )
+{
+    @*<EditForm  EditContext="@EditContext">
+        <DataAnnotationsValidator />*@
+    <div class="row">
+        <div class="col-sm-12">
+            @if (IsForAccredited != true)
+            {
+            
+                <ResponsiveTable ItemsDataSource="@LIST1" 
+                    PageSize="15" 
+                    HasAction="true"
+                         TableItem="POE_Scale"
+                         @ref="RT" 
+                                 InLineEdit="true"
+                                 EnabledModal="false" 
+                                 Context="Entity" 
+                                 NewButtonText="Add Scale"
+                                 NewItemDefaultItem="DefaultItem"
+                                 DeleteAction ="Delete"
+                                 Component="@Component"
+                                 ColActionCSS="col-sm"
+                                 PaginationFunction1="LoadData">
+                  
+
+
+                    <ChildContent>
+
+                        <GridColumns>
+                            <GridColumn TableItem="POE_Scale" Field="@RT.GetPropertyName(() => eqWeightSet.Scale)" DefaultSort="true" Title="Scale" />
+
+                         
+
+                        </GridColumns>
+
+
+                    </ChildContent>
+
+
+                    <GridRow>
+                        @*<div class="col-sm-2 customcol inv">WeightValue</div>
+                        <div class="col-sm-2 customcol">@Entity.WeightNominalValue</div>
+                        <div class="col-sm-2 customcol inv">UnitOfMeasurement</div>
+                        <div class="col-sm-2 customcol">@Entity.UnitOfMeasureID</div>
+                        <div class="col-sm-2 customcol inv">Note</div>
+                        <div class="col-sm-2 customcol">@Entity.Note</div>
+                        <div class="col-sm-2 customcol inv">PoEStatus</div>
+                        <div class="col-sm-2 customcol">@Entity.PieceOfEquipmentStatus</div>*@
+                    </GridRow>
+                
+                    <GridEdit>
+                        <div class="row" style="width:100%">
+                            <div class="col-sm customcol inv">Scale</div>
+                            <div class="col-sm customcol">
+                                <TextInput @bind-Value="@Entity.Scale" Validate="false" IsDisabled="!Enabled" Label="Scale" LabelDown="false">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.Scale))
+                            </div>
+                           </div>
+                       
+                    </GridEdit>
+                </ResponsiveTable>
+            }
+          
+
+        </div>
+    </div>
+
+}
+
+@code
+
+
+    {
+
+   
+
+
+
+
+}

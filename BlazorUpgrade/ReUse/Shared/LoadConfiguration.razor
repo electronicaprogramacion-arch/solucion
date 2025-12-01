@@ -1,0 +1,538 @@
+﻿@page "/Configuration"
+
+@using CalibrationSaaS.Infraestructure.Blazor.Services.Offline.Sqlite
+@using CalibrationSaaS.Infraestructure.Blazor.Shared
+@using System.Drawing
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.Extensions.Configuration
+@using ProtoBuf.Grpc
+@using Grpc.Core
+@using ChartJs.Blazor.Samples.Shared
+@using ChartJs.Blazor
+@using Blazed.Controls
+@using System.Timers
+@inherits CalibrationSaaS.Infraestructure.Blazor.FComponentBase
+
+
+@using SqliteWasmHelper
+
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@namespace CalibrationSaaS.Infraestructure.Blazor
+@inject IBrowserCache Cache
+
+@if (ShowDelete)
+{
+
+    <div class="row border border-dark">
+        <div class="col">
+            <h5>Use this option to delete and reset all the offline data, NOTE: After the information is deleted, there is no option to restore it. Please be careful using this option.</h5>
+        </div>
+        <div class="col-2">
+            <button class="btn btn-sm btn-primary shadow-sm editButton" id="_btnNew"
+            @onclick=@(async () => await DeleteDataBase()) @onclick:stopPropagation @onclick:preventDefault>
+                Reset Offline
+            </button>
+        </div>
+    </div>
+    <div class="row border border-dark">
+        <div class="col">
+            <h5>Use this option to download a copy of your offline data, you can use it to share it with other users, support or backup your data.</h5>
+        </div>
+        <div class="col-2">
+            @*  <SqliteWasmHelper.BackupLink @ref="bl" DbContextType="typeof(CalibrationSaaS.Infraestructure.Blazor.Services.Offline.Sqlite.CalibrationSaaSDBContextOff2)"></SqliteWasmHelper.BackupLink> *@
+
+            <div id="bklinkdownload" class="bklinkclass btn btn-sm btn-primary shadow-sm customlink"></div>
+
+            @* <button class="btn btn-sm btn-primary shadow-sm editButton" id="_btnNew"
+                    @onclick=@(async () => await DownloadDatabase()) @onclick:stopPropagation @onclick:preventDefault>
+                Download Offline Data file
+            </button>
+ *@
+        </div>
+    </div>
+    <div class="row border border-dark">
+        <div class="col">
+            <div class="row">
+                <div class="col">
+                    <h5> Use this option to upload a file and use it as offline data.</h5>
+                </div>
+                @*   <div class="col-2">
+            <button class="btn btn-sm btn-primary shadow-sm editButton" id="_btnUploadDatabase"
+                     @onclick:stopPropagation @onclick:preventDefault>
+                Upload Offline Data file
+            </button>
+        </div> *@
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="drag-drop-zone">
+                        <BlazorInputFile.InputFile OnChange="ViewFile" />
+                        @status
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    @if (ConnectionStatusService.GetCurrentStatus())
+
+    {
+        <div class="row border border-dark">
+            <div class="col">
+                <h5>Use this option to delete and reset and reload all the parametric Data, NOTE: After the information is deleted, there is no option to restore it. Please be careful using this option.</h5>
+            </div>
+            <div class="col-2">
+                <button class="btn btn-sm btn-primary shadow-sm editButton" id="_btnNew"
+                @onclick=@(async () => await DeleteAndReload()) @onclick:stopPropagation @onclick:preventDefault>
+                    Reset Data Parametrics
+                </button>
+            </div>
+        </div>
+    }
+
+
+
+}
+
+@if (IsSQLExcecute)
+{
+
+    <div class="row">
+        <div class="col">
+        </div>
+        <div class="col">
+
+        </div>
+        <div class="col-2">
+            <button class="btn btn-sm btn-primary shadow-sm editButton" id="_btnNew"
+            @onclick=@(async () => await ExcecuteQuery()) @onclick:stopPropagation @onclick:preventDefault>
+                Execute
+            </button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <FluentTextArea @bind-Value=SQLQUERY Label="SQL QUERY"  Style="width:100%;height:100%"/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <FluentTextArea @bind-Value=SQLQUERYPAR Label="Parameters" Style="width:100%;height:100%" />
+        </div>
+    </div>
+
+
+
+}
+
+
+
+@code {
+
+    public string SQLQUERYPAR { get; set; }
+    public string SQLQUERY { get; set; }
+
+    [Parameter]
+    public bool IsSQLExcecute { get; set; }
+    public const string DefaultStatus = "Drop a sqllite file here to view it, or click to choose a sqllite file";
+    public const int MaxFileSize = 5 * 1024 * 1024; // 5MB
+    public string status = DefaultStatus;
+
+    public async Task ViewFile(IFileListEntry[] files)
+    {
+
+        var loadpa = await ConfirmAsync("Delete and Overwrite Data in Offline Database, Application reload");
+
+        if (!loadpa)
+        {
+            return;
+        }
+
+        var file = files.FirstOrDefault();
+        if (file != null)
+        {
+            var stream = new MemoryStream();
+            await file.Data.CopyToAsync(stream);
+
+            var a = stream.ToArray();
+
+            if (Cache != null)
+            {
+                var res = await Cache.ManualRestore(a, "things.db");
+                if(res == 0)
+                {
+
+                    await OffLineClient(DbFactory).ini2();
+
+                    await OffLineClient(DbFactory).ini2();
+
+                    //await OffLineClient(DbFactory).InitializeAsync();       
+
+                    await ShowToast("load Offline database successfully", Blazed.Controls.Toast.ToastLevel.Success);
+
+                    var man = await OffLineClient(DbFactory).GetManufacturerOff();
+
+                    NavigationManager.NavigateTo("View", true);
+
+                    return;
+                }
+
+            }
+        }
+        await ShowError("Not load database");
+    }
+
+    [Parameter]
+    public bool ShowDelete { get; set; }
+
+    [Inject]
+    public BrowserService BrowserService { get; set; }
+
+
+    public BackupLink bl = null!;
+
+
+    [Inject]
+    Func<dynamic, Application.Services.IWorkOrderDetailServices<CallContext>> Service2 { get; set; }
+
+
+    [Inject] public Func<dynamic, CalibrationSaaS.Application.Services.IUOMService<CallContext>> UOM { get; set; }
+    [Inject] public Func<dynamic, CalibrationSaaS.Application.Services.IBasicsServices<CallContext>> Basics { get; set; }
+    [Inject] public Func<dynamic, CalibrationSaaS.Application.Services.IAssetsServices<CallContext>> Assets { get; set; }
+
+    [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.Basic.AppState AppStateBasics { get; set; }
+    [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.AppStateCompany AppState { get; set; }
+
+
+
+    [Inject]
+    public ISqliteWasmDbContextFactory<CalibrationSaaSDBContextOff2> DbFactory { get; set; }
+
+    [Inject]
+    public Func<dynamic, Application.Services.ISampleService2<CallContext>> OffLineClient { get; set; }
+
+
+    public async Task ExcecuteQuery()
+    { 
+
+        var loadpa = await ConfirmAsync("Are you sure to excecute");
+
+        if (!loadpa)
+        {
+            return;
+        }
+
+
+        try
+        {
+            await OffLineClient(DbFactory).Excecute(SQLQUERY,SQLQUERYPAR);
+
+            await OffLineClient(DbFactory).ini2();            
+
+            await OffLineClient(DbFactory).ini2();
+
+            await ShowToast("Sucess", Blazed.Controls.Toast.ToastLevel.Success);
+        }
+        catch(Exception ex){
+
+            await ExceptionManager(ex);
+
+        }
+   
+    }
+
+
+    public async Task DeleteDataBase()
+    {
+        var loadpa = await ConfirmAsync("Are you sure that you need to delete all offline data? After the information is deleted, there is no option to restore it. Please be careful using this option");
+
+        if (!loadpa)
+        {
+            return;
+        }
+
+        await ShowProgress();
+
+        if (loadpa)
+        {
+            //await DatabaseService.deleteDatabaseAsync();
+
+            //await DatabaseService.InitDatabaseAsync();
+
+            //await OffLineClient(DbFactory).InitializeAsync();
+
+            await OffLineClient(DbFactory).DeleteDatabase();
+
+            //await  LoadMeasurament();
+            //await LoadParametrics(Technician);
+        }
+
+        await ShowToast("Offline data successfully deleted", Blazed.Controls.Toast.ToastLevel.Success);
+        await CloseProgress();
+
+    }
+
+    public async Task DeleteAndReload()
+    {
+        DeleteCache();
+        await LoadMeasurament();
+    }
+
+    public void DeleteCache()
+    {
+        AppStateBasics.UnitofMeasureList = null;
+        AppState.UnitofMeasureList = null;
+        AppState.UnitofMeasureTypeList = null;
+        AppStateBasics.UnitofMeasureTypeList = null;
+        AppSecurity.RolesList = null;
+        AppSecurity.Permissions = null;
+        AppSecurity.UserList = null;
+        AppSecurity.CertificationList = null;
+        AppSecurity.CalibrtionTypeList = null;
+        AppSecurity.EquipmentTypeWODList = null;
+        AppState.ToleranceList2 = null;
+        AppStateBasics.ToleranceList2 = null;
+        AppSecurity.AlreadyLoad = false;
+
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        ConnectionStatusService.ConnectedChangeStatus(AppSecurity.IsNotGrpc);
+
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            ConnectionStatusService.ConnectedChangeStatus(AppSecurity.IsNotGrpc);
+            var onl = ConnectionStatusService.GetCurrentStatus();
+            if (firstRender)
+            {
+                //((user != null && user?.Identity?.IsAuthenticated == true && onl) || !onl) &&
+                var user = await GetUser();
+                if (AppSecurity.AlreadyLoad == false && onl)
+                {
+                    await LoadMeasurament();
+                }
+
+                if (JSRuntime != null)
+                {
+                    await JSRuntime.InvokeVoidAsync("backupbase");
+                }
+
+
+            }
+
+            await base.OnAfterRenderAsync(firstRender);
+
+            if (!onl && !AppSecurity.AlreadyLoadOff && OffLineClient != null && (AppSecurity?.Components == null || AppSecurity?.Components.Count == 0))
+            {
+
+                AppSecurity.Components = await OffLineClient(DbFactory).GetComponents();
+
+                await LoadMeasurament();
+
+                AppSecurity.AlreadyLoadOff = true;
+
+            }
+        }
+        catch (Exception ex )
+        {
+
+        }
+        finally
+        {
+           
+        }
+
+
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public async Task DownloadDatabase()
+    {
+        if (JSRuntime != null)
+        {
+            await JSRuntime.InvokeVoidAsync("backupbase");
+        }
+    }
+
+
+    async Task LoadMeasurament()
+    {
+
+        if (AppSecurity.IsReport)
+        {
+            return;
+        }
+
+        BasicsServiceGRPC basic = new BasicsServiceGRPC(Basics, DbFactory);
+        var g = new CallOptions(await GetHeaderAsync());
+
+        Console.WriteLine("----------------LoadMeasurament-------------");
+
+        if (UOM != null && (AppStateBasics.UnitofMeasureList == null || AppState?.UnitofMeasureList?.Count > 0
+            || AppState?.UnitofMeasureList == null || AppState?.UnitofMeasureList?.Count == 0))
+        {
+            AppState.UnitofMeasureTypeList = new List<UnitOfMeasureType>();
+
+            AppState.UnitofMeasureList = new List<UnitOfMeasure>();
+
+            UOMServiceGRPC uom = new UOMServiceGRPC(UOM, DbFactory);
+
+            await Task.Delay(100);
+
+            var a = await uom.GetTypes();
+
+            AppState.UnitofMeasureTypeList = a.ToList();
+            AppStateBasics.UnitofMeasureTypeList = a.ToList();
+
+            var b = await uom.GetAll();
+
+            if (b != null && b?.UnitOfMeasureList != null && b?.UnitOfMeasureList?.Count > 0)
+            {
+
+                AppState.UnitofMeasureList = b.UnitOfMeasureList.ToList();
+                AppStateBasics.UnitofMeasureList = b.UnitOfMeasureList.ToList();
+
+            }
+        }
+
+
+
+        if (AppSecurity.RolesList == null)
+        {
+
+
+            var a = await basic.GetRoles();
+            if (a != null && a.Roles != null)
+            {
+
+                AppSecurity.RolesList = a.Roles;
+            }
+
+        }
+
+        if (AppSecurity?.Permissions?.Count == 0)
+        {
+
+            AppSecurity.Permissions = Enum.GetNames(typeof(Policies)).ConvertListStringinKeyValue();
+
+        }
+
+
+        if (AppSecurity?.UserList == null || AppSecurity?.UserList?.Count == 0)
+        {
+
+
+            AssetsServiceGRPC assets = new Services.AssetsServiceGRPC(Assets, DbFactory);
+
+            var _user = await assets.GetUsers();  //Tecnhicians_companyService.GetAll();
+            var _userList = _user.Users;
+
+            AppSecurity.UserList = _userList;
+
+        }
+
+
+        if (AppSecurity?.WOStatusList == null || AppSecurity?.WOStatusList?.Count() == 0)
+        {
+
+
+            AssetsServiceGRPC assets = new Services.AssetsServiceGRPC(Assets, DbFactory);
+
+            var _user = await assets.GetStatus();  //Tecnhicians_companyService.GetAll();
+            
+
+            AppSecurity.WOStatusList = _user;
+
+        }
+
+
+        if (AppSecurity?.CertificationList == null || AppSecurity?.CertificationList?.Count == 0)
+        {
+
+
+            // BasicsServiceGRPC basic = new BasicsServiceGRPC(Basics,DbFactory);
+
+            var result = await basic.GetCertifications();
+
+            AppSecurity.CertificationList = result.ToList();
+
+        }
+
+
+        if (AppSecurity?.CalibrtionTypeList == null || AppSecurity?.CalibrtionTypeList?.Count == 0 || AppStateBasics?.EquipmentTypes?.Count == 0)
+        {
+            AppSecurity.CalibrtionTypeList = new List<CalibrationType>();
+
+            AppSecurity.EquipmentTypeWODList = new List<EquipmentType>();
+
+            //BasicsServiceGRPC assets = new BasicsServiceGRPC(Basics,DbFactory);
+
+            var _calibType = await basic.GetEquipmenTypes();
+
+            foreach (var item in _calibType.EquipmentTypes)
+            {
+                AppStateBasics.AddEquipmentType(item);
+            }
+
+            foreach (var item in _calibType.EquipmentTypes.Where(x => x.HasWorkOrderDetail == true))
+            {
+                CalibrationType c = new CalibrationType();
+
+                c.CalibrationTypeId = item.CalibrationTypeID;
+                c.Name = item.Name;
+
+                AppSecurity.CalibrtionTypeList.Add(c);
+
+                AppSecurity.EquipmentTypeWODList.Add(item);
+
+
+
+            }
+            //AppSecurity.CalibrtionTypeList.Add(new CalibrationType() { CalibrationTypeId=1, Name= "Balance & Scale" });
+            //AppSecurity.CalibrtionTypeList.Add(new CalibrationType() { CalibrationTypeId = 2, Name = "Force" });
+
+
+        }
+
+
+
+
+
+
+        if (AppState?.ToleranceList2 == null || AppState?.ToleranceList2?.Count == 0 || AppStateBasics?.ToleranceList2 == null || AppStateBasics?.ToleranceList2?.Count == 0)
+        {
+
+
+            var result = await basic.GetToleranceTypes();
+
+            AppState.ToleranceList2 = result.ToList();
+
+            AppStateBasics.ToleranceList2 = result.ToList();
+
+
+        }
+
+
+        if (OffLineClient != null && (AppSecurity?.Components == null || AppSecurity?.Components.Count == 0))
+    {
+            
+            AppSecurity.Components =await OffLineClient(DbFactory).GetComponents();
+        }
+
+        AppSecurity.AlreadyLoad = true;
+      
+        Console.WriteLine("end LoadMeasurament");
+
+    }
+}

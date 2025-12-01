@@ -1,0 +1,138 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+	<NoWarn>CS0168,CS1998,BL9993,CS0649,CS0436,0436</NoWarn>
+	<NuGetAuditMode>direct</NuGetAuditMode>
+	<TargetFramework>net9.0</TargetFramework>
+	<ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<Content Remove="wwwroot\css\BlazorControls.css" />
+	<Content Remove="wwwroot\Files\ExamenOCA.jpeg" />
+	<Content Remove="wwwroot\Files\Rut Personal Yenny Papamija.pdf" />
+	<Content Remove="wwwroot\js\BlazorControls.js" />
+	<Content Remove="wwwroot\Version\CurrentVersion.txt" />
+  </ItemGroup>
+
+  <!--<ItemGroup>
+	<Content Include="..\..\..\..\..\..\..\.nuget\packages\chartjs.blazor.fork\2.0.2\contentFiles\any\netstandard2.1\wwwroot\ChartJsBlazorInterop.js" Link="wwwroot\ChartJsBlazorInterop.js">
+	  <Private>False</Private>
+	  <NuGetPackageVersion>2.0.2</NuGetPackageVersion>
+	  <NuGetItemType>Content</NuGetItemType>
+	  <NuGetPackageId>ChartJs.Blazor.Fork</NuGetPackageId>
+	  <Pack>false</Pack>
+	</Content>
+  </ItemGroup>-->
+
+  <ItemGroup>
+	<EmbeddedResource Include="wwwroot\css\BlazorControls.css">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  <LogicalName>blazor:css:%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+	</EmbeddedResource>
+	<EmbeddedResource Include="wwwroot\js\BlazorControls.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  <LogicalName>blazor:js:%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+	</EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Fluxor.Blazor.Web" Version="6.8.0" />
+	<PackageReference Include="Fluxor.Blazor.Web.ReduxDevTools" Version="6.8.0" />
+	<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="9.0.9" />
+	<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.9" />
+	<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="9.0.9" />
+	<PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="9.0.9" />
+	<PackageReference Include="Radzen.Blazor" Version="8.0.3" />
+	<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.*-*" />
+	<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.9" />
+	<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.9" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
+	  <PrivateAssets>all</PrivateAssets>
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+	<None Include="wwwroot\Files\ExamenOCA.jpeg" />
+	<None Include="wwwroot\Files\Rut Personal Yenny Papamija.pdf" />
+	<None Include="wwwroot\Version\CurrentVersion.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<ProjectReference Include="..\..\Blazed\Blazed.csproj" />
+	<ProjectReference Include="..\..\Blazored.Modal\Blazored.Modal.csproj" />
+	<ProjectReference Include="..\..\CalibrationSaaS.Infraestructure.Blazor\CalibrationSaaS.Infraestructure.Blazor.csproj" />
+	<ProjectReference Include="..\..\Helpers\Helpers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<Content Update="appsettings.Development.json">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Content>
+	<Content Update="appsettings.json">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\css\print.min.css">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\css\sb-admin-2.css">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\css\site.css">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\favicon.ico">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\Files\reticles.csv">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\Files\WeightsUploadExample.csv">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\icon-512.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\Canvas.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\dexie-export-import.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\dexie.min.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\download.min.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\file5.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\getReportCanvasDemo.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\moment.min.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\pdf.min.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\pdf.worker.min.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\print.min.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\sb-admin-2.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\js\site.js">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+	<Content Update="wwwroot\manifest.json">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34202.233
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meziantou.AspNetCore.Components", "Meziantou.AspNetCore.Components.csproj", "{B4F38903-8731-425E-810E-E67467FDA6EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B4F38903-8731-425E-810E-E67467FDA6EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4F38903-8731-425E-810E-E67467FDA6EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4F38903-8731-425E-810E-E67467FDA6EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4F38903-8731-425E-810E-E67467FDA6EA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {568D0B18-853D-444F-A38B-97605E4C6560}
+	EndGlobalSection
+EndGlobal

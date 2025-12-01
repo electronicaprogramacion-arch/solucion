@@ -1,0 +1,264 @@
+﻿@namespace Blazor.Controls
+
+@if (!ForceShow)
+{
+    Show = "";
+    CSSClass = "modal fade bd-example-modal-lg";
+}
+else
+{
+    CSSClass = "modal fade bd-example-modal-lg show";
+}
+
+@if (FullScreen)
+{
+    //Show = Show + "height:100%;width:100%;";
+    CSSFull = "fullScreen";
+}
+
+@if (_Hide)
+{
+
+    CSSClass = "modal fade bd-example-modal-lg";
+    Show = "display: none;";
+    //Enabled = false;
+}
+else
+{
+    Show = "display: block;";
+
+}
+
+@if (Enabled)
+{
+    //Hide = false;
+
+    <div class="@CSSClass" id="@ID" tabindex="-1"
+         role="dialog" aria-labelledby="ModalLabel" aria-hidden="true" data-backdrop="false" style="@Show">
+        <div class="modal-dialog modal-dialog-scrollable @CSSFull" role="document">
+            <div class="modal-content @CSSFull">
+                <div class="row">
+                    <div class="col-sm" style="flex-grow:0">
+
+                        @*@if (_ShowMenu)
+                        {
+                            <NavMenu>
+
+                            </NavMenu>
+                        }*@
+
+
+                    </div>
+
+                    <div class="col-sm">
+                        <div class="modal-header">
+                            @if (EnableMenu) 
+                            {
+                            <button class="navbar-toggler" type="button" data-toggle="collapse" 
+                                    aria-controls="navbarSupportedContent" aria-expanded="false" @onclick=@(async () => await ShowMenu()) @onclick:stopPropagation @onclick:preventDefault aria-label="Toggle navigation">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            }
+                            <h5 class="modal-title" id="ModalLabel">@Title</h5>
+                            @if (CloseButton == null)
+                            {
+                                @*<button class="close" type="button" data-dismiss="modal" aria-label="Close">
+
+                <span aria-hidden="true">×</span>
+            </button>*@
+
+                                <button class="close" type="button" data-dismiss="modal" aria-label="Close"
+                                        @onclick="@(async () => await CancelItem("" + "" + ""))"
+                                        @onclick:stopPropagation @onclick:preventDefault>
+
+                                    <span aria-hidden="true">×</span>
+                                </button>
+
+                            }
+                            else
+                            {
+
+                                @CloseButton
+
+                            }
+                        </div>
+                        <div class="modal-body">
+
+
+                            @ContentBody
+
+
+
+                        </div>
+                        <div class="modal-footer">
+                            @Footer
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    @if (DefaultHide)
+    {
+<div style="display:none">
+    @ContentBody
+    @Footer
+</div>
+    }
+    else
+    {
+
+    @ContentBody
+    @Footer
+
+    }
+
+}
+
+@*@{ 
+    if (!Enabled)
+    {
+        Hide = true;
+    }
+    else
+    {
+        Hide = false;
+    }
+
+}*@
+
+@code {
+
+
+
+    public async Task ShowMenu()
+    {
+
+        _ShowMenu = true;
+
+        StateHasChanged();
+
+    }
+
+    [Parameter]
+    public bool EnableMenu { get; set; }
+
+
+
+    public bool _ShowMenu { get; set; }
+
+
+    public void Hide()
+    {
+
+        _Hide = true;
+        Enabled = false;
+
+    }
+
+    public async Task Hide2()
+    {
+
+        _Hide = true;
+        Enabled = false;
+        await RemoveClass();
+    }
+
+
+    public void Toggle()
+    {
+        if (!Enabled)
+        {
+            _Hide = false;
+            Enabled = true;
+
+        }
+        else
+        {
+            _Hide = true;
+            Enabled = false;
+        }
+    }
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+
+    public async Task RemoveClass()
+    {
+
+        if (JSRuntime != null && !string.IsNullOrEmpty(ID))
+        {
+            await JSRuntime.InvokeVoidAsync("hideElement", ID);
+        }
+
+        await JSRuntime.InvokeVoidAsync("removeClass", "modal-backdrop");
+
+    }
+
+    public bool _Hide { get; set; }
+
+    [Parameter]
+    public Func<Task> CloseWindow { get; set; }
+
+
+    public async Task CancelItem(string item)
+    {
+
+
+        if (CloseWindow != null)
+        {
+
+            await  CloseWindow();
+        }
+
+        if (ForceShow)
+        {
+            Enabled = false;
+            _Hide = true;
+            await RemoveClass();
+        }
+
+    }
+
+
+    [Parameter]
+    public bool DefaultHide { get; set; }
+
+
+    public string CSSFull { get; set; }
+
+    public string CSSClass { get; set; } = "modal fade bd-example-modal-lg";
+
+
+    [Parameter]
+    public bool FullScreen { get; set; }
+
+
+    public string Show { get; set; } = "display: inline-block;";
+
+    [Parameter]
+    public bool ForceShow { get; set; }
+
+    [Parameter]
+    public string ID { get; set; } = "modalWindow";
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public RenderFragment ContentBody { get; set; }
+
+    [Parameter]
+    public RenderFragment Footer { get; set; }
+
+    [Parameter]
+    public bool Enabled { get; set; }
+
+    [Parameter]
+    public RenderFragment CloseButton { get; set; }
+
+
+}

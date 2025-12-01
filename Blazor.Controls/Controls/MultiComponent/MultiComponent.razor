@@ -1,0 +1,17 @@
+﻿@namespace Blazor.Controls
+@using Blazor.Controls
+@using System.Reflection
+@using System.Linq
+@using System.Linq.Expressions
+@*@inherits MultiComponent_Base<TTYPE>*@ 
+@typeparam TTYPE
+
+<CascadingValue Value="@this" >
+    @ChildContent
+</CascadingValue>
+
+
+
+@code {
+
+}

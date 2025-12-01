@@ -1,0 +1,1230 @@
+﻿@using Blazed.Controls
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using CalibrationSaaS.Domain.Aggregates.Interfaces
+@using LTIDomainLogic;
+@inherits CalibrationTypeComponent_Base
+
+@{
+    //Console.WriteLine("CalibrationType");
+} 
+
+@if (WorkOrderItemCreate.eq != null && WorkOrderItemCreate.eq.GetCalibrationTypeID().HasValue && WorkOrderItemCreate.eq.GetCalibrationTypeID() < 4)
+{
+    <div class="accordion-item">
+        <div class="card-header" id="Balance&ScaleCalibrationHeader">
+            <button class="btn btn-link" type="button" data-toggle="collapse"
+            data-target="#ScaleCalibration" aria-expanded="true" aria-controls="ScaleCalibration" @onclick=@(async () => await ShowTests(Argument))
+            @onclick:stopPropagation @onclick:preventDefault>
+                @{
+                    var calibrationtype = "Calibration";
+
+                    if (WorkOrderItemCreate?.eq.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject != null)
+                    {
+                        calibrationtype = WorkOrderItemCreate?.eq.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject.Name + " " + "Calibration";
+                    }
+                }
+
+                @calibrationtype
+            </button>
+        </div>
+        <div id="ScaleCalibration" class="collapse" aria-labelledby="headingOne" data-parent="#accordionDynamic">
+            <div class="card-body">
+                @if (LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID, WorkOrderItemCreate.eq, 4, 5))
+                {
+
+                    <div class="accordion" id="accordionExampleReady">
+                        <div class="accordion-item">
+                            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("TensionISO"))
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Tension ISO 7500
+                                </button>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("CompressionISO"))
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Compression ISO 7500
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                }
+                else if (LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID, WorkOrderItemCreate.eq, 6, 7))
+                {
+
+                    <div class="accordion" id="accordionExampleReady">
+                        <div class="accordion-item">
+                            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("TensionASTM"))
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Tension ASTM E4
+                                </button>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("CompressionASTM"))
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Compression ASTM E4
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                }
+                else if (LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID, WorkOrderItemCreate.eq, 8))
+                {
+                    <div class="accordion" id="accordionExampleReady">
+                        <div class="accordion-item">
+                            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("UniversalISO"))
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Universal ISO 7500
+                                </button>
+                            </div>
+                        </div>
+
+
+                    </div>
+                }
+                else if (LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID, WorkOrderItemCreate.eq, 9))
+                {
+                    <div class="accordion" id="accordionExampleReady">
+                        <div class="accordion-item">
+                            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("UniversalASTM"))
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Universal ASTM
+                                </button>
+                            </div>
+                        </div>
+
+
+                    </div>
+                }
+                else if (LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID, WorkOrderItemCreate.eq, 10, 11))
+                {
+
+                    @*  <div class="accordion" id="accordionExampleReady">
+
+                        <div class="card">
+                            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("Tension"))
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Rockwell ISO As Found
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("Compression"))
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Rockwell ISO As Left
+                                </button>
+                            </div>
+                        </div>
+
+                    </div> *@
+
+
+                }
+                else if (LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID, WorkOrderItemCreate.eq, 12, 13))
+                {
+
+                    @*   <div class="accordion" id="accordionExampleReady">
+
+                        <div class="card">
+                            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("Tension"))
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Rockwell ASTM As Found
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("Compression"))
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Rockwell ASTM As Left
+                                </button>
+                            </div>
+                        </div>
+
+                    </div> *@
+
+
+                }
+
+                else if (1 == 2 && WorkOrderItemCreate.eq.GetCalibrationTypeID() >= 4 && WorkOrderItemCreate.eq.GetCalibrationType().CalibrationSubTypes != null)
+                {
+
+                    <div class="accordion" id="accordionExampleReady">
+
+
+                        @foreach (var itembutton in WorkOrderItemCreate.eq.GetCalibrationType().CalibrationSubTypes.Where(x => x.Enabled == true).OrderBy(x => x.Position))
+                        {
+
+                            string keyfilter = "";
+
+                            if (!string.IsNullOrEmpty(itembutton.CalibrationSubTypeView.FilterField))
+                            {
+                                var valuefilter = WorkOrderItemCreate.eq.GetPropValue(itembutton.CalibrationSubTypeView.FilterField);
+                                if (valuefilter != null)
+                                {
+                                    keyfilter = valuefilter.ToString();
+                                }
+
+                            }
+
+
+
+
+
+
+
+                            if (string.IsNullOrEmpty(itembutton.CalibrationSubTypeView.FilterField) || (!string.IsNullOrEmpty(keyfilter) && keyfilter == itembutton.CalibrationSubTypeView.FilterValue))//(itemcs.DynamicPropertiesSchema != null && itemcs.DynamicPropertiesSchema.Count > 0)
+                            {
+
+
+                                <div class="accordion-item">
+
+
+                                    <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                        <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowGenericCalibration(itembutton.CalibrationSubTypeId))
+                                        @onclick:stopPropagation @onclick:preventDefault>
+                                            @itembutton.NameToShow
+                                        </button>
+                                    </div>
+
+
+                                </div>
+                            }
+
+
+
+                        }
+                        @* <div class="card">
+                <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowCalibration("Compression"))
+                @onclick:stopPropagation @onclick:preventDefault>
+                Micro As Left
+                </button>
+                </div>
+                </div>*@
+
+                    </div>
+
+
+                }
+
+
+            </div>
+        </div>
+    </div>
+}
+
+
+@if (WorkOrderItemCreate.eq != null
+ && WorkOrderItemCreate.WeightSetList2 != null
+ && LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID , WorkOrderItemCreate.eq, 4, 5))
+{
+
+
+    <Blazed.Controls.Modal ID="modalLinearity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLinearity" CloseWindow="CloseWindow" Title="Tension ISO 7500">
+        <ContentBody>
+            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                <Rules>
+                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                    TTYPE="WorkOrderDetail">
+                        <div> No Rule</div>
+                    </Rule>
+                    <RulesTemplate Context="Entity"
+                    TValue="string"
+                    TTYPE="WorkOrderDetail">
+                        <ValidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent @ref="Linearity" HideElement="@ModalLinearity.ID"
+                            WeightSetList2="@WorkOrderItemCreate.WeightSetList2"
+                            OnChangeDescription="OnChangeDescription"
+
+                            Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                            Component="@WorkOrderItemCreate.Component"
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution"
+                            IsCompresion="4" HasCopyButton="true">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent>
+                        </ValidConditionsTemplate>
+                        <InvalidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent @ref="@Linearity" WeightSetList2="@WorkOrderItemCreate.WeightSetList2" 
+                            HideElement="@ModalLinearity.ID"
+                            OnChangeDescription="OnChangeDescription" 
+
+                            Enabled="@(false)"
+                            Component="@WorkOrderItemCreate.Component"
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" IsCompresion="4" HasCopyButton="true">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent>
+                        </InvalidConditionsTemplate>
+                    </RulesTemplate>
+                </Rules>
+            </MultiComponent>
+        </ContentBody>
+        <Footer>
+
+            <div class="row w-100">
+                <div class="col-8">
+                </div>
+                <div class="col-2">
+
+
+                    @* <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveForce())
+                        @onclick:stopPropagation @onclick:preventDefault>
+                        Save
+                    </button>*@
+                </div>
+                <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseForce())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+
+
+
+
+        </Footer>
+    </Blazed.Controls.Modal>
+
+    <Blazed.Controls.Modal ID="modalLEccentricity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLEccentricity" CloseWindow="CloseWindow" Title="Compression ISO 7500">
+        <ContentBody>
+
+            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                <Rules>
+                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                    TTYPE="WorkOrderDetail">
+                        <div> la regla no se cumple</div>
+                    </Rule>
+                    <RulesTemplate Context="Entity"
+                    TValue="string"
+                    TTYPE="WorkOrderDetail">
+                        <ValidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent @ref="@Compresion" WeightSetList2="@WorkOrderItemCreate.WeightSetList2" 
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            HideElement="@ModalLEccentricity.ID"
+                            Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                            Component="@WorkOrderItemCreate.Component" 
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" IsCompresion="5">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent>
+                        </ValidConditionsTemplate>
+                        <InvalidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent @ref="@Compresion" WeightSetList2="@WorkOrderItemCreate.WeightSetList2" 
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            HideElement="@ModalLEccentricity.ID"
+                            Enabled="@(false)"
+                            Component="@WorkOrderItemCreate.Component" 
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" 
+                            IsCompresion="5">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent>
+                        </InvalidConditionsTemplate>
+                    </RulesTemplate>
+                </Rules>
+            </MultiComponent>
+        </ContentBody>
+        <Footer>
+
+            <div class="row w-100">
+                <div class="col-8">
+                </div>
+                <div class="col-2">
+
+
+                    @*  <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveForce())
+                        @onclick:stopPropagation @onclick:preventDefault>
+                        Save
+                    </button>*@
+                </div>
+                <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseForce())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+
+
+
+
+        </Footer>
+
+    </Blazed.Controls.Modal>
+
+}
+
+@if (WorkOrderItemCreate.eq != null && WorkOrderItemCreate.WeightSetList2 != null && LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID , WorkOrderItemCreate.eq, 6, 7))
+{
+
+    <Blazed.Controls.Modal ID="modalLinearity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLinearity" CloseWindow="CloseWindow" Title="Tension ASTM">
+        <ContentBody>
+            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                <Rules>
+                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                    TTYPE="WorkOrderDetail">
+                        <div> la regla no se cumple</div>
+                    </Rule>
+                    <RulesTemplate Context="Entity"
+                    TValue="string"
+                    TTYPE="WorkOrderDetail">
+                        <ValidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent @ref="@Linearity"
+                            WeightSetList2="@WorkOrderItemCreate.WeightSetList2"
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            HideElement="@ModalLinearity.ID"
+                            Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                            Component="@WorkOrderItemCreate.Component"
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution"
+                            IsCompresion="6" HasCopyButton="true">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent>
+                        </ValidConditionsTemplate>
+                        <InvalidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent @ref="@Linearity" WeightSetList2="@WorkOrderItemCreate.WeightSetList2" OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            Enabled="@(false)"
+                            HideElement="@ModalLinearity.ID"
+                            Component="@WorkOrderItemCreate.Component" 
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution"
+                            IsCompresion="6" HasCopyButton="true">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent>
+                        </InvalidConditionsTemplate>
+                    </RulesTemplate>
+                </Rules>
+            </MultiComponent>
+        </ContentBody>
+        <Footer>
+
+            <div class="row w-100">
+                <div class="col-8">
+                </div>
+                <div class="col-2">
+
+
+                    @* <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveForce())
+                        @onclick:stopPropagation @onclick:preventDefault>
+                        Save
+                    </button>*@
+                </div>
+                <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseForce())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+
+
+
+
+        </Footer>
+
+    </Blazed.Controls.Modal>
+
+
+
+
+    //Console.WriteLine("aqui des");
+
+    <Blazed.Controls.Modal ID="modalLEccentricity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLEccentricity" CloseWindow="CloseWindow" Title="Compression">
+        <ContentBody>
+
+            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                <Rules>
+                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                    TTYPE="WorkOrderDetail">
+                        <div> la regla no se cumple</div>
+                    </Rule>
+                    <RulesTemplate Context="Entity"
+                    TValue="string"
+                    TTYPE="WorkOrderDetail">
+                        <ValidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent @ref="@Compresion" WeightSetList2="@WorkOrderItemCreate.WeightSetList2" OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                            HideElement="@ModalLEccentricity.ID"
+                            Component="@WorkOrderItemCreate.Component" 
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" 
+                            IsCompresion="7">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent>
+                        </ValidConditionsTemplate>
+                        <InvalidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent @ref="@Compresion" WeightSetList2="@WorkOrderItemCreate.WeightSetList2" OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"  Enabled="@(false)"
+                            Component="@WorkOrderItemCreate.Component" 
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" 
+                            IsCompresion="7"
+                            HideElement="@ModalLEccentricity.ID">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent>
+                        </InvalidConditionsTemplate>
+                    </RulesTemplate>
+                </Rules>
+            </MultiComponent>
+        </ContentBody>
+
+        <Footer>
+
+            <div class="row w-100">
+                <div class="col-8">
+                </div>
+                @* <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveForce())
+                        @onclick:stopPropagation @onclick:preventDefault>
+                        Save
+                    </button>
+                </div>*@
+                <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseForce())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+
+
+
+
+        </Footer>
+
+    </Blazed.Controls.Modal>
+
+}
+
+@if (WorkOrderItemCreate.eq != null && WorkOrderItemCreate.WeightSetList2 != null && LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID , WorkOrderItemCreate.eq, 8))
+{
+
+
+    <Blazed.Controls.Modal ID="modalLinearity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLinearity" CloseWindow="CloseWindow" Title="Tension Universal">
+        <ContentBody>
+            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                <Rules>
+                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                    TTYPE="WorkOrderDetail">
+                        <div> la regla no se cumple</div>
+                    </Rule>
+                    <RulesTemplate Context="Entity"
+                    TValue="string"
+                    TTYPE="WorkOrderDetail">
+                        <ValidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent @ref="Linearity" WeightSetList2="@WorkOrderItemCreate.WeightSetList2" OnChangeDescription="OnChangeDescription"
+                            Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                            Component="@WorkOrderItemCreate.Component" RefreshResolution="WorkOrderItemCreate.ChangeResolution" 
+                            IsCompresion="8"
+                            HideElement="@ModalLinearity.ID">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent>
+                        </ValidConditionsTemplate>
+                        <InvalidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent @ref="@Linearity" WeightSetList2="@WorkOrderItemCreate.WeightSetList2"
+                            OnChangeDescription="OnChangeDescription"
+                            Enabled="@(false)"
+                            Component="@WorkOrderItemCreate.Component"
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" 
+                            IsCompresion="8"
+                            HideElement="@ModalLinearity.ID">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.LTI.ISOComponent>
+                        </InvalidConditionsTemplate>
+                    </RulesTemplate>
+                </Rules>
+            </MultiComponent>
+        </ContentBody>
+
+        <Footer>
+
+            <div class="row w-100">
+                <div class="col-8">
+                </div>
+                <div class="col-2">
+
+
+                    @* <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveForce())
+                        @onclick:stopPropagation @onclick:preventDefault>
+                        Save
+                    </button>*@
+                </div>
+                <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseForce())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+
+
+
+
+        </Footer>
+
+    </Blazed.Controls.Modal>
+
+
+}
+
+@if (WorkOrderItemCreate.eq != null && WorkOrderItemCreate.WeightSetList2 != null && LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID , WorkOrderItemCreate.eq, 9))
+{
+
+
+    <Blazed.Controls.Modal ID="modalLinearity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLinearity" CloseWindow="CloseWindow" Title="Universal">
+        <ContentBody>
+            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                <Rules>
+                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                    TTYPE="WorkOrderDetail">
+                        <div> la regla no se cumple</div>
+                    </Rule>
+                    <RulesTemplate Context="Entity"
+                    TValue="string"
+                    TTYPE="WorkOrderDetail">
+                        <ValidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent @ref="@Linearity" WeightSetList2="@WorkOrderItemCreate.WeightSetList2" 
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                            HideElement="@ModalLinearity.ID"
+                            Component="@WorkOrderItemCreate.Component" RefreshResolution="WorkOrderItemCreate.ChangeResolution" IsCompresion="9">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent>
+                        </ValidConditionsTemplate>
+                        <InvalidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent @ref="@Linearity" WeightSetList2="@WorkOrderItemCreate.WeightSetList2" 
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            Enabled="@(false)"
+                            HideElement="@ModalLinearity.ID"
+                            Component="@WorkOrderItemCreate.Component" RefreshResolution="WorkOrderItemCreate.ChangeResolution" IsCompresion="9">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMForceComponent>
+                        </InvalidConditionsTemplate>
+                    </RulesTemplate>
+                </Rules>
+            </MultiComponent>
+        </ContentBody>
+
+        <Footer>
+
+            <div class="row w-100">
+                <div class="col-8">
+                </div>
+                <div class="col-2">
+
+
+                    @*  <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveForce())
+                        @onclick:stopPropagation @onclick:preventDefault>
+                        Save
+                    </button>*@
+                </div>
+                <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseForce())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+
+
+
+
+        </Footer>
+
+
+
+    </Blazed.Controls.Modal>
+
+
+}
+
+@if (WorkOrderItemCreate.eq != null && WorkOrderItemCreate.WeightSetList2 != null && LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID , WorkOrderItemCreate.eq, 10, 11))
+{
+
+    <Blazed.Controls.Modal ID="modalLinearity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLinearity" CloseWindow="CloseRockwellWindow" Title="Rockwell ISO As Found">
+        <ContentBody>
+
+
+            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                <Rules>
+                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                    TTYPE="WorkOrderDetail">
+                        <div> la regla no se cumple</div>
+                    </Rule>
+                    <RulesTemplate Context="Entity"
+                    TValue="string"
+                    TTYPE="WorkOrderDetail">
+                        <ValidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsFoundComponent CalibrationItem="CalibrationSaaS.Domain.Aggregates.Entities.Rockwell" 
+                            CalibrationItemResult="RockwellResult" @ref="@Compresion" 
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription" Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                            Component="@WorkOrderItemCreate.Component" 
+                            HideElement="@ModalLinearity.ID"
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" IsCompresion="10">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsFoundComponent>
+                        </ValidConditionsTemplate>
+                        <InvalidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsFoundComponent CalibrationItem="CalibrationSaaS.Domain.Aggregates.Entities.Rockwell" CalibrationItemResult="RockwellResult" @ref="@Compresion" 
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription" Enabled="@(false)"
+                            HideElement="@ModalLinearity.ID"
+                            Component="@WorkOrderItemCreate.Component" RefreshResolution="WorkOrderItemCreate.ChangeResolution" IsCompresion="10">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsFoundComponent>
+                        </InvalidConditionsTemplate>
+                    </RulesTemplate>
+                </Rules>
+            </MultiComponent>
+
+        </ContentBody>
+
+        <Footer>
+
+            <div class="row w-100">
+                <div class="col-8">
+                </div>
+                <div class="col-2">
+
+
+                    @* <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveRockwell())
+                        @onclick:stopPropagation @onclick:preventDefault>
+                        Save
+                    </button>*@
+                </div>
+                <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseRockwell())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+
+
+
+
+        </Footer>
+
+
+    </Blazed.Controls.Modal>
+
+
+
+
+    //Console.WriteLine("aqui des");
+
+    <Blazed.Controls.Modal ID="modalLEccentricity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLEccentricity" CloseWindow="CloseRockwellWindow" Title="Rockwell ISO As Left">
+        <ContentBody>
+            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                <Rules>
+                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                    TTYPE="WorkOrderDetail">
+                        <div> la regla no se cumple</div>
+                    </Rule>
+                    <RulesTemplate Context="Entity"
+                    TValue="string"
+                    TTYPE="WorkOrderDetail">
+                        <ValidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponent CalibrationItem="CalibrationSaaS.Domain.Aggregates.Entities.Rockwell" CalibrationItemResult="RockwellResult" @ref="@Linearity"
+
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                            Component="@WorkOrderItemCreate.Component"
+                            HideElement="@ModalLEccentricity.ID"
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution"
+                            IsCompresion="11">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponent>
+                        </ValidConditionsTemplate>
+                        <InvalidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponent CalibrationItem="CalibrationSaaS.Domain.Aggregates.Entities.Rockwell" CalibrationItemResult="RockwellResult" @ref="@Linearity"  OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            Enabled="@(false)"
+                            Component="@WorkOrderItemCreate.Component"
+                            HideElement="@ModalLEccentricity.ID"
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" 
+                            IsCompresion="11">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponent>
+                        </InvalidConditionsTemplate>
+                    </RulesTemplate>
+                </Rules>
+            </MultiComponent>
+        </ContentBody>
+
+        <Footer>
+
+            <div class="row w-100">
+                <div class="col-8">
+                </div>
+                <div class="col-2">
+
+                    @*
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveRockwell())
+                        @onclick:stopPropagation @onclick:preventDefault>
+                        Save
+                    </button>*@
+                </div>
+                <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseRockwell())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+
+
+
+
+        </Footer>
+
+
+
+    </Blazed.Controls.Modal>
+
+}
+@if (WorkOrderItemCreate.eq != null && WorkOrderItemCreate.WeightSetList2 != null && LTILogic.ValidCalibrationSubType(WorkOrderItemCreate.eq.CertificationID , WorkOrderItemCreate.eq, 12, 13))
+{
+
+    <Blazed.Controls.Modal ID="modalLinearity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLinearity" CloseWindow="CloseRockwellWindow" Title="Rockwell ASTM As Found">
+        <ContentBody>
+
+
+            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                <Rules>
+                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                    TTYPE="WorkOrderDetail">
+                        <div> la regla no se cumple</div>
+                    </Rule>
+                    <RulesTemplate Context="Entity"
+                    TValue="string"
+                    TTYPE="WorkOrderDetail">
+                        <ValidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsFoundComponent CalibrationItem="CalibrationSaaS.Domain.Aggregates.Entities.Rockwell" 
+                            CalibrationItemResult="RockwellResult" @ref="@Compresion" 
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription" Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                            Component="@WorkOrderItemCreate.Component" 
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" 
+                            IsCompresion="12"
+                            HideElement="@ModalLinearity.ID">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsFoundComponent>
+                        </ValidConditionsTemplate>
+                        <InvalidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsFoundComponent CalibrationItem="CalibrationSaaS.Domain.Aggregates.Entities.Rockwell" CalibrationItemResult="RockwellResult" @ref="@Compresion" 
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription" Enabled="@(false)"
+                            Component="@WorkOrderItemCreate.Component" 
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" 
+                            IsCompresion="12"
+                            HideElement="@ModalLinearity.ID">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsFoundComponent>
+                        </InvalidConditionsTemplate>
+                    </RulesTemplate>
+                </Rules>
+            </MultiComponent>
+
+        </ContentBody>
+
+        <Footer>
+
+            <div class="row w-100">
+                <div class="col-8">
+                </div>
+                <div class="col-2">
+
+
+                    @*  <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveRockwell())
+                        @onclick:stopPropagation @onclick:preventDefault>
+                        Save
+                    </button>*@
+                </div>
+                <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseRockwell())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+
+
+
+
+        </Footer>
+
+
+
+    </Blazed.Controls.Modal>
+
+
+
+
+    //Console.WriteLine("aqui des");
+
+    <Blazed.Controls.Modal ID="modalLEccentricity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLEccentricity" CloseWindow="CloseRockwellWindow" Title="Rockwell ASTM As Left">
+        <ContentBody>
+            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                <Rules>
+                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                    TTYPE="WorkOrderDetail">
+                        <div> la regla no se cumple</div>
+                    </Rule>
+                    <RulesTemplate Context="Entity"
+                    TValue="string"
+                    TTYPE="WorkOrderDetail">
+                        <ValidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponent CalibrationItem="CalibrationSaaS.Domain.Aggregates.Entities.Rockwell" CalibrationItemResult="RockwellResult" @ref="@Linearity"
+
+                            OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                            Component="@WorkOrderItemCreate.Component"
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution"
+                            IsCompresion="13"
+                            HideElement="@ModalLEccentricity.ID">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponent>
+                        </ValidConditionsTemplate>
+                        <InvalidConditionsTemplate>
+                            <CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponent CalibrationItem="CalibrationSaaS.Domain.Aggregates.Entities.Rockwell" CalibrationItemResult="RockwellResult" @ref="@Linearity"  OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                            Enabled="@(false)"
+                            Component="@WorkOrderItemCreate.Component" 
+                            RefreshResolution="WorkOrderItemCreate.ChangeResolution" 
+                            IsCompresion="13"
+                            HideElement="@ModalLEccentricity.ID">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponent>
+                        </InvalidConditionsTemplate>
+                    </RulesTemplate>
+                </Rules>
+            </MultiComponent>
+        </ContentBody>
+
+        <Footer>
+
+            <div class="row w-100">
+                <div class="col-8">
+                </div>
+                <div class="col-2">
+
+
+                    @*   <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveRockwell())
+                        @onclick:stopPropagation @onclick:preventDefault>
+                        Save
+                    </button>*@
+                </div>
+                <div class="col-2">
+
+
+                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseRockwell())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        Save & Close
+                    </button>
+                </div>
+            </div>
+
+
+
+
+        </Footer>
+
+
+    </Blazed.Controls.Modal>
+
+}
+
+@if (
+   WorkOrderItemCreate.eq != null &&
+   WorkOrderItemCreate.eq?.calibrationType?.CalibrationSubTypes != null
+   && WorkOrderItemCreate.eq?.calibrationType?.CalibrationTypeId >= 4
+)
+{
+    var cardclass = "accordion-item";
+    var bodyclass = "card-body";
+    var collapseclass = "collapse";
+
+
+    if (WorkOrderItemCreate.eq.GetCalibrationType().ShowType.HasValue && WorkOrderItemCreate.eq.GetCalibrationType().ShowType.Value == false)
+    {
+        cardclass = "";
+        bodyclass = "";
+        collapseclass = "";
+    }
+
+
+
+    int cont = 1;
+
+
+    <div class="@cardclass">
+
+        @if (!string.IsNullOrEmpty(cardclass))
+        {
+            <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                <button class="btn btn-link" type="button" data-toggle="collapse"
+                data-target="#ScaleCalibration" aria-expanded="true" aria-controls="ScaleCalibration" @onclick=@(async () => await ShowTests(Argument))
+                @onclick:stopPropagation @onclick:preventDefault>
+                    @{
+                        var calibrationtype = "Calibration";
+
+                        if (WorkOrderItemCreate?.eq.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject != null)
+                        {
+                            calibrationtype = WorkOrderItemCreate?.eq?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject?.Name + " " + "Calibration";
+                        }
+                    }
+
+                    @calibrationtype
+                </button>
+            </div>
+        }
+
+         
+        <div id="ScaleCalibration" class="@collapseclass" aria-labelledby="headingOne" data-parent="#accordionDynamic">
+            <div class="@bodyclass">
+
+                <div class="accordion" id="accordionExampleReady">
+
+                    @{
+                        var lista = _persistentCalibrationType?.CalibrationSubTypes?.Where(x => x.Enabled == true);// WorkOrderItemCreate.eq.GetCalibrationType().CalibrationSubTypes.Where(x => x.Enabled == true);
+
+
+                    }
+                   
+                    @if(lista?.Count() > 0)
+                    {
+                        @foreach (var itemcs in lista.DistinctBy(x=>x.CalibrationSubTypeId).OrderBy(x => x.Position))
+                        {
+                            string keyfilter = "";
+
+                            if (!string.IsNullOrEmpty(itemcs?.CalibrationSubTypeView?.FilterField))
+                            {
+                                var valuefilter = WorkOrderItemCreate?.eq.GetPropValue(itemcs.CalibrationSubTypeView.FilterField);
+                                keyfilter = valuefilter.ToString();
+                            }
+
+
+                            var iso = itemcs?.CalibrationSubTypeId;
+
+                            //Console.WriteLine("calibrationtypeerrordanger");
+                            //Console.WriteLine(iso);
+                            //Console.WriteLine(itemcs);
+
+                            @if (string.IsNullOrEmpty(itemcs?.CalibrationSubTypeView?.FilterField)
+                           || (!string.IsNullOrEmpty(keyfilter) && keyfilter == itemcs?.CalibrationSubTypeView?.FilterValue))//(itemcs.DynamicPropertiesSchema != null && itemcs.DynamicPropertiesSchema.Count > 0)
+                            {
+
+
+                                <div class="accordion-item">
+
+                                    <div class="card-header" id="Balance&ScaleCalibrationHeader">
+                                        <button class="btn btn-link" type="button" data-toggle="collapse" @onclick=@(async () => await ShowGenericCalibration(itemcs.CalibrationSubTypeId))
+                                        @onclick:stopPropagation @onclick:preventDefault>
+                                            @itemcs.NameToShow
+                                        </button>
+                                    </div>
+
+                                    @{
+
+                                        ICreateItems createmetod = null;
+
+                                        IGetItems getmetod = null;
+
+                                        ISelectItems selectmethods = null;
+
+                                        if (!string.IsNullOrEmpty(itemcs.CreateClass))//(iso == 14)
+                                        {
+                                            createmetod = (ICreateItems)Helpers.DynamicHelper.GetInstance(itemcs.CreateClass); // new CalibrationSaaS.Infraestructure.Blazor.LTI.Micro.CreateItemsMicro();
+
+
+                                        }
+
+                                        if (!string.IsNullOrEmpty(itemcs.GetClass))//(iso == 14)
+                                        {
+                                            getmetod = (IGetItems)Helpers.DynamicHelper.GetInstance(itemcs.GetClass);//new CalibrationSaaS.Infraestructure.Blazor.LTI.Micro.GetItemsMicro();
+
+
+                                        }
+
+
+                                        if (!string.IsNullOrEmpty(itemcs.SelectStandarClass))//(iso == 14)
+                                        {
+                                            selectmethods = (ISelectItems)Helpers.DynamicHelper.GetInstance(itemcs.SelectStandarClass);//new CalibrationSaaS.Infraestructure.Blazor.LTI.Micro.GetItemsMicro();
+
+
+                                        }
+                                        IExecuteMethod exce = new ExcecuteMicro();
+                                    }
+
+                                    <Blazed.Controls.Modal ID="@(iso.ToString() + "-modal")" Style="Modal" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="@RefModal" CloseWindow="CloseGenericWindow" Title="@itemcs.NameToShow">
+                                        <ContentBody>
+
+
+                                            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@WorkOrderItemCreate.UsersAccess" TTYPE="WorkOrderDetail">
+                                                <Rules>
+                                                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                                                          TTYPE="WorkOrderDetail">
+                                                        <div> la regla no se cumple</div>
+                                                    </Rule>
+                                                    <RulesTemplate Context="Entity"
+                                                                   TValue="string"
+                                                                   TTYPE="WorkOrderDetail">
+                                                        <ValidConditionsTemplate>
+                                                            <CalibrationSaaS.Infraestructure.Blazor.GenericTestComponent CalibrationItem="CalibrationSaaS.Domain.Aggregates.Entities.GenericCalibration"
+                                                                                                                         CalibrationItemResult="GenericCalibrationResult"
+                                                            @ref="@Ref"
+                                                                                                                         OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                                                                                                                         Enabled="@(true && !WorkOrderItemCreate.eq.HasBeenCompleted)"
+                                                                                                                         Component="@WorkOrderItemCreate.Component"
+                                                                                                                         RefreshResolution="WorkOrderItemCreate.ChangeResolution"
+                                                                                                                         CalibrationSubType="@itemcs.CalibrationSubTypeId.ToString()"
+                                                                                                                         _strCreate="@createmetod"
+                                                                                                                         _strGet="@getmetod"
+                                                                                                                         IExecuteMethod="@exce"
+                                                                                                                         CalibrationSubTypeView="@itemcs.CalibrationSubTypeView"
+                                                                                                                         SelectStandards="selectmethods"
+                                                                                                                         cmcValues="cmcValues"
+                                                                                                                         HideElement="@(iso.ToString() + "-modal")">
+
+                                                            </CalibrationSaaS.Infraestructure.Blazor.GenericTestComponent>
+                                                        </ValidConditionsTemplate>
+                                                        <InvalidConditionsTemplate>
+                                                            <CalibrationSaaS.Infraestructure.Blazor.GenericTestComponent CalibrationItem="CalibrationSaaS.Domain.Aggregates.Entities.GenericCalibration"
+                                                                                                                         CalibrationItemResult="GenericCalibrationResult"
+                                                            @ref="@Ref"
+                                                                                                                         OnChangeDescription="WorkOrderItemCreate.OnChangeDescription"
+                                                                                                                         Enabled="@(false)"
+                                                                                                                         Component="@WorkOrderItemCreate.Component"
+                                                                                                                         RefreshResolution="WorkOrderItemCreate.ChangeResolution"
+                                                                                                                         CalibrationSubType="@itemcs.CalibrationSubTypeId.ToString()"
+                                                                                                                         _strCreate="@createmetod"
+                                                                                                                         _strGet="@getmetod"
+                                                                                                                         IExecuteMethod="@exce"
+                                                                                                                         CalibrationSubTypeView="@itemcs.CalibrationSubTypeView"
+                                                                                                                         SelectStandards="selectmethods"
+                                                                                                                         cmcValues="cmcValues"
+                                                                                                                         HideElement="@(iso.ToString() + "-modal")">
+
+                                                            </CalibrationSaaS.Infraestructure.Blazor.GenericTestComponent>
+                                                        </InvalidConditionsTemplate>
+                                                    </RulesTemplate>
+                                                </Rules>
+                                            </MultiComponent>
+
+                                        </ContentBody>
+
+                                        <Footer>
+
+
+                                            <MultiComponent Instance="WorkOrderItemCreate?.eq" Policy="@WorkOrderItemCreate?.UsersAccess" TTYPE="WorkOrderDetail">
+                                                <Rules>
+                                                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                                                          TTYPE="WorkOrderDetail">
+                                                        <div> la regla no se cumple</div>
+                                                    </Rule>
+                                                    <RulesTemplate Context="Entity"
+                                                                   TValue="string"
+                                                                   TTYPE="WorkOrderDetail">
+                                                        <ValidConditionsTemplate>
+                                                            <div class="row w-100">
+                                                                <div class="col-8">
+                                                                </div>
+                                                                <div class="col-2">
+
+
+                                                                    @* <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveGeneric())
+                                                    @onclick:stopPropagation @onclick:preventDefault>
+                                                    Save
+                                                    </button>*@
+                                                                </div>
+                                                                <div class="col-2">
+
+
+                                                                    <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseGeneric())
+                                                                    @onclick:stopPropagation @onclick:preventDefault>
+                                                                        Save & Close
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </ValidConditionsTemplate>
+                                                        <InvalidConditionsTemplate>
+
+                                                        </InvalidConditionsTemplate>
+                                                    </RulesTemplate>
+                                                </Rules>
+                                            </MultiComponent>
+
+
+                                           
+
+
+
+
+                                        </Footer>
+
+                                    </Blazed.Controls.Modal>
+
+
+                                </div>
+
+                            }
+
+
+
+                            cont++;
+                        }
+                    }
+
+                   
+
+
+                </div>
+
+
+            </div>
+            
+        </div>
+
+
+        </div>
+
+   
+}
+    
+
+
+
+
+
+@code {
+
+
+
+}

@@ -1,0 +1,210 @@
+﻿@using CalibrationSaaS.Infraestructure.Blazor.Shared
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using System.Linq
+@using System.IO
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic
+@using Blazed.Controls
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Configuration
+@inject CalibrationSaaS.Application.Services.IFileUpload fileUpload
+@inject IModalService modal
+
+@inject ILogger<Certificate_Create> Logger
+
+@using System.Reflection;
+@using Helpers.Controls;
+@using Helpers.Controls.ValueObjects;
+@if (LIST1 != null)
+{
+    <div class="row">
+        <div class="col-sm-12">
+
+            <Blazed.Controls.ResponsiveTable ItemsDataSource="@LIST1"
+                             PageSize="5"
+                             HasAction="false"
+                             HasNew="false"
+                             TableItem="Certificate"
+                             @ref="RT"
+                             RowEditClass=""
+                             RowNewClass=""
+                             InLineEdit="false"
+                             EnabledSearch="true"
+                             EnabledModal="false"
+                             NewItemDefaultItem="Newcertificate"
+                             Component="@Component">
+
+                <GridHeader>
+                    @*<div class="col-sm-2 customcol">-</div>*@
+                    <div class="col-sm-2 customcol">Certificate#<br />Value</div>
+                    <div class="col-sm-2 customcol">Version</div>
+                    <div class="col-sm-2 customcol">Due<br />Date</div>
+                    <div class="col-sm-2 customcol">Calibration<br />Date</div>
+                    <div class="col-sm-2 customcol">Certificate</div>
+
+                </GridHeader>
+                <GridRow>
+                    <div class="col-sm-2 customcol inv">Certificate#</div>
+                    <div class="col-sm-2 customcol">@context.CertificateNumber</div>
+                    <div class="col-sm-2 customcol inv">Company</div>
+                    <div class="col-sm-2 customcol">@context.Version</div>
+                    <div class="col-sm-2 customcol inv">DueDate</div>
+                    <div class="col-sm-2 customcol">@context.DueDate</div>
+                    <div class="col-sm-2 customcol inv">CalibrationDate</div>
+                    <div class="col-sm-2 customcol">@context.CalibrationDate</div>
+                    <div class="col-sm-2 customcol"><a href="@(Url + context.Description)" download="">Download</a></div>
+ 
+                </GridRow>
+
+                <GridEdit>
+                    <div class="row">
+                        <div class="col-md-12 mx-auto">
+                            <form>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-4">
+
+                                        <TextInput Label="Certificate #" @bind-Value="context.CertificateNumber"
+                                                   Validate="true" ValidationFor="@(() => context.CertificateNumber)" IsDisabled="!Enabled">
+
+
+                                        </TextInput>
+                                    </div>
+                                    <div class="col-sm-4" style="display:none">
+                                        <label>Customer</label>
+                                        <div class="param param-feature">
+
+                                            <label class="custom-select text-nowrap" @onclick="@(()=> ShowModalCustomer())">
+                                                @_CustomerId @_CustomerValue
+                                            </label>
+                                            @*@Grid.GetErrorMessage(nameof(@context.CustomerId))*@
+
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-4">
+
+                                        <TextInput @bind-Value="@context.Company" class="form-control">
+
+                                        </TextInput>
+
+
+                                    </div>
+                                    <div class="col-sm-4">
+
+                                        <label>Due Date</label>
+
+                                        <InputDate @bind-Value="@context.DueDate" class="form-control">
+
+                                        </InputDate>
+
+
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-4">
+                                        <label>Calibration Date</label>
+
+                                        <InputDate @bind-Value="@context.CalibrationDate" class="form-control">
+
+                                        </InputDate>
+
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="custom-control custom-switch">
+
+                                            <input type="checkbox" class="custom-control-input" id="customSwitch1">
+                                            <label class="custom-control-label" for="customSwitch1" style="margin:25px">Affects the Due Date</label>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-sm-4">
+                                       <div class="custom-control custom-switch">
+                                            @*<input type="file" id="fileUpload" @onchange="UploadFile">
+                                                <label class="custom-file-label" for="inputGroupFile01">Choose file</label>*@
+                                            <BlazorInputFile.InputFile OnChange="HandleFileSelected" />
+                                            @if (file != null)
+                                            {
+                                                <label> File Name: @file.Name</label>
+
+                                            }
+                                        </div>
+
+                                    </div>
+                                   
+
+                                </div>
+
+
+                            </form>
+                        </div>
+                    </div>
+
+                </GridEdit>
+            </Blazed.Controls.ResponsiveTable>
+
+
+        </div>
+    </div>
+}
+
+@code
+{
+
+    //public string pathS;
+    //[Inject] Application.Services.IAssetsServices<CallContext> _assetsServices { get; set; }
+    //[CascadingParameter] public IModalService Modal { get; set; }
+    //public int _CustomerId { get; set; }
+    //public string _CustomerValue { get; set; }
+
+
+    //string _message;
+    //int _equipmentTemplate;
+    //bool isVisible = false;
+    //IFileListEntry file;
+
+    //public List<Certificate> LIST1 { get; set; }
+
+    //[Inject] public AppState AppState { get; set; }
+
+    //[Parameter]
+    //public Component Component { get; set; }
+
+    //public ResponsiveTable<Certificate> RT { get; set; } = new ResponsiveTable<Certificate>();
+
+
+  
+
+
+    public async Task ShowModalCustomer()
+    {
+        Dictionary<string, object> EmptyValidationDictionary = new Dictionary<string, object>();
+
+        var parameters = new ModalParameters();
+        parameters.Add("SelectOnly", true);
+        parameters.Add("IsModal", true);
+
+        var messageForm = Modal.Show<CalibrationSaaS.Infraestructure.Blazor.Pages.Customer.Customer_Search>("Select Customer", parameters);
+        var result = await messageForm.Result;
+
+        if (!result.Cancelled)
+            // _message = result.Data?.ToString() ?? string.Empty;
+
+            EmptyValidationDictionary = result.Data.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                  .ToDictionary(prop => prop.Name, prop => prop.GetValue(result.Data, null));
+
+        _CustomerId = Convert.ToInt32(EmptyValidationDictionary["CustomerID"].ToString());
+        _CustomerValue = EmptyValidationDictionary["Name"].ToString();
+
+
+    }
+
+
+
+}
+
+@code
+{
+    
+
+}

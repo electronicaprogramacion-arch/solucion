@@ -1,0 +1,413 @@
+@page "/radzen-table-with-columns-example"
+@using CalibrationSaaS.Infraestructure.Blazor.Controls
+@using CalibrationSaaS.Infraestructure.Blazor.Models
+@using Radzen
+@using Radzen.Blazor
+
+<h3>Radzen DataGrid with Advanced Features</h3>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <RadzenCard>
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Filter by State</h5>
+                    <RadzenDropDown @bind-Value="selectedState" Data="@states" Change="@OnStateChange"
+                                  AllowClear="true" Placeholder="Select State..." class="w-100" />
+                </div>
+                <div class="col-md-4">
+                    <h5>Group by</h5>
+                    <RadzenSelectBar @bind-Value="groupByField" TValue="string" Change="@OnGroupByChange">
+                        <Items>
+                            <RadzenSelectBarItem Text="None" Value="@string.Empty" />
+                            <RadzenSelectBarItem Text="State" Value="@nameof(Models.Customer.State)" />
+                            <RadzenSelectBarItem Text="City" Value="@nameof(Models.Customer.City)" />
+                        </Items>
+                    </RadzenSelectBar>
+                </div>
+                <div class="col-md-4">
+                    <h5>View Options</h5>
+                    <RadzenSwitch @bind-Value="showDetails" Change="@OnShowDetailsChange" />
+                    <span class="ml-2">Show Details</span>
+                </div>
+            </div>
+        </RadzenCard>
+    </div>
+</div>
+
+<RadzenDataGrid @ref="grid"
+                Data="@filteredCustomers"
+                AllowFiltering="true"
+                AllowColumnResize="true"
+                AllowAlternatingRows="true"
+                AllowSorting="true"
+                AllowPaging="true"
+                PageSize="10"
+                PagerHorizontalAlign="HorizontalAlign.Left"
+                ShowPagingSummary="true"
+                IsLoading="@isLoading"
+                FilterMode="FilterMode.Advanced"
+                LogicalFilterOperator="LogicalFilterOperator.Or"
+                SelectionMode="DataGridSelectionMode.Multiple"
+                @bind-Value="@selectedCustomers"
+                EmptyText="No customers found"
+                AllowGrouping="true"
+                GroupPanelText="Drag columns here to group">
+    <Columns>
+        <RadzenDataGridColumn TItem="Models.Customer" Property="CustomerID" Title="ID" Width="80px" />
+        <RadzenDataGridColumn TItem="Models.Customer" Property="Name" Title="Name" Width="200px">
+            <Template Context="data">
+                <div class="d-flex align-items-center">
+                    <RadzenImage Path="@GetAvatarUrl(data.CustomerID)" Style="width: 32px; height: 32px; border-radius: 16px; margin-right: 8px;" />
+                    <div>
+                        <strong>@data.Name</strong>
+                        @if (showDetails)
+                        {
+                            <div class="small text-muted">ID: @data.CustomerID</div>
+                        }
+                    </div>
+                </div>
+            </Template>
+            <GroupFooterTemplate>
+                <strong>Total: @((context as IEnumerable<Models.Customer>)?.Count() ?? 0) customers</strong>
+            </GroupFooterTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Models.Customer" Property="Address" Title="Address" Visible="@showDetails" />
+        <RadzenDataGridColumn TItem="Models.Customer" Property="City" Title="City" Groupable="true">
+            <Template Context="data">
+                <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@data.City" />
+            </Template>
+            <GroupFooterTemplate>
+                <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">@((context as IEnumerable<Models.Customer>)?.Count() ?? 0) from this city</RadzenText>
+            </GroupFooterTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Models.Customer" Property="State" Title="State" Width="80px" Groupable="true">
+            <Template Context="data">
+                <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="@data.State" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Models.Customer" Property="ZipCode" Title="Zip Code" Width="100px" Visible="@showDetails" />
+        <RadzenDataGridColumn TItem="Models.Customer" Property="Phone" Title="Phone" Width="120px" Visible="@showDetails" />
+        <RadzenDataGridColumn TItem="Models.Customer" Property="Email" Title="Email" Width="200px">
+            <Template Context="data">
+                <a href="mailto:@data.Email">@data.Email</a>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Models.Customer" Width="120px" TextAlign="TextAlign.Center" Filterable="false" Sortable="false">
+            <Template Context="data">
+                <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small"
+                             Click="@(() => ViewCustomerDetails(data))" class="mr-1" />
+                <RadzenButton Icon="favorite" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                             Click="@(() => ToggleFavorite(data))" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@if (selectedCustomers != null && selectedCustomers.Any())
+{
+    <div class="mt-3">
+        <RadzenCard>
+            <h4>Selected Customers</h4>
+            <RadzenDataList WrapItems="true" AllowPaging="true" Data="@selectedCustomers" TItem="Models.Customer" PageSize="5">
+                <Template Context="customer">
+                    <RadzenCard Style="width: 300px; margin: 10px;">
+                        <div class="d-flex align-items-center">
+                            <RadzenImage Path="@GetAvatarUrl(customer.CustomerID)" Style="width: 48px; height: 48px; border-radius: 24px; margin-right: 12px;" />
+                            <div>
+                                <h5 class="mb-0">@customer.Name</h5>
+                                <div>@customer.City, @customer.State</div>
+                                <div class="small text-muted">@customer.Email</div>
+                            </div>
+                        </div>
+                    </RadzenCard>
+                </Template>
+            </RadzenDataList>
+        </RadzenCard>
+    </div>
+}
+
+@if (showCustomerDetails)
+{
+    <div class="modal" tabindex="-1" style="display:block" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Customer Details</h5>
+                    <button type="button" class="close" @onclick="CloseCustomerDetails">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <RadzenTabs>
+                        <Tabs>
+                            <RadzenTabsItem Text="Profile">
+                                <div class="row mt-3">
+                                    <div class="col-md-4 text-center">
+                                        <RadzenImage Path="@GetAvatarUrl(currentCustomer.CustomerID)" Style="width: 150px; height: 150px; border-radius: 75px;" />
+                                        <h4 class="mt-3">@currentCustomer.Name</h4>
+                                        <div>Customer ID: @currentCustomer.CustomerID</div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <RadzenFieldset Text="Contact Information">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <RadzenText TextStyle="TextStyle.Subtitle2">Email</RadzenText>
+                                                    <RadzenText>@currentCustomer.Email</RadzenText>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <RadzenText TextStyle="TextStyle.Subtitle2">Phone</RadzenText>
+                                                    <RadzenText>@currentCustomer.Phone</RadzenText>
+                                                </div>
+                                            </div>
+                                        </RadzenFieldset>
+                                        <RadzenFieldset Text="Address" class="mt-3">
+                                            <div>
+                                                <RadzenText>@currentCustomer.Address</RadzenText>
+                                                <RadzenText>@currentCustomer.City, @currentCustomer.State @currentCustomer.ZipCode</RadzenText>
+                                            </div>
+                                        </RadzenFieldset>
+                                    </div>
+                                </div>
+                            </RadzenTabsItem>
+                            <RadzenTabsItem Text="Orders">
+                                <div class="mt-3">
+                                    <RadzenText TextStyle="TextStyle.H6">Recent Orders</RadzenText>
+                                    <RadzenDataGrid Data="@GetRandomOrders()" AllowPaging="true" PageSize="5">
+                                        <Columns>
+                                            <RadzenDataGridColumn TItem="Order" Property="OrderID" Title="Order ID" Width="100px" />
+                                            <RadzenDataGridColumn TItem="Order" Property="OrderDate" Title="Date" Width="150px" FormatString="{0:d}" />
+                                            <RadzenDataGridColumn TItem="Order" Property="ProductName" Title="Product" />
+                                            <RadzenDataGridColumn TItem="Order" Property="Quantity" Title="Qty" Width="80px" />
+                                            <RadzenDataGridColumn TItem="Order" Property="Price" Title="Price" Width="100px" FormatString="{0:C}" />
+                                            <RadzenDataGridColumn TItem="Order" Property="Status" Title="Status" Width="120px">
+                                                <Template Context="order">
+                                                    <RadzenBadge BadgeStyle="@GetOrderStatusBadgeStyle(order.Status)" Text="@order.Status" />
+                                                </Template>
+                                            </RadzenDataGridColumn>
+                                        </Columns>
+                                    </RadzenDataGrid>
+                                </div>
+                            </RadzenTabsItem>
+                            <RadzenTabsItem Text="Statistics">
+                                <div class="mt-3">
+                                    <RadzenText TextStyle="TextStyle.H6">Customer Activity</RadzenText>
+                                    <RadzenChart>
+                                        <RadzenColumnSeries Data="@GetRandomChartData()" CategoryProperty="Month" ValueProperty="Value" Title="Orders" />
+                                        <RadzenColumnOptions Radius="5" />
+                                        <RadzenValueAxis>
+                                            <RadzenGridLines Visible="true" />
+                                            <RadzenAxisTitle Text="Orders" />
+                                        </RadzenValueAxis>
+                                        <RadzenCategoryAxis>
+                                            <RadzenGridLines Visible="false" />
+                                            <RadzenAxisTitle Text="Month" />
+                                        </RadzenCategoryAxis>
+                                    </RadzenChart>
+                                </div>
+                            </RadzenTabsItem>
+                        </Tabs>
+                    </RadzenTabs>
+                </div>
+                <div class="modal-footer">
+                    <RadzenButton Text="Close" Click="@CloseCustomerDetails" ButtonStyle="ButtonStyle.Secondary" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private RadzenDataGrid<Models.Customer> grid;
+    private List<Models.Customer> customers = new List<Models.Customer>();
+    private List<Models.Customer> filteredCustomers = new List<Models.Customer>();
+    private IList<Models.Customer> selectedCustomers;
+    private bool isLoading;
+    private string selectedState;
+    private List<string> states = new List<string>();
+    private string groupByField = "";
+    private bool showDetails = false;
+    private bool showCustomerDetails = false;
+    private Models.Customer currentCustomer = new Models.Customer();
+
+    protected override void OnInitialized()
+    {
+        // Generate sample data
+        GenerateSampleData(100);
+
+        // Extract unique states for the dropdown
+        states = customers.Select(c => c.State).Distinct().OrderBy(s => s).ToList();
+
+        // Initialize filtered customers
+        filteredCustomers = customers.ToList();
+    }
+
+    private void GenerateSampleData(int count)
+    {
+        var random = new Random();
+        var firstNames = new[] { "John", "Jane", "Bob", "Alice", "Charlie", "David", "Eva", "Frank", "Grace", "Henry" };
+        var lastNames = new[] { "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor" };
+        var cities = new[] { "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose" };
+        var states = new[] { "NY", "CA", "IL", "TX", "AZ", "PA", "TX", "CA", "TX", "CA" };
+        var streets = new[] { "Main St", "Oak Ave", "Pine Rd", "Elm St", "Maple Dr", "Cedar Ln", "Washington Ave", "Park Rd", "Lake Dr", "River Rd" };
+
+        customers = new List<Models.Customer>();
+        for (int i = 1; i <= count; i++)
+        {
+            var firstName = firstNames[random.Next(firstNames.Length)];
+            var lastName = lastNames[random.Next(lastNames.Length)];
+            var cityIndex = random.Next(cities.Length);
+            customers.Add(new Models.Customer
+            {
+                CustomerID = i,
+                Name = $"{firstName} {lastName}",
+                Address = $"{random.Next(100, 999)} {streets[random.Next(streets.Length)]}",
+                City = cities[cityIndex],
+                State = states[cityIndex],
+                ZipCode = $"{random.Next(10000, 99999)}",
+                Phone = $"555-{random.Next(1000, 9999)}",
+                Email = $"{firstName.ToLower()}.{lastName.ToLower()}@example.com"
+            });
+        }
+    }
+
+    private string GetAvatarUrl(int id)
+    {
+        return $"https://randomuser.me/api/portraits/{(id % 2 == 0 ? "women" : "men")}/{id % 70}.jpg";
+    }
+
+    private void OnStateChange(object value)
+    {
+        if (string.IsNullOrEmpty(selectedState))
+        {
+            filteredCustomers = customers.ToList();
+        }
+        else
+        {
+            filteredCustomers = customers.Where(c => c.State == selectedState).ToList();
+        }
+    }
+
+    private void OnGroupByChange(string value)
+    {
+        if (grid != null)
+        {
+            grid.Groups.Clear();
+            if (!string.IsNullOrEmpty(groupByField))
+            {
+                grid.Groups.Add(new GroupDescriptor()
+                {
+                    Property = groupByField,
+                    SortOrder = SortOrder.Ascending
+                });
+            }
+            grid.Reload();
+        }
+    }
+
+    private void OnShowDetailsChange(bool value)
+    {
+        showDetails = value;
+    }
+
+    private void ViewCustomerDetails(Models.Customer customer)
+    {
+        currentCustomer = customer;
+        showCustomerDetails = true;
+    }
+
+    private void CloseCustomerDetails()
+    {
+        showCustomerDetails = false;
+    }
+
+    private void ToggleFavorite(Models.Customer customer)
+    {
+        // In a real app, this would toggle a favorite status
+        // For this example, we'll just add/remove from selection
+        if (selectedCustomers == null)
+        {
+            selectedCustomers = new List<Models.Customer>();
+        }
+
+        if (selectedCustomers.Contains(customer))
+        {
+            selectedCustomers.Remove(customer);
+        }
+        else
+        {
+            selectedCustomers.Add(customer);
+        }
+    }
+
+    // Helper classes and methods for the details view
+    public class Order
+    {
+        public int OrderID { get; set; }
+        public DateTime OrderDate { get; set; }
+        public string ProductName { get; set; }
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
+        public string Status { get; set; }
+    }
+
+    public class ChartData
+    {
+        public string Month { get; set; }
+        public double Value { get; set; }
+    }
+
+    private List<Order> GetRandomOrders()
+    {
+        var random = new Random();
+        var products = new[] { "Laptop", "Monitor", "Keyboard", "Mouse", "Headphones", "Printer", "Scanner", "Webcam", "Speakers", "Microphone" };
+        var statuses = new[] { "Pending", "Processing", "Shipped", "Delivered", "Cancelled" };
+
+        var orders = new List<Order>();
+        for (int i = 1; i <= 10; i++)
+        {
+            orders.Add(new Order
+            {
+                OrderID = random.Next(10000, 99999),
+                OrderDate = DateTime.Now.AddDays(-random.Next(1, 60)),
+                ProductName = products[random.Next(products.Length)],
+                Quantity = random.Next(1, 5),
+                Price = random.Next(50, 500) + random.Next(0, 99) / 100m,
+                Status = statuses[random.Next(statuses.Length)]
+            });
+        }
+
+        return orders.OrderByDescending(o => o.OrderDate).ToList();
+    }
+
+    private List<ChartData> GetRandomChartData()
+    {
+        var random = new Random();
+        var months = new[] { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+        var data = new List<ChartData>();
+        for (int i = 0; i < 12; i++)
+        {
+            data.Add(new ChartData
+            {
+                Month = months[i],
+                Value = random.Next(5, 30)
+            });
+        }
+
+        return data;
+    }
+
+    private BadgeStyle GetOrderStatusBadgeStyle(string status)
+    {
+        return status switch
+        {
+            "Pending" => BadgeStyle.Warning,
+            "Processing" => BadgeStyle.Info,
+            "Shipped" => BadgeStyle.Primary,
+            "Delivered" => BadgeStyle.Success,
+            "Cancelled" => BadgeStyle.Danger,
+            _ => BadgeStyle.Light
+        };
+    }
+}

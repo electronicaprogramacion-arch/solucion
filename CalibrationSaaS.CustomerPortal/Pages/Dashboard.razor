@@ -1,0 +1,568 @@
+@page "/{tenant}"
+@layout MainLayout
+@implements IDisposable
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using CalibrationSaaS.CustomerPortal.Services.GrpcClients
+@using CalibrationSaaS.CustomerPortal.Services.Authentication
+@using CalibrationSaaS.CustomerPortal.Services.Certificates
+@using CalibrationSaaS.CustomerPortal.Models.Certificates
+@using CalibrationSaaS.CustomerPortal.Models.ViewModels
+@using CalibrationSaaS.CustomerPortal.Components.Dashboard
+@using CalibrationSaaS.CustomerPortal.Components.Equipment
+@using CalibrationSaaS.CustomerPortal.Services.Equipment
+@using CalibrationSaaS.CustomerPortal.Services.Dashboard
+@using CalibrationSaaS.CustomerPortal.Models.Dashboard
+@using CalibrationSaaS.CustomerPortal.Models.Equipment
+@using Radzen
+@using Radzen.Blazor
+@using LocalCertificateDto = CalibrationSaaS.CustomerPortal.Models.Certificates.CertificateDto
+@inject IWorkOrderGrpcService WorkOrderService
+@inject ICustomerPortalGrpcService CustomerService
+@inject ICertificateService CertificateService
+@inject IEquipmentDueDateService DueDateService
+@inject IDashboardMetricsService DashboardMetricsService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NotificationService NotificationService
+@inject IJSRuntime JSRuntime
+@inject ILogger<Dashboard> Logger
+
+<PageTitle>Dashboard - CalibrationSaaS Customer Portal</PageTitle>
+
+@if (isLoading && !hasInitialLoad)
+{
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 400px;">
+        <div style="text-align: center;">
+            <div style="margin-bottom: 16px;">Loading your dashboard...</div>
+        </div>
+    </div>
+}
+else
+{
+    <header class="stitch-header">
+        <h1>Dashboard</h1>
+        <p style="margin-top: 5px; margin-left: 16px;">Welcome back, @contactName with @customerName! Here's a quick overview of your account.</p>
+    </header>
+
+    <section class="stitch-section">
+        <h2>Quick Actions</h2>
+        <div class="stitch-actions">
+            <button class="stitch-btn-primary" @onclick="@(() => Navigation.NavigateTo(GetTenantUrl("certificates")))">
+                Download Certificates
+            </button>
+            <button class="stitch-btn-secondary" @onclick="@(() => Navigation.NavigateTo(GetTenantUrl("equipment/due-dates")))">
+                View Due Dates
+            </button>
+        </div>
+    </section>
+
+    <section class="stitch-section">
+        <h2>Account Overview</h2>
+        <div class="stitch-cards">
+            <div class="stitch-card">
+                <p class="stitch-card-label">Total Certificates</p>
+                <p class="stitch-card-value">@(dashboardMetrics?.TotalCertificates ?? 0)</p>
+            </div>
+            <div class="stitch-card">
+                <p class="stitch-card-label">Expiring Soon</p>
+                <p class="stitch-card-value">@(dashboardMetrics?.EquipmentExpiringSoon ?? 0)</p>
+            </div>
+            @* Demo: Hide Active Service Requests for demo purposes *@
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public string? tenant { get; set; }
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private int customerId = 0;
+    private string customerName = "Customer";
+    private string contactName = "User";
+    private bool isLoading = false;
+    private bool hasInitialLoad = false;
+    private DashboardMetrics? dashboardMetrics;
+    private List<WorkOrderDto>? recentWorkOrders;
+    private List<Services.GrpcClients.EquipmentDueDateDto>? equipmentDueDates;
+    private List<LocalCertificateDto>? recentCertificates;
+    private CancellationTokenSource? cancellationTokenSource;
+    private bool isDisposed = false;
+
+    private string GetTenantUrl(string path)
+    {
+        if (string.IsNullOrEmpty(tenant))
+        {
+            return string.IsNullOrEmpty(path) ? "/" : $"/{path}";
+        }
+
+        return string.IsNullOrEmpty(path) ? $"/{tenant}" : $"/{tenant}/{path}";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        cancellationTokenSource = new CancellationTokenSource();
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        if (isDisposed || cancellationTokenSource?.Token.IsCancellationRequested == true)
+            return;
+
+        try
+        {
+            isLoading = true;
+            if (!isDisposed)
+                StateHasChanged();
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                var customerIdValue = authState.User.GetCustomerId();
+                var tenantId = authState.User.GetTenantId();
+                // Demo: Hardcode company name for demo purposes
+                customerName = "Kavoku";
+                contactName = authState.User.GetFullName() ?? "User";
+
+                if (customerIdValue.HasValue && !string.IsNullOrEmpty(tenantId))
+                {
+                    customerId = customerIdValue.Value;
+
+                    // Demo: Use mock dashboard metrics for demo purposes
+                    dashboardMetrics = GetMockDashboardMetrics();
+
+                    // Load recent certificates for display
+                    var certificateSearchRequest = new CertificateSearchRequest
+                    {
+                        Page = 1,
+                        PageSize = 5,
+                        SortBy = "IssueDate",
+                        SortDirection = "desc"
+                    };
+                    var certificatesResult = await CertificateService.SearchCertificatesAsync(certificateSearchRequest, customerId);
+                    recentCertificates = certificatesResult.Certificates;
+
+                    // Demo: Add fallback mock data if no certificates found
+                    if (recentCertificates == null || !recentCertificates.Any())
+                    {
+                        recentCertificates = GetMockCertificates();
+                    }
+
+                    // Load recent work orders for display
+                    var workOrdersResult = await WorkOrderService.GetWorkOrdersAsync(customerId, tenantId, 1, 5);
+                    recentWorkOrders = workOrdersResult.WorkOrders;
+
+                    // Load equipment due dates for display
+                    equipmentDueDates = await WorkOrderService.GetEquipmentDueDatesAsync(customerId, tenantId, 90);
+
+                    // Demo: Add fallback mock data if no equipment due dates found
+                    if (equipmentDueDates == null || !equipmentDueDates.Any())
+                    {
+                        equipmentDueDates = GetMockEquipmentDueDates();
+                    }
+
+                    hasInitialLoad = true;
+                    if (!isDisposed)
+                        StateHasChanged();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            if (!isDisposed)
+            {
+                Logger.LogError(ex, "Error loading dashboard data");
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error Loading Dashboard",
+                    Detail = "Unable to load dashboard data. Please try refreshing the page.",
+                    Duration = 5000
+                });
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            if (!isDisposed)
+                StateHasChanged();
+        }
+    }
+
+    private Task HandleNavigation(string path)
+    {
+        Navigation.NavigateTo(path);
+        return Task.CompletedTask;
+    }
+
+    private Variant GetStatusVariant(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "completed" => Variant.Filled,
+            "in progress" => Variant.Filled,
+            "scheduled" => Variant.Filled,
+            "cancelled" => Variant.Outlined,
+            _ => Variant.Text
+        };
+    }
+
+    private Variant GetDueStatusVariant(string status)
+    {
+        return status switch
+        {
+            "Overdue" => Variant.Filled,
+            "Due Soon" => Variant.Filled,
+            "Due Later" => Variant.Filled,
+            "Current" => Variant.Filled,
+            _ => Variant.Text
+        };
+    }
+
+    private string GetDueStatusColor(string status)
+    {
+        return status switch
+        {
+            "Overdue" => "var(--rz-danger)",
+            "Due Soon" => "var(--rz-warning)",
+            "Due Later" => "var(--rz-info)",
+            "Current" => "var(--rz-success)",
+            _ => "var(--rz-secondary)"
+        };
+    }
+
+    private void ViewWorkOrder(int workOrderId)
+    {
+        Navigation.NavigateTo($"/work-orders/{workOrderId}");
+    }
+
+    private void ViewCertificate(int certificateId)
+    {
+        Navigation.NavigateTo($"/certificates/{certificateId}");
+    }
+
+    private async Task DownloadCertificate(int certificateId)
+    {
+        try
+        {
+            // TODO: Get customer ID from authentication context
+            var customerId = 1; // Placeholder
+
+            var result = await CertificateService.DownloadCertificateAsync(certificateId, customerId);
+
+            if (result.Success && result.FileData != null)
+            {
+                // Use JavaScript to trigger download
+                await JSRuntime.InvokeVoidAsync("downloadFile",
+                    result.FileName,
+                    result.ContentType,
+                    Convert.ToBase64String(result.FileData));
+
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Download Started",
+                    Detail = $"Certificate {result.FileName} download has started.",
+                    Duration = 3000
+                });
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Download Failed",
+                    Detail = result.ErrorMessage ?? "Failed to download certificate.",
+                    Duration = 5000
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error downloading certificate {CertificateId}", certificateId);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Download Error",
+                Detail = "An error occurred while downloading the certificate.",
+                Duration = 5000
+            });
+        }
+    }
+
+    private BadgeStyle GetCertificateStatusBadgeStyle(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "issued" => BadgeStyle.Success,
+            "draft" => BadgeStyle.Secondary,
+            "pending" => BadgeStyle.Warning,
+            "cancelled" => BadgeStyle.Danger,
+            "expired" => BadgeStyle.Light,
+            _ => BadgeStyle.Info
+        };
+    }
+
+    private string GetCertificateStatusClasses(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "issued" => "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+            "draft" => "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+            "pending" => "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+            "cancelled" => "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+            "expired" => "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+            _ => "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+        };
+    }
+
+    private string GetLoginUrl()
+    {
+        return !string.IsNullOrEmpty(tenant) ? $"/{tenant}/login" : "/login";
+    }
+
+    // Demo: Mock data methods for demo purposes
+    private List<Models.Certificates.CertificateDto> GetMockCertificates()
+    {
+        return new List<Models.Certificates.CertificateDto>
+        {
+            new Models.Certificates.CertificateDto
+            {
+                Id = 1001,
+                CertificateNumber = "CERT-WO-2024-001-1001",
+                WorkOrderNumber = "WO-2024-001",
+                WorkOrderId = 1001,
+                WorkOrderDetailId = 1001,
+                IssueDate = DateTime.Now.AddDays(-2),
+                CalibrationDate = DateTime.Now.AddDays(-3),
+                Status = "Issued",
+                Equipment = new Models.Certificates.EquipmentDto
+                {
+                    Id = 101,
+                    SerialNumber = "TH-001-2023",
+                    Description = "Digital Thermometer",
+                    Manufacturer = "Fluke",
+                    Model = "1523",
+                    Location = "Lab A",
+                    NextCalibrationDate = DateTime.Now.AddMonths(12)
+                },
+                Customer = new Models.Certificates.CustomerDto
+                {
+                    Id = 1,
+                    Name = "Acme Manufacturing",
+                    CompanyName = "Acme Manufacturing Corp"
+                }
+            },
+            new Models.Certificates.CertificateDto
+            {
+                Id = 1002,
+                CertificateNumber = "CERT-WO-2024-002-1002",
+                WorkOrderNumber = "WO-2024-002",
+                WorkOrderId = 1002,
+                WorkOrderDetailId = 1002,
+                IssueDate = DateTime.Now.AddDays(-5),
+                CalibrationDate = DateTime.Now.AddDays(-6),
+                Status = "Issued",
+                Equipment = new Models.Certificates.EquipmentDto
+                {
+                    Id = 102,
+                    SerialNumber = "PR-002-2023",
+                    Description = "Pressure Gauge",
+                    Manufacturer = "Ashcroft",
+                    Model = "1009",
+                    Location = "Lab B",
+                    NextCalibrationDate = DateTime.Now.AddMonths(12)
+                },
+                Customer = new Models.Certificates.CustomerDto
+                {
+                    Id = 1,
+                    Name = "Acme Manufacturing",
+                    CompanyName = "Acme Manufacturing Corp"
+                }
+            },
+            new Models.Certificates.CertificateDto
+            {
+                Id = 1003,
+                CertificateNumber = "CERT-WO-2024-003-1003",
+                WorkOrderNumber = "WO-2024-003",
+                WorkOrderId = 1003,
+                WorkOrderDetailId = 1003,
+                IssueDate = DateTime.Now.AddDays(-8),
+                CalibrationDate = DateTime.Now.AddDays(-9),
+                Status = "Issued",
+                Equipment = new Models.Certificates.EquipmentDto
+                {
+                    Id = 103,
+                    SerialNumber = "SC-003-2023",
+                    Description = "Analytical Scale",
+                    Manufacturer = "Mettler Toledo",
+                    Model = "XS205",
+                    Location = "QC Lab",
+                    NextCalibrationDate = DateTime.Now.AddMonths(6)
+                },
+                Customer = new Models.Certificates.CustomerDto
+                {
+                    Id = 1,
+                    Name = "Acme Manufacturing",
+                    CompanyName = "Acme Manufacturing Corp"
+                }
+            },
+            new Models.Certificates.CertificateDto
+            {
+                Id = 1004,
+                CertificateNumber = "CERT-WO-2024-004-1004",
+                WorkOrderNumber = "WO-2024-004",
+                WorkOrderId = 1004,
+                WorkOrderDetailId = 1004,
+                IssueDate = DateTime.Now.AddDays(-12),
+                CalibrationDate = DateTime.Now.AddDays(-13),
+                Status = "Issued",
+                Equipment = new Models.Certificates.EquipmentDto
+                {
+                    Id = 104,
+                    SerialNumber = "VM-004-2023",
+                    Description = "Digital Voltmeter",
+                    Manufacturer = "Keysight",
+                    Model = "34461A",
+                    Location = "Electronics Lab",
+                    NextCalibrationDate = DateTime.Now.AddMonths(12)
+                },
+                Customer = new Models.Certificates.CustomerDto
+                {
+                    Id = 1,
+                    Name = "Acme Manufacturing",
+                    CompanyName = "Acme Manufacturing Corp"
+                }
+            },
+            new Models.Certificates.CertificateDto
+            {
+                Id = 1005,
+                CertificateNumber = "CERT-WO-2024-005-1005",
+                WorkOrderNumber = "WO-2024-005",
+                WorkOrderId = 1005,
+                WorkOrderDetailId = 1005,
+                IssueDate = DateTime.Now.AddDays(-15),
+                CalibrationDate = DateTime.Now.AddDays(-16),
+                Status = "Issued",
+                Equipment = new Models.Certificates.EquipmentDto
+                {
+                    Id = 105,
+                    SerialNumber = "FL-005-2023",
+                    Description = "Flow Meter",
+                    Manufacturer = "Endress+Hauser",
+                    Model = "Proline 300",
+                    Location = "Process Lab",
+                    NextCalibrationDate = DateTime.Now.AddMonths(12)
+                },
+                Customer = new Models.Certificates.CustomerDto
+                {
+                    Id = 1,
+                    Name = "Acme Manufacturing",
+                    CompanyName = "Acme Manufacturing Corp"
+                }
+            }
+        };
+    }
+
+    private List<Services.GrpcClients.EquipmentDueDateDto> GetMockEquipmentDueDates()
+    {
+        return new List<Services.GrpcClients.EquipmentDueDateDto>
+        {
+            new Services.GrpcClients.EquipmentDueDateDto
+            {
+                EquipmentId = 201,
+                SerialNumber = "TH-201-2022",
+                Manufacturer = "Raytek",
+                Model = "ST80",
+                EquipmentType = "Infrared Thermometer",
+                Location = "Production Floor",
+                LastCalibrationDate = DateTime.Now.AddMonths(-11),
+                NextDueDate = DateTime.Now.AddDays(15),
+                CalibrationIntervalMonths = 12,
+                Status = "Due Soon",
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            },
+            new Services.GrpcClients.EquipmentDueDateDto
+            {
+                EquipmentId = 202,
+                SerialNumber = "PR-202-2022",
+                Manufacturer = "Honeywell",
+                Model = "STG94L",
+                EquipmentType = "Digital Pressure Transducer",
+                Location = "Test Bay 1",
+                LastCalibrationDate = DateTime.Now.AddMonths(-11),
+                NextDueDate = DateTime.Now.AddDays(22),
+                CalibrationIntervalMonths = 12,
+                Status = "Due Soon",
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            },
+            new Services.GrpcClients.EquipmentDueDateDto
+            {
+                EquipmentId = 203,
+                SerialNumber = "SC-203-2022",
+                Manufacturer = "Sartorius",
+                Model = "Entris224-1S",
+                EquipmentType = "Precision Balance",
+                Location = "Lab C",
+                LastCalibrationDate = DateTime.Now.AddMonths(-5),
+                NextDueDate = DateTime.Now.AddDays(28),
+                CalibrationIntervalMonths = 6,
+                Status = "Due Soon",
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            },
+            new Services.GrpcClients.EquipmentDueDateDto
+            {
+                EquipmentId = 204,
+                SerialNumber = "VM-204-2022",
+                Manufacturer = "Fluke",
+                Model = "8845A",
+                EquipmentType = "Bench Multimeter",
+                Location = "Electronics Lab",
+                LastCalibrationDate = DateTime.Now.AddMonths(-10),
+                NextDueDate = DateTime.Now.AddDays(35),
+                CalibrationIntervalMonths = 12,
+                Status = "Current",
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            },
+            new Services.GrpcClients.EquipmentDueDateDto
+            {
+                EquipmentId = 205,
+                SerialNumber = "FL-205-2022",
+                Manufacturer = "Siemens",
+                Model = "SITRANS FUS1010",
+                EquipmentType = "Ultrasonic Flow Meter",
+                Location = "Utility Room",
+                LastCalibrationDate = DateTime.Now.AddMonths(-13),
+                NextDueDate = DateTime.Now.AddDays(-5),
+                CalibrationIntervalMonths = 12,
+                Status = "Overdue",
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            }
+        };
+    }
+
+    /// <summary>
+    /// Demo: Returns mock dashboard metrics for demo purposes
+    /// </summary>
+    private DashboardMetrics GetMockDashboardMetrics()
+    {
+        return new DashboardMetrics
+        {
+            TotalCertificates = 5,
+            EquipmentExpiringSoon = 5
+            // Demo: ActiveServiceRequests removed for demo purposes
+        };
+    }
+
+    public void Dispose()
+    {
+        isDisposed = true;
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource?.Dispose();
+    }
+}

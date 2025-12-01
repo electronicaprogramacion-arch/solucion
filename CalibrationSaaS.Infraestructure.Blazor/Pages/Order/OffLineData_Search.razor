@@ -1,0 +1,301 @@
+﻿@page "/OffLineData"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Domain.Aggregates.Views;
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base
+@using CalibrationSaaS.Blazor.Controls
+@inherits WorkOrderDetailOff_SearchBase
+ 
+<ResponsiveTable ItemsDataSource="@List"
+                 PageSize="paginaSize"
+                 HasAction="false"
+                
+                 Context="Entity"
+                 @ref="@Grid"
+                 GridID="gridWod"
+                 InLineEdit="false"
+                 RowEditClass=""
+                 RowNewClass=""
+                 TableItem="WorkOrderDetail"
+                 EnabledSearch="true"
+                 editContext="@CurrentEditContext"
+                 EnabledModal="false"
+                 OnChangeWindow="ClearList"
+                 SelectOnly="@SelectOnly"
+                 SaveButtonSubmit="false"
+                 PaginationFunction1="LoadData"
+                 PaginasTotales="paginasTotales"
+                 TotalRows="TotalRows"
+                 HasDelete="false">
+
+    <ChildContent>
+        <GridColumns>
+
+            <GridColumn TableItem="WorkOrderDetail" Title=" "
+                        Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" CSScol="col-sm-1 customcol">
+                <ResponsiveTemplate>
+                    @{
+                        bool ch = false;
+                        var entity = context as WorkOrderDetail;
+                        if (_pieceOfEquipmentsFiltered != null && _pieceOfEquipmentsFiltered.Count > 0 && entity != null)
+                        {
+                            var a = _pieceOfEquipmentsFiltered.Where(x => x.WorkOrderDetailID == entity.WorkOrderDetailID).ToList();
+
+                            if (a != null && a?.Count > 0)
+                            {
+                                ch = true;
+                            }
+                        }
+
+                    }
+                    @if (ch)
+                    {
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" value="@entity.WorkOrderDetailID" checked="checked"
+                                   id="switch-@entity.WorkOrderDetailID" @onclick="@(async () => await addToListPoE(entity.WorkOrderDetailID))">
+
+                            <label class="custom-control-label" for="switch-@entity.WorkOrderDetailID"></label>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" value="@entity.WorkOrderDetailID"
+                                   id="switch-@entity.WorkOrderDetailID" @onclick="@(async () => await addToListPoE(entity.WorkOrderDetailID))">
+
+                            <label class="custom-control-label" for="switch-@entity.WorkOrderDetailID"></label>
+
+                        </div>
+
+                    }
+
+
+                </ResponsiveTemplate>
+            </GridColumn>
+
+
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOrderID)" />
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" Title="Work Order Detail Id" CSScol="col-sm-1 customcol" />
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.CurrentStatus.Name)" Title="Status" CSScol="col-sm-1 customcol" />
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.IsAccredited)" Title="Accredited" />
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.Customer.Name)" Title="Customer" />
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.Capacity)" Title="Capacity" />
+
+
+            <GridColumn TableItem="WorkOrderDetail" Title=" "
+                        Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" CSScol="col-sm-1 customcol">
+                <ResponsiveTemplate>
+
+                    @{
+                        UnitOfMeasure d;
+                        string h = "";
+                        var c = context as WorkOrderDetail;
+                        if (c.PieceOfEquipment.UnitOfMeasureID.HasValue)
+                        {
+                            d = c.PieceOfEquipment.UnitOfMeasureID.Value.GetUoM(AppState.UnitofMeasureList);
+                            if (d != null && !string.IsNullOrEmpty(d?.Abbreviation))
+                            {
+                                h = d.Abbreviation;
+                            }
+
+                        }
+                    }
+                    @h
+
+
+                </ResponsiveTemplate>
+            </GridColumn>
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.TechnicianID)" />
+
+
+
+        </GridColumns>
+
+    </ChildContent>
+
+    @*<GridHeader>
+            <div class="col-sm customcol"></div>
+            <div class="col-sm customcol">Serial Number</div>
+            <div class="col-sm customcol">Model</div>
+            <div class="col-sm customcol">Customer</div>
+            <div class="col-sm customcol">Capacity</div>
+            <div class="col-sm customcol">Status</div>
+            <div class="col-sm customcol">Due Date</div>
+        </GridHeader>*@
+
+    <GridRow>
+
+    </GridRow>
+    @*<NewButton>
+        <button class="btn btn-sm btn-primary shadow-sm editButton" id="_btnNew" 
+                @onclick=@(async () => await NewItem()) @onclick:stopPropagation @onclick:preventDefault>
+           Add
+        </button>
+    </NewButton>*@
+   
+
+</ResponsiveTable>
+
+
+<ResponsiveTable ItemsDataSource="@List"
+                 PageSize="paginaSize"
+                 HasAction="true"
+                 HasSelect="true"
+                 HasEdit="false"
+                 Context="Entity"
+                 @ref="@GridOff"
+                 GridID="gridWodOff"
+                 InLineEdit="false"
+                 RowEditClass=""
+                 RowNewClass=""
+                 TableItem="WorkOrderDetail"
+                 EnabledSearch="true"
+                 editContext="@CurrentEditContext"
+                 EnabledModal="false"
+                 OnChangeWindow="ClearList"
+                 SelectOnly="@SelectOnly"
+                 SaveButtonSubmit="false"
+                 PaginationFunction1="LoadData2"
+                 PaginasTotales="paginasTotales"
+                 TotalRows="TotalRows"
+                 HasDelete="false">
+
+    <ChildContent>
+        <GridColumns>
+
+            @*<GridColumn TableItem="WorkOrderDetail" Title=" "
+                    Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" CSScol="col-sm-1 customcol">
+            <ResponsiveTemplate>
+                @{
+                    bool ch = false;
+                    var entity = context as WorkOrderDetail;
+                    if (_pieceOfEquipmentsFiltered != null && _pieceOfEquipmentsFiltered.Count > 0 && entity != null)
+                    {
+                        var a = _pieceOfEquipmentsFiltered.Where(x => x.WorkOrderDetailID == entity.WorkOrderDetailID).ToList();
+
+                        if (a != null && a?.Count > 0)
+                        {
+                            ch = true;
+                        }
+                    }
+
+                }
+                @if (ch)
+                {
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" value="@entity.WorkOrderDetailID" checked="checked"
+                               id="switch-@entity.WorkOrderDetailID" @onclick="@(async () => await addToListPoE(entity.WorkOrderDetailID))">
+
+                        <label class="custom-control-label" for="switch-@entity.WorkOrderDetailID"></label>
+
+                    </div>
+                }
+                else
+                {
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" value="@entity.WorkOrderDetailID"
+                               id="switch-@entity.WorkOrderDetailID" @onclick="@(async () => await addToListPoE(entity.WorkOrderDetailID))">
+
+                        <label class="custom-control-label" for="switch-@entity.WorkOrderDetailID"></label>
+
+                    </div>
+
+                }
+
+
+            </ResponsiveTemplate>
+        </GridColumn>*@
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOrderID)" />
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" Title="Work Order Detail Id" CSScol="col-sm-1 customcol">
+
+             
+
+            </GridColumn>
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.CurrentStatus.Name)" Title="Status" CSScol="col-sm-1 customcol" />
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.IsAccredited)" Title="Accredited" />
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.Customer.Name)" Title="Customer" />
+
+            <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.Capacity)" Title="Capacity" />
+
+
+            <GridColumn TableItem="WorkOrderDetail" Title=" "
+                        Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" CSScol="col-sm-1 customcol">
+                <ResponsiveTemplate>
+
+                    @{
+                        UnitOfMeasure d;
+                        string h = "";
+                        var c = context as WorkOrderDetail;
+                        if (c.PieceOfEquipment.UnitOfMeasureID.HasValue)
+                        {
+                            d = c.PieceOfEquipment.UnitOfMeasureID.Value.GetUoM(AppState.UnitofMeasureList);
+                            if (d != null && !string.IsNullOrEmpty(d?.Abbreviation))
+                            {
+                                h = d.Abbreviation;
+                            }
+
+                        }
+                    }
+                    @h
+
+
+                </ResponsiveTemplate>
+                </GridColumn>
+                    <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.TechnicianID)" />
+
+
+
+
+
+        </GridColumns>
+
+    </ChildContent>
+
+    @*<GridHeader>
+            <div class="col-sm customcol"></div>
+            <div class="col-sm customcol">Serial Number</div>
+            <div class="col-sm customcol">Model</div>
+            <div class="col-sm customcol">Customer</div>
+            <div class="col-sm customcol">Capacity</div>
+            <div class="col-sm customcol">Status</div>
+            <div class="col-sm customcol">Due Date</div>
+        </GridHeader>*@
+
+    <GridRow>
+
+    </GridRow>
+   
+     <GridSelect >
+
+        <a class="btn btn-sm btn-primary" id="_btnselect"
+                href="/WorkOrderItem/@Entity.WorkOrderDetailID" >
+            Select
+        </a>
+
+    </GridSelect>
+
+</ResponsiveTable>
+
+
+
+@code {
+
+
+ 
+
+}

@@ -1,0 +1,466 @@
+@using CalibrationSaaS.CustomerPortal.Services.Authentication
+@using CalibrationSaaS.CustomerPortal.Services.MultiTenancy
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@using Finbuckle.MultiTenant
+@using Radzen
+@using Radzen.Blazor
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject ICustomerAuthenticationService AuthService
+@inject ITenantService TenantService
+@inject IMultiTenantContextAccessor MultiTenantContextAccessor
+@inject CalibrationSaaS.CustomerPortal.Services.GrpcClients.ICustomerPortalGrpcService CustomerPortalService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject ILogger<MainLayout> Logger
+
+<div class="stitch-layout">
+    <AuthorizeView>
+        <Authorized>
+            <aside class="stitch-sidebar">
+                <div class="stitch-brand">
+                    <div class="stitch-logo">
+                        @if (!string.IsNullOrEmpty(tenantLogoUrl))
+                        {
+                            <img src="@tenantLogoUrl" alt="@tenantCompanyName Logo" class="tenant-logo" />
+                        }
+                        else
+                        {
+                            <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 6V3m0 18v-3" stroke-linecap="round" stroke-linejoin="round"></path>
+                                <path d="M7.86 7.86a10 10 0 1014.28 0M7.86 16.14a10 10 0 10-5.72-8.28" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        }
+                    </div>
+                    @* Demo: Hide company name text, show only logo *@
+                </div>
+                <nav class="stitch-nav">
+                    <NavLink href="@GetTenantUrl("")" class="stitch-nav-item" Match="NavLinkMatch.All">
+                        <span>Dashboard</span>
+                    </NavLink>
+                    <NavLink href="@GetTenantUrl("certificates")" class="stitch-nav-item">
+                        <span>Certificates</span>
+                    </NavLink>
+                    <NavLink href="@GetTenantUrl("equipment/due-dates")" class="stitch-nav-item">
+                        <span>Due Dates</span>
+                    </NavLink>
+
+                </nav>
+
+            </aside>
+            <div class="stitch-content">
+                <header class="stitch-header">
+                    <div class="stitch-header-content">
+                        <div class="stitch-header-left">
+                            <!-- Page title or breadcrumbs can go here -->
+                        </div>
+                        <div class="stitch-header-right">
+                            <div class="stitch-user-info">
+                                @if (!string.IsNullOrEmpty(currentUserName))
+                                {
+                                    <div class="stitch-user-details">
+                                        <div class="stitch-user-name">@currentUserName</div>
+                                        <div class="stitch-user-email">@currentUserEmail</div>
+                                        <div class="stitch-user-company">@currentUserCompany</div>
+                                    </div>
+                                    <div class="stitch-user-actions">
+                                        <button @onclick="LogoutAsync" class="stitch-logout-btn" title="Logout">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                                <polyline points="16,17 21,12 16,7"></polyline>
+                                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="stitch-user-loading">Loading user info...</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <main class="stitch-main">
+                    @Body
+                </main>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="stitch-login-prompt">
+                <div class="stitch-login-card">
+                    <h2>Access Restricted</h2>
+                    <p>Please log in to access the Customer Portal dashboard.</p>
+                    <button @onclick="@(() => Navigation.NavigateTo(GetLoginUrl()))" class="stitch-login-btn">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+<RadzenNotification />
+<RadzenTooltip />
+<RadzenContextMenu />
+<RadzenDialog />
+
+<!-- Loading overlay -->
+<div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <div class="mt-2">Loading...</div>
+    </div>
+</div>
+
+<!-- Toast notifications container -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <!-- Toasts will be dynamically added here -->
+</div>
+
+@code {
+    private string? currentTenant;
+    private string tenantLogoUrl = "/logos/thermotemp/logo.png";
+    private string tenantCompanyName = "ThermoTemp";
+    private string currentUserName = string.Empty;
+    private string currentUserEmail = string.Empty;
+    private string currentUserCompany = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UpdateCurrentTenant();
+        await LoadTenantInfoAsync();
+        await LoadUserInfoAsync();
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        UpdateCurrentTenant();
+        await LoadTenantInfoAsync();
+        await LoadUserInfoAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateCurrentTenant()
+    {
+        try
+        {
+            var uri = new Uri(Navigation.Uri);
+            var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            Logger.LogInformation("🔍 URL Analysis: {Url}", Navigation.Uri);
+            Logger.LogInformation("🔍 Path Segments: [{Segments}]", string.Join(", ", pathSegments));
+
+            if (pathSegments.Length > 0)
+            {
+                currentTenant = pathSegments[0];
+                Logger.LogInformation("✅ Extracted tenant: {Tenant}", currentTenant);
+            }
+            else
+            {
+                // If no tenant in URL, default to thermotemp for development
+                currentTenant = "thermotemp";
+                Logger.LogInformation("⚠️ No tenant in URL, defaulting to: {Tenant}", currentTenant);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error extracting tenant from URL");
+            currentTenant = "thermotemp"; // Default fallback
+        }
+    }
+
+    private async Task LoadTenantInfoAsync()
+    {
+        try
+        {
+            Logger.LogInformation("🏢 Loading tenant info for: {Tenant}", currentTenant);
+
+            var tenantContext = MultiTenantContextAccessor.MultiTenantContext;
+            Logger.LogInformation("🔍 Tenant context available: {HasContext}", tenantContext != null);
+            Logger.LogInformation("🔍 Tenant info available: {HasTenantInfo}", tenantContext?.TenantInfo != null);
+
+            if (tenantContext?.TenantInfo != null)
+            {
+                Logger.LogInformation("🔍 TenantInfo type: {Type}", tenantContext.TenantInfo.GetType().Name);
+
+                // The TenantInfo from context should be LocalTenantInfo (which is an alias for TenantInfo)
+                if (tenantContext.TenantInfo is CalibrationSaaS.CustomerPortal.Models.MultiTenancy.TenantInfo tenantInfo)
+                {
+                    tenantCompanyName = tenantInfo.CompanyName ?? "Kavoku";
+                    tenantLogoUrl = tenantInfo.LogoUrl ?? "/logos/calibrationco/logo.svg";
+                    Logger.LogInformation("✅ Loaded tenant info from context: Company={CompanyName}, Logo={LogoUrl}", tenantCompanyName, tenantLogoUrl);
+                }
+                else
+                {
+                    Logger.LogWarning("⚠️ TenantInfo type mismatch. Expected TenantInfo, got {ActualType}", tenantContext.TenantInfo.GetType().Name);
+                    // Demo: Fallback to Kavoku
+                    tenantCompanyName = "Kavoku";
+                    tenantLogoUrl = "/logos/calibrationco/logo.svg";
+                }
+            }
+            else if (!string.IsNullOrEmpty(currentTenant))
+            {
+                Logger.LogInformation("🔄 Loading tenant via TenantService for: {Tenant}", currentTenant);
+                var tenantInfo = await TenantService.GetTenantAsync(currentTenant);
+                if (tenantInfo != null)
+                {
+                    tenantCompanyName = tenantInfo.CompanyName ?? "Kavoku";
+                    tenantLogoUrl = tenantInfo.LogoUrl ?? "/logos/calibrationco/logo.svg";
+                    Logger.LogInformation("✅ Loaded tenant info from service: Company={CompanyName}, Logo={LogoUrl}", tenantCompanyName, tenantLogoUrl);
+                }
+                else
+                {
+                    Logger.LogWarning("⚠️ TenantService returned null for tenant: {Tenant}", currentTenant);
+                    // Demo: Fallback to Kavoku
+                    tenantCompanyName = "Kavoku";
+                    tenantLogoUrl = "/logos/calibrationco/logo.svg";
+                }
+            }
+            else
+            {
+                Logger.LogWarning("⚠️ No current tenant available, using Kavoku fallback");
+                // Demo: Fallback to Kavoku
+                tenantCompanyName = "Kavoku";
+                tenantLogoUrl = "/logos/calibrationco/logo.svg";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "❌ Error loading tenant information, using Kavoku fallback");
+            tenantCompanyName = "Kavoku";
+            tenantLogoUrl = "/logos/calibrationco/logo.svg";
+        }
+    }
+
+    private async Task LoadUserInfoAsync()
+    {
+        try
+        {
+            var session = await AuthService.GetCurrentSessionAsync();
+            if (session != null)
+            {
+                currentUserName = session.ContactName ?? string.Empty;
+                currentUserEmail = session.Email ?? string.Empty;
+
+                // Demo: Hardcode company name for demo purposes
+                currentUserCompany = "Kavoku";
+            }
+            else
+            {
+                currentUserName = string.Empty;
+                currentUserEmail = string.Empty;
+                currentUserCompany = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading user information");
+            currentUserName = string.Empty;
+            currentUserEmail = string.Empty;
+            currentUserCompany = string.Empty;
+        }
+    }
+
+    private string GetTenantUrl(string path)
+    {
+        if (string.IsNullOrEmpty(currentTenant))
+        {
+            return string.IsNullOrEmpty(path) ? "/" : $"/{path}";
+        }
+
+        return string.IsNullOrEmpty(path) ? $"/{currentTenant}" : $"/{currentTenant}/{path}";
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+
+    private async Task LogoutAsync()
+    {
+        try
+        {
+            var session = await AuthService.GetCurrentSessionAsync();
+            if (session != null)
+            {
+                await AuthService.LogoutAsync(session.SessionId);
+            }
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Logged Out",
+                Detail = "You have been successfully logged out.",
+                Duration = 3000
+            });
+
+            Navigation.NavigateTo("/login", true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during logout");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Logout Error",
+                Detail = "An error occurred during logout. Please try again.",
+                Duration = 5000
+            });
+        }
+    }
+
+    private void ShowAccountMenu()
+    {
+        // This method is called when the split button is clicked
+        // The dropdown items handle their own navigation
+    }
+
+    private string GetLoginUrl()
+    {
+        // Extract tenant from current URL
+        var uri = new Uri(Navigation.Uri);
+        var segments = uri.Segments;
+
+        // Check if we have a tenant in the URL path
+        if (segments.Length > 1 && !string.IsNullOrEmpty(segments[1]))
+        {
+            var potentialTenant = segments[1].TrimEnd('/');
+            // Simple check - if it's not a known non-tenant path, treat it as tenant
+            if (potentialTenant != "login" && potentialTenant != "index")
+            {
+                return $"/{potentialTenant}/login";
+            }
+        }
+
+        return "/login";
+    }
+}
+
+<style>
+    /* Enhanced Radzen Layout Styles */
+    .rz-layout {
+        min-height: 100vh;
+        background-color: var(--light-color);
+    }
+
+    /* Enhanced Header */
+    .rz-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        box-shadow: var(--shadow-2);
+        height: var(--header-height);
+        z-index: 1000;
+    }
+
+    .rz-header .rz-stack {
+        height: 100%;
+    }
+
+    /* Enhanced Sidebar */
+    .rz-sidebar {
+        background: linear-gradient(180deg, #1a237e 0%, #3a0647 70%);
+        color: white;
+        width: var(--sidebar-width);
+        box-shadow: var(--shadow-3);
+        z-index: 999;
+    }
+
+    .rz-sidebar .rz-panel-menu {
+        background: transparent;
+    }
+
+    .rz-sidebar .rz-panel-menu-item {
+        border-radius: 8px;
+        margin: 4px 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .rz-sidebar .rz-panel-menu-item-text {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+    }
+
+    .rz-sidebar .rz-panel-menu-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateX(4px);
+    }
+
+    .rz-sidebar .rz-panel-menu-item.rz-state-active {
+        background-color: rgba(255, 255, 255, 0.2);
+        box-shadow: var(--shadow-1);
+    }
+
+    .rz-sidebar .rz-panel-menu-item.rz-state-active .rz-panel-menu-item-text {
+        color: white;
+        font-weight: 600;
+    }
+
+    /* Enhanced Body */
+    .rz-body {
+        background-color: var(--light-color);
+        padding: var(--content-padding);
+        min-height: calc(100vh - var(--header-height) - 80px);
+    }
+
+    /* Enhanced Footer */
+    .rz-footer {
+        background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+        border-top: 1px solid var(--border-color);
+        margin-top: auto;
+        box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+    }
+
+    /* Loading States */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(2px);
+    }
+
+    .loading-spinner {
+        background-color: white;
+        padding: 2rem;
+        border-radius: var(--card-border-radius);
+        text-align: center;
+        box-shadow: var(--shadow-4);
+        min-width: 200px;
+    }
+
+    /* Responsive styles moved to site.css to avoid Blazor CSS compilation issues */
+
+    /* Accessibility Enhancements */
+    @@media (prefers-reduced-motion: reduce) {
+        .rz-sidebar,
+        .rz-panel-menu-item {
+            transition: none;
+        }
+    }
+
+    /* High Contrast Mode */
+    @@media (prefers-contrast: high) {
+        .rz-header {
+            background: #000;
+            border-bottom: 2px solid #fff;
+        }
+
+        .rz-sidebar {
+            background: #000;
+            border-right: 2px solid #fff;
+        }
+    }
+</style>

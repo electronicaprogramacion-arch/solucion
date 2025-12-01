@@ -1,0 +1,16 @@
+﻿@inherits LayoutComponentBase
+@layout CalibrationSaaS.Infraestructure.Blazor.Shared.MainLayout
+
+<h1>Manage your account</h1>
+
+<RadzenRow>
+    <RadzenColumn Size="12" SizeMD="3">
+        <ManageNavMenu />
+    </RadzenColumn>
+    <RadzenColumn Size="12" SizeMD="9">
+        <RadzenStack Gap="1rem">
+            <StatusMessage />
+            @Body
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>

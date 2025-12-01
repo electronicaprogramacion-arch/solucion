@@ -1,0 +1,194 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Log in";
+}
+
+@* <h1>@ViewData["Title"]</h1> *@
+
+
+<div class="modern-login-container">
+
+    <!-- Main Login Section -->
+    <div class="login-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-user-circle me-2"></i>
+                Sign In to Your Account
+            </h2>
+            <p class="section-subtitle">Enter your credentials to access Calibrify</p>
+        </div>
+
+        @* <StatusMessage Message="@errorMessage" /> *@
+
+        @* <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" class="login-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="validation-summary" role="alert" /> *@
+        <form id="account" method="post">
+           
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Input.Email" class="form-label">
+                    <i class="fas fa-envelope me-2"></i>User Name
+                </label>
+                <div class="input-wrapper">
+
+                    <input asp-for="Input.Email" class="form-control modern-input" autocomplete="username" aria-required="true" aria-describedby="emailHelp" />
+
+                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="Input.Password" class="form-label">
+                    <i class="fas fa-lock me-2"></i>Password
+                </label>
+                <div class="input-wrapper">
+                    <input asp-for="Input.Password" class="form-control modern-input" autocomplete="current-password" aria-required="true" />
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+               
+            </div>
+            <div class="form-group remember-me-group">
+               
+                <label class="remember-me-label" asp-for="Input.RememberMe">@Html.DisplayNameFor(m => m.Input.RememberMe)
+                    <input type="checkbox" class="remember-me-checkbox" asp-for="Input.RememberMe">
+                    <span class="checkmark"></span>
+                    <span class="remember-me-text">Keep me signed in</span>
+                </label>
+
+               
+
+
+            </div>
+
+            <div>
+                <div class="form-group">
+                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                </div>
+               
+            </div>
+            <br />
+            <div class="helper-links">
+                <p>
+                    <a id="forgot-password" class="helper-link" asp-page="./ForgotPassword"> <i class="fas fa-question-circle me-1"></i>Forgot your password?</a>
+                </p>
+                <p>
+                    <a asp-page="./Register" class="helper-link"  asp-route-returnUrl="@Model.ReturnUrl"><i class="fas fa-user-plus me-1"></i>Create new account</a>
+                </p>
+                <p>
+                    <a id="resend-confirmation" class="helper-link"  asp-page="./ResendEmailConfirmation"><i class="fas fa-envelope-open me-1"></i>Resend email confirmation</a>
+                </p>
+            </div>
+        </form>
+           
+        @* </EditForm> *@
+    </div>
+
+    <!-- Divider -->
+    <div class="auth-divider">
+        <div class="divider-line"></div>
+        <span class="divider-text">OR</span>
+        <div class="divider-line"></div>
+    </div>
+
+    <!-- External Authentication Section -->
+    <div class="external-auth-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-globe me-2"></i>
+                Quick Sign In
+            </h3>
+            <p class="section-subtitle">Use your existing social media account</p>
+        </div>
+
+        <div class="external-auth-wrapper">
+            <ExternalLoginPicker />
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="row">
+
+   @*  <div class="col-md-4">
+        <section>
+            <form id="account" method="post">
+                <h3>Use a local account to log in.</h3>
+                <hr />
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Input.Email" class="form-label"></label>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" aria-describedby="emailHelp" />
+                    <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Password" class="form-label"></label>
+                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" />
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" asp-for="Input.RememberMe">
+                    <label class="form-check-label" asp-for="Input.RememberMe">@Html.DisplayNameFor(m => m.Input.RememberMe)</label>
+                </div>
+
+                <div>
+                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                </div>
+                <br />
+                <div>
+                    <p>
+                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+                    </p>
+                    <p>
+                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
+                    </p>
+                    <p>
+                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
+                    </p>
+                </div>
+            </form>
+        </section>
+    </div> *@
+   @*  <div class="col-md-6 col-md-offset-2">
+        <section>
+            <h3>Use another service to log in.</h3>
+            <hr />
+            @{
+                if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                {
+                    <div>
+                        <p>
+                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
+                            about setting up this ASP.NET application to support logging in via external services</a>.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+                        <div>
+                            <p>
+                                @foreach (var provider in Model.ExternalLogins)
+                                {
+                                    <button type="submit" class="w-100 btn btn-lg btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                                }
+                            </p>
+                        </div>
+                    </form>
+                }
+            }
+        </section>
+    </div> *@
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+}

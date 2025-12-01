@@ -1,0 +1,365 @@
+@page "/radzen-table-example"
+@using CalibrationSaaS.Infraestructure.Blazor.Controls
+@using CalibrationSaaS.Infraestructure.Blazor.Models
+@using Radzen
+@using Radzen.Blazor
+
+<h3>Radzen DataGrid Example - Server-side Paging, Sorting, and Filtering</h3>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="d-flex align-items-center">
+            <RadzenButton Click="@AddCustomer" Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" Text="Add Customer" class="mr-2" />
+            <RadzenButton Click="@RefreshGrid" Icon="refresh" ButtonStyle="ButtonStyle.Light" Text="Refresh" />
+        </div>
+    </div>
+    <div class="col-md-6 text-right">
+        <RadzenButton Click="@ExportExcel" Icon="file_download" ButtonStyle="ButtonStyle.Success" Text="Export to Excel" />
+    </div>
+</div>
+
+<RadzenDataGrid @ref="grid"
+                Data="@customers"
+                Count="@count"
+                LoadData="@LoadData"
+                AllowFiltering="true"
+                AllowColumnResize="true"
+                AllowAlternatingRows="true"
+                AllowSorting="true"
+                AllowPaging="true"
+                PageSize="10"
+                PagerHorizontalAlign="HorizontalAlign.Left"
+                ShowPagingSummary="true"
+                IsLoading="@isLoading"
+                FilterMode="FilterMode.Advanced"
+                LogicalFilterOperator="LogicalFilterOperator.Or"
+                SelectionMode="DataGridSelectionMode.Single"
+                @bind-Value="@selectedCustomers">
+    <Columns>
+        <RadzenDataGridColumn TItem="CalibrationSaaS.Infraestructure.Blazor.Models.Customer" Property="CustomerID" Title="ID" Width="80px" />
+        <RadzenDataGridColumn TItem="CalibrationSaaS.Infraestructure.Blazor.Models.Customer" Property="Name" Title="Name" Width="200px">
+            <Template Context="data">
+                <RadzenImage Path="@GetAvatarUrl(data.CustomerID)" Style="width: 32px; height: 32px; border-radius: 16px; margin-right: 8px;" />
+                <strong>@data.Name</strong>
+            </Template>
+            <FooterTemplate>
+                Total Customers: <strong>@count</strong>
+            </FooterTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="CalibrationSaaS.Infraestructure.Blazor.Models.Customer" Property="Address" Title="Address" />
+        <RadzenDataGridColumn TItem="CalibrationSaaS.Infraestructure.Blazor.Models.Customer" Property="City" Title="City" />
+        <RadzenDataGridColumn TItem="CalibrationSaaS.Infraestructure.Blazor.Models.Customer" Property="State" Title="State" Width="80px" />
+        <RadzenDataGridColumn TItem="CalibrationSaaS.Infraestructure.Blazor.Models.Customer" Property="ZipCode" Title="Zip Code" Width="100px" />
+        <RadzenDataGridColumn TItem="CalibrationSaaS.Infraestructure.Blazor.Models.Customer" Property="Phone" Title="Phone" Width="120px" />
+        <RadzenDataGridColumn TItem="CalibrationSaaS.Infraestructure.Blazor.Models.Customer" Property="Email" Title="Email" Width="200px" >
+            <Template Context="data">
+                <a href="mailto:@data.Email">@data.Email</a>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="CalibrationSaaS.Infraestructure.Blazor.Models.Customer" Width="120px" TextAlign="TextAlign.Center" Filterable="false" Sortable="false">
+            <Template Context="data">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small"
+                             Click="@(() => EditCustomer(data))" class="mr-1" />
+                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                             Click="@(() => DeleteCustomer(data))" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@if (showCustomerDialog)
+{
+    <div class="modal" tabindex="-1" style="display:block" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(editingCustomer.CustomerID == 0 ? "Add" : "Edit") Customer</h5>
+                    <button type="button" class="close" @onclick="CloseDialog">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <RadzenTextBox id="name" @bind-Value="editingCustomer.Name" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <RadzenTextBox id="address" @bind-Value="editingCustomer.Address" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <RadzenTextBox id="city" @bind-Value="editingCustomer.City" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <RadzenTextBox id="state" @bind-Value="editingCustomer.State" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="zipCode">Zip Code</label>
+                        <RadzenTextBox id="zipCode" @bind-Value="editingCustomer.ZipCode" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <RadzenTextBox id="phone" @bind-Value="editingCustomer.Phone" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <RadzenTextBox id="email" @bind-Value="editingCustomer.Email" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <RadzenButton Text="Cancel" Click="@CloseDialog" ButtonStyle="ButtonStyle.Light" />
+                    <RadzenButton Text="Save" Click="@SaveCustomer" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private RadzenDataGrid<CalibrationSaaS.Infraestructure.Blazor.Models.Customer> grid;
+    private List<CalibrationSaaS.Infraestructure.Blazor.Models.Customer> customers = new List<CalibrationSaaS.Infraestructure.Blazor.Models.Customer>();
+    private IList<CalibrationSaaS.Infraestructure.Blazor.Models.Customer> selectedCustomers;
+    private int count;
+    private bool isLoading;
+    private bool showCustomerDialog = false;
+    private CalibrationSaaS.Infraestructure.Blazor.Models.Customer editingCustomer = new CalibrationSaaS.Infraestructure.Blazor.Models.Customer();
+
+    protected override void OnInitialized()
+    {
+        // Generate sample data
+        GenerateSampleData(100);
+    }
+
+    private void GenerateSampleData(int count)
+    {
+        var random = new Random();
+        var firstNames = new[] { "John", "Jane", "Bob", "Alice", "Charlie", "David", "Eva", "Frank", "Grace", "Henry" };
+        var lastNames = new[] { "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor" };
+        var cities = new[] { "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose" };
+        var states = new[] { "NY", "CA", "IL", "TX", "AZ", "PA", "TX", "CA", "TX", "CA" };
+        var streets = new[] { "Main St", "Oak Ave", "Pine Rd", "Elm St", "Maple Dr", "Cedar Ln", "Washington Ave", "Park Rd", "Lake Dr", "River Rd" };
+
+        customers = new List<CalibrationSaaS.Infraestructure.Blazor.Models.Customer>();
+        for (int i = 1; i <= count; i++)
+        {
+            var firstName = firstNames[random.Next(firstNames.Length)];
+            var lastName = lastNames[random.Next(lastNames.Length)];
+            var cityIndex = random.Next(cities.Length);
+            customers.Add(new CalibrationSaaS.Infraestructure.Blazor.Models.Customer
+            {
+                CustomerID = i,
+                Name = $"{firstName} {lastName}",
+                Address = $"{random.Next(100, 999)} {streets[random.Next(streets.Length)]}",
+                City = cities[cityIndex],
+                State = states[cityIndex],
+                ZipCode = $"{random.Next(10000, 99999)}",
+                Phone = $"555-{random.Next(1000, 9999)}",
+                Email = $"{firstName.ToLower()}.{lastName.ToLower()}@example.com"
+            });
+        }
+        this.count = customers.Count;
+    }
+
+    private async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+
+        try
+        {
+            // Simulate server delay
+            await Task.Delay(500);
+
+            // Apply filtering
+            var query = customers.AsQueryable();
+            if (!string.IsNullOrEmpty(args.Filter))
+            {
+                query = query.Where(c =>
+                    c.Name.Contains(args.Filter, StringComparison.OrdinalIgnoreCase) ||
+                    c.Email.Contains(args.Filter, StringComparison.OrdinalIgnoreCase) ||
+                    c.Address.Contains(args.Filter, StringComparison.OrdinalIgnoreCase) ||
+                    c.City.Contains(args.Filter, StringComparison.OrdinalIgnoreCase) ||
+                    c.State.Contains(args.Filter, StringComparison.OrdinalIgnoreCase) ||
+                    c.ZipCode.Contains(args.Filter, StringComparison.OrdinalIgnoreCase) ||
+                    c.Phone.Contains(args.Filter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // Apply sorting
+            if (args.Sorts != null && args.Sorts.Any())
+            {
+                var sort = args.Sorts.First();
+                if (sort.Property == "CustomerID")
+                {
+                    query = sort.SortOrder == SortOrder.Ascending ?
+                        query.OrderBy(c => c.CustomerID) :
+                        query.OrderByDescending(c => c.CustomerID);
+                }
+                else if (sort.Property == "Name")
+                {
+                    query = sort.SortOrder == SortOrder.Ascending ?
+                        query.OrderBy(c => c.Name) :
+                        query.OrderByDescending(c => c.Name);
+                }
+                else if (sort.Property == "Address")
+                {
+                    query = sort.SortOrder == SortOrder.Ascending ?
+                        query.OrderBy(c => c.Address) :
+                        query.OrderByDescending(c => c.Address);
+                }
+                else if (sort.Property == "City")
+                {
+                    query = sort.SortOrder == SortOrder.Ascending ?
+                        query.OrderBy(c => c.City) :
+                        query.OrderByDescending(c => c.City);
+                }
+                else if (sort.Property == "State")
+                {
+                    query = sort.SortOrder == SortOrder.Ascending ?
+                        query.OrderBy(c => c.State) :
+                        query.OrderByDescending(c => c.State);
+                }
+                else if (sort.Property == "ZipCode")
+                {
+                    query = sort.SortOrder == SortOrder.Ascending ?
+                        query.OrderBy(c => c.ZipCode) :
+                        query.OrderByDescending(c => c.ZipCode);
+                }
+                else if (sort.Property == "Phone")
+                {
+                    query = sort.SortOrder == SortOrder.Ascending ?
+                        query.OrderBy(c => c.Phone) :
+                        query.OrderByDescending(c => c.Phone);
+                }
+                else if (sort.Property == "Email")
+                {
+                    query = sort.SortOrder == SortOrder.Ascending ?
+                        query.OrderBy(c => c.Email) :
+                        query.OrderByDescending(c => c.Email);
+                }
+            }
+            else
+            {
+                // Default sort by ID
+                query = query.OrderBy(c => c.CustomerID);
+            }
+
+            // Get total count for pagination
+            count = query.Count();
+
+            // Apply pagination
+            if (args.Skip.HasValue)
+            {
+                query = query.Skip(args.Skip.Value);
+            }
+            if (args.Top.HasValue)
+            {
+                query = query.Take(args.Top.Value);
+            }
+
+            // Get the final result
+            customers = query.ToList();
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private string GetAvatarUrl(int id)
+    {
+        return $"https://randomuser.me/api/portraits/men/{id % 100}.jpg";
+    }
+
+    private void AddCustomer()
+    {
+        editingCustomer = new CalibrationSaaS.Infraestructure.Blazor.Models.Customer();
+        showCustomerDialog = true;
+    }
+
+    private void EditCustomer(CalibrationSaaS.Infraestructure.Blazor.Models.Customer customer)
+    {
+        editingCustomer = new CalibrationSaaS.Infraestructure.Blazor.Models.Customer
+        {
+            CustomerID = customer.CustomerID,
+            Name = customer.Name,
+            Address = customer.Address,
+            City = customer.City,
+            State = customer.State,
+            ZipCode = customer.ZipCode,
+            Phone = customer.Phone,
+            Email = customer.Email
+        };
+        showCustomerDialog = true;
+    }
+
+    private async Task DeleteCustomer(CalibrationSaaS.Infraestructure.Blazor.Models.Customer customer)
+    {
+        // Simulate server delay
+        isLoading = true;
+        await Task.Delay(500);
+
+        // Remove the customer from the list
+        var customerToRemove = customers.FirstOrDefault(c => c.CustomerID == customer.CustomerID);
+        if (customerToRemove != null)
+        {
+            customers.Remove(customerToRemove);
+            count--;
+        }
+
+        isLoading = false;
+        await grid.Reload();
+    }
+
+    private void CloseDialog()
+    {
+        showCustomerDialog = false;
+    }
+
+    private async Task SaveCustomer()
+    {
+        // Simulate server delay
+        isLoading = true;
+        await Task.Delay(500);
+
+        if (editingCustomer.CustomerID == 0)
+        {
+            // Add new customer
+            editingCustomer.CustomerID = customers.Max(c => c.CustomerID) + 1;
+            customers.Add(editingCustomer);
+            count++;
+        }
+        else
+        {
+            // Update existing customer
+            var customerToUpdate = customers.FirstOrDefault(c => c.CustomerID == editingCustomer.CustomerID);
+            if (customerToUpdate != null)
+            {
+                customerToUpdate.Name = editingCustomer.Name;
+                customerToUpdate.Address = editingCustomer.Address;
+                customerToUpdate.City = editingCustomer.City;
+                customerToUpdate.State = editingCustomer.State;
+                customerToUpdate.ZipCode = editingCustomer.ZipCode;
+                customerToUpdate.Phone = editingCustomer.Phone;
+                customerToUpdate.Email = editingCustomer.Email;
+            }
+        }
+
+        isLoading = false;
+        showCustomerDialog = false;
+        await grid.Reload();
+    }
+
+    private async Task RefreshGrid()
+    {
+        await grid.Reload();
+    }
+
+    private void ExportExcel()
+    {
+        // In a real application, this would export the data to Excel
+        // For this example, we'll just show a message
+        Console.WriteLine("Exporting to Excel...");
+    }
+}

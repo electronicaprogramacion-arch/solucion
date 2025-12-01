@@ -1,0 +1,345 @@
+﻿@using Blazed.Controls
+@namespace CalibrationSaaS.Infraestructure.Blazor.Pages.Customer
+@inherits Contact_CreateBase
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@*<EditForm style="margin:10px" OnValidSubmit="Submit" Model="@eq" Context="CurrenEditContext">
+    <DataAnnotationsValidator />*@
+
+<style>
+
+    .divContenedor {
+        position: relative;
+    }
+
+
+    .centrar {
+        /* display: table-cell; */
+        /* vertical-align: middle; */
+        /* position: relative; */
+        position: absolute;
+        top: 50%;
+        left: 50%; 
+        height: 30%;
+        width: 0%;
+       /* margin: -15% 0 0 -25%;*/
+        }
+
+</style>
+
+
+<EditForm style="margin:10px" OnSubmit="Submit" EditContext="@CurrentEditContext">
+    <DataAnnotationsValidator />
+
+    <ResponsiveTable ItemsDataSource="@List"
+                     PageSize="4"
+                     
+                     HasAction="true"
+                     Context="Entity"
+                     @ref="@Grid"
+                     GridID="gridContact"
+                     RowEditClass=""
+                     RowNewClass=""
+                     InLineEdit=false
+                     TableItem="Contact"
+                     EnabledSearch="false"
+                     editContext="@CurrentEditContext"
+                     EnabledModal="true"
+                     OnChangeWindow="ClearList"
+                     NewButtonText="Add New Contact"
+                     NewItemDefaultItem="newContact"
+                     ClientPagination="true"
+                     Component="Component">
+
+
+        <ChildContent>
+            <GridColumns>
+
+                <GridColumn TableItem="Contact" Field="@Grid.GetPropertyName(() => eq.Name)" Title="First Name" DefaultSort="true" />
+                <GridColumn TableItem="Contact" Field="@Grid.GetPropertyName(() => eq.LastName)" />
+                @*<GridColumn TableItem="Contact" Field="@Grid.GetPropertyName(() => eq.UserName)" />*@
+
+                <GridColumn TableItem="Contact" Field="@Grid.GetPropertyName(() => eq.Email)" />
+                <GridColumn TableItem="Contact" Field="@Grid.GetPropertyName(() => eq.PhoneNumber)" Title="Office" />
+                <GridColumn TableItem="Contact" Field="@Grid.GetPropertyName(() => eq.CellPhoneNumber)" Title="Cell" />
+            </GridColumns>
+
+
+            </ChildContent>
+             
+                <GridRow>
+                   
+                </GridRow>
+
+                <GridEdit>
+
+                    @*@setContext(Entity)*@
+                    @*<EditForm style="margin:10px" OnValidSubmit="Submit"   EditContext="@CurrentEditContext">*@
+
+                    <div class="row">
+                        <div class="col-md-12 mx-auto">
+                            <form>
+                                <div class="form-group row">
+                                    <div class="col-sm-6">
+
+                                        <TextInput @bind-Value="@Entity.Name" LabelDown="@LabelDown" Label="Name" IsDisabled="!Enabled">
+                                        </TextInput>
+                                        @Grid.GetErrorMessage(nameof(Entity.Name))
+
+
+                                    </div>
+                                    <div class="col-sm-6">
+
+                                        <TextInput @bind-Value="@Entity.LastName" LabelDown="@LabelDown" Label="Last Name" IsDisabled="!Enabled">
+
+                                        </TextInput>
+                                        @Grid.GetErrorMessage(nameof(Entity.LastName))
+                                        @*<ValidationMessage For="@(() => Entity.LastName)"></ValidationMessage>
+
+                Grid.GetErrorMessage(nameof(Entity.LastName))*@
+                                        @*<CalibrationSaaS.Infraestructure.Blazor.CustomValidation For="@(() => Entity.LastName)" EditContext="Grid.editContext">
+
+                </CalibrationSaaS.Infraestructure.Blazor.CustomValidation>*@
+
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    @*<div class="col-sm-6">
+
+                <TextInput @bind-Value="@Entity.UserName" LabelDown="@LabelDown" Label="User Name" IsDisabled="!Enabled">
+
+                </TextInput>
+                @Grid.GetErrorMessage(nameof(Entity.UserName))
+            </div>*@
+                                    <div class="col">
+
+                                        <TextInput @bind-Value="@Entity.Email" LabelDown="@LabelDown" Label="Email" IsDisabled="!Enabled">
+
+                                        </TextInput>
+                                        @Grid.GetErrorMessage(nameof(Entity.Email))
+                                    </div>
+                                    <div class="col">
+
+                                        <TextInput @bind-Value="@Entity.CellPhoneNumber" LabelDown="@LabelDown" Label="Cell Phone" IsDisabled="!Enabled">
+
+                                        </TextInput>
+                                        @Grid.GetErrorMessage(nameof(Entity.CellPhoneNumber))
+                                    </div>
+                                    <div class="col">
+
+                                        <TextInput @bind-Value="@Entity.PhoneNumber" LabelDown="@LabelDown" Label="Phone Office" IsDisabled="!Enabled">
+
+                                        </TextInput>
+                                        @Grid.GetErrorMessage(nameof(Entity.PhoneNumber))
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+
+                                    <div class="col-sm-6">
+
+                                        <TextInput @bind-Value="@Entity.Occupation" LabelDown="@LabelDown" Label="Occupation" IsDisabled="!Enabled">
+
+                                        </TextInput>
+                                        @Grid.GetErrorMessage(nameof(Entity.Occupation))
+                                    </div>
+                                    <div class="col-sm-5">
+                                        <TextInput @bind-Value="@Entity.IsEnabled" LabelDown="@LabelDown" Label="Enabled" IsDisabled="!Enabled" Type="@Types.Switch">
+
+                                        </TextInput>
+                                        @Grid.GetErrorMessage(nameof(Entity.IsEnabled))
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group row">
+
+                                    <div class="col">
+
+
+                                        <TextInput @bind-Value="@Entity.Note" LabelDown="@LabelDown" Label="Note" IsDisabled="!Enabled" Type="@Types.TextArea">
+
+                                        </TextInput>
+                                        @Grid.GetErrorMessage(nameof(Entity.Note))
+
+                                    </div>
+                                    </div>
+
+                                    <div class="col-sm-2 divContenedor">
+                                        @*<div class="custom-control custom-switch centrar">
+                <InputCheckbox @bind-Value="Entity.IsEnabled" placeholder="Is Enable" class="custom-control-input" id="customSwitch1" />
+                <label class="custom-control-label" for="customSwitch1">Enabled</label>
+            </div>*@
+                                        <div class="form-group row">
+
+                                        </div>
+                                    </div>
+
+
+</form>
+                        </div>
+                    </div>
+                    @*<button class="btn btn-primary" type="submit">Submit form</button>*@
+
+
+                </GridEdit>
+    </ResponsiveTable>
+</EditForm>
+@*</EditForm>*@
+
+@code
+{
+
+    public Contact newContact()
+    {
+        Contact c = new Contact();
+        c.ContactID = NumericExtensions.GetUniqueID(c.ContactID);
+        c.IsEnabled = true;
+        c.PasswordReset = true;
+
+        return c;
+
+
+    }
+
+    //[Parameter]
+    //public Component Component { get; set; }
+
+    public Contact user = new Contact();
+
+
+    //public EditContext editContex { get; set; }
+
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        //eq = Grid.currentEdit;
+        //CurrentEditContext = Grid.editContext;
+
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        //editContex = new EditContext(user);
+
+        await base.OnInitializedAsync();
+
+
+    }
+
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        return base.OnParametersSetAsync();
+    }
+
+
+    IList<Rol> lista;
+
+    public string GetRoles(string roles)
+
+    {
+
+        //if (string.IsNullOrEmpty(roles))
+        //{
+        //    if(lista != null) {
+        //        //lista.Clear();
+        //    }
+        //    return "";
+        //}
+
+        //List<Roles> lis = new List<Roles>();
+        //var a = roles.Split(',');
+        //foreach(var item in a)
+        //{
+        //    Logger.LogDebug(item);
+        //    var array =  AppState.RolesList.Where(x => x.Name.Trim() == item.Trim()).ToList();
+
+        //    lis = lis.Concat(array).ToList();
+        //}
+
+        //lista = lis;
+        //var s = 1;
+
+        return "";
+    }
+
+    public IList<Rol> _Roles;
+
+
+    public IList<Rol> TempRole
+    {
+        get
+        {
+
+            return lista;
+        }
+
+        set
+        {
+            _Roles = value;
+
+            lista = _Roles;
+
+        }
+
+    }
+
+    public string _strroles { get; set; }
+
+    //IList<Rol> result= GetRoles(_strroles)
+
+
+    public Task<IEnumerable<Rol>> SearchRol(string searchText)
+    {
+        var result = AppSecurity.RolesList
+            .Where(x => x.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+
+        return Task.FromResult<IEnumerable<Rol>>(result);
+    }
+
+    public string BoundValues(Contact model)
+    {
+        //if (model == null || model.RolesList == null || model.RolesList.Count == 0)
+        //{
+        //    model.Roles = string.Empty;
+        //    return String.Empty;
+        //}
+
+        //string roles = "";
+        //foreach (var item in model.RolesList)
+        //{
+        //    roles += item.Name + " ,";
+        //}
+
+
+        //model.Roles = roles;
+        return "";
+    }
+
+
+    protected async Task Submit(EditContext editContext)
+    {
+
+    }
+
+
+    public string setContext(Contact Model)
+    {
+        user = Model;
+
+        //editContex = new EditContext(Model);
+        return "";
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+        lista.Clear();
+        _Roles.Clear();
+    }
+
+
+}

@@ -1,0 +1,202 @@
+﻿@model Reports.Domain.ReportViewModels.UncertaintyViewModel
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>UNCERTAINTY BUDGET</title>
+    <style>
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 10px;
+            font-size: 10px;
+            line-height: 24px;
+            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            color: #555;
+        }
+
+            .invoice-box table {
+                width: 100%;
+                line-height: inherit;
+                text-align: center;
+                border-collapse: collapse;
+                border-spacing: unset;
+                text-indent: unset;
+            }
+
+                .invoice-box table td {
+                    vertical-align: top;
+                }
+
+
+                .invoice-box table tr.top table td.title {
+                    font-size: 45px;
+                    line-height: 45px;
+                    color: #333;
+                }
+
+                .invoice-box table tr.information table td {
+                    padding-bottom: 20px;
+                }
+
+                .invoice-box table tr.heading td {
+                    background: #eee;
+                    border: 1px solid #0c0c0c;
+                    font-weight: bold;
+                }
+
+        .table-header {
+            text-align: left;
+        }
+
+        aside {
+            float: right;
+            width: 40%;
+            text-align: center;
+        }
+
+        table {
+            margin-top: 10px;
+        }
+
+        section {
+            float: left;
+            width: 60%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="invoice-box" >
+        <div style="page-break-inside: avoid">
+            <h2 style="font-family:'Lucida Sans Unicode', 'Lucida Grande'; text-align:center"><i><strong>MEASUREMENT UNCERTAINTY BUDGET- CMC</strong></i></h2>
+
+            @if (Model.ContributorsDynamic != null)
+            {
+
+                <table border="1" style="page-break-inside:avoid">
+                    
+                    <tr class="heading">
+
+                        <td>
+                            Contributor
+                        </td>
+                        <td>
+                            Type
+                        </td>
+                        <td>
+                            Magnitude <br />
+                            (Value)
+                        </td>
+                        <td>
+                           
+                            Distribution
+                        </td>
+                        <td>
+                            Divisor
+                        </td>
+                        <td>
+                            Units <br /> (must be <br />
+                            same for all<br />
+                            contributors)
+                        </td>
+
+                        <td>
+                            Std. Unc. <br />
+                            (Quotient of <br />
+                            Mag/Divisor)
+                        </td>
+                    
+                    </tr>
+
+                    @foreach (var item in Model.ContributorsDynamic)
+                    {
+                        <tr class="item">
+                            <td>
+                                @item.Contributor
+                            </td>
+                            <td>
+                                @item.Type
+
+                            </td>
+                            <td>
+                                @item.Magnitude
+                            </td>
+                            <td>
+                                @item.Distribution
+                            </td>
+
+                            <td>
+                                @item.Divisor
+                            </td>
+
+                            <td>
+                                @item.Units
+                            </td>
+
+                            <td>
+                                @item.Quotient
+                            </td>
+
+
+
+                        </tr>
+
+                    }
+                  
+                </table>
+            }
+                  
+        
+            <table border="1" style="page-break-inside:avoid">
+                <tr>
+                    <td colspan="10">
+                        SUM
+                    </td>
+                    <td colspan="2">
+                        @Model.Totales.SumOfSquares
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="10">
+                        STD UNC
+                    </td>
+                   
+                        <td colspan="2">
+                            @Model.Totales.TotalUncerainty
+                        </td>
+                    
+                </tr>
+            
+            
+                <tr>
+                    <td colspan="10">
+                        EXP UNC
+                    </td>
+                    @if (@Model.cmcValuesReplace != null)
+                    {
+                        <td colspan="2">
+                            @Model.Totales.ExpandedUncertainty.ToString() *
+                        </td>
+                    }
+                    else
+                    {
+                    <td colspan="2">
+                        @Model.Totales.ExpandedUncertainty
+                    </td>
+                    }
+                </tr>
+            </table>
+          
+        </div>
+       
+    </div>
+    
+</body>
+</html>
+

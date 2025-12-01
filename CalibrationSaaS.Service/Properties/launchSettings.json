@@ -1,0 +1,34 @@
+{
+  "profiles": {
+    "CalibrationSaaS.Service": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:5333",
+      "nativeDebugging": true,
+      "hotReloadEnabled": true
+    },
+    "SelfHostProject": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:5333",
+      "nativeDebugging": true,
+      "hotReloadEnabled": true
+    }
+  },
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iis": {
+      "applicationUrl": "http://localhost/CalibrationManagementService",
+      "sslPort": 0
+    },
+    "iisExpress": {
+      "applicationUrl": "http://localhost:20713/",
+      "sslPort": 0
+    }
+  }
+}

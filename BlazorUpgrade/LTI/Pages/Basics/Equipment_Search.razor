@@ -1,0 +1,321 @@
+﻿@page "/EquipmentTemplateSearch"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@inherits EquipmentTemplate_SearchBase
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys
+
+<div class="">
+
+
+    <HeaderComponent Title="Equipment Template" ActionBar="false"></HeaderComponent>
+
+    <ResponsiveTable ItemsDataSource="@ListETemp"
+                     PageSize="10"
+                     HasAction="true"
+                     Context="Entity"
+                     @ref="@Grid"
+                     GridID="gridETemp"
+                     InLineEdit="false"
+                     RowEditClass=""
+                     RowNewClass=""
+                     TableItem="EquipmentTemplate"
+                     EnabledSearch="true"
+                     editContext="@CurrentEditContext"
+                     EnabledModal="false"
+                     OnChangeWindow="ClearList"
+                     SelectOnly="@SelectOnly"
+                     SaveButtonSubmit="false"
+                     OnSave="@Submitted"
+                     OnUpdate="@SubmittedUP"
+                     PaginationFunction1="LoadData"
+                     DeleteAction="@Delete"
+                     Component="@Component">
+
+
+        <ChildContent>
+
+            <GridColumns>
+                <GridColumn TableItem="EquipmentTemplate" Field="@Grid.GetPropertyName(() => eq.EquipmentTemplateID)" Title="ID" DefaultSort="true" />
+
+                <GridColumn TableItem="EquipmentTemplate" Field="@Grid.GetPropertyName(() => eq.EquipmentTypeObject.Name)" Title="Type" CSScol="col-sm text-justify" />
+
+                @*<GridColumn TableItem="EquipmentTemplate" Field="@Grid.GetPropertyName(() => eq.Name)" />*@
+
+                <GridColumn TableItem="EquipmentTemplate" Field="@Grid.GetPropertyName(() => eq.Manufacturer1.Name)" Title="Manufacturer" />
+
+                <GridColumn TableItem="EquipmentTemplate" Field="@Grid.GetPropertyName(() => eq.Model)" />
+
+                @*<GridColumn TableItem="EquipmentTemplate" Field="@Grid.GetPropertyName(() => eq.Capacity)" />*@
+
+                <GridColumn TableItem="EquipmentTemplate" Field="@Grid.GetPropertyName(() => eq.UnitofmeasurementID)" Title="Capacity">
+
+                    <ResponsiveTemplate>
+                        @{
+                            var a = context as EquipmentTemplate;
+                            var b = a.UnitofmeasurementID.GetUoM(AppState.UnitofMeasureList, a.Capacity);
+                        }
+                        @if (b != null && a.EquipmentTypeObject !=null && a.EquipmentTypeObject.HasWorkOrderDetail)
+                        {
+                            @b.CapacityFull
+                        }
+                        else
+                        {
+
+                        }
+
+
+                    </ResponsiveTemplate>
+                </GridColumn>
+
+
+
+                <GridColumn TableItem="EquipmentTemplate" Field="@Grid.GetPropertyName(() => eq.StatusID)" Title="Status">
+                    <ResponsiveTemplate>
+
+                        @{
+                            var a = context as EquipmentTemplate;
+                            var b = a.StatusID.GetStatus(AppState.StatusListET);
+                        }
+                        @b
+
+
+                    </ResponsiveTemplate>
+
+
+                </GridColumn>
+            </GridColumns>
+
+
+        </ChildContent>
+
+
+        @*<GridHeader>
+                <div class="col-sm customcol"></div>
+                <div class="col-sm customcol">Id</div>
+                <div class="col-sm customcol">Name</div>
+                <div class="col-sm customcol">Manufacturer</div>
+                <div class="col-sm customcol">Model</div>
+                <div class="col-sm customcol">Capacity</div>
+                <div class="col-sm customcol">Status</div>
+            </GridHeader>*@
+
+        <GridRow>
+            @*<div class="col-sm customcol inv">Id</div>
+                <div class="col-sm customcol">@Format(@Entity.EquipmentTemplateID)</div>
+                <div class="col-sm customcol inv">Name</div>
+                <div class="col-sm customcol">@Format(@Entity.Name)</div>
+                <div class="col-sm customcol inv">Manufacturer</div>
+                <div class="col-sm customcol">@Format(@Entity.Manufacturer)</div>
+                <div class="col-sm customcol inv">Model</div>
+                <div class="col-sm customcol">@Format(@Entity.Model)</div>
+                <div class="col-sm customcol inv">Capacity</div>
+                <div class="col-sm customcol">@Format(@Entity.Capacity)</div>
+                <div class="col-sm customcol inv">Status</div>
+                <div class="col-sm customcol">@Format(@Entity.Status)</div>*@
+        </GridRow>
+
+        
+
+        <GridSelect>
+
+            <button class="btn btn-sm btn-primary" id="_btnselect"
+                    @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                Select
+            </button>
+
+        </GridSelect>
+        <NewButton>
+            <a class="d-sm-inline-block btn btn-sm btn-primary shadow-sm editButton" href="EquipmentTemplate/0">
+                <span>new 
+                @*<i class="fas fa-plus fa-sm"></i>*@
+                </span>
+            </a>
+
+          
+
+        </NewButton>
+        <EditButton>
+
+            <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                <a class="d-sm-inline-block btn btn-sm btn-primary shadow-sm editButton" href="EquipmentTemplate/@Entity.EquipmentTemplateID.ToString()">
+
+                    <span>edit <i class="fas fa-pen fa-sm"></i></span>
+                </a>
+            </div>
+        </EditButton>
+        <GridFilter Context="filter">
+            @{
+
+
+                var a = filter as FilterObject<EquipmentTemplate>;
+
+                if (eq == null)
+                {
+                    eq = new EquipmentTemplate();
+                    eq.Manufacturer1 = new Manufacturer();
+                }
+                if(a != null )
+                {
+                    if (eq.Manufacturer1 == null)
+                    {
+                        eq.Manufacturer1 = new Manufacturer();
+                    }
+                    a.EntityFilter = eq;
+                }
+            }
+
+            @if (a != null && a.EntityFilter != null )
+            {
+                List<EquipmentTypeGroup> etg=null;
+
+                @if (AppState != null && AppState.EquipmentTypeGroups != null && AppState.EquipmentTypeGroups.Count > 0)
+                {
+                    etg = AppState.EquipmentTypeGroups;
+
+                }
+
+                <div class="row">
+                   
+                        @if (etg != null)
+                        {
+                    <div class="col">
+                            <TextInput @bind-Value="a.EntityFilter.EquipmentTypeGroupID"
+                                       IsDisabled="!Enabled"
+                                       Label="Equipment Type"
+                                       LabelDown="@LabelDown"
+                                       ValidationFor="(()=> a.EntityFilter.EquipmentTypeGroupID)">
+                                @foreach (var item in etg)
+                                {
+                                    <option value="@item.EquipmentTypeGroupID">@item.Name</option>
+                                }
+                            </TextInput>
+                        </div>
+                        }
+                    
+                   
+                        @if (EnableSubTypeFilter && AppState != null && AppState.EquipmentTypeGroups != null && AppState.EquipmentTypeGroups.Count > 0)
+                        {
+                    <div class="col">
+                            @{
+                                List<EquipmentTypeGroup> lst = null;
+                                if (a.EntityFilter.EquipmentTypeGroupID.HasValue)
+                                {
+                                    lst = AppState.EquipmentTypeGroups.Where(x => x.EquipmentTypeGroupID == a.EntityFilter.EquipmentTypeGroupID.Value).ToList();
+                                }
+                                else
+                                {
+                                    lst = AppState.EquipmentTypeGroups;
+                                }
+
+                            }
+                            <TextInput @bind-Value="a.EntityFilter.EquipmentTypeGroupID"
+                               IsDisabled="!Enabled"
+                               Label="Sub Equipment Type"
+                               LabelDown="@LabelDown"
+                               ValidationFor="(()=> a.EntityFilter.EquipmentTypeGroupID)">
+
+
+
+                                @foreach (EquipmentTypeGroup item in lst)
+                                {
+                                    if(lst.Count == 1)
+                                    {
+                                        <option value="@item.EquipmentTypeGroupID" selected>@item.Name</option>
+                                       
+                                            a.EntityFilter.EquipmentTypeGroupID = item.EquipmentTypeGroupID;
+                                        
+                                    }
+                                    else
+                                    {
+                                        <option value="@item.EquipmentTypeGroupID">@item.Name</option>
+                                    }
+                                   
+                                }
+                            </TextInput>
+                        </div>
+                        }
+                    
+                    <div class="col">
+                        <TextInput @bind-Value="a.EntityFilter.Manufacturer1.Name" Label="Manufacturer" Validate="false"></TextInput>
+                    </div>
+                    <div class="col">
+                        <TextInput @bind-Value="a.EntityFilter.Model" Label="Model" Validate="false"></TextInput>
+                    </div>
+                </div>
+            }
+           
+
+            <div class="form-row">
+
+            </div>
+
+
+
+           
+        </GridFilter>
+
+
+
+
+    </ResponsiveTable>
+
+
+</div>
+
+
+
+
+
+
+@code {
+
+
+    EquipmentTemplate Definition = new EquipmentTemplate();
+
+
+    void Close(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+            //searchComponent.List.Add((EquipmentTemplate)a.Data);
+
+            StateHasChanged();
+        }
+
+    }
+
+    void CloseEdit(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+            //var yy = searchComponent.List.Where(x => x.EquipmentTemplateID == x.EquipmentTemplateID).FirstOrDefault();
+
+            //searchComponent.List.Remove(yy);
+
+            //searchComponent.List.Add((EquipmentTemplate)a.Data);
+
+            StateHasChanged();
+        }
+
+    }
+
+    async Task Select(object arg, EquipmentTemplate entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+
+    }
+
+
+}

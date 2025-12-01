@@ -1,0 +1,126 @@
+﻿@page "/CalibrationTypeDetail"
+@using Blazed.Controls
+@using Microsoft.AspNetCore.Authorization
+@inherits CalibrationType_DetailBase
+
+<div class="">
+
+    <HeaderComponent Title="Calibration Type" Enabled="true" ActionBar="false"></HeaderComponent>
+
+    <ResponsiveTable ItemsDataSource="@ListCT"
+                     PageSize="5"
+                     HasAction="true"
+                     HasEdit="true"
+                     Context="Entity"
+                     @ref="@Grid"
+                     GridID="gridCT"
+                     InLineEdit="false"
+                     RowEditClass=""
+                     RowNewClass=""
+                     TableItem="CalibrationType"
+                     EnabledSearch="true"
+                     editContext="@CurrentEditContext"
+                     EnabledModal="false"
+                     OnChangeWindow="ClearList"
+                     SelectOnly="@SelectOnly"
+                     SaveButtonSubmit="false"
+                     PaginationFunction1="LoadData"
+                     DeleteAction="@Delete"
+                     Enabled="true"
+                     Policy="HasAccess"
+                     Component="@Component">
+
+
+        <ChildContent>
+
+            <GridColumns>
+
+                <GridColumn TableItem="CalibrationType" Field="@Grid.GetPropertyName(() => eq.CalibrationTypeId)" Title="ID" DefaultSort="true" CSScol="col-sm-1 customcol" />
+
+                <GridColumn TableItem="CalibrationType" Field="@Grid.GetPropertyName(() => eq.Name)" Title="Name" CSScol="col-sm text-justify" />
+
+
+
+            </GridColumns>
+        </ChildContent>
+
+
+
+        <GridRow>
+
+
+        </GridRow>
+
+
+        <GridSelect>
+
+        </GridSelect>
+       @*  <NewButton>
+            <a class="btn btn-primary btn-sm" href="EquipmentTypeCreate/0">new</a>
+        </NewButton> *@
+        <EditButton>
+            <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton" href="CMCValuesCreate/@Entity.CalibrationTypeId">edit</a>
+            </div>
+        </EditButton>
+
+    </ResponsiveTable>
+
+
+
+
+</div>
+
+@code {
+
+    void Close(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+            //searchComponent.List.Insert(0, (EquipmentType)a.Data);
+
+            StateHasChanged();
+        }
+    }
+
+    async Task CloseEdit(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        //if (a.Data != null)
+        //{
+        //    var yy = Grid.Items.Where(x => x.EquipmentTypeID == ((EquipmentType)a.Data).EquipmentTypeID).FirstOrDefault();
+
+        //    Grid.Items.Remove(yy);
+
+        //    Grid.Items.Add((EquipmentType)a.Data);
+
+        //    StateHasChanged();
+        //}
+
+        if (!a.Cancelled)
+        {
+            await Grid.SearchFunction(Grid.currentColumn);
+        }
+
+
+
+
+    }
+
+    async Task Select(object arg, EquipmentType entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+
+    }
+}

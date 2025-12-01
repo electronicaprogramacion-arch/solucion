@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>validatelib</AssemblyName>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+		<!-- Properties related to NuGet packaging: -->
+		<IsPackable>True</IsPackable>
+		<PackageId>CsvValidator</PackageId>
+		<Title>CSV Validator: Fast text file validation</Title>
+		<Description>Library for complex validation of delimited text files.</Description>
+		<PackageReleaseNotes>A changelog is available at https://github.com/barry-jones/csv-validator/blob/master/CHANGELOG.md.</PackageReleaseNotes>
+		<Authors>Barry Jones</Authors>
+		<PackageLicenseUrl>https://github.com/barry-jones/csv-validator/blob/master/LICENSE</PackageLicenseUrl>
+		<PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+		<NoPackageAnalysis>True</NoPackageAnalysis>
+		<PackageTags>csvvalidator;csv;text;validator;validation</PackageTags>
+		<PackageProjectUrl>https://github.com/barry-jones/csv-validator</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/barry-jones/csv-validator</RepositoryUrl>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Nerdbank.GitVersioning" Version="3.9.50" />
+  </ItemGroup>
+</Project>

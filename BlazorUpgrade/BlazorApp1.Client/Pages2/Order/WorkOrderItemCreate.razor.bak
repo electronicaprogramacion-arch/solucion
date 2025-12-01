@@ -1,0 +1,1498 @@
+﻿@page "/WorkOrderItem/{EntityID}"
+@inject NavigationManager NavigationManager
+@inject Reports.Domain.ReportViewModels.Repeatability repeatability
+@inherits BlazorApp1.Blazor.Pages.Order.WorkOrderItemCreateBase
+@using Blazed.Controls
+@using BlazorApp1.Blazor.Blazor.Pages.Order
+@using BlazorApp1.Blazor.Shared
+@using BlazorApp1.Client.Pages.Basics
+
+@using CalibrationSaaS.Domain.Aggregates.Querys;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+
+
+@using CalibrationSaaS.Domain.Aggregates.Shared;
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using System.Dynamic;
+
+@using Helpers
+@using Helpers.Controls
+@using Microsoft.Extensions.DependencyInjection;
+@namespace BlazorApp1.Blazor.Pages.Order
+<style>
+
+
+    .buttonsep {
+    margin-right: 20px;
+    }
+
+
+    .fixed-top {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+    }
+</style>
+
+@{
+
+
+    SetEnabled();
+
+
+
+}
+<!-- Horizontal Steppers -->
+@*<div>---- @Enabled.ToString()------</div>*@
+
+@if (!LoadingWait)
+{
+
+    <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+        <div class="row" style="width:100%;display:flex;flex-dirección:columna;justify-content: center;">
+            <div class="col">
+            </div>
+            <div class="col">
+                <p><em>Loading...</em></p>
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+
+            </div>
+            <div class="col">
+            </div>
+
+
+        </div>
+    </div>
+}
+else if(EquipmentTypeObject != null){
+    <CascadingValue Value="@this" Name="CascadeParam1">
+        <div class="WodContent" style="">
+
+            @if (eq != null && eq.WorkOrderID != 0 && PieceOfEquipment != null && eq.CurrentStatusID > 0 && StatusList != null && StatusList?.Count > 0 )
+            {
+                <div class="row">
+                    <div class="progress" style="display:none" id="progressBar">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%;z-index:100;min-width:2000px"></div>
+                    </div>
+                </div>
+
+                @if( !IsModal)
+                {
+                    <div class="row">
+                        <div class="stepwizard">
+                            <div class="stepwizard-row setup-panel">
+
+                                @if (StatusList != null && eq != null)
+                                {
+                                    var alist = StatusList;
+
+                                    Console.WriteLine(eq.CurrentStatusID);
+                                    var astatus = alist.Where(x => x.StatusId == eq.CurrentStatusID).FirstOrDefault();
+
+                                    if (astatus != null)
+                                    {
+                                        Possibilities = astatus.Possibilities.Split(';').ToList(); ;
+                                    }
+
+
+
+                                    @foreach (var item in alist)
+                                    {
+                                        string classColor = "btn btn-success btn-circle";
+                                        string nameitem = "#step-" + item.StatusId.ToString();
+                                        @if (eq.CurrentStatusID == item.StatusId)
+                                        {
+                                            eq.CurrentStatus.CopyPropertiesFrom(item);
+
+                                            classColor = "btn btn-primary btn-circle";
+
+                                        }
+                                        else if (Possibilities != null && Possibilities.Count > 0 && Possibilities.Contains(item.StatusId.ToString()))
+                                        {
+                                            classColor = "btn btn-success btn-circle";
+                                        }
+                                        else
+                                        {
+                                            classColor = "btn btn-secondary btn-circle";
+                                        }
+                                        <div class="stepwizard-step  col-xs-3 buttonsep">
+
+                                            @*@{
+
+                        var buttonEnabled = GetAccess(Policies.HasFullacces, Component);
+
+
+                        }*@
+                                            <AuthorizeView Roles="admin">
+                                                <Authorized>
+                                                    <button class="@classColor"
+                                                    @onclick="@(async () => await SetCurrentStatus(item))"
+                                                    @onclick:stopPropagation @onclick:preventDefault>
+
+                                                        @item.StatusId.ToString()
+                                                    </button>
+                                                </Authorized>
+                                                <NotAuthorized>
+                                                    <button class="@classColor"
+                                                    @onclick:stopPropagation @onclick:preventDefault disabled="disabled">
+
+                                                        @item.StatusId.ToString()
+                                                    </button>
+                                                </NotAuthorized>
+                                            </AuthorizeView>
+
+
+                                            @if (eq.CurrentStatusID == item.StatusId)
+                                            {
+                                                <p>
+                                                    <small style="font-weight:bold">
+                                                        @item.Name
+
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16">
+                                                            <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"></path>
+                                                        </svg>
+
+                                                    </small>
+                                                </p>
+                                            }
+                                            else
+                                            {
+                                                <p>
+                                                    <small>
+                                                        @item.Name
+                                                    </small>
+                                                </p>
+                                            }
+
+
+                                        </div>
+                                    }
+                                }
+
+
+                            </div>
+                        </div>
+                    </div>
+                }
+
+
+
+
+
+                <nav class="navbar navbar-expand-lg">
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Actions</a>
+
+                    <div class="collapse navbar-collapse" id="navbarTogglerDemo03">
+                        <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                            <li class="nav-item active">
+                                @if (eq != null && eq.CurrentStatusID > 0)
+                                {
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;" id="executebutton"
+                                    type="button"
+                                    @onclick="@(async () => await SetCurrentStatus(null,true))"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+
+                                        Save
+                                    </button>
+
+                                }
+                            </li>
+                            <li class="nav-item active">
+                                @if (eq != null && !IsModal)
+                                {
+
+                                    var buttonDis = true;
+                                    var a = GetAccess(Policies.ContractReview, Component);
+
+                                    var b = GetAccess(Policies.ReadyforCalibration, Component);
+
+                                    var c = GetAccess(Policies.TechnicalReview, Component);
+
+                                    var d = GetAccess(Policies.Override, Component);
+
+                                    if (a && eq.CurrentStatusID == 1 || b && eq.CurrentStatusID == 2 || c && eq.CurrentStatusID == 3 || d)
+                                    {
+                                        buttonDis = false;
+                                    }
+
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                    type="button" id="SaveMenuButton"
+                                    @onclick="@(async () => await SetCurrentStatus(null))"
+                                    @onclick:stopPropagation @onclick:preventDefault disabled="@buttonDis">
+
+                                        Next >>
+                                    </button>
+
+
+                                }
+                            </li>
+                            <li class="nav-item">
+                                @if (eq != null && !IsModal)
+                                {
+                                    <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                        <Rules>
+                                            <Rule LambdaCondition="@(x => x.CurrentStatusID > 1 )" TTYPE="WorkOrderDetail">
+                                                <div> la regla no se cumple</div>
+                                            </Rule>
+                                            <RulesTemplate TValue="string"
+                                            TTYPE="WorkOrderDetail">
+
+                                                <ValidConditionsTemplate>
+
+
+
+
+                                                    <SearchButtonComponent FormType="typeof(WorkOrderDetailHist_Search)"
+                                                    ID="@eq?.WorkOrderDetailID.ToString()" Type="search"
+                                                    Size="@ModalSize.FullScreen"
+                                                    Text="Check History"
+                                                    AllWidth="false"
+                                                    Enabled="false"
+                                                    CSSButton="primary"
+                                                    Parameters="@parameters"
+                                                    CSSClass="d-sm-inline-block btn btn-sm">
+
+
+                                                    </SearchButtonComponent>
+
+
+                                                </ValidConditionsTemplate>
+                                                <InvalidConditionsTemplate>
+
+
+                                                    <SearchButtonComponent FormType="typeof(WorkOrderDetailHist_Search)"
+                                                    ID="@eq?.WorkOrderDetailID.ToString()" Type="search"
+                                                    Size="@ModalSize.FullScreen"
+                                                    Text="Check History"
+                                                    AllWidth="false"
+                                                    Enabled="false"
+                                                    CSSButton="primaty"
+                                                    Parameters="@parameters"
+                                                    IsDisabled="true"
+                                                    CSSClass="d-sm-inline-block btn btn-sm ">
+
+                                                    </SearchButtonComponent>
+                                                </InvalidConditionsTemplate>
+                                            </RulesTemplate>
+                                        </Rules>
+                                    </MultiComponent>
+
+                                }
+
+
+
+
+
+                            </li>
+                            @if (EquipmentTypeObject?.CalibrationType != null && EquipmentTypeObject?.CalibrationType?.IsNivel1.HasValue==true && !EquipmentTypeObject?.CalibrationType.IsNivel1 == true)
+                            {
+                                <li class="nav-item">
+                                    <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                        <Rules>
+                                            <Rule LambdaCondition="@(Querys.WODRules.RuleDownLoadCertificateStatus().Compile())" TTYPE="WorkOrderDetail">
+                                                <div> la regla no se cumple</div>
+                                            </Rule>
+                                            <RulesTemplate TValue="string"
+                                            TTYPE="WorkOrderDetail">
+
+                                                <ValidConditionsTemplate>
+
+                                                    @if (EquipmentTypeObject != null && EquipmentTypeObject?.CalibrationTypeID > 0 && !string.IsNullOrEmpty(EquipmentTypeObject?.CalibrationType?.UrlReport))
+                                                    {
+                                                        <a href="@(url + EquipmentTypeObject.CalibrationType.UrlReport +  eq.WorkOrderDetailID)" class="d-sm-inline-block btn btn-sm btn-primary " style="margin-right: 20px;" target="_blank">View Certificate</a>
+                                                    }
+
+
+
+
+                                                </ValidConditionsTemplate>
+                                                <InvalidConditionsTemplate>
+                                                    <a href="#" class="d-sm-inline-block btn btn-sm btn-primary disabled" style="margin-right: 20px;" target="_blank">View Certificate</a>
+
+                                                </InvalidConditionsTemplate>
+                                            </RulesTemplate>
+                                        </Rules>
+                                    </MultiComponent>
+
+                                </li>
+                            }
+
+                            @if (eq.IsAccredited == true)
+                            {
+
+                            }
+
+                            @if (eq?.TestCode != null && eq?.TestCode?.ProcedureID != null && eq?.TestCode?.Procedure?.DocumentUrl != null && !IsModal)
+                            {
+                                <li class="nav-item">
+                                    <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                        <Rules>
+                                            <Rule LambdaCondition="@(Querys.WODRules.RuleDownLoadCertificateStatus().Compile())" TTYPE="WorkOrderDetail">
+                                                <div> la regla no se cumple</div>
+                                            </Rule>
+                                            <RulesTemplate TValue="string"
+                                            TTYPE="WorkOrderDetail">
+
+
+                                                <ValidConditionsTemplate>
+
+                                                    <a href="@(context?.TestCode?.Procedure?.DocumentUrl)" class="d-sm-inline-block btn btn-sm btn-primary " style="margin-right: 20px;" target="_blank">View Procedure</a>
+
+                                                </ValidConditionsTemplate>
+                                                <InvalidConditionsTemplate>
+                                                    <a href="#" class="d-sm-inline-block btn btn-sm btn-primary " style="margin-right: 20px;" target="_blank">View Procedure</a>
+
+
+                                                </InvalidConditionsTemplate>
+                                            </RulesTemplate>
+                                        </Rules>
+                                    </MultiComponent>
+
+                                </li>
+
+                            }
+                            else if(!IsModal)
+                            {
+
+                                <li class="nav-item">
+                                    <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                        <Rules>
+                                            <Rule LambdaCondition="@(Querys.WODRules.RuleDownLoadCertificateStatus().Compile())" TTYPE="WorkOrderDetail">
+                                                <div> la regla no se cumple</div>
+                                            </Rule>
+                                            <RulesTemplate TValue="string"
+                                            TTYPE="WorkOrderDetail">
+
+
+                                                <ValidConditionsTemplate>
+
+                                                    <a href="@(urlAzure + "Procedure_" + context?.TestCode?.ProcedureID + ".pdf")" class="d-sm-inline-block btn btn-sm btn-primary " style="margin-right: 20px;" target="_blank">View Procedure</a>
+
+                                                </ValidConditionsTemplate>
+                                                <InvalidConditionsTemplate>
+                                                    <a href="#" class="d-sm-inline-block btn btn-sm btn-primary " style="margin-right: 20px;" target="_blank">View Procedure</a>
+
+
+                                                </InvalidConditionsTemplate>
+                                            </RulesTemplate>
+                                        </Rules>
+                                    </MultiComponent>
+
+                                </li>
+                            }
+
+                            @if (1 == 1 && Component.ConfigMode && !IsModal)
+                            {
+
+                                <li class="nav-item">
+                                    <button class="btn btn-warning btn-sm buttonsep"
+                                    type="button" id="SaveMenuButton"
+                                    @onclick="@(async () => await CalibrationConfig(new CreateModel()))"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+
+                                        Templates
+                                    </button>
+
+                                </li>
+
+                            }
+                            @if (isThread && urlWebExcel == null)
+                            {
+                                <li class="nav-item active">
+
+
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                    type="button" id="UploadToExcel"
+                                    @onclick="@(async () => await UploadtoExcel())"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+
+                                        Create Excel in OneDrive
+                                    </button>
+
+
+                                </li>
+                            }
+                            @if (urlWebExcel != null)
+                            {
+                                <li class="nav-item active">
+
+                                    <a href="@(urlWebExcel)" target="_blank" class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;">Open file in OneDrive</a>
+
+                                </li>
+
+
+                                <li class="nav-item active">
+
+
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                    type="button" id="DownloadResults"
+                                    @onclick="@(async () => await DownloadResults())"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+
+                                        Get Results from Excel
+                                    </button>
+
+
+                                </li>
+                            }
+
+                            @if (eq?.CurrentStatusID == 2 && !IsModal)
+                            {
+                                <li class="nav-item active">
+
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                    type="button" id="DownloadResults"
+                                    @onclick="@(async () => await ResetWOD())"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+
+                                        Reset Work Order Detail
+                                    </button>
+
+                                </li>
+                            }
+
+                            @if (eq?.CurrentStatusID != 5)
+                            {
+                                <li class="nav-item active">
+
+
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                    type="button" id="CancelWOD"
+                                    @onclick="@(async () => await CancelWOD())"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+
+                                        Cancel Work Order Detail
+                                    </button>
+
+
+                                </li>
+                            }
+
+                                @if (eq?.CurrentStatusID == 5)
+                                {
+                                    <li class="nav-item active">
+
+
+                                        <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                        type="button" id="OpenWOD"
+                                        @onclick="@(async () => await OpenWOD())"
+                                        @onclick:stopPropagation @onclick:preventDefault>
+
+                                            Open Work Order Detail
+                                        </button>
+
+                                    </li>
+                                }
+                            
+                        </ul>
+
+                    </div>
+                </nav>
+
+
+
+                <!-- Page Heading -->
+
+                <br class="separadorbr" />
+
+                @if (eq != null && eq?.WorkOder != null && eq?.WorkOrderID != 0 && eq?.WorkOder?.Customer != null && !IsModal)
+                {
+                    <div class="accordion d-none d-sm-inline-block" id="accordionExample33xx">
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="headingOne">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link linkstyle" type="button" data-bs-toggle="collapse" style="padding-right:0px"
+                                    data-bs-target="#collapseOne33xx" aria-expanded="true" aria-controls="collapseOne33">
+                                        Work Order Detail: @Format(eq?.WorkOrderDetailUserID)
+                                        | Work Order: @Format(eq?.WorkOrderID)
+                                    </button>
+                                    <SearchButtonComponent FormType="typeof(BlazorApp1.Blazor.Pages.Basics.EquipmentType_Detail)"
+                                    ID="@eq?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeID.ToString()" Type="link"
+                                    Size="@ModalSize.FullScreen"
+                                    Prefix="| Equipment Type: "
+                                    Text="@(Format(eq?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject?.Name).ToString() + " - " + eq?.PieceOfEquipment?.EquipmentTemplate?.DeviceClass)"
+                                    AllWidth="false"
+                                    Enabled="@Enabled">
+
+                                    </SearchButtonComponent>
+                                    <SearchButtonComponent FormType="typeof(BlazorApp1.Blazor.Pages.Basics.Manufacturer_Create)"
+                                    ID="@eq?.PieceOfEquipment?.EquipmentTemplate?.Manufacturer1?.ManufacturerID.ToString()" Type="link"
+                                    Size="@ModalSize.FullScreen"
+                                    Prefix="| Make: "
+                                    Text="@Format(eq?.PieceOfEquipment?.EquipmentTemplate?.Manufacturer1?.Name).ToString()"
+                                    AllWidth="false"
+                                    Enabled="true">
+
+                                    </SearchButtonComponent>
+                                    <SearchButtonComponent FormType="typeof(BlazorApp1.Blazor.Pages.Customer.Customer_Create)"
+                                    ID="@eq?.WorkOder?.CustomerId.ToString()" Type="link"
+                                    Size="@ModalSize.FullScreen"
+                                    Prefix="| Company: "
+                                    Text="@Format(eq?.WorkOder?.Customer?.Name).ToString()"
+                                    AllWidth="false"
+                                    Enabled="true">
+
+                                    </SearchButtonComponent>
+
+                                    <button class="btn btn-link" type="button" data-bs-toggle="collapse" style="padding-left:0px"
+                                    data-bs-target="#collapseOne33" aria-expanded="true" aria-controls="collapseOne33">
+                                        | Model:@Format(eq?.PieceOfEquipment?.EquipmentTemplate?.Model)
+                                        | Serial: @Format(eq?.PieceOfEquipment?.SerialNumber)
+                                        | Capacity: @eq.PieceOfEquipment.UnitOfMeasureID.Value.GetUoM(AppState.UnitofMeasureList, eq.PieceOfEquipment.Capacity).CapacityFull
+
+
+                                        @*| UOM: @Format(eq?.PieceOfEquipment?.UnitOfMeasureID)*@
+                                    </button>
+
+                                </h2>
+                            </div>
+                            <div id="collapseOne33xx" class="collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                            </div>
+                        </div>
+                    </div>
+
+                }
+                <br />
+                @if (eq != null && eq.WorkOrderID != 0 && eq.CurrentStatusID > 0 && !IsModal)
+                {
+                    <div class="accordion" id="accordionConfiguration">
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="BasicInformationHeader">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#BasicInformation" aria-expanded="true" aria-controls="BasicInformation">
+                                    Basic Information
+                                </button>
+                            </div>
+                            <div id="BasicInformation" class="collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConfiguration">
+                                <div class="card-body">
+                                    <div class="card">
+                                        <BlazorApp1.Blazor.Pages.Order.BasicInformation Component="Component" @ref="@BasicInfo" CurrentStatus="@eq.CurrentStatus" eq="eq" _addressFiltered="Addresses" UsersAccess="@UsersAccess">
+
+                                        </BlazorApp1.Blazor.Pages.Order.BasicInformation>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                       
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="CalibrationInstructionsHeader">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#CalibrationInstructions" aria-expanded="true" aria-controls="CalibrationInstructions">
+                                    Calibration Instructions
+                                </button>
+                            </div>
+
+                            <div id="CalibrationInstructions" class="collapse" aria-labelledby="headingOne" data-bs-parent="#accordionConfiguration">
+                                <div class="card-body">
+                                    <div class="card-body">
+                                        @if (eq != null && eq.WorkOrderID != 0)
+                                        {
+
+
+                                            @*<DynamicComponent Type="typeof(CalibrationSaaS.Infraestructure.Blazor.CalibrationInstructionsLTI)" >
+
+                                            </DynamicComponent>*@
+                                            @*<CalibrationInstructions @ref="CalibrationInstructions" CurrentStatus="eq.CurrentStatus" eq="eq" UsersAccess="@UsersAccess">
+
+                                            </CalibrationInstructions>*@
+                                            @* for (int i = 0; i < 100; i++f)
+                                            {
+
+                                            }*@
+
+
+                                            @if (GetCalibrationInstruccionsType(eq) == "scale")
+                                            {
+
+                                                <BlazorApp1.Blazor.Pages.Order.CalibrationInstructions @ref="CalibrationInstructions" CurrentStatus="eq.CurrentStatus" eq="eq" UsersAccess="@UsersAccess" RefreshParent="Refresh">
+
+                                                </BlazorApp1.Blazor.Pages.Order.CalibrationInstructions>
+                                            }
+
+                                            @if (GetCalibrationInstruccionsType(eq) == "force")
+                                            {    //FORCE
+                                                 <BlazorApp1.Blazor.Pages.Order.CalibrationInstructionsLTI @ref="CalibrationInstructions" RefreshParent="Refresh">
+
+                                                </BlazorApp1.Blazor.Pages.Order.CalibrationInstructionsLTI>
+                                            }
+
+
+                                            @if (GetCalibrationInstruccionsType(eq) == "rockwell")
+                                            {    //rockwell
+
+
+                                                var json = GetJSONConfigurationArray();
+                                                string key = null;
+                                                if (json != null)
+                                                {
+
+                                                    key = json.FirstOrDefault().Key;
+                                                }
+                                                    <CascadingValue Value="@key" Name="JsonConfigurationArray">
+                                                    <BlazorApp1.Blazor.CalibrationInstructionsRock @ref="CalibrationInstructions" RefreshParent="Refresh">
+
+                                                        </BlazorApp1.Blazor.CalibrationInstructionsRock>
+                                                    </CascadingValue>
+                                                
+                                            }
+                                     }
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+
+                @if (eq != null && (EquipmentTypeObject?.CalibrationTypeID == 1 || GetJSONConfigurationArray()?.FirstOrDefault()?.Value == "Balance") && eq?.CurrentStatusID > 1 && eq?.WorkOrderID != 0 && !IsModal)
+                {
+                    <CalibrationSaaS.Infraestructure.Blazor.Scale.EnviromentLTIComponent>
+
+                    </CalibrationSaaS.Infraestructure.Blazor.Scale.EnviromentLTIComponent>
+
+                }
+
+                @if (eq != null && (EquipmentTypeObject?.CalibrationTypeID >= 2) && eq?.CurrentStatusID > 1 && eq?.WorkOrderID != 0 && !IsModal && GetJSONConfigurationArray()?.FirstOrDefault()?.Value != "Balance")
+                {
+                    @*<CalibrationSaaS.Infraestructure.Blazor.Shared.Component.Logo TypeString="@("EnviromentLTIComponent")">
+
+            </CalibrationSaaS.Infraestructure.Blazor.Shared.Component.Logo>*@
+
+                    <CalibrationSaaS.Infraestructure.Blazor.EnviromentLTIComponent>
+
+                    </CalibrationSaaS.Infraestructure.Blazor.EnviromentLTIComponent>
+
+                }
+
+
+
+
+
+
+                @if (!IsModal && eq != null && eq?.CurrentStatusID > 1 && eq?.WorkOrderID != 0 && !(eq?.CalibrationType?.IsNivel1 ?? false)  @* && !string.IsNullOrEmpty(eq.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.StandardComponent) *@)
+                {
+                    foreach (var ist in GetStandardComponentArray())
+                    {
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="headingOne2">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="@("#collapse" + @ist.Key)"
+                                aria-expanded="true" aria-controls="@("#collapse" + @ist.Key)">
+                                    @*@StandardSectionTitle : @Description*@
+                                    @ist.Value
+                                </button>
+
+                            </div>
+                            <div id="@("collapse" + @ist.Key)" class="collapse" aria-labelledby="headingOne2" data-bs-parent="#accordionConfiguration">
+
+                                <div class="card-body">
+                                    <div class="d-sm-flex">
+
+
+                                        <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail" RulesCondition="MultiComponent<WorkOrderDetail>.Condition.OnlyOne">
+                                            <Rules>
+                                                <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationAndContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                                                </Rule>
+                                                @*<Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                                </Rule>*@
+
+                                                <RulesTemplate TValue="string"
+                                                TTYPE="WorkOrderDetail">
+
+                                                    <ValidConditionsTemplate>
+                                                        <div class="row w-100">
+                                                            <div class="col-4">
+
+                                                                <button href="#" style="margin:5px" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" onclick="@("$('#btnSetWeightset" + @ist.Key + "').click()")">
+                                                                    <i class="fas fa-magic fa-sm text-white-50"></i>@("+ Add " + @ist.Value)
+                                                                </button>
+                                                            </div>
+                                                            <div class="col-5">
+                                                            </div>
+                                                            <div class="col-3">
+                                                                <button href="#" style="margin:5px;float:right" class="d-sm-inline-block btn btn-sm btn-danger shadow-sm" onclick="@("$('#btnClearWeightset" + @ist.Key + "').click()")">
+                                                                    <i class="fas fa-magic fa-sm text-white-50"></i>@ClearWeightSets
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+
+
+                                                    </ValidConditionsTemplate>
+                                                    <InvalidConditionsTemplate>
+                                                        <button href="#" style="margin:5px" class="d-sm-inline-block btn btn-sm btn-warning shadow-sm" disabled onclick="@("$('#btnClearWeightset" + @ist.Key + "').click()")">
+                                                            <i class="fas fa-magic fa-sm text-white-50"></i>@ClearWeightSets
+                                                        </button>
+
+                                                        <button href="#" style="margin:5px" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled onclick="@("$('#btnSetWeightset" + @ist.Key + "').click()")">
+                                                            <i class="fas fa-magic fa-sm text-white-50"></i>@AddWeightSets
+                                                        </button>
+
+                                                    </InvalidConditionsTemplate>
+
+
+                                                </RulesTemplate>
+                                            </Rules>
+                                        </MultiComponent>
+
+
+
+
+
+
+                                    </div>
+
+                                    <div class="" style="max-height:300px;overflow:auto;width:100%">
+                                        @*  <h5>Select </h5> *@
+                                        @if ((ist.Key) == "scale" && eq?.CurrentStatusID > 1)
+                                        {
+                                            <BlazorApp1.Blazor.LTI.Scale.WeightSetComponent @ref="@WeightSetComponent"
+                                            CurrentStatus="eq.CurrentStatus"
+                                            ChangeAdd="ChangeDescripcion"
+                                            ClearGrid="ClearWeightSet"
+                                            Master="true"
+                                            lstWeightSet="WeightSetList2"
+                                            Component="Component"
+                                            ID="@ist.Key"
+                                            Option="@ist.Option"
+                                            CalibrationTypeID="@ist.CalibrationTypeID"
+                                            JsonFields="@ist.Fields">
+
+                                            </BlazorApp1.Blazor.LTI.Scale.WeightSetComponent>
+                                        }
+                                        else
+                        @if (ist.Key == "force" && eq.CurrentStatusID > 1)
+                                        {
+                                            <BlazorApp1.Blazor.Blazor.Shared.WeightSetComponent @ref="@WeightSetComponent"
+                                            CurrentStatus="eq.CurrentStatus"
+                                            ChangeAdd="ChangeDescripcion"
+                                            ClearGrid="ClearWeightSet"
+                                            Master="true"
+                                            lstWeightSet="WeightSetList2"
+                                            Component="Component"
+                                            ID="@ist.Key"
+                                            Option="@ist.Option"
+                                            CalibrationTypeID="@ist.CalibrationTypeID">
+
+                                            </BlazorApp1.Blazor.Blazor.Shared.WeightSetComponent>
+                                        }
+                                        else
+                        @if (ist.Key == "rockwell" && eq.CurrentStatusID > 1)
+                                        {
+                                            <BlazorApp1.Blazor.Blazor.LTI.Micro.StandardComponent @ref="@WeightSetComponent"
+                                            CurrentStatus="eq.CurrentStatus"
+                                            ChangeAdd="ChangeDescripcion"
+                                            ClearGrid="ClearWeightSet"
+                                            Master="true"
+                                            lstWeightSet="WeightSetList2"
+                                            Component="Component"
+                                            ID="@ist.Key"
+                                            Option="@ist.Option"
+                                            CalibrationTypeID="@ist.CalibrationTypeID">
+
+                                            </BlazorApp1.Blazor.Blazor.LTI.Micro.StandardComponent>
+                                        }
+                                        else
+                        @if (ist.Key == "micro" && eq.CurrentStatusID > 1)
+                                        {
+                                            <BlazorApp1.Blazor.Blazor.LTI.Micro.StandardComponent @ref="@WeightSetComponent"
+                                            CurrentStatus="eq.CurrentStatus"
+                                            ChangeAdd="ChangeDescripcion"
+                                            ClearGrid="ClearWeightSet"
+                                            Master="true"
+                                            lstWeightSet="WeightSetList2"
+                                            Component="Component"
+                                            ID="@ist.Key"
+                                            Option="@ist.Option"
+                                            CalibrationTypeID="@ist.CalibrationTypeID">
+
+                                            </BlazorApp1.Blazor.Blazor.LTI.Micro.StandardComponent>
+
+
+
+                                        }
+                                        else
+                        @if (ist.Key == "standard" && eq.CurrentStatusID > 1)
+                                        {
+                                            <BlazorApp1.Blazor.Blazor.GenericMethods.StandardComponent @ref="@WeightSetComponent"
+                                            CurrentStatus="eq.CurrentStatus"
+                                            ChangeAdd="ChangeDescripcion"
+                                            ClearGrid="ClearWeightSet"
+                                            Master="true"
+                                            lstWeightSet="WeightSetList2"
+                                            Component="Component"
+                                            ID="@ist.Key"
+                                            Option="@ist.Option"
+                                            CalibrationTypeID="@ist.CalibrationTypeID"
+                                            JsonFields="@ist.Fields">
+
+                                            </BlazorApp1.Blazor.Blazor.GenericMethods.StandardComponent>
+
+
+                                        }
+                                        else
+                        @if (ist.Key == "weight" && eq.CurrentStatusID > 1)
+                                        {
+                                            <BlazorApp1.Blazor.Blazor.GenericMethods.WeightSetComponent @ref="@WeightSetComponent"
+                                            CurrentStatus="eq.CurrentStatus"
+                                            ChangeAdd="ChangeDescripcion"
+                                            ClearGrid="ClearWeightSet"
+                                            Master="true"
+                                            lstWeightSet="WeightSetList2"
+                                            Component="Component"
+                                            ID="@ist.Key"
+                                            Option="@ist.Option"
+                                            CalibrationTypeID="@ist.CalibrationTypeID"
+                                            JsonFields="@ist.Fields">
+
+                                            </BlazorApp1.Blazor.Blazor.GenericMethods.WeightSetComponent>
+
+
+                                        }
+                                    </div>
+                                    @* } *@
+
+                                </div>
+
+                            </div>
+                        </div>
+                    }
+
+
+
+                }
+               
+                
+                    
+
+                }
+
+                
+                
+                <div class="accordion" id="accordionDynamic">
+
+                    @if ((EquipmentTypeObject.CalibrationTypeID == 1 || GetJSONConfigurationArray()?.FirstOrDefault()?.Value == "Balance") && eq.CurrentStatusID > 1 && eq.WorkOrderID != 0)
+                    {
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="Balance&ScaleCalibrationHeader">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#ScaleCalibration" aria-expanded="true" aria-controls="ScaleCalibration" @onclick=@(async () => await ShowTests())
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Balance & Scale Calibration
+                                </button>
+                            </div>
+                            <div id="ScaleCalibration" class="collapse" aria-labelledby="headingOne" data-bs-parent="#accordionDynamic">
+                                <div class="card-body">
+
+                                    <div class="accordion" id="accordionExampleReady">
+                                        <div class="accordion-item">
+                                            <div class="accordion-header" id="Balance&ScaleCalibrationHeader">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" @onclick=@(async () => await ShowLinearity())
+                                                @onclick:stopPropagation @onclick:preventDefault>
+                                                    Linearity
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="accordion-item">
+                                            <div class="accordion-header" id="Balance&ScaleCalibrationHeader">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" @onclick=@(async () => await ShowEccentricity())
+                                                @onclick:stopPropagation @onclick:preventDefault>
+                                                    Eccentricity
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="accordion-item">
+                                            <div class="accordion-header" id="Balance&ScaleCalibrationHeader">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" @onclick=@(async () => await ShowRepeatibility())
+                                                @onclick:stopPropagation @onclick:preventDefault>
+                                                    Repeatability
+                                                </button>
+                                            </div>
+                                        </div>
+ 
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+
+                    }
+
+                    @if (EquipmentTypeObject.CalibrationTypeID >= 2 && eq.CurrentStatusID > 1 && eq.WorkOrderID != 0
+               && !EquipmentTypeObject.DynamicConfiguration2)
+                    {
+
+                        <CascadingValue  Value="@EquipmentTypeObject.CalibrationType" Name="CascadeParam2">
+                          @*   <CalibrationSaaS.Infraestructure.Blazor.LTI.CalibrationTypeComponent cmcValues="cmcValuesCalType">
+
+                            </CalibrationSaaS.Infraestructure.Blazor.LTI.CalibrationTypeComponent> *@
+                        </CascadingValue>
+
+                    }
+
+                    @if (EquipmentTypeObject.CalibrationTypeID >= 2
+               && eq.WorkOrderID != 0 && EquipmentTypeObject.DynamicConfiguration2 
+               || eq != null && IsModal && (EquipmentTypeObject.CalibrationTypeID >= 2 && eq.CurrentStatusID >= 1
+               && eq.WorkOrderID != 0 && EquipmentTypeObject.DynamicConfiguration2))
+                    {
+                        bool? enble2 = null;
+                        if(eq.ParentID.HasValue)
+                        {
+                            enble2 = true;
+                        }
+                        <CascadingValue Value="@eq.CurrentStatusID" Name="CurrentStatusId">
+                            <CascadingValue Value="@eq" Name="CascadeParam3">
+                                <CascadingValue Value="@EquipmentTypeObject.CalibrationType" Name="CascadeParam2">
+
+                                    <BlazorApp1.Blazor.Shared.CalibrationTypeComponent Entity="WorkOrderDetail" IsVisible="IsModal" Expanded="IsModal"
+                                                                                                            UseIsVisible="true" ShowProgress="true"
+                                                                                                            CalibrationItem="GenericCalibration2" CalibrationItemResult="GenericCalibrationResult2"
+                                                                                                            Component="@Component"
+                                                                                                            @ref="CalibrationTypeComponent"
+                                                                                                            ResultCalibration="DynamicResult"
+                                                                                                            SaveAction="Save"
+                                                                                                            NewCalibrationFunc="NewCalibration"
+                                                                                                            cmcValues="cmcValuesCalType"
+                                                                                                            RuleValue="enble2"
+                                                                                                            TestPointGroupsWod="@eq.JsonTestPointsGroups"
+                                                                                                            Enabled="@Enabled"
+                                                                                                            IsInit=true>
+
+
+
+                                    </BlazorApp1.Blazor.Shared.CalibrationTypeComponent>
+
+                                </CascadingValue>
+                            </CascadingValue>
+                        </CascadingValue>
+
+
+
+                    }
+
+                     @if (1 == 1 && !IsModal && listWorkOrderDetailchildren?.Count > 0 && eq.CurrentStatusID > 1)
+                    {
+                        <div class="card shadow">
+                            <div class="accordion-header" id="ChildrenHeader">
+                                <h2 class="mb-0">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ChildrenCollapse"
+                                            aria-expanded="false" aria-controls="ChildrenCollapse">
+                                        Children
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="ChildrenCollapse" class="collapse" aria-labelledby="headingThree" data-bs-parent="#accordionConfiguration">
+                                <div class="card-body">
+
+                                    <BlazorApp1.Blazor.Pages.Order.WorkOrderDetailChildren_Search _listWorkOrderDetail="@listWorkOrderDetailchildren" 
+                                        @ref="@WorkOrderDetailSearch" 
+                                        Enabled="Enabled" 
+                                        Component="@Component">
+                                    </BlazorApp1.Blazor.Pages.Order.WorkOrderDetailChildren_Search>
+
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+
+                <div class="accordion" id="accordionEquipmentCondition">
+                    @if (eq != null && eq.CurrentStatusID > 1 && eq.WorkOrderID != 0 && !IsModal)
+                    {
+                        <div class="card shadow">
+                            <div class="accordion-header" id="EquipmentConditionHeader">
+                                <h2 class="mb-0">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#EquipmentCondition" aria-expanded="false" aria-controls="collapseTwo">
+                                        Equipment Condition
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="EquipmentCondition" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionEquipmentCondition">
+                                <div class="card-body">
+                                    @if (eq != null)
+                                    {
+                                        if (eq.EquipmentCondition == null || eq.EquipmentCondition.Count == 0)
+                                        {
+                                            eq.EquipmentCondition = Querys.DefaultEquipmentConditionLTI().ToList();
+                                        }
+
+                                        <EquipmentConditionLTIComponent @ref="EquipmentConditionComponent">
+
+                                        </EquipmentConditionLTIComponent>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (eq != null && (EquipmentTypeObject.CalibrationTypeID == 1 || GetJSONConfigurationArray()?.FirstOrDefault()?.Value == "Balance") && eq.CurrentStatusID > 1 && eq.WorkOrderID != 0 && !IsModal)
+                    {
+                        <BlazorApp1.Blazor.Pages.Order.EnviromentLTIComponent>
+
+                        </BlazorApp1.Blazor.Pages.Order.EnviromentLTIComponent>
+
+                    }
+
+                    @if (eq != null && (EquipmentTypeObject.CalibrationTypeID >= 2) && eq.CurrentStatusID > 1 && eq.WorkOrderID != 0 && !IsModal && GetJSONConfigurationArray()?.FirstOrDefault()?.Value != "Balance")
+                    {
+                        @*<CalibrationSaaS.Infraestructure.Blazor.Shared.Component.Logo TypeString="@("EnviromentLTIComponent")">
+
+            </CalibrationSaaS.Infraestructure.Blazor.Shared.Component.Logo>*@
+
+                        <BlazorApp1.Blazor.Pages.Order.EnviromentLTIComponent>
+
+                        </BlazorApp1.Blazor.Pages.Order.EnviromentLTIComponent>
+
+                    }
+
+
+                   
+
+
+                    @if (_listCetificate != null && _listCetificate.Count() > 0 && eq.WorkOrderID != 0)
+                    {
+                        <div class="card shadow">
+                            <div class="accordion-header" id="CertificateHeader">
+                                <h2 class="mb-0">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-target="#CertificateCollapse"
+                                            aria-expanded="false" aria-controls="CertificateCollapse">
+                                        Certificate History
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="CertificateCollapse" class="collapse" aria-labelledby="headingThree" data-bs-parent="#accordionEquipmentCondition">
+                                <div class="card-body">
+
+                                    <BlazorApp1.Blazor.Pages.AssetsBasics.Certificate_Create @ref="CertificateCreate" Component="@Component">
+                        </BlazorApp1.Blazor.Pages.AssetsBasics.Certificate_Create>
+
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+
+                @if (Customer == "LTI")
+
+                {
+                <div class="accordion" id="accordionNotes">
+                    @if (eq.CurrentStatusID > 1 && eq.WorkOrderID != 0)
+                    {
+                        <div class="accordion-item">
+                            <div class="card-header" id="collapseNotesHeader">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNotes"
+                                        aria-expanded="true" aria-controls="collapseNotes">
+                                    Notes
+                                </button>
+
+                            </div>
+                            <div id="collapseNotes" class="collapse" aria-labelledby="headingOne" data-bs-parent="#accordionNotes">
+
+                                <div class="card-body">
+                                    <EditForm EditContext="@CurrentEditContext">
+                                        <ResponsiveTable ItemsDataSource="@LIST1" PageSize="5" HasAction="true"
+                                                         TableItem="CalibrationSaaS.Domain.Aggregates.Entities.NoteWOD"
+                                                         @ref="@RT1"
+                                                         InLineEdit="@true"
+                                                         EnabledModal="@false"
+                                                         Context="context1"
+                                                         NewButtonText="Add Note"
+                                                         NewItemDefaultItem="@NewNote"
+                                                         HasDelete="@true"
+                                                         Component="@Component"
+                                                         EnabledDrag="@true"
+                                                         RowExecute="RowChange"
+                                                         ColActionCSS="col-sm-2"
+                                                         ClientDefaultSortField="Position"
+                                                         ClientDefaultSortDirection="asc"
+                                                         Key="NoteWODId">
+
+
+                                            <ChildContent>
+
+                                                <GridColumns>
+
+                                                    <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.NoteWOD" Field="@RT1.GetPropertyName(() => NoteRef.Position)" DefaultSort="true" Title="ID" IsVisble="false" />
+
+                                                    <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.NoteWOD" Field="@RT1.GetPropertyName(() => NoteRef.Text)" Title="Data" />
+
+                                                    <GridColumn TableItem="NoteWOD" Field="@RT1.GetPropertyName(() => NoteRef.CalibrationSubtypeId)" Title="Data Grid">
+
+                                                        <ResponsiveTemplate Context="_context">
+
+                                                            @{
+                                                                string cond = "";
+
+                                                                var c = _context as CalibrationSaaS.Domain.Aggregates.Entities.NoteWOD;
+
+                                                                if (_calibrationSubtypeList != null && _calibrationSubtypeList.Count > 0)
+                                                                {
+                                                                    var res1 = _calibrationSubtypeList.Where(x => x.CalibrationSubTypeId == c.CalibrationSubtypeId).FirstOrDefault();
+                                                                    if (res1 != null)
+                                                                    {
+                                                                        cond = res1.Name;
+                                                                    }
+                                                                }
+
+
+                                                            }
+
+                                                            @cond
+
+
+                                                        </ResponsiveTemplate>
+
+                                                    </GridColumn>
+
+                                                </GridColumns>
+
+
+                                            </ChildContent>
+
+
+                                            <GridRow>
+
+                                            </GridRow>
+
+                                            <GridEdit>
+                                                <div class="row" style="width:100%">
+                                                    <div class="col-sm-2">
+
+                                                        <TextInput Label="Position" @bind-Value="@context1.Position"
+                                                                   Validate="true" ValidationFor="@(() => context1.Position)" IsDisabled="!Enabled">
+
+
+                                                        </TextInput>
+
+                                                    </div>
+
+                                                    <div class="col-sm">
+
+                                                        <TextInput Label="Data" @bind-Value="context1.Text"
+                                                                   Validate="true" ValidationFor="@(() => context1.Text)">
+
+
+                                                        </TextInput>
+                                                    </div>
+                                                    <div class="col-sm customcol">
+                                                        <TextInput @bind-Value="context1.CalibrationSubtypeId" Label="Data Grid" Validate="false" Type="@Types.select" LabelDown="LabelDown"
+                                                                   ValidationFor="(()=>context1.CalibrationSubtypeId)" IsDisabled="!Enabled">
+                                                            @if (_calibrationSubtypeList != null && _calibrationSubtypeList?.Count > 0)
+                                                    {
+                                                        @foreach (CalibrationSubType item in _calibrationSubtypeList)
+                                                        {
+                                                            <option value="@item.CalibrationSubTypeId">@item.Name</option>
+                                                        }
+                                                    }
+
+                                                </TextInput>
+
+                                            </div>
+                                        </div>
+                                    </GridEdit>
+                                </ResponsiveTable>
+                            </EditForm>
+                        </div>
+
+                    </div>
+                </div>
+                    }
+                </div>
+
+                }
+                <div>
+                </div>
+
+            }
+        </div>
+
+        @if (eq != null && eq.WorkOrderID != 0 && WeightSetList2 != null && (EquipmentTypeObject.CalibrationTypeID == 1 || GetJSONConfigurationArray()?.FirstOrDefault()?.Value == "Balance") && eq.CurrentStatusID > 1)
+        {        <Modal ID="modalLinearity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLinearity" CloseWindow="CloseLinearity" Title="Linearity">
+                <ContentBody>
+                    <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                        <Rules>
+                            <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                                  TTYPE="WorkOrderDetail">
+                                <div> la regla no se cumple</div>
+                            </Rule>
+                            <RulesTemplate Context="Entity"
+                                           TValue="string"
+                                           TTYPE="WorkOrderDetail">
+                                <ValidConditionsTemplate>
+                                    <BlazorApp1.Blazor.Pages.Order.Calibrations.LinearityComponent @ref="@Linearity" WeightSetList2="@WeightSetList2" OnChangeDescription="OnChangeDescription" Enabled="@(true && !eq.HasBeenCompleted)"
+                                                                                                   Component="@Component" RefreshResolution="ChangeResolution">
+
+                                    </BlazorApp1.Blazor.Pages.Order.Calibrations.LinearityComponent>
+                                </ValidConditionsTemplate>
+                                <InvalidConditionsTemplate>
+                                    <BlazorApp1.Blazor.Pages.Order.Calibrations.LinearityComponent @ref="@Linearity" WeightSetList2="@WeightSetList2" OnChangeDescription="OnChangeDescription" Enabled="@(false)"
+                                                                                                   Component="@Component" RefreshResolution="ChangeResolution">
+
+                                    </BlazorApp1.Blazor.Pages.Order.Calibrations.LinearityComponent>
+                                </InvalidConditionsTemplate>
+                            </RulesTemplate>
+                        </Rules>
+                    </MultiComponent>
+                </ContentBody>
+
+                <Footer>
+
+                    <div class="row w-100">
+                        <div class="col-8">
+                        </div>
+                        <div class="col-2">
+
+
+                            @*  <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveLinearity())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                    Save
+                    </button>*@
+                        </div>
+                        <div class="col-2">
+
+
+                            <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseLinearity())
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                Save & Close
+                            </button>
+                        </div>
+                    </div>
+
+
+
+
+                </Footer>
+            </Modal>
+
+           
+
+            <Modal ID="modalEccentricity" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLEccentricity" CloseWindow="CloseEccentricity" Title="Eccentricity">
+                <ContentBody>
+
+                    <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                        <Rules>
+                            <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                                  TTYPE="WorkOrderDetail">
+                                <div> la regla no se cumple</div>
+                            </Rule>
+                            <RulesTemplate Context="Entity"
+                                           TValue="string"
+                                           TTYPE="WorkOrderDetail">
+                                <ValidConditionsTemplate>
+                                    <BlazorApp1.Blazor.Pages.Order.Calibrations.EccentricityComponent @ref="EccentricityComponent" WeightSetList2="WeightSetList2" CurrentStatus="@eq.CurrentStatus"  Enabled="@(true && !eq.HasBeenCompleted)" Component="@Component">
+
+                                    </BlazorApp1.Blazor.Pages.Order.Calibrations.EccentricityComponent>
+                                </ValidConditionsTemplate>
+                                <InvalidConditionsTemplate>
+                                    <BlazorApp1.Blazor.Pages.Order.Calibrations.EccentricityComponent @ref="EccentricityComponent" WeightSetList2="WeightSetList2" CurrentStatus="@eq.CurrentStatus"  Enabled="false" Component="@Component">
+
+                                    </BlazorApp1.Blazor.Pages.Order.Calibrations.EccentricityComponent>
+                                </InvalidConditionsTemplate>
+                            </RulesTemplate>
+                        </Rules>
+                    </MultiComponent>
+                </ContentBody>
+
+
+                <Footer>
+
+                    <div class="row w-100">
+                        <div class="col-8">
+                        </div>
+                        <div class="col-2">
+
+
+                            @* <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveEccentricity())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                    Save
+                    </button>*@
+                        </div>
+                        <div class="col-2">
+
+
+                            <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseEccentricity())
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                Save & Close
+                            </button>
+                        </div>
+                    </div>
+
+
+
+
+                </Footer>
+            </Modal>
+
+
+
+
+            <Modal ID="modalRepeatibility" ForceShow="true" FullScreen="true" DefaultHide="true" @ref="ModalLRepeatibility" CloseWindow="CloseRepeatibility" Title="Repeatability">
+                <ContentBody>
+
+                    <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                        <Rules>
+                            <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                                  TTYPE="WorkOrderDetail">
+                                <div> la regla no se cumple</div>
+                            </Rule>
+                            <RulesTemplate Context="Entity"
+                                           TValue="string"
+                                           TTYPE="WorkOrderDetail">
+                                <ValidConditionsTemplate>
+                                     <BlazorApp1.Blazor.Pages.Order.Calibrations.RepeabilityComponent @ref="RepeabilityComponent" WeightSetList2="WeightSetList2" CurrentStatus="@eq.CurrentStatus"  Enabled="@(true && !eq.HasBeenCompleted)" Component="@Component">
+
+                                    </BlazorApp1.Blazor.Pages.Order.Calibrations.RepeabilityComponent>
+                                </ValidConditionsTemplate>
+                                <InvalidConditionsTemplate>
+                                     <BlazorApp1.Blazor.Pages.Order.Calibrations.RepeabilityComponent @ref="RepeabilityComponent" WeightSetList2="WeightSetList2" CurrentStatus="@eq.CurrentStatus"  Enabled="false" Component="@Component">
+
+                                    </BlazorApp1.Blazor.Pages.Order.Calibrations.RepeabilityComponent>
+                                </InvalidConditionsTemplate>
+                            </RulesTemplate>
+                        </Rules>
+                    </MultiComponent>
+                </ContentBody>
+                <Footer>
+
+                    <div class="row w-100">
+                        <div class="col-8">
+                        </div>
+                        <div class="col-2">
+
+
+                            @* <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveRepeateability())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                    Save
+                    </button>*@
+                        </div>
+                        <div class="col-2">
+
+
+                            <button class="btn btn-primary w-100" id="@( "_btnSaveAndClose")" @onclick=@(async () =>await SaveAndCloseRepeateability())
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                Save & Close
+                            </button>
+                        </div>
+                    </div>
+
+
+
+
+                </Footer>
+            </Modal>
+
+
+        }
+    </CascadingValue>
+}
+
+
+
+
+
+
+@code {
+    int contqw = 0;
+    public async Task ChangeControl2(ChangeEventArgs arg, dynamic lin, bool AddWeight = false)
+    {
+        object name=null;
+
+        if(lin != null)
+        {
+            name = lin.Test1X;
+        }
+        if (name == null)
+        {
+            name = "nullo";
+        }
+        contqw++;
+        await ShowToast("Success " + contqw.ToString() + " " + name.ToString(),Blazed.Controls.Toast.ToastLevel.Success);
+
+    
+    }
+
+    //public RenderFragment render(dynamic obj, GenericCalibration Wod, Bogus.ViewPropertyBase view)
+    //{
+
+    //    string name = "obj.prop";
+    //    var ty = name.GetType();
+
+
+    //    return
+    //@<TextInput Label="@view.Display" 
+    //                          TValue="@typeof(ty)"
+    //                          Validate="false"
+    //                          @bind-Value="@name" Type="@view.ControlType"
+    //                          Model="Wod" 
+    //                          >
+    //</TextInput>;
+
+
+    //    //return@<input type="text" placeholder="@option.Key" value="@option.Value"
+    //    //   @onchange="@((ChangeEventArgs __e) => ((IDictionary<string, object>)selectedProduct.Properties)[option.Key] = (object)__e.Value.ToString())"/> 
+
+    //}
+
+   
+    //[Parameter] public ExpandoObject DataContext { get; set; } = new ExpandoObject();
+    //[Parameter] public Dictionary<string, string> FieldIdentifiers { get; set; } = new Dictionary<string, string> { { "Name", "string" }, { "Phone", "string" } };
+
+    //public RenderFragment CreateComponent(string fld) => builder =>
+    //{
+    //    builder.OpenComponent(0, typeof(InputText));
+
+    //    // Get the initial property value
+    //    var propInfoValue = typeof(ExpandoObject).GetProperty(fld);
+    //    var s = propInfoValue.GetValue(DataContext);
+    //    builder.AddAttribute(1, "Value", s);
+
+    //    // Create the handler for ValueChanged. I use reflection to the value.
+    //    builder.AddAttribute(3, "ValueChanged", Microsoft.AspNetCore.Components.RuntimeHelpers.TypeCheck<Microsoft.AspNetCore.Components.EventCallback<System.String>>(Microsoft.AspNetCore.Components.EventCallback.Factory.Create<System.String>(this, Microsoft.AspNetCore.Components.EventCallback.Factory.CreateInferred(this, __value => propInfoValue.SetValue(DataContext, __value), (string)propInfoValue.GetValue(DataContext)))));
+
+    //    // Create an expression to set the ValueExpression-attribute.
+    //    var constant = System.Linq.Expressions.Expression.Constant(DataContext, typeof(DataX));
+    //    var exp = System.Linq.Expressions.MemberExpression.Property(constant, fld);
+    //    var lamb = System.Linq.Expressions.Expression.Lambda<Func<string>>(exp);
+    //    builder.AddAttribute(4, "ValueExpression", lamb);
+
+    //    builder.CloseComponent();
+    //};
+
+
+    //public DateTime? DateValue { get; set; } = DateTime.Now.Date;
+    //private RenderFragment dynamicComponent { get; set; }
+    //private RenderFragment CreateComponent() => builder =>
+    //{
+    //    builder.OpenComponent(0, typeof(TextInput<int>));
+    //    builder.AddAttribute(1, "ID", "MyDynamicId");
+    //    builder.AddAttribute(2, "Placeholder", "Choose a date");
+    //    //Bind the value property with Datevalue property
+    //    builder.AddAttribute(3, "Value", DateValue);
+    //    builder.AddAttribute(4, "onchange", Microsoft.AspNetcore.Components.EventCallback.Factory.CreateBinder(this, _value => DateValue = _value, DateValue));
+    //    builder.CloseComponent();
+    //};
+
+    //private void RenderComponent()
+    //{
+    //    dynamicComponent = CreateComponent();
+    //}
+    //private void onChange()
+    //{
+    //    DateValue = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 07);
+
+    //}
+
+}

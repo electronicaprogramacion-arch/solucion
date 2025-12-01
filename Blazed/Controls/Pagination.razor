@@ -1,0 +1,136 @@
+﻿@namespace Blazed.Controls
+
+ <div class="row">
+<div class="col">
+<nav aria-label="Page navigation example">
+    <div class="paginationControls">
+        <ul class="pagination justify-content-center">
+            @foreach (var pagina in paginas)
+            {
+            <li @onclick="@(() => PaginaSeleccionadaInterno(pagina))"
+                style="cursor: pointer;"
+                class="page-item @(pagina.Habilitada ? null : "disabled") @(pagina.Activa ? "active" : null)">
+                 <span class="page-link" href="#">@pagina.Texto</span>
+            </li>
+            }
+           @* @if (paginas != null && paginas.Count > 5)
+            {
+                var pagina = paginas.ElementAtOrDefault(paginas.Count -1);
+
+                <li @onclick="@(() => PaginaSeleccionadaInterno(pagina))"
+                style="cursor: pointer;"
+                class="page-item @(pagina.Habilitada ? null : "disabled") @(pagina.Activa ? "active" : null)">
+                    <span class="page-link" href="#">Last</span>
+                </li>
+            }*@
+
+        </ul>
+    </div>
+            <div class="col p-2 font-weight-bold paginationTotal" id="paginationTotal">
+       
+            <label>Total : @TotalRows.ToString()</label>
+    </div>
+</nav>
+</div>
+</div>
+@code {
+    [Parameter] public bool OnlyNextPrevious { get; set; }
+    [Parameter] public List<string> PageName { get; set; }
+    [Parameter] public int TotalRows { get; set; } = 1;
+    [Parameter] public int PaginaActual { get; set; } = 1;
+    [Parameter] public int PaginasTotales { get; set; }
+    [Parameter] public int Radio { get; set; } = 5;
+    [Parameter] public EventCallback<int> PaginaSeleccionada { get; set; }
+    List<PaginasModel> paginas = new List<PaginasModel>();
+
+    protected override void OnParametersSet()
+    {
+        CargarPaginas();
+    }
+
+    private async Task PaginaSeleccionadaInterno(PaginasModel pagina)
+    {
+        if (pagina.Pagina == PaginaActual)
+        {
+            return;
+        }
+
+        if (!pagina.Habilitada)
+        {
+            return;
+        }
+
+        PaginaActual = pagina.Pagina;
+
+        CargarPaginas();
+
+        if (pagina.Pagina == PaginasTotales)
+        {
+            //Console.WriteLine("LastPagina");
+        }
+
+        await PaginaSeleccionada.InvokeAsync(pagina.Pagina);
+    }
+
+    private void CargarPaginas()
+    {
+        paginas = new List<PaginasModel>();
+        var paginaAnteriorHabilitada = PaginaActual != 1;
+        var paginaAnterior = (PaginaActual == 1) ? 1 : PaginaActual - 1;
+        paginas.Add(new PaginasModel(paginaAnterior, paginaAnteriorHabilitada, "< Prev", "< "));
+
+        if (!OnlyNextPrevious)
+        {
+            for (int i = 1; i <= PaginasTotales; i++)
+            {
+                if (i >= PaginaActual - Radio && i <= PaginaActual + Radio)
+                {
+                    paginas.Add(new PaginasModel(i) { Activa = PaginaActual == i });
+                }
+            }
+        }
+
+
+        var paginaSiguienteHabilitada = PaginaActual != PaginasTotales;
+        var paginaSiguiente = (PaginaActual == PaginasTotales) ? PaginasTotales : PaginaActual + 1;
+
+        paginas.Add(new PaginasModel(paginaSiguiente, paginaSiguienteHabilitada, "Next >"," >"));
+
+        if (!OnlyNextPrevious)
+        {
+            paginas.Add(new PaginasModel(PaginasTotales, true, "Last >>", " >>"));
+        }
+
+
+        //Console.WriteLine("Load Pages" + PaginasTotales);
+
+        //Console.WriteLine("Load Pages" + TotalRows);
+
+    }
+
+    class PaginasModel
+    {
+
+        public PaginasModel(int pagina)
+            : this(pagina, true)
+        { }
+
+        public PaginasModel(int pagina, bool habilitada)
+            : this(pagina, habilitada, pagina.ToString(),"")
+        { }
+
+        public PaginasModel(int pagina, bool habilitada, string texto,string icon)
+        {
+            Pagina = pagina;
+            Habilitada = habilitada;
+            Texto = texto;
+            Icon = icon;
+        }
+
+        public string Texto { get; set; }
+        public int Pagina { get; set; }
+        public bool Habilitada { get; set; } = true;
+        public bool Activa { get; set; } = false;
+        public string Icon { get; set; } = "";
+    }
+}

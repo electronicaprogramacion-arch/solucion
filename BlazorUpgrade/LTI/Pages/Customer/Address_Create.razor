@@ -1,0 +1,456 @@
+﻿@page "/CreateAddress"
+@namespace CalibrationSaaS.Infraestructure.Blazor.Pages.Customer
+@inherits Address_CreateBase
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys
+
+
+
+<EditForm  EditContext="@CurrentEditContext">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <ResponsiveTable ItemsDataSource="@List"
+                     PageSize="10" HasAction="true"
+                     Context="Entity" 
+                     @ref="@RT"
+                     GridID="gridAddress"
+                     RowEditClass=""
+                     RowNewClass=""
+                     EnabledSearch="false"
+                     TableItem="Address"
+                     InLineEdit="false"
+                     EnabledModal="true"
+                     NewButtonText="Add New Address"
+                     NewItemDefaultItem="Create"
+                     ClientPagination="true"
+                     Component="@Component">
+
+        <ChildContent>
+            <GridColumns>
+                <GridColumn TableItem="Address" Field="@RT.GetPropertyName(() => eq.StreetAddress1)" Title="Address" DefaultSort="true" />
+                <GridColumn TableItem="Address" Field="@RT.GetPropertyName(() => eq.ZipCode)" />
+                <GridColumn TableItem="Address" Field="@RT.GetPropertyName(() => eq.CityID)" Title="City" />
+                @*<GridColumn TableItem="Address" Field="@RT.GetPropertyName(() => eq.StateID)"  />*@
+                <GridColumn TableItem="Address" Field="@RT.GetPropertyName(() => eq.StateID)" Title="State">
+
+                    <ResponsiveTemplate Context="address">
+
+                        @{
+                            var a = address as Address;
+                            var b = a.StateID.GetState(AppState.States);
+                        }
+                        @b
+
+
+                    </ResponsiveTemplate>
+
+                </GridColumn>
+
+            </GridColumns>
+
+
+        </ChildContent>
+
+        @*<GridHeader>
+                <div class="col-sm-3 customcol"></div>
+                <div class="col-sm-3 customcol">Address</div>
+                <div class="col-sm-2 customcol">ZipCode</div>
+                <div class="col-sm-2 customcol">City</div>
+                <div class="col-sm-2 customcol">State</div>
+
+            </GridHeader>*@
+        <GridRow>
+            @*<div class="col-sm-3 customcol inv">Address</div>
+                <div class="col-sm-3 customcol">@Entity.StreetAddress1</div>
+                <div class="col-sm-2 customcol inv">ZipCode</div>
+                <div class="col-sm-2 customcol">@Entity.ZipCode</div>
+                <div class="col-sm-2 customcol inv">City</div>
+                <div class="col-sm-2 customcol">@Entity.City</div>
+                <div class="col-sm-2 customcol inv">State</div>
+                <div class="col-sm-2 customcol">@Entity.State</div>*@
+
+        </GridRow>
+        @*<GridNew>
+                <div class="col-sm-2 customcol inv">StreetAddress1</div>
+                <div class="col-sm-2 customcol">
+                    <InputNumber @bind-Value="@Entity.StreetAddress1" class="form-control">
+
+                    </InputNumber>
+                </div>
+                <div class="col-sm-2 customcol inv">StreetAddress2</div>
+                <div class="col-sm-2 customcol">
+                    <InputNumber @bind-Value="@Entity.StreetAddress2" class="form-control">
+
+                    </InputNumber>
+                </div>
+                <div class="col-sm-3 customcol inv">UnitOfMeasurement</div>
+                <div class="col-sm-3 customcol">
+                    <InputSelect @bind-Value="@Entity.StateID" class="form-control">
+                        @foreach (var item in AppState.States)
+                        {
+                            <option value="@item.Value">@item.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-sm-3 customcol inv">LowerTolerance</div>
+                <div class="col-sm-3 customcol">
+                    <InputText @bind-Value="@Entity.ZipCode" class="form-control">
+
+                    </InputText>
+                </div>
+                <div class="col-sm-2 customcol inv">Description</div>
+                <div class="col-sm-2 customcol">
+                    <InputText @bind-Value="@Entity.Description" class="form-control">
+
+                    </InputText>
+
+                </div>
+
+            </GridNew>*@
+        <GridEdit>
+
+            <div class="row">
+                <div class="col-md-12 mx-auto">
+                    <form>
+                        <div class="form-group row">
+
+                            <div class="col-sm-12">
+                                @*<label>Address</label>
+
+                <input type="text" class="form-control" placeholder="" aria-label="search" id="StreetAddress1" rEntityuired
+                       @bind-value="@Entity.StreetAddress1" @bind-value:event="oninput"
+                       @onkeyup=@(() => IsEmptyValidator(nameof(Entity.StreetAddress1),Entity.StreetAddress1)) aria-describedby="basic-addon2" />
+
+                <div class="footermessage @EmptyValidationDictionary[nameof(Entity.StreetAddress1)]">
+                    @GetErrorMessage(nameof(Entity.StreetAddress1))
+
+                </div>*@
+
+
+                                @*<InputText @bind-Value="@Entity.StreetAddress1" class="form-control" placholder="Address" >
+
+
+                 </InputText>
+                <ValidationMessage For="@(() => Entity.StreetAddress1)"></ValidationMessage>*@
+
+                                <TextInput @bind-Value="Entity.StreetAddress1"
+                                           IsDisabled="!Enabled"
+                                           Label="Address line1"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> Entity.StreetAddress1)"
+                                           Type="@Types.text"
+                                           Validate="false">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.StreetAddress1))
+
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-group row">
+
+                            <div class="col-sm-6">
+                                @*<label>Address line (Optional)</label>
+                <input type="text" class="form-control" placeholder="" aria-label="search" id="StreetAddress1"
+                       @bind-value="@Entity.StreetAddress2" @bind-value:event="oninput"
+                       @onkeyup=@(() => IsEmptyValidator(nameof(Entity.StreetAddress1),Entity.StreetAddress2)) aria-describedby="basic-addon2" />
+
+                <div class="footermessage @EmptyValidationDictionary[nameof(Entity.StreetAddress2)]">
+                    @GetErrorMessage(nameof(Entity.StreetAddress2))
+                </div>*@
+                                <TextInput @bind-Value="Entity.StreetAddress2"
+                                           IsDisabled="!Enabled"
+                                           Label="Address line2"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> Entity.StreetAddress2)"
+                                           Type="@Types.text"
+                                           Validate="false">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.StreetAddress2))
+                            </div>
+                            <div class="col-sm-6">
+                                @*<label>Address line (Optional)</label>
+                <input type="text" class="form-control" placeholder="" aria-label="search" id="StreetAddress1"
+                       @bind-value="@Entity.StreetAddress3" @bind-value:event="oninput"
+                       @onkeyup=@(() => IsEmptyValidator(nameof(Entity.StreetAddress3),Entity.StreetAddress3)) aria-describedby="basic-addon2" />
+
+                <div class="footermessage @EmptyValidationDictionary[nameof(Entity.StreetAddress3)]">
+                    @GetErrorMessage(nameof(Entity.StreetAddress3))
+                </div>*@
+                                <TextInput @bind-Value="Entity.StreetAddress3"
+                                           IsDisabled="!Enabled"
+                                           Label="Address line3"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> Entity.StreetAddress3)"
+                                           Type="@Types.text"
+                                           Validate="false">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.StreetAddress3))
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+
+                            <div class="col-sm-6">
+
+
+                                <TextInput @bind-Value="Entity.ZipCode"
+                                           IsDisabled="!Enabled"
+                                           Label="ZipCode"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> Entity.ZipCode)"
+                                           Type="@Types.number"
+                                           Validate="false">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.ZipCode))
+                            </div>
+                            <div class="col-sm-6">
+
+
+                                <TextInput @bind-Value="Entity.County"
+                                           IsDisabled="!Enabled"
+                                           Label="County"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> Entity.County)"
+                                           Type="@Types.text"
+                                           Validate="false">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.County))
+                            </div>
+
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                @*<label>City</label>*@
+
+                                <TextInput @bind-Value="Entity.CityID"
+                                           IsDisabled="!Enabled"
+                                           Label="City"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> Entity.CityID)"
+                                           Type="@Types.text"
+                                           Validate="false">
+
+                                </TextInput>
+                                @*<Blazor.Controls.Typeahead SearchMethod="@SearchCity"
+                                                           Items="AppState.Cities"
+                                                           @bind-Value="@Entity.CityID"
+                                                           ConvertMethod="ConvertCity"
+                                                           Placeholder="City">
+                    <SelectedTemplate Context="CityID">
+                        @LookupCity(CityID, @Entity)?.Name
+                    </SelectedTemplate>
+                    <ResultTemplate Context="state">
+                        @state.Name
+                    </ResultTemplate>
+                </Blazor.Controls.Typeahead>*@
+                                @*<ValidationMessage For="@(() => @Entity.City)"></ValidationMessage>*@
+                                @RT.GetErrorMessage(nameof(Entity.CityID))
+
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-control-label">State</label>
+                                <Typeahead SearchMethod="@SearchState"
+                                                                           Items="AppState.States"
+                                                                           @bind-Value="@Entity.StateID"
+                                                                           ConvertMethod="ConvertState"
+                                                                           Placeholder="State">
+                                    <SelectedTemplate Context="StateID">
+                                        @LookupState(StateID, @Entity)?.Name
+                                    </SelectedTemplate>
+                                    <ResultTemplate Context="state">
+                                        @state.Name
+                                    </ResultTemplate>
+                                </Typeahead>
+                                @RT.GetErrorMessage(nameof(Entity.StateID))
+                            </div>
+
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <label class="form-control-label">Country</label>
+                                @*<InputSelect @bind-Value="@Entity.CountryID" class="form-control">
+                    @foreach (var item in AppState.Countries)
+                    {
+                        <option value="@item.Key">@item.Value</option>
+                    }
+                </InputSelect>*@
+
+                                <Typeahead SearchMethod="@SearchCountry"
+                                                                           Items="AppState.Countries"
+                                                                           @bind-Value="@Entity.CountryID"
+                                                                           ConvertMethod="ConvertCountry"
+                                                                           Placeholder="Country">
+                                    <SelectedTemplate Context="CountryID">
+                                        @LookupCountry(CountryID, @Entity)?.Name
+                                    </SelectedTemplate>
+                                    <ResultTemplate Context="state">
+                                        @state.Name
+                                    </ResultTemplate>
+                                </Typeahead>
+                                @RT.GetErrorMessage(nameof(Entity.CountryID))
+
+
+
+                            </div>
+                            <div class="col-sm-3">
+                                @*<div class="custom-control custom-switch">
+                    <InputCheckbox @bind-Value="Entity.IsDefault" placeholder="Is Default" class="custom-control-input" id="customSwitch1" />
+                    <label class="custom-control-label" for="customSwitch1">Defaul Direction</label>
+                </div>*@
+
+                                <TextInput @bind-Value="Entity.IsDefault"
+                                           IsDisabled="!Enabled"
+                                           Label="Default"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> Entity.IsDefault)"
+                                           Type="@Types.Switch"
+                                           Validate="false">
+
+                                </TextInput>
+
+
+                            </div>
+                            <div class="col-sm-3">
+                                @*<div class="custom-control custom-switch">
+                    <InputCheckbox @bind-Value="Entity.IsEnable" placeholder="Enable" class="custom-control-input" id="customSwitch2" />
+                    <label class="custom-control-label" for="customSwitch2">Enabled</label>
+                </div>*@
+                                <TextInput @bind-Value="Entity.IsEnable"
+                                           IsDisabled="!Enabled"
+                                           Label="Enabled"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> Entity.IsEnable)"
+                                           Type="@Types.Switch"
+                                           Validate="false">
+
+                                </TextInput>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </GridEdit>
+    </ResponsiveTable>
+</EditForm>
+
+
+
+
+
+@code {
+
+    Address Create()
+    {
+        Address a = new Address();
+        a.AddressId = NumericExtensions.GetUniqueID(a.AddressId);
+        a.IsDefault = true;
+        a.IsEnable = true;
+
+        return a;
+    }
+
+
+    public EditContext CurrentContext { get; set; }
+
+
+
+    public Task<IEnumerable<StateLocation>> SearchState(string searchText)
+    {
+        var result = AppState.States
+            .Where(x => x.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 || (x.Value != null && x.Value.ToLower().Contains(searchText)))
+            .ToList();
+
+        return Task.FromResult<IEnumerable<StateLocation>>(result);
+    }
+
+    public string ConvertState(StateLocation state)
+    {
+
+        var p = state.Value;
+        return p;
+    }
+
+    public StateLocation LookupState(string id, Address model)
+    {
+        var res = AppState.States.FirstOrDefault(p => p.Value == id);
+        if (model != null && res != null)
+        {
+            model.State = res.Name;
+        }
+        return res;
+    }
+
+
+    public Task<IEnumerable<CountryLocation>> SearchCountry(string searchText)
+    {
+        var result = AppState.Countries
+            .Where(x => x.Value.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 || (x.Name != null && x.Name.ToLower().Contains(searchText)))
+            .ToList();
+
+        return Task.FromResult<IEnumerable<CountryLocation>>(result);
+    }
+
+    public string ConvertCountry(CountryLocation state)
+    {
+
+        var p = state.Value;
+        return p;
+    }
+
+    public CountryLocation LookupCountry(string id, Address model)
+    {
+        var res = AppState.Countries.FirstOrDefault(p => p.Value == id);
+        if (model != null && res != null)
+        {
+            model.Country = res.Name;
+        }
+        return res;
+    }
+
+
+
+    public Task<IEnumerable<CityLocation>> SearchCity(string searchText)
+    {
+        var result = AppState.Cities
+            .Where(x => x.Value.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 || (x.Name != null && x.Name.ToLower().Contains(searchText)))
+            .ToList();
+
+        return Task.FromResult<IEnumerable<CityLocation>>(result);
+    }
+
+    public string ConvertCity(CityLocation state)
+    {
+
+        var p = state.Value;
+        return p;
+    }
+
+    public CityLocation LookupCity(string id, Address model)
+    {
+        var res = AppState.Cities.FirstOrDefault(p => p.Value == id);
+        if (model != null && res != null)
+        {
+            model.City = res.Name;
+        }
+        return res;
+    }
+
+
+
+
+
+
+
+
+}

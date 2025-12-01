@@ -1,0 +1,232 @@
+﻿@page "/WorkOrderDetailXStatus"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Domain.Aggregates.Views;
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base
+@using Blazed.Controls
+@inherits WorkOrderDetailXStatus_SearchBase
+
+
+<div class="d-flex bd-highlight mb-3 bg-white shadow" style="height: 100px">
+    <div class="p-2 bd-highlight">
+        <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 7rem;"
+             src="img/undraw_launch_day_4e04.svg" alt="">
+    </div>
+    <div class="align-self-end p-2 bd-highlight"><h2>@TypeName Search By Status</h2></div>
+    <div class="p-2 bd-highlight"></div>
+</div>
+
+
+<div class="progress" style="display:none" id="progressBar">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div>
+</div>
+<div class="col-md-12">
+
+    <EditForm style="margin:10px" EditContext="@ec1">
+
+    @*<h4>@LastSubmitResult</h4>*@
+
+    <div class="row">
+        <div class="col">
+            <div class="row">
+                <div class="col">
+
+
+                    <TextInput @bind-Value="eq.StatusId"
+                               IsDisabled="!Enabled"
+                               Label="Work Order Detail Status"
+                               LabelDown="LabelDown">
+                        @foreach (Status item in _statusList)
+                        {
+                            <option value="@item.StatusId">@item.Name</option>
+                        }
+                    </TextInput>
+                </div>
+                <div class="col">
+                    <label for="abbreviation" class="form-control-label">Work Order Receive Date</label>
+
+                    <InputDate @bind-Value="@eq.WorkOrderReceiveDate" class="form-control">
+
+                    </InputDate>
+
+
+                </div>
+            </div>
+
+           
+
+            <div class="row">
+                <div class="col">
+                    <label for="abbreviation" class="form-control-label">Work Order Selected Status Date</label>
+
+                    <InputDate @bind-Value="@eq.StatusDate" class="form-control">
+
+                    </InputDate>
+
+
+                </div>
+                <div class="col">
+                    <TextInput Label="Model" @bind-Value="eq.Model"
+                               IsDisabled="!Enabled">
+                    </TextInput>
+                </div>
+
+                <div class="col">
+                    <TextInput Label="Customer" @bind-Value="eq.Company"
+                               IsDisabled="!Enabled">
+                    </TextInput>
+                </div>
+                @*<div class="col">
+            <TextInput @bind-Value="eq.EquipmentTypeID"
+                       IsDisabled="!Enabled"
+                       Label="Equipment Type"
+                       LabelDown="LabelDown">
+                @foreach (EquipmentType item in _equipmentTypeList)
+                {
+                    <option value="@item.EquipmentTypeID">@item.Name</option>
+                }
+            </TextInput>
+        </div>*@
+            </div>
+
+
+            @*<div class="row">
+                
+            </div>*@
+
+          
+
+        </div>
+    </div>
+
+
+    <button class="btn btn-sm btn-info shadow-sm"
+            onclick="$('#gridWod_btnSearch').click();">
+        Find
+       
+    </button>
+
+    </EditForm>
+
+</div>
+
+<ResponsiveTable ItemsDataSource="@List"
+                 PageSize="paginaSize"
+                 HasAction="true"
+                 Context="Entity"
+                 @ref="@Grid"
+                 GridID="gridWod"
+                 InLineEdit="false"
+                 RowEditClass=""
+                 RowNewClass=""
+                 TableItem="WorkOrderDetailByStatus"
+                 EnabledSearch="true"
+                 VisibleSearch="false"
+                 editContext="@CurrentEditContext"
+                 EnabledModal="false"
+                 OnChangeWindow="ClearList"
+                 SelectOnly="@SelectOnly"
+                 SaveButtonSubmit="false"
+                 PaginationFunction1="LoadData"
+                 
+                 HasDelete="false"
+                 Component="Component">
+
+    <ChildContent>
+
+        <GridColumns>
+
+            <GridColumn TableItem="WorkOrderDetailByStatus" Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" DefaultSort="true" Title="Work Order Detail Id" CSScol="col-sm-1 customcol" />
+
+            <GridColumn TableItem="WorkOrderDetailByStatus" Field="@Grid.GetPropertyName(() => eq.Company)" />
+
+            <GridColumn TableItem="WorkOrderDetailByStatus" Field="@Grid.GetPropertyName(() => eq.SerialNumber)" />
+
+            <GridColumn TableItem="WorkOrderDetailByStatus" Field="@Grid.GetPropertyName(() => eq.Model)" />
+            <GridColumn TableItem="WorkOrderDetailByStatus" Field="@Grid.GetPropertyName(() => eq.EquipmentType)" />
+            <GridColumn TableItem="WorkOrderDetailByStatus" Field="@Grid.GetPropertyName(() => eq.WorkOrderId)" />
+            <GridColumn TableItem="WorkOrderDetailByStatus" Field="@Grid.GetPropertyName(() => eq.WorkOrderReceiveDate)" />
+            <GridColumn TableItem="WorkOrderDetailByStatus" Field="@Grid.GetPropertyName(() => eq.Status)" />
+
+
+        </GridColumns>
+
+
+
+    </ChildContent>
+
+    @*<GridHeader>
+            <div class="col-sm customcol"></div>
+            <div class="col-sm customcol">Serial Number</div>
+            <div class="col-sm customcol">Model</div>
+            <div class="col-sm customcol">Customer</div>
+            <div class="col-sm customcol">Capacity</div>
+            <div class="col-sm customcol">Status</div>
+            <div class="col-sm customcol">Due Date</div>
+        </GridHeader>*@
+
+    <GridRow>
+
+
+
+        @*<div class="col-sm customcol inv">SerialNumber</div>
+            <div class="col-sm customcol">@Format(@Entity.SerialNumber)</div>
+            <div class="col-sm customcol inv">EquipmentTemplate</div>
+            <div class="col-sm customcol">@Format(@Entity.EquipmentTemplate.Model)</div>
+            <div class="col-sm customcol inv">Customer</div>
+            <div class="col-sm customcol">@Format(@Entity.Customer.Name)</div>
+            <div class="col-sm customcol inv">Capacity</div>
+            <div class="col-sm customcol">@Format(@Entity.Capacity)</div>
+            <div class="col-sm customcol inv">Status</div>
+            <div class="col-sm customcol">@Format(@Entity.Status)</div>
+            <div class="col-sm customcol inv">DueDate</div>
+            <div class="col-sm customcol">@Format(@Entity.DueDate)</div>*@
+
+
+
+    </GridRow>
+
+
+
+    @*<GridEdit>
+            <div class="row">
+                <div class="col-md customcol">
+                    <TextInput @bind-Value="@Entity.SerialNumber" Label="Name" Validate="false" ValidationFor="@(()=> Entity.SerialNumber)"
+                               LabelDown="false">
+
+                    </TextInput>
+                    @Grid.GetErrorMessage(nameof(Entity.SerialNumber))
+
+                </div>
+
+            </div>
+
+
+        </GridEdit>*@
+
+    @*<GridSelect>
+
+            <button class="btn btn-sm btn-primary" id="_btnselect"
+                    @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                select
+            </button>
+
+        </GridSelect>*@
+    <NewButton>
+        
+    </NewButton>
+    <EditButton>
+        <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton" href="WorkOrderCreate/@Entity.WorkOrderId">Edit</a>
+
+    </EditButton>
+
+</ResponsiveTable>
+
+@code {
+
+
+
+}

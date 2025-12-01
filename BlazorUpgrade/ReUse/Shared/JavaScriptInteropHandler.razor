@@ -1,0 +1,52 @@
+@using Microsoft.JSInterop
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+@code {
+    private DotNetObjectReference<JavaScriptInteropHandler> _dotNetReference;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetReference = DotNetObjectReference.Create(this);
+            
+            try
+            {
+                // Register for network status updates
+                await JSRuntime.InvokeVoidAsync("registerDotNetReference", _dotNetReference);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error registering for network status updates: {ex.Message}");
+            }
+        }
+    }
+    
+    [JSInvokable]
+    public void OnNetworkStatusChanged(bool isOnline)
+    {
+        // Update the ConnectionStatusService with the new status
+        ConnectionStatusService.ConnectedChangeStatus(
+            isOnline, 
+            true, // Assume installed for simplicity
+            false // Not GRPC
+        );
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_dotNetReference != null)
+            {
+                _dotNetReference.Dispose();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error disposing JavaScriptInteropHandler: {ex.Message}");
+        }
+    }
+}

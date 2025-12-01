@@ -1,0 +1,325 @@
+﻿<!-- Sidebar -->
+@using Blazed.Controls
+@using Microsoft.AspNetCore.Authorization
+
+@inherits NavMenu_Base
+@inject ILogger<NavMenu> Logger;
+
+
+    <div >
+
+        @*<button id="sidebarToggleTop" class="btn btn-link  rounded-circle mr-3" onclick="showSideNav()">
+            <i class="fa fa-bars"></i>
+        </button>*@
+
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion sidebarcustom" id="accordionSidebar">
+
+
+            @*<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#accordionSidebar"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>*@
+
+            <!-- Sidebar - Brand -->
+            <NavLink class="sidebar-brand d-flex align-items-center justify-content-center" href="" Match="NavLinkMatch.All">
+                <div class="sidebar-brand-icon" style="background:rgba(255,255,255,0.5)">
+                    <img class="img-fluid" style="width: 8rem;align-self:center;align-content:center;align-items:center" src="img/logo/Kavoku-LOGO-02.png" alt="">
+                </div>
+                <div class="sidebar-brand-text mx-2">Calibration <sup>SaaS</sup></div>
+            </NavLink>
+
+
+            <li class="nav-item active align-content-center align-items-center align-self-center" >
+                <div>
+                    @*<img src="img/logo/Kavoku-LOGO-02.png" width="80" />*@
+                    
+                </div>
+            </li>
+
+
+
+        <AuthorizeView Policy="HasAccess">
+                <Authorized>
+                    <!-- Divider -->
+                    <hr class="sidebar-divider my-0">
+
+                    <!-- Nav Item - Dashboard -->
+                    <li class="nav-item active">
+                        <NavLink class="nav-link" href=""  Match="NavLinkMatch.All">
+                            <i class="fas fa-fw fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </NavLink>
+
+
+                    </li>
+                @if (Customer?.ToLower() == "lti" || Customer?.ToLower() == "thermotemp")
+                {
+                    <li class="nav-item active">
+                        <NavLink class="nav-link" href="BackLog/0">
+                            <i class="fas fa-fw fa-tachometer-alt"></i>
+                            <span>Backlog</span>
+                        </NavLink>
+                    </li>
+
+                   @*  <li class="nav-item active">
+                        <NavLink class="nav-link" href="DynamicReport/1">
+                            <i class="fas fa-fw fa-tachometer-alt"></i>
+                            <span>Report Dummy</span>
+                        </NavLink>
+                    </li>  *@
+
+
+                @* / DynamicReport / *@
+                }
+                
+                    <!-- Divider -->
+                    <hr class="sidebar-divider">
+                    <div class="sidebar-heading">
+                        Calibration Business
+                    </div>
+                    <AuthorizeView Context="_context">
+                        <Authorized>
+                        @if (CanShow && ConnectionStatusService.GetCurrentStatus())
+                            {
+                            <!-- Nav Item - Basics -->
+                            <li class="nav-item">
+                                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#dvBasics" aria-expanded="true" aria-controls="collapseTwo1">
+                                    <i class="fas fa-fw fa-mobile-alt"></i>
+                                    <span>Basics</span>
+                                </a>
+                                <div id="dvBasics" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                                    <div class="bg-white py-2 collapse-inner rounded">
+                                        <h6 class="collapse-header">Basics Actions:</h6>
+                                        @if (demoEnabled == "true")
+                                        {
+                                            @* Demo mode: Show only Manufacturer and Equipment Template *@
+                                            <NavLink class="collapse-item" href="ManufacturerSearch">Manufacturer</NavLink>
+                                            <NavLink class="collapse-item" href="EquipmentTemplateSearch">Equipment Template</NavLink>
+                                        }
+                                        else
+                                        {
+                                            @* Normal mode: Show all options *@
+                                            @if (demoEnabled == "false")
+                                            {
+                                                <NavLink class="collapse-item" href="EquipmentType">Equipment Type</NavLink>
+                                            }
+                                            <NavLink class="collapse-item" href="ManufacturerSearch">Manufacturer</NavLink>
+                                            <NavLink class="collapse-item" href="EquipmentTemplateSearch">Equipment Template</NavLink>
+                                            <NavLink class="collapse-item" href="CalibrationTypeDetail">CMC Values</NavLink>
+                                            @*<NavLink class="collapse-item" href="UOMManager">
+                                                Unit Of Measurement
+                                            </NavLink>*@
+                                            <NavLink class="collapse-item" href="TestCodeSearch">
+                                                Test Codes
+                                            </NavLink>
+                                            <NavLink class="collapse-item" href="ProcedureSearch">Procedure</NavLink>
+                                        }
+                                        </div>
+                                    </div>
+                                </li>
+
+                                @* Hide Company section in demo mode *@
+                                @if (demoEnabled != "true")
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#dvCompany" aria-expanded="true" aria-controls="collapseTwo1">
+                                            <i class="fas fa-fw fa-user-alt"></i>
+                                            <span>Company</span>
+                                        </a>
+                                        <div id="dvCompany" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                                            <div class="bg-white py-2 collapse-inner rounded">
+                                                <h6 class="collapse-header">Company Actions:</h6>
+                                                <NavLink class="collapse-item" href="UserSearch">Technicians</NavLink>
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+
+                                <!-- Nav Item - Customers -->
+                                <li class="nav-item">
+                                    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#dvCustomers" aria-expanded="true" aria-controls="collapseTwo">
+                                        <i class="fas fa-fw fa-user-astronaut"></i>
+                                        <span>Customer</span>
+                                    </a>
+                                    <div id="dvCustomers" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                                        <div class="bg-white py-2 collapse-inner rounded">
+                                            <h6 class="collapse-header">Customer Actions:</h6>
+                                            <NavLink class="collapse-item" href="CustomerSearch">Customer</NavLink>
+                                        </div>
+                                    </div>
+                                </li>
+
+                               
+
+                            }
+                        <li class="nav-item">
+                            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#dvPoE" aria-expanded="true" aria-controls="collapseTwo">
+                                <i class="fas fa-fw fa-balance-scale-right"></i>
+                                <span>Assets</span>
+                            </a>
+                            <div id="dvPoE" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                                <div class="bg-white py-2 collapse-inner rounded">
+                                    <h6 class="collapse-header">Customer Actions:</h6>
+                                    <NavLink class="collapse-item" href="PieceOfEquipmentSearch">Piece Of Equipment</NavLink>
+                                    @* Hide Weight Set CSV in demo mode *@
+                                    @if (ConnectionStatusService.GetCurrentStatus() && demoEnabled != "true")
+                                    {
+                                        <NavLink class="collapse-item" href="weightCreateCSV">Weight Set CSV</NavLink>
+                                    }
+
+                                </div>
+                            </div>
+                        </li>
+                        <!-- Nav Item - Assets -->
+                        <li class="nav-item">
+                            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#dvOrd" aria-expanded="true" aria-controls="collapseTwo3">
+                                <i class="fas fa-fw fa-file-invoice-dollar"></i>
+                                <span>Orders</span>
+                            </a>
+                            <div id="dvOrd" class="collapse" aria-labelledby="headingTwo3" data-parent="#accordionSidebar">
+                                <div class="bg-white py-2 collapse-inner rounded">
+                                    <h6 class="collapse-header">Customer Actions:</h6>
+                                    @*<NavLink class="collapse-item" href="WorkOrderSearch">Search Work Order</NavLink>*@
+                                    <NavLink class="collapse-item" href="WorkOrderSearchNew">Work Order</NavLink>
+
+                                </div>
+                            </div>
+                        </li>
+                        <!-- Nav Item - Assets -->
+                        @if (!ConnectionStatusService.GetCurrentStatus())
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#dvOffline" aria-expanded="true" aria-controls="collapseTwo3">
+                                    <i class="fas fa-fw fa-file-invoice-dollar"></i>
+                                    <span>Offline</span>
+                                </a>
+                                <div id="dvOffline" class="collapse" aria-labelledby="headingTwo3" data-parent="#accordionSidebar">
+                                    <div class="bg-white py-2 collapse-inner rounded">
+                                        <h6 class="collapse-header">Offline:</h6>
+                                        @*<NavLink class="collapse-item" href="WorkOrderSearch">Search Work Order</NavLink>*@
+                                        <NavLink class="collapse-item" href="WODOff/0">Download Wod</NavLink>
+                                        <NavLink class="collapse-item" href="WODOff2/1">Upload Wod</NavLink>
+
+                                        @*<NavLink class="collapse-item" href="OffLineData">Load Data</NavLink>
+                                    <NavLink class="collapse-item" href="OfflineManager">Manager</NavLink>*@
+
+                                        @*<NavLink class="collapse-item" href="WorkOrderCreate/0">Create Work Order</NavLink>
+                                    <NavLink class="collapse-item" href="WorkOrderItem/1">Work Order Detail</NavLink>*@
+                                    </div>
+                                </div>
+                            </li>
+                        }
+
+                        @if (CanShow && ConnectionStatusService.GetCurrentStatus() && Customer?.ToLower() == "thermotemp")
+                        {
+                            <!-- Nav Item - Quotes -->
+                            <li class="nav-item">
+                                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#dvQuotes" aria-expanded="true" aria-controls="collapseQuotes">
+                                    <i class="fas fa-fw fa-file-invoice-dollar"></i>
+                                    <span>Quotes</span>
+                                </a>
+                                <div id="dvQuotes" class="collapse" aria-labelledby="headingQuotes" data-parent="#accordionSidebar">
+                                    <div class="bg-white py-2 collapse-inner rounded">
+                                        <h6 class="collapse-header">Quote Actions:</h6>
+                                        <NavLink class="collapse-item" href="QuotesSearch">Search Quotes</NavLink>
+                                        <NavLink class="collapse-item" href="QuoteCreate">Create Quote</NavLink>
+                                        <div class="dropdown-divider"></div>
+                                        <h6 class="collapse-header">Configuration:</h6>
+                                        <NavLink class="collapse-item" href="Quotes/PriceTypesConfiguration">Price Types</NavLink>
+                                    </div>
+                                </div>
+                            </li>
+
+                            <!-- Nav Item - Equipment Recalls -->
+                            <li class="nav-item">
+                                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#dvEquipmentRecalls" aria-expanded="true" aria-controls="collapseEquipmentRecalls">
+                                    <i class="fas fa-fw fa-calendar-check"></i>
+                                    <span>Equipment Recalls</span>
+                                </a>
+                                <div id="dvEquipmentRecalls" class="collapse" aria-labelledby="headingEquipmentRecalls" data-parent="#accordionSidebar">
+                                    <div class="bg-white py-2 collapse-inner rounded">
+                                        <h6 class="collapse-header">Recall Actions:</h6>
+                                        <NavLink class="collapse-item" href="EquipmentRecalls">View Equipment Recalls</NavLink>
+                                    </div>
+                                </div>
+                            </li>
+                        }
+
+                        @* Hide Settings section in demo mode *@
+                        @if (demoEnabled != "true")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#dvTools" aria-expanded="true" aria-controls="collapseTwo">
+                                    <i class="fas fa-fw fa-cog"></i>
+                                    <span>Settings</span>
+                                </a>
+
+                                <div id="dvTools" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                                    @if (ConnectionStatusService.GetCurrentStatus())
+                                    {
+                                        <div class="bg-white py-2 collapse-inner rounded">
+                                            <h6 class="collapse-header">Security:</h6>
+
+                                            <NavLink class="collapse-item" href="SecurityCreate">Roles and Permissions</NavLink>
+
+
+                                        </div>
+                                    }
+
+                                    <div class="bg-white py-2 collapse-inner rounded">
+                                        <h6 class="collapse-header">Storage:</h6>
+                                        <NavLink class="collapse-item" href="View">Storage Options</NavLink>
+                                    </div>
+
+                                    <div class="bg-white py-2 collapse-inner rounded">
+                                        <h6 class="collapse-header">Audit:</h6>
+                                        <NavLink class="collapse-item" href="Log">Audit Log</NavLink>
+                                    </div>
+
+
+
+
+                                </div>
+                            </li>
+                        }
+                        </Authorized>
+                        <NotAuthorized>
+
+                        </NotAuthorized>
+                    </AuthorizeView>
+
+              
+                
+
+                    <!-- Divider -->
+                    <hr class="sidebar-divider">
+
+                    <!-- Heading -->
+                    <div class="sidebar-heading">
+                        Options
+                    </div>
+                   
+
+                    <!-- Divider -->
+                    <hr class="sidebar-divider d-none d-md-block">
+
+                    <!-- Sidebar Toggler (Sidebar) -->
+                    <div class="text-center d-none d-md-inline">
+                        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+
+                </NotAuthorized>
+            </AuthorizeView>
+
+         
+
+
+        </ul>
+    </div>
+    @code{
+
+    
+
+    }

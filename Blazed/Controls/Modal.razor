@@ -1,0 +1,381 @@
+﻿@namespace Blazed.Controls
+@using Radzen.Blazor
+
+
+@if(!ifNotShow)
+{
+    @if (Style == "Modal")
+    {
+        @if (!ForceShow)
+        {
+            Show = "";
+            CSSClass = "modal fade bd-example-modal-lg";
+        }
+        else
+        {
+            CSSClass = "modal fade bd-example-modal-lg show";
+        }
+
+        @if (FullScreen)
+        {
+            //Show = Show + "height:100%;width:100%;";
+            CSSFull = " fullScreen ";
+        }else
+        {
+            CSSFull = " HScreen ";
+        }
+
+        @if (_Hide)
+        {
+
+            CSSClass = "modal fade bd-example-modal-lg";
+            Show = "display: none;";
+            //Enabled = false;
+        }
+        else
+        {
+            Show = "display: block; height: auto";
+
+        }
+    }
+    else if (Style == "Panel")
+    {
+        @if (!ForceShow)
+        {
+            Show = "";
+            CSSClass = "modal fade bd-example-modal-lg";
+        }
+        else
+        {
+            CSSClass = "modal fade bd-example-modal-lg show";
+        }
+
+        @if (FullScreen)
+        {
+            //Show = Show + "height:100%;width:100%;";
+            CSSFull = "fullScreen";
+        }
+
+        @if (_Hide)
+        {
+
+            CSSClass = "modal fade bd-example-modal-lg";
+            Show = "";
+            //Enabled = false;
+        }
+        else
+        {
+            Show = " show";
+
+        }
+    }
+
+
+    @if (Enabled)
+    {
+        if (Style == "Modal")
+        {
+
+
+            <RadzenHeader >
+
+            <div class="@CSSClass" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+                 aria-labelledby="staticBackdropLabel" aria-hidden="true" style="@Show">
+                <div class="@("modal-dialog " + CSSFull)">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="staticBackdropLabel">@Title</h1>
+                            @* <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> *@
+                            @if (CloseButton == null)
+                            {
+
+
+                                <button class="close" type="button" data-bs-dismiss="modal" aria-label="Close"
+                                        @onclick="@(async () => await CancelItem("" + "" + ""))"
+                                        @onclick:stopPropagation @onclick:preventDefault>
+
+                                    <span aria-hidden="true">×</span>
+                                </button>
+
+                                <div style="display:none">
+                                    <button class="close" type="button" data-bs-dismiss="modal" aria-label="Close" id="CloseButtonModal"
+                                            @onclick="@(async () => await CancelItem("" + "auto" + ""))"
+                                            @onclick:stopPropagation @onclick:preventDefault>
+
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+
+
+                            }
+                            else
+                            {
+
+                                @CloseButton
+
+                            }
+                        </div>
+                        <div class="modal-body">
+                            @ContentBody
+                        </div>
+                        <div class="modal-footer">
+                            @Footer
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </RadzenHeader>
+        }
+
+        if (Style == "Panel")
+        {
+            <div id="@ID" class="collapse @Show" aria-labelledby="headingTwo" data-parent="#accordion">
+                <div class="card-body">
+
+                    @ContentBody
+
+                </div>
+
+
+            </div>
+        }
+    }
+    else
+    {
+        @if (DefaultHide)
+        {
+            <div style="display:none">
+                @ContentBody
+                @Footer
+            </div>
+        }
+        else
+        {
+
+            @ContentBody
+            @Footer
+
+        }
+
+    }
+}
+
+
+@code {
+
+    [Parameter]
+    public bool ifNotShow { get; set; }
+
+
+    [Parameter]
+    public  IJSInProcessRuntime JSInProcRuntime { get; set; }
+
+    public bool Waiting { get; set; }
+
+    [Parameter]
+    public string Style { get; set; } = "Modal";
+
+
+
+    public async Task ShowMenu()
+    {
+
+        _ShowMenu = true;
+
+        StateHasChanged();
+
+    }
+
+    [Parameter]
+    public bool EnableMenu { get; set; }
+
+
+
+    public bool _ShowMenu { get; set; }
+
+
+    public void Hide()
+    {
+
+        _Hide = true;
+        Enabled = false;
+
+    }
+
+    public async Task Hide2()
+    {
+
+        _Hide = true;
+        Enabled = false;
+        await RemoveClass();
+    }
+
+
+    public void Toggle()
+    {
+        if (!Enabled)
+        {
+            _Hide = false;
+            Enabled = true;
+
+        }
+        else
+        {
+            _Hide = true;
+            Enabled = false;
+        }
+    }
+
+
+    public void ShowP()
+    {
+        
+            _Hide = false;
+            Enabled = true;
+    }
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+
+    public async Task RemoveClass()
+    {
+
+        if (JSRuntime != null && !string.IsNullOrEmpty(ID))
+        {
+            await JSRuntime.InvokeVoidAsync("hideElement2", "ID");
+
+            await JSRuntime.InvokeVoidAsync("removeClass", "modal-backdrop");
+        }
+
+
+
+    }
+
+    [Parameter]
+    public bool _Hide { get; set; }
+
+    [Parameter]
+    public Func<Task> CloseWindow { get; set; }
+
+    [Parameter]
+    public bool ShowProgress { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClose { get; set; }
+
+
+    public async Task CancelItem2(string item)
+    { 
+        try{
+            bool change = false;
+
+            if (JSInProcRuntime != null && ShowProgress && item == "auto")
+            {
+                change = true;
+                JSInProcRuntime.InvokeVoid("showProgressBar", "progressBar");
+
+            }
+
+            if (JSInProcRuntime != null && ShowProgress)
+            {
+                change = true;
+                JSInProcRuntime.InvokeVoid("showElement2", "waitingring");
+
+
+            }
+            if(change){
+                //StateHasChanged();
+            }
+
+            
+
+        }
+        catch(Exception ex)
+        {
+            //Console.WriteLine(ex.Message);
+        }
+    }
+
+    public async Task CancelItem(string item)
+    {
+
+
+
+        //CancelItem2(item).ConfigureAwait(false).GetAwaiter().GetResult(); 
+
+        Waiting = true;
+        //Console.WriteLine("CancelItem xxx");
+
+        if (CloseWindow != null)
+        {
+            //Console.WriteLine("CancelItem2 xxx");
+            await InvokeAsync(CloseWindow);
+        }
+
+        if (OnClose.HasDelegate)
+        {
+            //Console.WriteLine("CancelItem222222 xxx");
+            await OnClose.InvokeAsync();
+            //Console.WriteLine("CancelItem222222 xxx33333");
+        }
+        //Console.WriteLine("CancelItem xxx3");
+        if (ForceShow)
+        {
+            Enabled = false;
+            _Hide = true;
+            await RemoveClass();
+        }
+        Waiting = false;
+    }
+
+
+    [Parameter]
+    public bool DefaultHide { get; set; }
+
+
+    public string CSSFull { get; set; }
+
+    public string CSSClass { get; set; } = "modal fade bd-example-modal-lg";
+
+
+    [Parameter]
+    public bool FullScreen { get; set; }
+
+
+    public string Show { get; set; } = "display: inline-block;";
+
+    [Parameter]
+    public bool ForceShow { get; set; }
+
+    [Parameter]
+    public string ID { get; set; } = "modalWindow";
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public RenderFragment ContentBody { get; set; }
+
+    [Parameter]
+    public RenderFragment Footer { get; set; }
+
+    [Parameter]
+    public bool Enabled { get; set; }
+
+    [Parameter]
+    public RenderFragment CloseButton { get; set; }
+
+    [Parameter]
+    public bool PanelNoHeader { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (PanelNoHeader)
+        {
+            _Hide = false;
+            Enabled = true;
+        }
+
+            base.OnInitialized();
+    }
+}

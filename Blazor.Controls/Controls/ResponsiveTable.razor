@@ -1,0 +1,4364 @@
+﻿@inject HttpClient Http;
+@inject BrowserService BrowserService;
+
+@inject IAuthorizationService AuthorizationService;
+@using System.ComponentModel.DataAnnotations;
+@using System;
+@using System.Linq;
+
+@using System.Reflection;
+@using System.Collections.Generic
+@using System.Linq.Expressions
+@using Blazor.Controls
+@using System.Collections;
+@using Microsoft.AspNetCore.Components;
+
+@using System.Timers;
+
+@using DynamicExpressions
+@using Microsoft.AspNetCore.Authorization;
+@typeparam TableItem
+@inherits Blazor.Controls.ControlComponentBase
+
+
+@using Helpers.Controls;
+@using Helpers.Controls.ValueObjects;
+@implements IDisposable
+@namespace Blazor.Controls
+
+
+
+
+
+@*@{
+        ShowProgress();
+    }*@
+
+<CascadingValue Value="@this">
+
+    @{
+
+
+        var isinrole = false;
+        if (!string.IsNullOrEmpty(Roles))
+        {
+            isinrole = IsInRole().ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+
+        var HasFullacess = false;
+        if (!string.IsNullOrEmpty(Policy))
+        {
+            HasFullacess = IsInPolicy(Policies.HasFullAccess).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+
+
+        if (!HasFullacess)
+        {
+            var HasView = false;
+            if (!string.IsNullOrEmpty(Policy))
+            {
+                HasView = IsInPolicy(Policies.HasView).ConfigureAwait(false).GetAwaiter().GetResult();
+            }
+
+            if (HasView)
+            {
+
+            }
+            else
+            {
+                <div>you not have permissions to see this resource</div>
+                return;
+            }
+
+            if (HasView)
+            {
+                if (!HasNew.HasValue)
+                {
+                    HasNew = IsInPolicy(Policies.HasNew).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+
+                if (!HasEdit.HasValue)
+                {
+                    HasEdit = IsInPolicy(Policies.HasEdit).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+
+                if (!HasEdit.Value && GridEdit == null && EditButton != null)
+                {
+                    HasEdit = true;
+                }
+
+
+                if (!HasDelete.HasValue)
+                {
+                    HasDelete = IsInPolicy(Policies.HasDelete).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+
+                if (!HasSelect.HasValue)
+                {
+                    HasSelect = IsInPolicy(Policies.HasSelect).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+                if (!HasSave.HasValue)
+                {
+                    HasSave = IsInPolicy(Policies.HasSave).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+            }
+        }
+        else
+        {
+            if (!HasNew.HasValue)
+            {
+                HasNew = true;
+            }
+            if (!HasEdit.HasValue)
+            {
+                HasEdit = true;
+            }
+            if (!HasDelete.HasValue)
+            {
+                HasDelete = true;
+            }
+            if (!HasSave.HasValue)
+            {
+                HasSave = true;
+            }
+
+
+
+            if (!HasSelect.HasValue && GridEdit == null && EditButton != null)
+            {
+                HasSelect = false;
+            }
+            else if (!HasSelect.HasValue)
+            {
+                HasSelect = true;
+            }
+
+
+        }
+
+
+        if (!HasNew.HasValue)
+        {
+            HasNew = false;
+        }
+        if (!HasEdit.HasValue)
+        {
+            HasEdit = false;
+        }
+        if (!HasDelete.HasValue)
+        {
+            HasDelete = false;
+        }
+        if (!HasSelect.HasValue)
+        {
+            HasSelect = false;
+        }
+        if (!HasSave.HasValue)
+        {
+            HasSave = false;
+        }
+
+    }
+
+    @ChildContent
+    @if (SelectOnly && (HasSelect.Value == true || HasEdit.Value == true))
+    {
+        HasDelete = false;
+        HasAction = true;
+        HasEdit = false;
+        HasSelect = true;
+        HasNew = false;
+        HasSave = false;
+        HasCancelButton = false;
+
+    }
+    @if (!Enabled)
+    {
+        IsDisable = true;
+    }
+
+
+
+    @if (!isinrole && !string.IsNullOrEmpty(Roles))
+    {
+        HasDelete = false;
+    }
+    @if (!isinrole && !string.IsNullOrEmpty(Roles))
+    {
+        HasEdit = false;
+    }
+    @if (!isinrole && !string.IsNullOrEmpty(Roles))
+    {
+        HasNew = false;
+    }
+
+
+
+
+
+    @if (HasDelete == false && HasEdit == false && HasSelect == false)
+    {
+        HasAction = false;
+    }
+
+    @if (HasDelete == true || HasEdit == true || HasSelect == true)
+    {
+        HasAction = true;
+    }
+
+    @if (EnabledDrag)
+    {
+        <style>
+
+            /*add this to avoid flickering*/
+            .plk-dd-inprogess > * {
+                pointer-events: none;
+            }
+
+            /*dropzone style style*/
+            .plk-dd-dropzone {
+                min-height: 50px;
+            }
+
+            /*drag drop styles*/
+
+            .plk-dd-spacing {
+                height: 10px;
+            }
+
+            .plk-dd-spacing-dragged-over {
+                padding: 25px;
+            }
+
+            .plk-dd-dragged-over {
+                background-color: lightgray;
+                opacity: 0.6;
+                animation: blinker 1s linear infinite;
+            }
+
+                .plk-dd-dragged-over > div {
+                    background-color: lightgray;
+                    opacity: 0.6;
+                    animation: blinker 1s linear infinite;
+                }
+
+            .plk-dd-dragged-over-denied {
+                background-color: red;
+                opacity: 0.6;
+                animation: blinker 1s linear infinite;
+            }
+
+            .plk-dd-in-transit {
+                opacity: 0;
+            }
+
+                .plk-dd-in-transit > div {
+                    opacity: 0;
+                }
+
+            @@keyframes blinker {
+                50% {
+                    opacity: 0;
+                }
+            }
+
+            .blink_me {
+                animation: blinker 1s linear infinite;
+            }
+
+            /*for flex demo*/
+
+            .plk-flex .plk-dd-spacing {
+                width: 20px;
+                height: auto;
+            }
+
+            .plk-flex .plk-dd-dragged-over {
+                background-color: lightgray;
+                opacity: 0.6;
+                animation: blinker 1s linear infinite;
+            }
+
+                .plk-flex .plk-dd-dragged-over > div {
+                    background-color: lightgray;
+                    opacity: 0.9;
+                    animation: blinker 1s linear infinite;
+                }
+
+            .plk-flex .plk-dd-in-transit {
+                background-color: orangered;
+            }
+
+                .plk-flex .plk-dd-in-transit > div {
+                    background-color: orangered;
+                }
+
+            .plk-dd-noselect {
+                -webkit-touch-callout: none; /* iOS Safari */
+                -webkit-user-select: none; /* Safari */
+                -khtml-user-select: none; /* Konqueror HTML */
+                -moz-user-select: none; /* Old versions of Firefox */
+                -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+            }
+        </style>
+
+
+    }
+
+    <style>
+
+        @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+
+            .gridContainer {
+                max-height: 500px;
+                overflow-y: scroll;
+            }
+        }
+    </style>
+    <style type="text/css">
+        .h-divider {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            height: 1px;
+            width: 100%;
+            border-top: 1px solid gray;
+        }
+
+        .grid-striped .row:nth-of-type(odd) {
+            background-color: rgba(0,0,0,.05);
+        }
+    </style>
+
+    @if (!InLineEdit && (HasNew.HasValue && HasNew.Value && IsNew || CurrentEditIndex > -1) || DisabledRowHover)
+    {
+        <style>
+
+
+            .grid-row div:hover {
+                color: #858796;
+                background-color: transparent !important;
+            }
+        </style>
+    }
+
+
+    @if (IsNew || CurrentEditIndex > -1)
+    {
+        <style>
+            .new :hover {
+                color: #858796;
+                background-color: transparent !important;
+            }
+
+            .new div:hover {
+                color: #858796;
+                background-color: transparent !important;
+            }
+        </style>
+    }
+
+
+    @{
+
+        GetDimensions().ConfigureAwait(true).GetAwaiter();
+
+    }
+    @*<input @bind-value="SearchTerm" @bind-value:event="oninput" @onkeyup=@(() => KeyEvent("Name", SearchTerm))
+        class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" />*@
+
+
+
+    <div class="progress" style="display:none" id="progressBar">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div>
+    </div>
+
+    @if ((Items == null || Items?.Count() == 0) || !EnabledSearch && ForceNEwButton)
+    {
+        <div class="@AloneNewButtonCSS">
+
+            @if (HasNew.Value && !ShowSearch)
+            {
+
+                @if (NewButton == null)
+                {
+                    <button class="@NewButtonCSS" id="@(GridID + "_btnNew")" @onclick=@(async () =>await NewItem()) disabled="@IsDisable"
+                            @onclick:stopPropagation @onclick:preventDefault>
+                        @NewButtonText
+                    </button>
+                }
+                else
+                {
+                    @NewButton
+
+                }
+
+            }
+        </div>
+    }
+    else
+    {
+        ShowSearch = true;
+    }
+
+    @if ((CurrentEditIndex == -1 && !IsNew && ItemsDataSource != null && ItemsDataSource?.Count() > 0) || (ShowSearch == true && ItemsDataSource != null && CurrentEditIndex == -1 && !IsNew) || ForceNEwButton)
+    {
+
+
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light" style="padding-bottom:0px">
+
+            @*<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>*@
+
+            @*<ul class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <div class="navbar-nav mr-auto">
+
+                    </div>
+
+                </ul>*@
+            <div class="row" style="width:100%">
+
+                <div style="float:left;width:30%" class="col">
+                    @if (HasNew.Value)
+                    {
+
+
+                        @if (NewButton == null)
+                        {
+                            <div class="@AloneNewButtonCSS">
+                                <button class="@NewButtonCSS" id="@(GridID + "_btnNew")" disabled="@IsDisable"
+                                        @onclick=@(async () => await NewItem()) @onclick:stopPropagation @onclick:preventDefault>
+                                    @NewButtonText
+                                </button>
+                            </div>
+                        }
+
+                        else
+                        {
+                            <div class="@AloneNewButtonCSS">
+                                @NewButton
+                            </div>
+                        }
+
+
+                    }
+                </div>
+                @if (EnabledSearch)
+                {
+                    <div style="float:right; width: 70%" class="col">
+                        <div class="form-inline my-2 my-lg-0" style="float:right">
+
+                            @if (GridFilter != null && Filter != null)
+                            {
+                                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent"
+                                        aria-controls="navbarToggleExternalContent" aria-expanded="false" @onclick=@(async () => await EnabledAdvancedSearch()) aria-label="Toggle navigation" @onclick:stopPropagation @onclick:preventDefault>
+                                    Advanced Search
+                                </button>
+                            }
+
+                            @if (!ActiveAdvancedSearch)
+                            {
+                                if (VisibleSearch)
+                                {
+                                    @*<div class="input-group mb-3">
+
+
+                                            <input @bind-value="SearchTerm" @ref="searchE" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm,arg))
+                                                   class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" />
+
+
+                                            <div class="input-group-append">
+                                                <button class="d-sm-inline-block btn btn-sm btn-success shadow-sm" id="@(GridID + "_btnSearch")" disabled="@IsDisable"
+                                                        @onclick=@(async () => await SearchFunction()) @onclick:stopPropagation @onclick:preventDefault>
+                                                    Search
+                                                </button>
+                                            </div>
+                                        </div>*@
+
+
+                                    <div class="nav-item dropdown no-arrow d-sm-none">
+                                        <a class="nav-link dropdown-toggle" href="#" id="searchDropdownGrid" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-search fa-fw"></i>
+                                        </a>
+
+                                        <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in" aria-labelledby="searchDropdown" style="width:600%">
+                                            <form class="form-inline mr-auto w-100 navbar-search">
+                                                <div class="input-group">
+                                                    <input type="text"
+                                                           @bind-value="SearchTerm" @ref="searchE" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm,arg))
+                                                           class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-primary" type="button"
+                                                                id="@(GridID + "_btnSearch")"
+                                                                disabled="@IsDisable"
+                                                                @onclick=@(async () => await SearchFunction())
+                                                                @onclick:stopPropagation @onclick:preventDefault>
+                                                            <i class="fas fa-search fa-sm"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                                        <div class="input-group mb-3">
+                                            <input @bind-value="SearchTerm" @ref="searchE" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm,arg))
+                                                   class="form-control mr-sm-2" type="search" placeholder="Type a keyword" aria-label="Search" />
+
+
+                                            <div class="input-group-append">
+                                                <button class="d-sm-inline-block btn btn-sm btn-success shadow-sm"
+                                                        id="@(GridID + "_btnSearch")"
+                                                        disabled="@IsDisable"
+                                                        @onclick=@(async () => await SearchFunction())
+                                                        @onclick:stopPropagation @onclick:preventDefault>
+                                                    Search
+                                                </button>
+                                            </div>
+
+                                        </div>
+                                    </form>
+
+
+                                }
+                                else
+                                {
+                                    <div class="input-group mb-3" style="display:none">
+
+
+                                        <input @bind-value="SearchTerm" @ref="searchE" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm,arg))
+                                               class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" />
+
+
+                                        <div class="input-group-append">
+                                            <button class="d-sm-inline-block btn btn-sm btn-success shadow-sm" id="@(GridID + "_btnSearch")" disabled="@IsDisable"
+                                                    @onclick=@(async () => await SearchFunction()) @onclick:stopPropagation @onclick:preventDefault>
+                                                Search
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+
+
+                            }
+
+
+
+                        </div>
+                    </div>
+                }
+            </div>
+
+        </nav>
+        <div class="collapse" id="navbarToggleExternalContent">
+            <div class="p-4">
+                @if (GridFilter != null && Filter != null)
+                {
+                    <EditForm Model="Filter">
+                        @GridFilter(Filter)
+                    </EditForm>
+                }
+                @if (ActiveAdvancedSearch)
+                {
+                    <div class="form-row">
+
+                        <div class="col-sm" style="width:50%">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent"
+                                    aria-controls="navbarToggleExternalContent" aria-expanded="false" @onclick=@(async () => await EnabledAdvancedSearch()) aria-label="Toggle navigation" @onclick:stopPropagation @onclick:preventDefault>
+                                Close Advanced...
+                            </button>
+                        </div>
+                        <div class="col-sm" style="text-align:right;width:50%">
+                            <button class="btn btn-sm btn-success shadow-sm my-2 my-sm-0" id="@(GridID + "_btnSearchFilter")" disabled="@IsDisable"
+                                    @onclick=@(async () => await SearchFunction()) @onclick:stopPropagation @onclick:preventDefault>
+                                Search
+                            </button>
+                        </div>
+
+                    </div>
+                }
+
+
+            </div>
+        </div>
+
+
+    }
+
+    <div class="gridContainer p-2 grid-striped" id="@GridID">
+
+        @if ((CurrentEditIndex == -1 && !IsNew) || InLineEdit)
+        {
+
+            <div class="@HeaderRowClass">
+                @if ((HasAction && !EnabledSearch && Items != null && Items.Count() > 0 && !IsNew))
+                {
+
+                }
+
+                @if (GridHeader != null && Items != null)
+                {
+
+                    @GridHeader
+
+
+                }
+
+
+                else if (GridHeader == null && Items != null && !IsNew && CurrentEditIndex < 0)
+                {
+
+                    if (Columns != null && Columns?.Count > 0)
+                    {
+                        if ((HasAction))
+                        {
+
+
+                            <div class="@ColActionHeaderCSS"></div>
+
+
+                        }
+                        //Console.WriteLine("Columns " + Columns.Count);
+                        @foreach (GridColumn<TableItem> column in Columns)
+                        {
+
+
+                            if (column.IsVisble)
+                            {
+                                var _ColumnName = column.Title;
+
+
+                                if (string.IsNullOrEmpty(_ColumnName))
+                                {
+                                    _ColumnName = GetField(column.Field).SplitCamelCase();
+                                }
+
+                                <div class="@column.CSScol" @onclick=@(async () => await SearchFunction(column)) @onclick:stopPropagation @onclick:preventDefault>
+                                    <a class="@GetSortStyle(column)">
+                                        @_ColumnName
+                                    </a>
+                                </div>
+                            }
+
+
+
+                        }
+
+                        if ((HasAction && EnabledSearch && HasDelete.Value))
+                        {
+                            <div class="@ColActionHeaderCSS"></div>
+                        }
+
+                    }
+
+                }
+            </div>
+        }
+
+        @if (ItemsDataSource != null)
+        {
+
+            @if (IsNew)
+            {
+                <div class="@RowNewClass">
+
+
+                    @if (HasAction)
+                    {
+                        @if (!InLineEdit)
+                        {
+
+                            @if (!HasCancelButton && !EnableShowModal)
+                            {
+                                <div class="modal-header">
+
+                                    <button class="close" type="button" data-dismiss="modal" aria-label="Close" style="text-align:right"
+                                            @onclick="@(async () => await CancelItem("" + "" + ""))"
+                                            @onclick:stopPropagation @onclick:preventDefault>
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+
+                                </div>
+
+                            }
+
+
+                            <div class="form" style="width:100%">
+                                <div class="@ColFormActionCSS">
+
+                                    <nav class="navbar sticky-top navbar-dark bg-light topBar" id="toolbarmodalGrid" style=" background-color:#563d7c !important; min-height:50px !important;width:100%;z-index:0 !important">
+
+                                        <div class="btn-group">
+
+                                            @if (HasNew.Value && HasSave.Value)
+                                                @if (SaveButtonSubmit)
+                                                {
+                                                    <button class="@SaveButtonCSS" @onclick=@(async () => await SaveNewItem())
+                                                            @onclick:stopPropagation @onclick:preventDefault>
+                                                        save
+                                                        <i class="fas fa-save fa-sm text-white-50"></i>
+
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button class="@SaveButtonCSS" @onclick=@(async () => await SaveNewItem())
+                                                            @onclick:stopPropagation @onclick:preventDefault>
+                                                        save
+                                                        <i class="fas fa-save fa-sm text-white-50"></i>
+                                                    </button>
+                                                }
+
+
+                                            @if (HasCancelButton)
+                                            {
+                                                <button class="@CancelButtonCSS" @onclick="@(async () => await CancelItem("" + "" + ""))"
+                                                        @onclick:stopPropagation @onclick:preventDefault>
+                                                    cancel
+                                                    <i class="fas fa-remove fa-sm text-white-50"></i>
+                                                </button>
+                                            }
+
+
+
+                                        </div>
+
+                                    </nav>
+
+
+
+                                </div>
+                            </div>
+                        }
+
+                        else
+                        {
+                            <div class="@ColActionCSS">
+                                <div class="btn-group">
+
+                                    @if (HasNew.Value && HasSave.Value)
+                                        @if (SaveButtonSubmit)
+                                        {
+                                            <button class="@SaveButtonCSS"
+                                                    @onclick=@(async () => await SaveNewItem()) @onclick:stopPropagation @onclick:preventDefault>
+                                                save
+                                                <i class="fas fa-save fa-sm text-white-50"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="@SaveButtonCSS"
+                                                    @onclick=@(async () => await SaveNewItem()) @onclick:stopPropagation @onclick:preventDefault>
+                                                save
+                                                <i class="fas fa-save fa-sm text-white-50"></i>
+                                            </button>
+                                        }
+
+
+                                    <button class="@CancelButtonCSS"
+                                            @onclick="@(async () => await CancelNew("" + "" + ""))"
+                                            @onclick:stopPropagation @onclick:preventDefault>
+                                        cancel
+                                        <i class="fas fa-remove fa-sm text-white-50"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+
+
+                    @if (currentEdit != null)
+                    {
+                        currentEdit = DefaultNew;
+
+                        editContext = new EditContext(DefaultNew);
+                        editContext.AddDataAnnotationsValidation();
+                        editContext.OnFieldChanged += EditContext_OnFieldChanged;
+
+                    }
+
+
+                    @if (GridNew == null)
+                    {
+                        //try
+                        //{
+
+                        @GridEdit(DefaultNew)
+                        @*}
+                            catch (Exception ex)
+                            {
+
+                                //Logger.LogDebug(ex.Message);
+
+                                <div>@ex.Message</div>
+                            }*@
+                    }
+                    else if (GridNew != null)
+                    {
+                        @GridNew(DefaultNew)
+                    }
+                    else
+                    {
+                        <div>Not implement</div>
+                    }
+
+
+
+                    @if (!InLineEdit && CurrentEditIndex > -1 && FootAction)
+                    {
+                        <div class="@ColFormActionCSS">
+                            <div class="btn-group">
+                                @if (HasNew.Value && HasSave.Value)
+                                    @if (SaveButtonSubmit)
+                                    {
+                                        <button class="@SaveFormButtonCSS" @onclick=@(async () => await SaveNewItem()) type="submit">
+                                            save
+                                            <i class="fas fa-save fa-sm text-white-50"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="@SaveFormButtonCSS" @onclick=@(async () => await SaveNewItem())
+                                                @onclick:stopPropagation @onclick:preventDefault>
+                                            save
+                                            <i class="fas fa-save fa-sm text-white-50"></i>
+                                        </button>
+                                    }
+
+                                @if (HasCancelButton)
+                                {
+                                    <button class="@CancelFormButtonCSS" style="width:60%;float:right"
+                                            @onclick="@(async () => await CancelItem("" + "" + ""))"
+                                            @onclick:stopPropagation @onclick:preventDefault>
+                                        cancel  <i class="fas fa-remove fa-sm text-white-50"></i>
+                                    </button>
+                                }
+                                else
+                                {
+
+
+
+                                }
+
+
+                            </div>
+
+                        </div>
+                    }
+
+
+                </div>
+
+            }
+            @if (1 == 1)
+            {
+                int i = 0;
+
+                <div id="@(ID + "_drag")" class="@GetClassesForDropzone()"
+                     @ondragover:preventDefault
+                     @ondragover="()=> { }"
+                     @ondragenter:preventDefault
+                     @ondragenter="()=> { }"
+                     @ondrop="()=>OnDrop()"
+                     @ondrop:preventDefault
+                     ondragstart="event.dataTransfer.setData('text', event.target.id);"
+                     @ondrop:stopPropagation
+                     @ondragenter:stopPropagation
+                     @ondragend:stopPropagation
+                     @ondragover:stopPropagation
+                     @ondragleave:stopPropagation
+                     @ondragstart:stopPropagation>
+
+
+                    @foreach (var CurrentRenderRow2 in ItemList)
+                    {
+
+                        CurrentRenderRow = ItemList.ElementAtOrDefault(i);
+                        OriginalCurrentRenderRow = ItemList.ElementAtOrDefault(i);
+                        CurrentRenderIndexRow = i;
+                        TotalRenderRow = ItemList.Count();
+
+                        var inde = "Index-" + i.ToString();
+
+
+                        if (EnabledDrag && ItemList.IndexOf(CurrentRenderRow2) == 0 && MaxItems == null || MaxItems > 1)
+                        {
+                            <div @ondrop="()=>OnDropItemOnSpacing(0)"
+                                 @ondrop:stopPropagation
+                                 @ondragenter="()=>DragDropService.ActiveSpacerId =  0"
+                                 @ondragleave="()=>DragDropService.ActiveSpacerId = null"
+                                 class="@GetClassesForSpacing(0)">
+                            </div>
+                        }
+
+
+
+
+                        <div draggable="@IsItemDragable(CurrentRenderRow2)"
+                             @ondragstart="()=>OnDragStart(CurrentRenderRow2)"
+                             @ondragend="()=>OnDragEnd()"
+                             @ondragenter="()=>OnDragEnter(CurrentRenderRow2)"
+                             @ondragleave="()=>OnDragLeave()"
+                             class="@GetClassesForDraggable(CurrentRenderRow2)
+             @CheckIfItemIsInTransit(CurrentRenderRow2)
+             @CheckIfItemIsDragTarget(CurrentRenderRow2)
+             @CheckIfDragOperationIsInProgess()
+             @CheckIfDraggable(CurrentRenderRow2)">
+
+
+                            @if (CurrentEditIndex > -1 && i == CurrentEditIndex)
+                            {
+                                <div class=@RowEditClass>
+
+                                    @if (HasAction)
+                                    {
+
+                                        @if (!InLineEdit)
+                                        {
+
+
+                                            @if (!HasCancelButton && !EnableShowModal)
+                                            {
+                                                <div class="modal-header">
+
+                                                    <button class="close" type="button" data-dismiss="modal" aria-label="Close" style="text-align:right"
+                                                            @onclick="@(async () => await CancelItem("" + "" + ""))"
+                                                            @onclick:stopPropagation @onclick:preventDefault>
+                                                        <span aria-hidden="true">×</span>
+                                                    </button>
+
+                                                </div>
+
+                                            }
+
+                                            <div class="@ColFormActionCSS">
+
+
+                                                <nav class="navbar sticky-top navbar-dark bg-light topBar" id="toolbarmodal" style=" background-color:#563d7c !important; min-height:50px !important;width:100%;z-index:0 !important">
+                                                    <div class="btn-group">
+                                                        @if (HasEdit.Value && HasSave.Value)
+                                                            @if (SaveButtonSubmit)
+                                                            {
+                                                                <button class="@SaveButtonCSS"
+                                                                        @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))" type="submit">
+                                                                    @ActionText
+                                                                    <i class="fas fa-save fa-sm text-white-50"></i>
+                                                                </button>
+                                                            }
+                                                            else
+                                                            {
+                                                                <button class="@SaveButtonCSS"
+                                                                        @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))" @onclick:stopPropagation @onclick:preventDefault>
+                                                                    @ActionText
+                                                                    <i class="fas fa-save fa-sm text-white-50"></i>
+                                                                </button>
+
+                                                            }
+                                                        @if (HasCancelButton)
+                                                        {
+                                                            <button class="@CancelButtonCSS" @ref="myComponents[i]" @onclick="@(async () => await CancelItem("" + inde + ""))" @onclick:stopPropagation @onclick:preventDefault>
+                                                                cancel
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+
+                                                        }
+
+                                                    </div>
+
+                                                </nav>
+
+
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="@ColActionCSS">
+                                                <div class="btn-group">
+                                                    @if (HasEdit.Value && HasSave.Value)
+                                                        @if (SaveButtonSubmit)
+                                                        {
+                                                            <button class="@SaveButtonCSS" @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))" type="submit">
+                                                                save
+                                                                <i class="fas fa-save fa-sm text-white-50"></i>
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button class="@SaveButtonCSS" @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))"
+                                                                    @onclick:stopPropagation @onclick:preventDefault>
+                                                                save
+                                                                <i class="fas fa-save fa-sm text-white-50"></i>
+                                                            </button>
+                                                        }
+
+                                                    <button class="@CancelButtonCSS" @ref="myComponents[i]" @onclick="@(async () => await CancelItem("" + inde + ""))"
+                                                            @onclick:stopPropagation @onclick:preventDefault>
+                                                        cancel
+                                                        <i class="fas fa-remove fa-sm text-white-50"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+
+                                        }
+
+
+                                    }
+
+
+                                    @if (currentEdit != null)
+                                    {
+                                        currentEdit = ItemList.ElementAt(i);
+
+                                        editContext = new EditContext(ItemList.ElementAt(i));
+                                        editContext.AddDataAnnotationsValidation();
+                                        editContext.OnFieldChanged += EditContext_OnFieldChanged;
+
+
+                                    }
+
+                                    @if (GridEdit != null && ItemList?.ElementAtOrDefault(i) != null)
+                                    {
+                                        //try
+                                        //{
+                                        @GridEdit(ItemList.ElementAt(i))
+                                        @*}
+                                            catch (Exception exi)
+                                            {
+                                                <div>@exi.Message</div>
+                                            }*@
+
+
+                                    }
+
+
+                                    @if (!InLineEdit && CurrentEditIndex > -1 && FootAction)
+                                    {
+                                        <div class="btn-group">
+                                            @if (HasEdit.Value && HasSave.Value)
+                                                @if (SaveButtonSubmit)
+                                                {
+                                                    <button class="@SaveButtonCSS"
+                                                            @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))" type="submit">
+                                                        @ActionText
+                                                        <i class="fas fa-save fa-sm text-white-50"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button class="@SaveButtonCSS"
+                                                            @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))" @onclick:stopPropagation @onclick:preventDefault>
+                                                        @ActionText
+                                                        <i class="fas fa-save fa-sm text-white-50"></i>
+                                                    </button>
+                                                }
+
+
+
+                                            <button class="@CancelButtonCSS" @ref="myComponents[i]" @onclick="@(async () => await CancelItem("" + inde + ""))" @onclick:stopPropagation @onclick:preventDefault>
+                                                cancel
+                                                <i class="fas fa-remove fa-sm text-white-50"></i>
+                                            </button>
+                                        </div>
+                                    }
+
+
+
+
+                                </div>
+
+
+
+
+                            }
+                            else
+                            {
+
+
+                                if (!InLineEdit && CurrentEditIndex == -1 && !IsNew || InLineEdit)
+                                {
+                                    @if (RowExecute != null)
+                                    {
+
+
+                                        CurrentRenderRow = RowExecute(ItemList.ElementAtOrDefault(i));
+
+                                        CurrentRowIndex = i;
+
+                                    }
+                                    else
+                                    {
+                                        CurrentRenderRow = ItemList.ElementAtOrDefault(i);
+                                    }
+
+                                    <div class="@RowClass">
+
+                                        @if (HasAction)
+                                        {
+                                            //CurrentEditIndex = i;
+
+
+                                            <div class="@ColActionCSS">
+                                                <div class="btn-group">
+                                                    @if (RowExecute != null)
+                                                    {
+
+                                                        CurrentSelect = CurrentRenderRow;
+
+                                                    }
+                                                    else
+                                                    {
+
+                                                        CurrentSelect = ItemList.ElementAtOrDefault(i);
+
+
+                                                    }
+
+                                                    @if (GridSelect != null && HasSelect.Value)
+                                                    {
+
+
+                                                        @if (RowExecute != null)
+                                                        {
+
+                                                            CurrentSelect = CurrentRenderRow;
+                                                            @GridSelect(CurrentRenderRow)
+                                                        }
+                                                        else
+                                                        {
+
+                                                            CurrentSelect = ItemList.ElementAtOrDefault(i);
+
+                                                            @GridSelect(ItemList.ElementAtOrDefault(i))
+                                                        }
+
+
+                                                    }
+                                                    @if (GridSelect2 != null && HasSelect.Value)
+                                                    {
+                                                        CurrentSelectIndex = i;
+                                                        SelectRow Currentse = new SelectRow();
+
+                                                        @if (ItemList != null && RowExecute != null && CurrentRenderRow != null && Currentse != null && Currentse.Entity != null)
+                                                        {
+                                                            Currentse.Entity = CurrentRenderRow;
+                                                            Currentse.Position = i;
+                                                            CurrentSelect = CurrentRenderRow;
+                                                            @GridSelect2(Currentse)
+                                                        }
+                                                        else if (ItemList != null)
+                                                        {
+                                                            Currentse.Entity = ItemList.ElementAtOrDefault(i);
+                                                            Currentse.Position = i;
+                                                            CurrentSelect = ItemList.ElementAtOrDefault(i);
+                                                            @GridSelect2(Currentse)
+                                                        }
+
+
+                                                    }
+
+
+                                                    @if (HasEdit.Value && EditButton == null)
+                                                    {
+                                                        <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                                                            <button class="@EditButtonCSS" @onclick="@(async () => await EditItem("" + inde + ""))" @onclick:stopPropagation @onclick:preventDefault disabled="@IsDisable">
+                                                                <span>edit <i class="fas fa-pen fa-sm"></i></span>
+                                                            </button>
+                                                        </div>
+
+                                                    }
+                                                    else if (HasEdit.Value && EditButton != null)
+                                                    {
+
+                                                        @if (RowExecute != null)
+                                                        {
+                                                            @EditButton(CurrentRenderRow);
+                                                        }
+                                                        else
+                                                        {
+                                                            @EditButton(ItemList.ElementAtOrDefault(i))
+                                                        }
+
+                                                    }
+
+
+
+
+                                                    @if (HasDelete.Value)
+                                                    {
+                                                        var iy3 = ItemList.ElementAtOrDefault(i);
+
+                                                        <div class="form-group inv" style="margin-top:0rem;margin-bottom:0rem">
+                                                            <button class="@DeleteButtonCSS" @onclick="@(async () => await DeleteItem(iy3))" @onclick:stopPropagation @onclick:preventDefault disabled="@IsDisable">
+                                                                <span>
+                                                                    delete
+                                                                    <i class="fas fa-remove fa-sm"></i>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+
+                                                    }
+
+
+
+                                                </div>
+                                            </div>
+
+                                        }
+
+                                        @if (GridRow != null && ItemList != null && ItemList.ElementAtOrDefault(i) != null)
+                                        {
+                                            if (Columns != null && Columns?.Count > 0)
+                                            {
+                                                @foreach (GridColumn<TableItem> column in Columns)
+                                                {
+
+                                                    if (column.IsVisble)
+                                                    {
+
+                                                        var ColumnTitle = column.Title;
+                                                        if (ColumnTitle == null && !string.IsNullOrEmpty(column.Field))
+                                                        {
+                                                            var apos = column.Field.Split('.');
+
+                                                            ColumnTitle = apos[apos.Length - 1];
+                                                        }
+
+
+
+                                                        if (column.Template == null && column.ResponsiveTemplate == null && !string.IsNullOrEmpty(column.Field))
+                                                        {
+
+
+                                                            var value = GetPropertyValue(CurrentRenderRow, column.Field);
+
+                                                            @if (!string.IsNullOrEmpty(@ColumnTitle))
+                                                            {
+                                                                <div class="col-sm customcol inv">@ColumnTitle</div>
+                                                            }
+
+
+                                                            if (column.IsToolTip && !string.IsNullOrEmpty(column.ToolTipField))
+                                                            {
+
+                                                                var valueTool = GetPropertyValue(CurrentRenderRow, column.ToolTipField);
+
+                                                                if (valueTool != null)
+                                                                {
+                                                                    <div class="@column.CSScol">
+                                                                        <Blazor.Controls.TooltipComponent Text="@valueTool.ToString()">
+                                                                            @(string.IsNullOrEmpty(column.Format) ? value : string.Format(column.Format, value))
+                                                                        </Blazor.Controls.TooltipComponent>
+                                                                    </div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    @*<div class="@column.CSScol">@(string.IsNullOrEmpty(column.Format) ? value : string.Format(column.Format, value))</div>*@
+                                                                    @Div(value, column.Format, column.CSScol)
+
+                                                                }
+
+
+
+
+                                                            }
+                                                            else
+                                                            {
+
+
+                                                                @*<div class="@column.CSScol">@(string.IsNullOrEmpty(column.Format) ? value : string.Format(column.Format, value))</div>*@
+                                                                switch (column.ControlType)
+                                                                {
+                                                                    case "link":
+
+                                                                        @Link(column.Value, value, column.Format, column.CSScol)
+
+                                                                        break;
+
+                                                                    default:
+                                                                        @Div(value, column.Format, column.CSScol)
+                                                                        break;
+
+                                                                }
+
+
+
+
+                                                            }
+
+
+
+
+
+
+                                                        }
+                                                        else if (column.Template == null && column.Value != null)
+                                                        {
+
+
+                                                            if (!string.IsNullOrEmpty(column.ControlType) && !string.IsNullOrEmpty(column.Field))
+                                                            {
+
+                                                                var value = GetPropertyValue(CurrentRenderRow, column.Field);
+
+                                                                <div class="col-sm customcol inv">@(string.IsNullOrEmpty(column.Title) ? "" : column.Title)</div>
+                                                                <div class="@column.CSScol">
+                                                                    <a href="@(column.Value.ToString() + value.ToString())">
+                                                                        @value.ToString()
+                                                                    </a>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="col-sm customcol inv">@(string.IsNullOrEmpty(column.Title) ? "" : column.Title)</div>
+                                                                <div class="@column.CSScol">@column.Value.ToString()</div>
+                                                            }
+
+
+
+
+
+
+                                                        }
+
+
+
+
+                                                        else if (column.Template != null)
+                                                        {
+
+                                                            @column.Template(CurrentRenderRow)
+
+                                                        }
+                                                        else if (column.ResponsiveTemplate != null)
+                                                        {
+                                                            @if (!string.IsNullOrEmpty(@ColumnTitle))
+                                                            {
+                                                                <div class="col-sm customcol inv">@(@ColumnTitle)</div>
+                                                            }
+
+                                                            <div class="@column.CSScol">@column.ResponsiveTemplate(CurrentRenderRow)</div>
+                                                        }
+
+
+                                                    }
+
+
+                                                }
+                                            }
+                                            else if (GridCard != null && ItemList?.ElementAtOrDefault(i) != null && Width < 568)
+                                            {
+                                                //try
+                                                //{
+                                                @GridCard(CurrentRenderRow)
+                                                @*}
+                                                    catch (Exception ex)
+                                                    {
+                                                        <div>@ex.Message</div>
+                                                    }*@
+                                            }
+                                            else if (GridRow != null && ItemList?.ElementAtOrDefault(i) != null)
+                                            {
+                                                //try
+                                                //{
+                                                @GridRow(CurrentRenderRow)
+
+                                                if (RowAfterRender != null)
+                                                {
+                                                    RowAfterRender(CurrentRenderRow);
+                                                }
+
+                                                @*}
+                                                    catch (Exception ex)
+                                                    {
+                                                        <div>@ex.Message</div>
+                                                    }*@
+
+
+                                            }
+
+
+                                        }
+
+                                        @if (HasAction && HasDelete.Value)
+                                        {
+
+                                            <div class="@ColActionCSS noinv">
+                                                <div class="btn-group">
+
+                                                    @{
+
+                                                        var iy2 = ItemList.ElementAtOrDefault(i);
+
+                                                    }
+
+
+                                                    <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                                                        <button class="@DeleteButtonCSS" @onclick="@(async () => await DeleteItem(iy2))" @onclick:stopPropagation @onclick:preventDefault disabled="@IsDisable">
+                                                            <span>
+                                                                delete
+                                                                <i class="fas fa-remove fa-sm"></i>
+                                                            </span>
+                                                        </button>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                        }
+
+                                    </div>
+                                }
+
+
+
+                            }
+
+                        </div>
+
+                        @if (EnabledDrag && MaxItems == null || MaxItems > 1)
+                        {
+                            <div @ondrop="()=>OnDropItemOnSpacing(ItemList.IndexOf(CurrentRenderRow2)+1)"
+                                 @ondrop:stopPropagation
+                                 @ondragenter="()=>DragDropService.ActiveSpacerId = ItemList.IndexOf(CurrentRenderRow2)+1"
+                                 @ondragleave="()=>DragDropService.ActiveSpacerId = null"
+                                 class="@CheckIfDragOperationIsInProgess()
+                @GetClassesForSpacing(ItemList.IndexOf(CurrentRenderRow2)+1)">
+                            </div>
+                        }
+                        i++;
+                    }
+
+
+
+
+
+                </div>
+
+            }
+            else
+            {
+                @for (int i = 0; i < ItemList.Count(); i++)
+                {
+
+                    CurrentRenderRow = ItemList.ElementAtOrDefault(i);
+                    OriginalCurrentRenderRow = ItemList.ElementAtOrDefault(i);
+                    CurrentRenderIndexRow = i;
+                    TotalRenderRow = ItemList.Count();
+
+                    var inde = "Index-" + i.ToString();
+
+                    @if (CurrentEditIndex > -1 && i == CurrentEditIndex)
+                    {
+                        <div class=@RowEditClass>
+
+                            @if (HasAction)
+                            {
+
+                                @if (!InLineEdit)
+                                {
+
+
+                                    @if (!HasCancelButton && !EnableShowModal)
+                                    {
+                                        <div class="modal-header">
+
+                                            <button class="close" type="button" data-dismiss="modal" aria-label="Close" style="text-align:right"
+                                                    @onclick="@(async () => await CancelItem("" + "" + ""))"
+                                                    @onclick:stopPropagation @onclick:preventDefault>
+                                                <span aria-hidden="true">×</span>
+                                            </button>
+
+                                        </div>
+
+                                    }
+
+                                    <div class="@ColFormActionCSS">
+
+
+                                        <nav class="navbar sticky-top navbar-dark bg-light topBar" id="toolbarmodal" style=" background-color:#563d7c !important; min-height:50px !important;width:100%;z-index:0 !important">
+                                            <div class="btn-group">
+                                                @if (HasEdit.Value && HasSave.Value)
+                                                    @if (SaveButtonSubmit)
+                                                    {
+                                                        <button class="@SaveButtonCSS"
+                                                                @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))" type="submit">
+                                                            @ActionText
+                                                            <i class="fas fa-save fa-sm text-white-50"></i>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button class="@SaveButtonCSS"
+                                                                @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))" @onclick:stopPropagation @onclick:preventDefault>
+                                                            @ActionText
+                                                            <i class="fas fa-save fa-sm text-white-50"></i>
+                                                        </button>
+
+                                                    }
+                                                @if (HasCancelButton)
+                                                {
+                                                    <button class="@CancelButtonCSS" @ref="myComponents[i]" @onclick="@(async () => await CancelItem("" + inde + ""))" @onclick:stopPropagation @onclick:preventDefault>
+                                                        cancel
+                                                    </button>
+                                                }
+                                                else
+                                                {
+
+                                                }
+
+                                            </div>
+
+                                        </nav>
+
+
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="@ColActionCSS">
+                                        <div class="btn-group">
+                                            @if (HasEdit.Value && HasSave.Value)
+                                                @if (SaveButtonSubmit)
+                                                {
+                                                    <button class="@SaveButtonCSS" @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))" type="submit">
+                                                        save
+                                                        <i class="fas fa-save fa-sm text-white-50"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button class="@SaveButtonCSS" @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))"
+                                                            @onclick:stopPropagation @onclick:preventDefault>
+                                                        save
+                                                        <i class="fas fa-save fa-sm text-white-50"></i>
+                                                    </button>
+                                                }
+
+                                            <button class="@CancelButtonCSS" @ref="myComponents[i]" @onclick="@(async () => await CancelItem("" + inde + ""))"
+                                                    @onclick:stopPropagation @onclick:preventDefault>
+                                                cancel
+                                                <i class="fas fa-remove fa-sm text-white-50"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+
+                                }
+
+
+                            }
+
+
+                            @if (currentEdit != null)
+                            {
+                                currentEdit = ItemList.ElementAt(i);
+
+                                editContext = new EditContext(ItemList.ElementAt(i));
+                                editContext.AddDataAnnotationsValidation();
+                                editContext.OnFieldChanged += EditContext_OnFieldChanged;
+
+
+                            }
+
+                            @if (GridEdit != null && ItemList?.ElementAtOrDefault(i) != null)
+                            {
+                                //try
+                                //{
+                                @GridEdit(ItemList.ElementAt(i))
+                                @*}
+                                    catch (Exception exi)
+                                    {
+                                        <div>@exi.Message</div>
+                                    }*@
+
+
+                            }
+
+
+                            @if (!InLineEdit && CurrentEditIndex > -1 && FootAction)
+                            {
+                                <div class="btn-group">
+                                    @if (HasEdit.Value && HasSave.Value)
+                                        @if (SaveButtonSubmit)
+                                        {
+                                            <button class="@SaveButtonCSS"
+                                                    @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))" type="submit">
+                                                @ActionText
+                                                <i class="fas fa-save fa-sm text-white-50"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="@SaveButtonCSS"
+                                                    @ref="myComponents[i]" @onclick="@(async () => await SaveItem("" + inde + ""))" @onclick:stopPropagation @onclick:preventDefault>
+                                                @ActionText
+                                                <i class="fas fa-save fa-sm text-white-50"></i>
+                                            </button>
+                                        }
+
+
+
+                                    <button class="@CancelButtonCSS" @ref="myComponents[i]" @onclick="@(async () => await CancelItem("" + inde + ""))" @onclick:stopPropagation @onclick:preventDefault>
+                                        cancel
+                                        <i class="fas fa-remove fa-sm text-white-50"></i>
+                                    </button>
+                                </div>
+                            }
+
+
+
+
+                        </div>
+
+
+
+
+                    }
+                    else
+                    {
+
+
+                        if (!InLineEdit && CurrentEditIndex == -1 && !IsNew || InLineEdit)
+                        {
+                            @if (RowExecute != null)
+                            {
+
+
+                                CurrentRenderRow = RowExecute(ItemList.ElementAtOrDefault(i));
+
+                                CurrentRowIndex = i;
+
+                            }
+                            else
+                            {
+                                CurrentRenderRow = ItemList.ElementAtOrDefault(i);
+                            }
+
+                            <div class="@RowClass">
+
+                                @if (HasAction)
+                                {
+                                    //CurrentEditIndex = i;
+
+
+                                    <div class="@ColActionCSS">
+                                        <div class="btn-group">
+                                            @if (RowExecute != null)
+                                            {
+
+                                                CurrentSelect = CurrentRenderRow;
+
+                                            }
+                                            else
+                                            {
+
+                                                CurrentSelect = ItemList.ElementAtOrDefault(i);
+
+
+                                            }
+
+                                            @if (GridSelect != null && HasSelect.Value)
+                                            {
+
+
+                                                @if (RowExecute != null)
+                                                {
+
+                                                    CurrentSelect = CurrentRenderRow;
+                                                    @GridSelect(CurrentRenderRow)
+                                                }
+                                                else
+                                                {
+
+                                                    CurrentSelect = ItemList.ElementAtOrDefault(i);
+
+                                                    @GridSelect(ItemList.ElementAtOrDefault(i))
+                                                }
+
+
+                                            }
+                                            @if (GridSelect2 != null && HasSelect.Value)
+                                            {
+                                                CurrentSelectIndex = i;
+                                                SelectRow Currentse = new SelectRow();
+
+                                                @if (ItemList != null && RowExecute != null && CurrentRenderRow != null && Currentse != null && Currentse.Entity != null)
+                                                {
+                                                    Currentse.Entity = CurrentRenderRow;
+                                                    Currentse.Position = i;
+                                                    CurrentSelect = CurrentRenderRow;
+                                                    @GridSelect2(Currentse)
+                                                }
+                                                else if (ItemList != null)
+                                                {
+                                                    Currentse.Entity = ItemList.ElementAtOrDefault(i);
+                                                    Currentse.Position = i;
+                                                    CurrentSelect = ItemList.ElementAtOrDefault(i);
+                                                    @GridSelect2(Currentse)
+                                                }
+
+
+                                            }
+
+
+                                            @if (HasEdit.Value && EditButton == null)
+                                            {
+                                                <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                                                    <button class="@EditButtonCSS" @onclick="@(async () => await EditItem("" + inde + ""))" @onclick:stopPropagation @onclick:preventDefault disabled="@IsDisable">
+                                                        <span>edit <i class="fas fa-pen fa-sm"></i></span>
+                                                    </button>
+                                                </div>
+
+                                            }
+                                            else if (HasEdit.Value && EditButton != null)
+                                            {
+
+                                                @if (RowExecute != null)
+                                                {
+                                                    @EditButton(CurrentRenderRow);
+                                                }
+                                                else
+                                                {
+                                                    @EditButton(ItemList.ElementAtOrDefault(i))
+                                                }
+
+                                            }
+
+
+
+
+                                            @if (HasDelete.Value)
+                                            {
+                                                var iy3 = ItemList.ElementAtOrDefault(i);
+
+                                                <div class="form-group inv" style="margin-top:0rem;margin-bottom:0rem">
+                                                    <button class="@DeleteButtonCSS" @onclick="@(async () => await DeleteItem(iy3))" @onclick:stopPropagation @onclick:preventDefault disabled="@IsDisable">
+                                                        <span>
+                                                            delete
+                                                            <i class="fas fa-remove fa-sm"></i>
+                                                        </span>
+                                                    </button>
+                                                </div>
+
+                                            }
+
+
+
+                                        </div>
+                                    </div>
+
+                                }
+
+                                @if (GridRow != null && ItemList != null && ItemList.ElementAtOrDefault(i) != null)
+                                {
+                                    if (Columns != null && Columns?.Count > 0)
+                                    {
+                                        @foreach (GridColumn<TableItem> column in Columns)
+                                        {
+
+                                            if (column.IsVisble)
+                                            {
+
+                                                var ColumnTitle = column.Title;
+                                                if (ColumnTitle == null && !string.IsNullOrEmpty(column.Field))
+                                                {
+                                                    var apos = column.Field.Split('.');
+
+                                                    ColumnTitle = apos[apos.Length - 1];
+                                                }
+
+
+
+                                                if (column.Template == null && column.ResponsiveTemplate == null && !string.IsNullOrEmpty(column.Field))
+                                                {
+
+
+                                                    var value = GetPropertyValue(CurrentRenderRow, column.Field);
+
+                                                    @if (!string.IsNullOrEmpty(@ColumnTitle))
+                                                    {
+                                                        <div class="col-sm customcol inv">@ColumnTitle</div>
+                                                    }
+
+
+                                                    if (column.IsToolTip && !string.IsNullOrEmpty(column.ToolTipField))
+                                                    {
+
+                                                        var valueTool = GetPropertyValue(CurrentRenderRow, column.ToolTipField);
+
+                                                        if (valueTool != null)
+                                                        {
+                                                            <div class="@column.CSScol">
+                                                                <Blazor.Controls.TooltipComponent Text="@valueTool.ToString()">
+                                                                    @(string.IsNullOrEmpty(column.Format) ? value : string.Format(column.Format, value))
+                                                                </Blazor.Controls.TooltipComponent>
+                                                            </div>
+                                                        }
+                                                        else
+                                                        {
+                                                            @*<div class="@column.CSScol">@(string.IsNullOrEmpty(column.Format) ? value : string.Format(column.Format, value))</div>*@
+                                                            @Div(value, column.Format, column.CSScol)
+
+                                                        }
+
+
+
+
+                                                    }
+                                                    else
+                                                    {
+
+
+                                                        @*<div class="@column.CSScol">@(string.IsNullOrEmpty(column.Format) ? value : string.Format(column.Format, value))</div>*@
+                                                        switch (column.ControlType)
+                                                        {
+                                                            case "link":
+
+                                                                @Link(column.Value, value, column.Format, column.CSScol)
+
+                                                                break;
+
+                                                            default:
+                                                                @Div(value, column.Format, column.CSScol)
+                                                                break;
+
+                                                        }
+
+
+
+
+                                                    }
+
+
+
+
+
+
+                                                }
+                                                else if (column.Template == null && column.Value != null)
+                                                {
+
+
+                                                    if (!string.IsNullOrEmpty(column.ControlType) && !string.IsNullOrEmpty(column.Field))
+                                                    {
+
+                                                        var value = GetPropertyValue(CurrentRenderRow, column.Field);
+
+                                                        <div class="col-sm customcol inv">@(string.IsNullOrEmpty(column.Title) ? "" : column.Title)</div>
+                                                        <div class="@column.CSScol">
+                                                            <a href="@(column.Value.ToString() + value.ToString())">
+                                                                @value.ToString()
+                                                            </a>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="col-sm customcol inv">@(string.IsNullOrEmpty(column.Title) ? "" : column.Title)</div>
+                                                        <div class="@column.CSScol">@column.Value.ToString()</div>
+                                                    }
+
+
+
+
+
+
+                                                }
+
+
+
+
+                                                else if (column.Template != null)
+                                                {
+
+                                                    @column.Template(CurrentRenderRow)
+
+                                                }
+                                                else if (column.ResponsiveTemplate != null)
+                                                {
+                                                    @if (!string.IsNullOrEmpty(@ColumnTitle))
+                                                    {
+                                                        <div class="col-sm customcol inv">@(@ColumnTitle)</div>
+                                                    }
+
+                                                    <div class="@column.CSScol">@column.ResponsiveTemplate(CurrentRenderRow)</div>
+                                                }
+
+
+                                            }
+
+
+                                        }
+                                    }
+                                    else if (GridCard != null && ItemList?.ElementAtOrDefault(i) != null && Width < 568)
+                                    {
+                                        //try
+                                        //{
+                                        @GridCard(CurrentRenderRow)
+                                        @*}
+                                            catch (Exception ex)
+                                            {
+                                                <div>@ex.Message</div>
+                                            }*@
+                                    }
+                                    else if (GridRow != null && ItemList?.ElementAtOrDefault(i) != null)
+                                    {
+                                        //try
+                                        //{
+                                        @GridRow(CurrentRenderRow)
+
+                                        if (RowAfterRender != null)
+                                        {
+                                            RowAfterRender(CurrentRenderRow);
+                                        }
+
+                                        @*}
+                                            catch (Exception ex)
+                                            {
+                                                <div>@ex.Message</div>
+                                            }*@
+
+
+                                    }
+
+
+                                }
+
+                                @if (HasAction && HasDelete.Value)
+                                {
+
+                                    <div class="@ColActionCSS noinv">
+                                        <div class="btn-group">
+
+                                            @{
+
+                                                var iy2 = ItemList.ElementAtOrDefault(i);
+
+                                            }
+
+
+                                            <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                                                <button class="@DeleteButtonCSS" @onclick="@(async () => await DeleteItem(iy2))" @onclick:stopPropagation @onclick:preventDefault disabled="@IsDisable">
+                                                    <span>
+                                                        delete
+                                                        <i class="fas fa-remove fa-sm"></i>
+                                                    </span>
+                                                </button>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                }
+
+                            </div>
+                        }
+
+
+
+                    }
+
+
+
+                }
+            }
+
+
+            @if (!string.IsNullOrEmpty(ClientDefaultSortField) && (!IsDragAndDrop))
+            {
+                Items = Sort_List<TableItem>(ClientDefaultSortDirection, ClientDefaultSortField, Items);
+                if (Items != null && Items.Count > 0)
+                {
+                    ItemList = Items.Skip((1 - 1) * PageSize).Take(PageSize).ToList();
+
+                }
+                else if (Items != null && Items.Count == 0)
+                {
+
+                }
+            }
+
+
+
+
+
+        }
+
+    </div>
+    @if (CurrentResult != null && (PaginationFunction1 != null
+&& !IsNew && CurrentEditIndex == -1
+&& !ClientPagination || InLineEdit && PaginationFunction1 != null && !ClientPagination))
+    {
+        if (CurrentResult.Count > TotalRows)
+        {
+            TotalRows = CurrentResult.Count;
+        }
+
+        //Console.WriteLine("Change pagination");
+
+        <div class="footer">
+            <Pagination PaginaActual="PaginaActual" PaginasTotales="PaginasTotales" PaginaSeleccionada="PageSelected" TotalRows="TotalRows"></Pagination>
+        </div>
+    }
+    else
+if ((ItemsDataSource != null && ItemsDataSource.Count() > 0) || (Items != null && Items.Count() > 0) && InLineEdit
+|| InLineEdit && !IsNew && CurrentEditIndex == -1 || ClientPagination)
+    {
+
+
+
+        @if (Items.Count() > PageSize)
+        {
+            @*@if (curPage > 1 && Items.Count() == PageSize)
+                {
+                    curPage = curPage - 1;
+                }*@
+            <div class="footer">
+
+                <ul class="pagination">
+
+                    <li class="page-item">
+                        <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => SetPagerSize(b))
+                           @onclick:stopPropagation @onclick:preventDefault>&laquo;</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => NavigateToPage(p))
+                           @onclick:stopPropagation @onclick:preventDefault>Previous</a>
+                    </li>
+                    @for (int i = startPage; i <= endPage; i++)
+                    {
+                        var currentPage = i;
+                        <li class="page-item">
+                            <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => updateList(currentPage))
+                               @onclick:stopPropagation @onclick:preventDefault>
+                                @currentPage
+                            </a>
+                        </li>
+                    }
+
+                    <li class="page-item">
+                        <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => NavigateToPage("next"))
+                           @onclick:stopPropagation @onclick:preventDefault>Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => SetPagerSize("forward"))
+                           @onclick:stopPropagation @onclick:preventDefault>&raquo;</a>
+                    </li>
+                    <li class="page-item noinv">
+                        <span class="pagebutton btn btn-link disabled">Page @curPage of @totalPages</span>
+                    </li>
+                </ul>
+
+
+            </div>
+
+        }
+
+    }
+
+    @if (ValidationMessages != null)
+    {
+        foreach (var uu in ValidationMessages)
+        {
+            if (uu.Value != null && !string.IsNullOrEmpty(uu.Value) && InLineEdit)
+            {
+
+                <div class="validation-message" style="display:block !important">@uu.Key : @uu.Value</div>
+
+            }
+
+            else
+                if (uu.Value != null && !string.IsNullOrEmpty(uu.Value) && !InLineEdit)
+            {
+                ShowError(uu.Value).ConfigureAwait(false).GetAwaiter().GetResult();
+            }
+        }
+    }
+
+
+
+
+    <input @bind-value="SearchTerm2" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm2,arg))
+           class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" style="width:0px;border:0px" />
+
+
+
+
+
+
+</CascadingValue>
+
+@*@{
+        //Console.WriteLine("close grilla");
+        CloseProgress();
+    }*@
+
+@*</EditForm>*@
+
+@code {
+
+
+    private void HandleClick(string path)
+    {
+        NavigationManager.NavigateTo(path, true);
+    }
+
+    RenderFragment Link(object Path, object value, string Format, string CSScol)
+    {
+        return@<NavLink href="@(@Path + @"" + value)" @onclick=@(async () => HandleClick(@Path + @"" + value))>
+        <div class="@CSScol">@(string.IsNullOrEmpty(Format) ? value : string.Format(Format, value))</div>;
+    </NavLink>;
+
+}
+
+RenderFragment Div(object value, string Format, string CSScol)
+{
+return @<div class="@CSScol">@(string.IsNullOrEmpty(Format) ? value : string.Format(Format, value))</div>;
+}
+
+[Parameter]
+public string ClientDefaultSortDirection { get; set; } = "Asc";
+
+[Parameter]
+public string ClientDefaultSortField { get; set; }
+
+public class SelectRow
+{
+public TableItem Entity { get; set; } = new TableItem();
+public int Position { get; set; }
+}
+
+//private Component _Component { get; set; } = new Component();
+
+//[Parameter]
+//public new Component Component { get
+//    {
+//        return base.Component;
+
+//    }
+//    set
+//    {
+//        base.Component = value;
+
+//    } }
+
+[Parameter]
+public string EditBehavior { get; set; } = "link";
+
+//[CascadingParameter]
+//private Task<AuthenticationState> stateTask { get; set; }
+
+private string infoString { get; set; }
+
+private async Task<bool> IsInRole()
+{
+var user = (await stateTask).User;
+
+return user.IsInRole(Roles);
+}
+
+//private async Task<bool> IsInPolicy(Policies policy)
+//{
+//    var user = (await stateTask).User;
+
+//    //if (user.HasClaim(c => c.Type == "tech"))
+//    //{
+
+//    //}
+
+
+//    Component.Permission = policy;
+
+//    var ed = await AuthorizationService.AuthorizeAsync(user, Component, Policy);
+//    if(ed.Failure != null && ed.Failure.FailCalled)
+
+//    {
+//        throw new Exception("Access Failed");
+
+//    }
+
+
+
+//    if (ed.Succeeded)
+//    {
+//        return true;
+//    }
+//    return false;
+
+//}
+
+//[Parameter]
+//public string Policy { get; set; } = "HasAccess";
+
+private ElementReference searchE;
+
+
+public string Show { get; set; } = "display: inline-block;";
+
+[Parameter]
+public bool ForceShow { get; set; }
+
+[Parameter]
+public string ID { get; set; } = "modalWindow";
+
+[Parameter]
+public bool DefaultHide { get; set; }
+
+
+public string CSSFull { get; set; }
+
+public string CSSClass { get; set; } = "modal fade bd-example-modal-lg";
+
+
+[Parameter]
+public bool Enabled { get; set; } = true;
+
+public bool IsDisable { get; set; }
+
+public int TotalRenderRow { get; set; }
+
+public int CurrentRenderIndexRow { get; set; }
+
+public TableItem CurrentRenderRow { get; set; }
+
+public TableItem OriginalCurrentRenderRow { get; set; }
+
+
+[Parameter]
+public bool DisabledRowHover { get; set; }
+
+[Parameter]
+public bool ClientPagination { get; set; } = false;
+
+[Parameter]
+public bool HasCancelButton { get; set; } = true;
+
+
+[Parameter]
+public bool ForceNEwButton { get; set; }
+
+
+[Parameter]
+public Func<TableItem, TableItem> RowAfterRender { get; set; }
+
+
+
+[Parameter]
+public Func<TableItem, TableItem> RowExecute { get; set; }
+
+
+[Parameter]
+public Expression<Func<TableItem, bool>> RowCondition { get; set; }
+
+public string SortColumn { get; set; }
+
+public List<GridColumn<TableItem>> Columns { get; set; } = new List<GridColumn<TableItem>>();
+
+[Parameter]
+public RenderFragment ChildContent { get; set; }
+
+
+[Parameter]
+public Func<string, Task<IEnumerable<TableItem>>> FuncFilter { get; set; }
+
+
+[Parameter]
+public Func<TableItem, Task<IEnumerable<TableItem>>> FilterByObject { get; set; }
+
+[Parameter]
+public Func<Pagination<TableItem>, Task<ResultSet<TableItem>>> PaginationFunction1 { get; set; }
+
+[Parameter]
+public Action<int, int> PaginationMethod { get; set; }
+
+[Parameter] public int TotalRows { get; set; } = 1;
+[Parameter] public int PaginaActual { get; set; } = 1;
+[Parameter] public int PaginasTotales { get; set; }
+
+public ResultSet<TableItem> CurrentResult { get; set; }
+
+public async Task PageSelected(int pagina)
+{
+
+try
+{
+//await ShowProgress();
+
+GridColumn<TableItem> col = new GridColumn<TableItem>();
+
+foreach (GridColumn<TableItem> item2 in this.Columns)
+{
+if (SortColumn == item2.Field)
+{
+col = item2;
+col.SortDescending = sortAscending;
+}
+}
+
+PaginaActual = pagina;
+
+
+
+Pagination<TableItem> pag = new Pagination<TableItem>()
+{
+Page = pagina,
+Show = PageSize,
+
+Filter = SearchTerm,
+ColumnName = SortColumn,
+SortingAscending = col.SortDescending,
+Object = Filter
+
+
+};
+if (ActiveAdvancedSearch)
+{
+pag.Filter = "";
+}
+
+if (PaginationMethod != null)
+{
+PaginationMethod(pagina, PageSize);
+}
+else if (PaginationFunction1 != null)
+{
+
+//if (_ResultState.Value.IsLoading)
+//{
+//    await ShowProgress();
+//}
+//else if (_ResultState.Value.HasCurrentErrors)
+//{
+////error
+//}
+//        if (!(_ResultState.Value.CurrentTodos is null) && _ResultState.Value.CurrentTodos.Any())
+//{
+
+//        //carga
+//}
+
+
+
+
+
+
+
+ResultSet<TableItem> resultitems = await ExecuteServiceWithBlock(PaginationFunction1, pag, Component);
+
+CurrentResult = resultitems;
+
+
+await LoadData(pagina, resultitems);
+
+
+}
+if (currentColumn == null)
+{
+currentColumn = new GridColumn<TableItem>();
+}
+
+currentColumn.SortDescending = !sortAscending;
+currentColumn.Field = SortColumn;
+currentColumn.PageNumber = pagina;
+
+}
+catch (Exception ex)
+{
+//Console.WriteLine(ex.Message);
+}
+finally
+{
+//await CloseProgress();
+
+
+}
+
+}
+
+public bool ShowSearch { get; set; }
+
+public async Task LoadData(int Pagina, ResultSet<TableItem> result)
+{
+
+//Console.WriteLine("result.count " + result.Count);
+
+
+if (Pagina == 1 || Pagina == 0)
+{
+PaginasTotales = result.PageTotal;
+TotalRows = result.Count;
+}
+
+
+Clear();
+
+if (result.List == null)
+{
+ShowSearch = true;
+ItemList = new List<TableItem>();
+ItemsDataSource = new List<TableItem>();
+
+}
+else
+{
+ItemList = result.List;
+ItemsDataSource = result.List;
+}
+
+foreach (var item in this.Columns)
+{
+if (result.ColumnName == item.Field)
+{
+item.SortDescending = !result.SortingAscending;
+}
+}
+PaginaActual = result.CurrentPage;
+
+if (PaginaActual == 1)
+{
+PaginasTotales = result.PageTotal;
+TotalRows = result.Count;
+
+if (result.Shown > 0)
+{
+PageSize = result.Shown;
+}
+else
+{
+
+}
+}
+if (result.Shown > 0)
+{
+PageSize = result.Shown;
+}
+else
+{
+
+}
+StateHasChanged();
+
+}
+
+
+
+
+[Parameter]
+public string NewButtonText { get; set; } = "new";
+
+
+[Parameter]
+public EventCallback<ChangeEventArgs> OnUpdate { get; set; }
+
+
+[Parameter]
+public EventCallback<ChangeEventArgs> OnSave { get; set; }
+
+
+public string ModalName { get; set; } = "modalWindow";
+
+
+public async Task ShowModal()
+{
+await JSRuntime.InvokeVoidAsync("showModal", ModalName);
+
+}
+
+public async Task RemoveClass()
+{
+await JSRuntime.InvokeVoidAsync("removeClass", "modal-backdrop");
+
+}
+
+
+
+
+public bool EnableShowModal { get; set; } = false;
+
+public class OnChangeWindowEventArgs
+{
+public object itemShown;
+}
+
+//public bool ShowModal()
+//{
+//    return false;
+//}
+
+[Parameter]
+public EventCallback<EventArgs> OnChangeWindow { get; set; }
+
+
+
+protected void ChangeWindow(object item)
+{
+OnChangeWindow.InvokeAsync(new EventArgs());
+}
+
+
+[Parameter]
+public TableItem currentEdit2 { get; set; }
+
+//bool _SelectOnly;
+
+//[Parameter]
+//public bool SelectOnly
+//{
+//    get
+//    { return _SelectOnly; }
+
+//    set
+//    {
+//        _SelectOnly = value;
+//    }
+//}
+
+
+[Parameter]
+public TableItem currentEdit { get; set; } = new TableItem();
+
+//[CascadingParameter]
+[Parameter]
+public EditContext editContext { get; set; }
+
+
+//[Parameter]
+
+//public EditContext editContext2 { get; set; }
+
+
+
+int totalPages;
+int curPage;
+int pagerSize;
+
+int startPage = 1;
+int endPage;
+
+string b = "back";
+
+string p = "previous";
+
+TableItem test;
+
+[Parameter]
+public bool IsNew { get; set; } = false;
+
+public int CurrentEditIndex = -1;
+
+public int CurrentRowIndex { get; set; }
+
+public string SearchTerm { get; set; } = "";
+
+public string SearchTerm2 { get; set; } = "";
+
+private List<string> identifiers = new List<string> { "Button1", "Button2", "Button3" };
+
+private Dictionary<int, ElementReference> myComponents = new Dictionary<int, ElementReference>();
+
+
+List<TableItem> _ItemList = new List<TableItem>();
+
+
+public List<TableItem> ItemList
+{
+
+get
+{
+return _ItemList; // FilterList();
+}
+set
+{
+
+_ItemList = value;
+
+
+}
+}
+
+
+public Dictionary<string, string> ValidationMessages = new Dictionary<string, string>();
+
+private void EditContext_OnFieldChanged(object sender, FieldChangedEventArgs e)
+{
+var entity = e.FieldIdentifier.Model.GetType();
+
+
+
+FieldIdentifier id = new FieldIdentifier(editContext.Model, e.FieldIdentifier.FieldName);
+
+var message = editContext.GetValidationMessages(id);
+string msg = "";
+foreach (var item in message)
+{
+msg += item + " ";
+}
+if (!string.IsNullOrEmpty(msg))
+{
+ValidationMessages[e.FieldIdentifier.FieldName] = msg;
+}
+else
+{
+ValidationMessages[e.FieldIdentifier.FieldName] = "";
+}
+
+return;
+}
+
+
+
+
+
+public RenderFragment GetErrorMessage(string PropertyName)
+{
+if (ValidationMessages.ContainsKey(PropertyName) && !string.IsNullOrEmpty(ValidationMessages[PropertyName]))
+{
+return builder =>
+{
+builder.OpenElement(0, "div");
+builder.AddAttribute(1, "class", "validation-message");
+builder.AddAttribute(1, "style", "display:block !important");
+builder.AddContent(2, ValidationMessages[PropertyName]);
+builder.CloseElement();
+};
+
+
+//return "<div class='validation-message'>" + ValidationMessages[PropertyName] + "</div>";
+}
+else
+{
+return null;
+}
+}
+
+
+public virtual async Task<IEnumerable<TableItem>> FilterList()
+{
+//Logger.LogDebug("FilterList");
+if (FuncFilter != null)
+{
+
+
+var result = await FuncFilter(SearchTerm);
+
+var ItemList = result.Skip((curPage - 1) * PageSize).Take(PageSize);
+totalPages = (int)Math.Ceiling(result.Count() / (decimal)PageSize);
+
+SetPagerSize("forward");
+
+
+return ItemList;
+}
+else
+{
+
+throw new NotImplementedException();
+//Logger.LogDebug("2-FilterList");
+//return Items.Where(i => i.Name.ToLower().Contains(SearchTerm.ToLower())).ToList();
+}
+
+
+//return List.Where(i => i.Name.ToLower().Contains(SearchTerm.ToLower())).ToList();
+
+}
+
+public virtual async Task<IEnumerable<TableItem>> FilterList(TableItem item)
+{
+//Logger.LogDebug("FilterList");
+if (FilterByObject != null)
+{
+
+
+var result = await FilterByObject(item);
+
+var ItemList2 = result.Skip((curPage - 1) * PageSize).Take(PageSize);
+totalPages = (int)Math.Ceiling(result.Count() / (decimal)PageSize);
+
+SetPagerSize("forward");
+
+ItemList = ItemList2.ToList();
+return ItemList;
+}
+else
+{
+
+throw new NotImplementedException();
+//Logger.LogDebug("2-FilterList");
+//return Items.Where(i => i.Name.ToLower().Contains(SearchTerm.ToLower())).ToList();
+}
+
+
+//return List.Where(i => i.Name.ToLower().Contains(SearchTerm.ToLower())).ToList();
+
+}
+
+public List<TableItem> NewItems { get; set; } = new List<TableItem>();
+
+public List<TableItem> EditItems { get; set; } = new List<TableItem>();
+
+
+public List<TableItem> Items { get; set; } = new List<TableItem>();
+
+
+
+
+[Parameter]
+public string Roles { get; set; }
+
+
+[Parameter]
+public bool SaveButtonSubmit { get; set; } = false;
+
+
+[Parameter]
+public bool EnabledModal { get; set; } = true;
+
+[Parameter]
+public bool EnabledValidation { get; set; } = true;
+
+[Parameter]
+public bool EnabledSearch { get; set; } = false;
+
+
+[Parameter]
+public string ActionText { get; set; } = "edit";
+
+[Parameter]
+public TableItem DefaultNew { get; set; }
+
+
+[Parameter]
+public bool HasAction { get; set; }
+
+
+
+
+
+[Parameter]
+public bool? HasSelect { get; set; }
+
+[Parameter]
+public bool? HasSave { get; set; }
+
+[Parameter]
+public bool? HasNew { get; set; }
+
+[Parameter]
+public bool? HasEdit { get; set; }
+
+[Parameter]
+public bool? HasDelete { get; set; }
+
+[Parameter]
+public bool FootAction { get; set; } = false;
+
+
+
+
+
+[Parameter]
+public RenderFragment<TableItem> EditButton { get; set; }
+
+
+[Parameter]
+public RenderFragment NewButton { get; set; }
+
+
+[Parameter]
+public RenderFragment<TableItem> GridSelect { get; set; }
+
+
+[Parameter]
+public RenderFragment<dynamic> GridSelect2 { get; set; }
+
+
+
+[Parameter]
+public RenderFragment<TableItem> GridEdit { get; set; }
+
+public FilterObject<TableItem> Filter { get; set; } = new FilterObject<TableItem>();
+
+[Parameter]
+public RenderFragment<dynamic> GridFilter { get; set; }
+
+
+[Parameter]
+public RenderFragment<TableItem> GridNew { get; set; }
+
+/// <summary>
+/// Header for BlazorGrid.
+/// </summary>
+///
+
+[Parameter]
+public RenderFragment GridHeader { get; set; }
+
+/// <summary>
+/// Rows for BlazorGrid.
+/// </summary>
+[Parameter]
+public RenderFragment<TableItem> GridRow { get; set; }
+
+[Parameter]
+public RenderFragment<TableItem> GridCard { get; set; }
+
+
+
+List<TableItem> _ItemsDataSource;
+
+///// <summary>
+///// The list of item supplied to the BlazorGrid.
+///// </summary>
+//[Parameter]
+//public IEnumerable<TableItem> ItemsDataSource { get { return _ItemsDataSource; } set { SetDataSource(value); } }
+
+
+/// <summary>
+/// The list of item supplied to the BlazorGrid.
+/// </summary>
+[Parameter]
+public List<TableItem> ItemsDataSource { get { return _ItemsDataSource; } set { SetDataSource(value); } }
+
+public void SetDataSource(List<TableItem> v)
+{
+if (InternalOperation)
+{
+return;
+}
+//Console.WriteLine("SetDataSource");
+if (v == null)
+{
+_ItemsDataSource = new List<TableItem>();
+}
+else
+{
+_ItemsDataSource = v;
+}
+
+
+
+}
+/// <summary>
+/// Size of each page of BlazorGrid. This is a required field.
+/// </summary>
+[Parameter]
+public int PageSize { get; set; } = 10;
+
+
+
+
+
+[Parameter]
+public string HeaderRowClass { get; set; } = "row grid-row1 headerRow";
+
+[Parameter]
+public string RowClass { get; set; } = "row grid-row";
+
+[Parameter]
+public string RowEditClass { get; set; } = "row grid-row";
+
+[Parameter]
+public string RowNewClass { get; set; } = "row grid-row new";
+
+
+[Parameter]
+public string GridID { get; set; } = "gridID";
+
+[Parameter]
+public string AloneNewButtonCSS { get; set; } = "col-sm customcol";
+
+[Parameter]
+public string ColActionHeaderCSS { get; set; } = "col-sm-1 customcolAction";
+
+[Parameter]
+public string ColActionCSS { get; set; } = "col-sm-1 customcolAction";
+
+
+[Parameter]
+public string ColFormActionCSS { get; set; } = "col-sm customcolAction paddingzero";
+
+[Parameter]
+public string NewButtonCSS { get; set; } = "btn btn-sm btn-primary shadow-sm editButton";
+
+[Parameter]
+public string SaveButtonCSS { get; set; } = "btn btn-sm btn-info shadow-sm editButton";//"btn btn-sm btn-success shadow-sm editButton";
+
+
+[Parameter]
+public string EditButtonCSS { get; set; } = "btn btn-sm btn-primary shadow-sm btn-sm editButton";
+
+
+[Parameter]
+public string SaveFormButtonCSS { get; set; } = "btn btn-lg btn-primary shadow-lg btn-lg editButton";
+
+[Parameter]
+public string CancelFormButtonCSS { get; set; } = "btn btn-lg btn-primary shadow-lg btn-lg editButton";
+
+
+[Parameter]
+public string CancelButtonCSS { get; set; } = "d-sm-inline-block btn btn-sm btn-warning shadow-sm editButton";
+
+[Parameter]
+public string DeleteButtonCSS { get; set; } = "d-sm-inline-block btn btn-sm btn-danger shadow-sm editButton";
+
+
+
+[Parameter]
+public bool InLineEdit { get; set; } = true;
+
+[Parameter]
+public string DefaultView { get; set; } = "Grid";
+
+
+public void Clear()
+{
+
+Items = new List<TableItem>();
+
+//ItemList= new List<TableItem>();
+
+ItemsDataSource = new List<TableItem>();
+
+}
+
+public void Clear2()
+{
+
+Items = new List<TableItem>();
+
+ItemList = new List<TableItem>();
+
+ItemsDataSource = new List<TableItem>();
+
+}
+
+public bool ActiveAdvancedSearch { get; set; } = false;
+
+[Parameter]
+public bool VisibleSearch { get; set; } = true;
+
+public async Task EnabledAdvancedSearch()
+{
+if (ActiveAdvancedSearch)
+{
+ActiveAdvancedSearch = false;
+}
+else
+{
+ActiveAdvancedSearch = true;
+}
+
+await JSRuntime.InvokeVoidAsync("removeValidClass");
+}
+
+
+
+
+
+
+//Task<Task<ResultSet<TableItem>>>
+
+public Pagination<TableItem> currentPagination { get; set; }
+
+public GridColumn<TableItem> currentColumn { get; set; }
+
+public async Task SearchFunction(GridColumn<TableItem> _Column = null)
+{
+try
+{
+//await ShowProgress();
+
+int Page = 1;
+
+if (_Column != null)
+{
+SortColumn = _Column.Field;
+_Column.SortDescending = !_Column.SortDescending;
+sortAscending = !_Column.SortDescending;
+if (_Column.PageNumber > 0)
+{
+Page = _Column.PageNumber;
+}
+
+
+}
+else
+{
+if (currentColumn == null)
+{
+currentColumn = new GridColumn<TableItem>();
+}
+
+currentColumn.SortDescending = sortAscending;
+currentColumn.Field = SortColumn;
+}
+
+
+
+
+
+if (PaginationFunction1 != null)
+{
+
+Pagination<TableItem> pag = new Pagination<TableItem>()
+{
+
+Page = Page,
+Show = PageSize,
+Filter = SearchTerm,
+ColumnName = SortColumn,
+SortingAscending = sortAscending,
+Object = Filter,
+
+
+
+
+};
+if (ActiveAdvancedSearch)
+{
+pag.Filter = "";
+}
+
+//Facade.LoadResult<TableItem>(PaginationFunction1,pag);
+
+
+//CurrentPage = pag;
+//var resultitems = await PaginationFunction1(pag);
+ResultSet<TableItem> resultitems = await ExecuteServiceWithBlock(PaginationFunction1, pag, Component);
+
+CurrentResult = resultitems;
+
+await LoadData(PaginaActual, resultitems);
+
+currentPagination = pag;
+
+}
+else
+{
+ClientDefaultSortField = SortColumn;
+if (sortAscending)
+{
+ClientDefaultSortDirection = "asc";
+}
+else
+{
+ClientDefaultSortDirection = "desc";
+}
+
+updateList(1);
+
+}
+
+
+if (_Column != null)
+{
+if (currentColumn == null)
+{
+currentColumn = new GridColumn<TableItem>();
+}
+
+if (!sortAscending)
+{
+currentColumn.SortDescending = false;
+}
+else
+{
+currentColumn.SortDescending = true;
+}
+currentColumn.Field = SortColumn;
+}
+try
+{
+if (EnabledSearch)
+{
+await searchE.FocusAsync();
+}
+
+}
+catch (Exception ex)
+{
+
+}
+
+}
+catch (Exception ex)
+{
+//Console.WriteLine(ex.Message);
+}
+finally
+{
+//await CloseProgress();
+
+}
+
+}
+
+
+private void OnUserFinish(Object source, ElapsedEventArgs e)
+{
+InvokeAsync(() =>
+{
+SearchFunction().ConfigureAwait(false).GetAwaiter().GetResult();
+});
+aTimer.Stop();
+}
+
+private static System.Timers.Timer aTimer;
+
+public async Task KeyEvent(string FieldName, object Field, KeyboardEventArgs arg)
+{
+
+
+
+string value = "";
+if (Field != null)
+{
+value = Field.ToString();
+}
+
+
+var kp = arg.Key; //Backspace
+
+if ((PaginationFunction1 != null && value.Length > 2 && kp != "Backspace") || PaginationFunction1 != null && kp == "Enter")
+{
+
+// remove previous one
+aTimer.Stop();
+
+// new timer
+aTimer.Start();
+
+//await SearchFunction();
+
+//Pagination pag = new Pagination()
+//{
+//    Page = 1,
+//    Show = PageSize,
+//    Filter = SearchTerm
+
+//};
+
+
+//var resultitems = await PaginationFunction1(pag);
+
+//await LoadData(PaginaActual, resultitems);
+
+}
+
+return;
+
+
+//if (FuncFilter != null)
+//{
+//    var lst = await FuncFilter(Field.ToString());
+
+//    if (lst != null)
+//    {
+
+//        ItemList = lst.Skip((curPage - 1) * PageSize).Take(PageSize);
+//        totalPages = (int)Math.Ceiling(Items.Count() / (decimal)PageSize);
+
+//        SetPagerSize("forward");
+//    }
+
+//}
+}
+
+
+
+public void onClick(MouseEventArgs arg)
+{
+
+
+}
+
+
+[Parameter]
+public Func<TableItem, Task<bool>> DeleteAction { get; set; }
+
+public int CurrentDeleteIndex { get; set; }
+
+public int CurrentSelectIndex { get; set; }
+
+public TableItem CurrentSelect { get; set; }
+
+public async Task DeleteItem(string item)
+{
+
+//bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure do you want to delete this record?");
+//if (!confirmed)
+//{
+//    return;
+//}
+
+
+var ind = item.Split('-');
+
+int indice = Convert.ToInt32(ind[1]);
+
+var item2 = Items.ElementAtOrDefault(indice);
+
+CurrentDeleteIndex = indice;
+
+await DeleteItem(item2);
+
+
+
+}
+
+public bool InternalOperation;
+
+public async Task DeleteItem(TableItem item)
+{
+InternalOperation = true;
+bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure do you want to delete this record?");
+if (!confirmed)
+{
+return;
+}
+
+var item2 = item;
+
+if (DeleteAction != null)
+{
+try
+{
+await ShowProgress();
+var a = await DeleteAction(item2);
+
+if (!a)
+{
+return;
+}
+}
+catch (Exception ex)
+{
+//Console.WriteLine(ex.Message);
+return;
+}
+finally
+{
+await CloseProgress();
+}
+}
+
+List<TableItem> list = new List<TableItem>();
+
+List<TableItem> list2 = new List<TableItem>();
+
+
+TableItem ti = new TableItem();
+
+list = Items.ToList();
+
+list2 = ItemList.ToList();
+
+var item3 = item2;
+
+
+
+IsNew = false;
+
+//Items.Add(ti);
+if (Items.Count() == 1)
+{
+Items.Clear();
+ItemList = null;// new List<TableItem>();
+ItemsDataSource.Clear();// = new List<TableItem>();
+//Console.WriteLine("delete item");
+//Console.WriteLine(ItemsDataSource.Count());
+updateList(curPage);
+}
+else
+{
+list.Remove(item3);
+
+Items = list;
+
+ItemsDataSource = list;
+
+updateList(curPage);
+}
+if (AfterAction != null)
+{
+await AfterAction(item3, "Delete");
+}
+
+InternalOperation = false;
+}
+
+
+[Parameter]
+public Func<TableItem, string, Task> AfterAction { get; set; }
+
+
+
+
+
+
+public void DeleteAll()
+{
+
+
+List<TableItem> list = new List<TableItem>();
+
+TableItem ti = new TableItem();
+
+list = Items.ToList();
+
+
+list.Clear();
+
+Items = list;
+
+IsNew = false;
+
+ItemList = list;
+//Items.Add(ti);
+if (Items.Count() == 0)
+{
+//Clear();
+updateList(curPage);
+}
+else
+{
+updateList(curPage);
+}
+
+
+
+}
+
+
+
+
+public TableItem oldCurrentEditItem { get; set; } = new TableItem();
+
+public async Task EditItem(string item)
+{
+FirstRenderEdit = true;
+
+var ind = item.Split('-');
+
+int indice = Convert.ToInt32(ind[1]);
+
+oldCurrentEditItem.CopyPropertiesFrom(ItemList.ElementAt(indice));
+
+CurrentEditIndex = indice;
+ActionText = "save";
+
+if (!InLineEdit && EnabledModal)
+{
+EnableShowModal = true;
+
+await ShowModal();
+}
+
+
+StateHasChanged();
+
+}
+[Parameter]
+public bool ExternalSave { get; set; } = false;
+
+public async Task SaveNewItem()
+{
+if (ExternalSave)
+{
+
+await ExcecuteButtom();
+
+return;
+
+}
+
+List<TableItem> list = new List<TableItem>();
+
+TableItem ti = new TableItem();
+
+ti = DefaultNew;
+
+
+//editContext.Model
+if (editContext != null && EnabledValidation)
+{
+messageStore = new ValidationMessageStore(editContext);
+
+var result = editContext.Validate();
+
+if (!result)
+{
+//Console.WriteLine("SaveNewItem validation fail");
+
+FieldIdentifier _fieldIdentifier;
+
+//Expression<Func<TableItem>> For;
+
+//_fieldIdentifier = FieldIdentifier.Create();
+
+List<string> properties = new List<string>();
+
+properties = GetProperties();
+
+foreach (var prop in properties)
+{
+var fieldIdentifier = new FieldIdentifier(editContext.Model, prop);
+
+var mes = editContext.GetValidationMessages(fieldIdentifier);
+
+string mesagge = "";
+foreach (var msg in mes)
+{
+mesagge = msg;
+}
+if (!string.IsNullOrEmpty(mesagge))
+{
+
+ValidationMessages[prop] = mesagge;
+}
+
+}
+
+StateHasChanged();
+return;
+}
+}
+
+
+
+
+
+var res = await DispatchSaveEvent(ti);
+
+if (!res)
+{
+return;
+}
+
+list = Items.ToList();
+
+list.Add(ti);
+
+NewItems.Add(ti);
+
+
+Items = list;
+
+IsNew = false;
+
+updateList(curPage);
+//Items.Add(ti);
+if (AfterAction != null)
+{
+await AfterAction(ti, "Save");
+}
+
+await CloseModal();
+
+}
+
+public bool IsSave { get; set; }
+
+public async Task<bool> DispatchSaveEvent(object ar)
+{
+
+if (OnSave.HasDelegate)
+{
+ChangeEventArgs arg = new ChangeEventArgs();
+
+arg.Value = ar;
+
+//IsSave = true;
+try
+{
+await OnSave.InvokeAsync(arg);
+return true;
+}
+catch (Exception ex)
+{
+return false;
+}
+
+//IsSave = false;
+
+}
+else
+{
+
+return true;
+}
+
+
+
+}
+
+
+public async Task<bool> DispatchEditEvent(object ar)
+{
+
+if (OnUpdate.HasDelegate)
+{
+ChangeEventArgs arg = new ChangeEventArgs();
+
+arg.Value = ar;
+
+//IsSave = true;
+try
+{
+await OnUpdate.InvokeAsync(arg);
+return true;
+}
+catch (Exception ex)
+{
+return false;
+}
+
+//IsSave = false;
+
+}
+else
+{
+
+return true;
+}
+
+
+
+}
+
+
+
+public async Task DispatchEditEvent2(object ar)
+{
+
+if (OnUpdate.HasDelegate)
+{
+ChangeEventArgs arg = new ChangeEventArgs();
+
+arg.Value = ar;
+
+//IsSave = true;
+
+await OnUpdate.InvokeAsync(arg);
+
+//IsSave = false;
+
+}
+
+}
+
+
+public async Task SaveNewItem(TableItem item, string SortDirecction = null, string SortField = null, bool isUpdate = true)
+{
+if (item == null)
+{
+return;
+}
+
+if (!string.IsNullOrEmpty(SortDirecction))
+{
+ClientDefaultSortDirection = SortDirecction;
+}
+
+
+if (!string.IsNullOrEmpty(SortField))
+{
+ClientDefaultSortField = SortField;
+}
+
+
+
+List<TableItem> list = new List<TableItem>();
+
+TableItem ti = new TableItem();
+
+ti = item;
+
+//editContext.Model
+if (editContext != null && EnabledValidation)
+{
+messageStore = new ValidationMessageStore(editContext);
+
+var result = editContext.Validate();
+
+if (!result)
+{
+FieldIdentifier _fieldIdentifier;
+
+//Expression<Func<TableItem>> For;
+
+//_fieldIdentifier = FieldIdentifier.Create();
+
+List<string> properties = new List<string>();
+
+properties = GetProperties();
+
+foreach (var prop in properties)
+{
+var fieldIdentifier = new FieldIdentifier(editContext.Model, prop);
+
+var mes = editContext.GetValidationMessages(fieldIdentifier);
+
+string mesagge = "";
+foreach (var msg in mes)
+{
+mesagge = msg;
+}
+
+ValidationMessages[prop] = mesagge;
+}
+
+StateHasChanged();
+return;
+}
+}
+
+var a = await DispatchSaveEvent(ti);
+
+if (a == false)
+{
+return;
+}
+
+
+//list = Items.ToList();
+
+Items.Add(ti);
+
+NewItems.Add(ti);
+
+
+
+//Items = list;
+
+IsNew = false;
+if (isUpdate)
+{
+updateList(curPage);
+}
+
+
+if (AfterAction != null)
+{
+await AfterAction(ti, "Save");
+}
+////Items.Add(ti);
+//await CloseModal();
+
+
+}
+
+
+
+public List<string> GetProperties()
+{
+if (ValidationMessages == null || ValidationMessages.Count() == 0)
+{
+
+if (currentEdit2 == null)
+{
+currentEdit2 = new TableItem();
+}
+
+ValidationMessages = currentEdit2.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+.ToDictionary(prop => prop.Name, prop => "");
+
+}
+return ValidationMessages.Keys.ToList();
+
+}
+
+
+public async Task CancelNew(string item)
+{
+CurrentEditIndex = -1;
+IsNew = false;
+await CloseModal();
+
+}
+
+public async Task CloseModal()
+{
+//if (EnableShowModal)
+//{
+
+//clean mistakes
+
+EnableShowModal = false;
+
+List<string> properties = new List<string>();
+
+properties = ValidationMessages.Keys.ToList();
+
+foreach (var prop in properties)
+{
+
+ValidationMessages[prop] = "";
+
+}
+
+IsNew = false;
+
+await RemoveClass();
+
+StateHasChanged();
+//}
+}
+
+
+public async Task CancelItem(string item)
+{
+CurrentEditIndex = -1;
+//currentEdit = new TableItem();
+
+currentEdit.CopyPropertiesFrom(oldCurrentEditItem);
+
+//currentEdit=oldCurrentEditItem;
+
+ChangeWindow(item);
+
+EnableShowModal = false;
+
+//await ShowModal();
+
+
+await CloseModal();
+
+}
+
+
+//[Parameter]
+//public Func<TableItem, Task> EndExecute { get; set; }
+
+private ValidationMessageStore messageStore;
+
+
+public async Task SaveItem(string item)
+{
+if (ExternalSave)
+{
+
+await ExcecuteButtom();
+
+return;
+
+}
+
+
+var ind = item.Split('-');
+
+int indice = Convert.ToInt32(ind[1]);
+
+TableItem iintem = ItemList.ElementAt<TableItem>(indice);
+
+await SaveItem(iintem);
+
+
+
+
+
+}
+
+
+public async Task SaveItem(int Index, TableItem item)
+{
+
+
+updateList(curPage);
+
+CurrentEditIndex = -1;
+}
+
+
+public async Task SaveItem(TableItem iintem)
+{
+
+
+if (iintem == null)
+{
+return;
+}
+//editContext.Model
+if (editContext != null && EnabledValidation)
+{
+
+
+var result = editContext.Validate();
+
+if (!result)
+{
+FieldIdentifier _fieldIdentifier;
+
+//Expression<Func<TableItem>> For;
+
+//_fieldIdentifier = FieldIdentifier.Create();
+
+List<string> properties = new List<string>();
+
+properties = GetProperties();
+
+foreach (var prop in properties)
+{
+var fieldIdentifier = new FieldIdentifier(editContext.Model, prop);
+
+var mes = editContext.GetValidationMessages(fieldIdentifier);
+
+string mesagge = "";
+foreach (var msg in mes)
+{
+mesagge = msg;
+}
+//if (!string.IsNullOrEmpty(mesagge))
+//{
+
+ValidationMessages[prop] = mesagge;
+//}
+
+}
+
+StateHasChanged();
+return;
+}
+}
+
+var res = await DispatchEditEvent(iintem);
+
+if (!res)
+{
+return;
+}
+//var ind = item.Split('-');
+
+//int indice = Convert.ToInt32(ind[1]);
+
+//TableItem iintem = ItemList.ElementAt<TableItem>(indice);
+
+List<TableItem> list = new List<TableItem>();
+
+list = Items.ToList();
+
+//list.Add(iintem);
+
+Items = list;
+
+IsNew = false;
+
+CurrentEditIndex = -1;
+
+ActionText = "edit";
+
+EditItems.Add(iintem);
+
+updateList(curPage);
+
+
+await CloseModal();
+
+
+}
+
+[Parameter]
+public Func<TableItem> NewItemDefaultItem { get; set; }
+
+
+public async Task NewItem()
+{
+if (NewItemDefaultItem == null)
+{
+DefaultNew = new TableItem();
+}
+else
+{
+DefaultNew = NewItemDefaultItem();
+}
+if (DefaultNew == null)
+{
+
+await JSRuntime.InvokeVoidAsync("alert", "The new record could not be generated ");
+
+return;
+
+}
+
+
+await NewItem(DefaultNew);
+
+////editContext = new EditContext(DefaultNew);
+////editContext.AddDataAnnotationsValidation();
+////editContext.OnFieldChanged += EditContext_OnFieldChanged;
+//if (!InLineEdit && EnabledModal)
+//{
+//    EnableShowModal = true;
+
+//    await ShowModal();
+//}
+
+//IsNew = true;
+
+}
+
+public async Task NewItem(TableItem item)
+{
+
+IsNew = true;
+DefaultNew = item;
+FirstRenderEdit = true;
+
+if (!InLineEdit && EnabledModal)
+{
+EnableShowModal = true;
+
+await ShowModal();
+}
+
+//editContext = new EditContext(DefaultNew);
+//editContext.AddDataAnnotationsValidation();
+//editContext.OnFieldChanged += EditContext_OnFieldChanged;
+
+
+//List<TableItem> list = new List<TableItem>();
+
+//list = Items.ToList();
+
+//list.Add(item);
+
+StateHasChanged();
+
+
+}
+
+private void onclick(MouseEventArgs args)
+{
+var d = myComponents;
+var a = args;
+}
+
+
+
+public void updateList(int currentPage)
+{
+if (currentPage == 0)
+{
+currentPage = 1;
+}
+
+if (Items.Count == PageSize && currentPage > 1)
+{
+currentPage = currentPage - 1;
+}
+
+if (!string.IsNullOrEmpty(FilterColumn) && ValueFilter != null && Items != null && Items.Count > 0)
+{
+//Console.WriteLine("updateList 1");
+Items = Filter_List(FilterColumn, ValueFilter, Items);
+}
+
+
+
+if (!string.IsNullOrEmpty(ClientDefaultSortField) && Items != null && Items.Count > 0)
+{
+//Console.WriteLine("updateList 2");
+Items = Sort_List(ClientDefaultSortDirection, ClientDefaultSortField, Items);
+//Console.WriteLine(Items.Count);
+}
+
+
+
+
+if (Items != null && Items.Count > 0)
+{
+ItemList = Items.Skip((currentPage - 1) * PageSize).Take(PageSize).ToList();
+curPage = currentPage;
+totalPages = (int)Math.Ceiling(Items.Count() / (decimal)PageSize);
+//SetPagerSize("forward");
+//Console.WriteLine("updateList 3");
+//Console.WriteLine(Items.Count);
+
+}
+else
+if (Items != null && Items.Count == 0)
+{
+//ItemList = new List<TableItem>();
+//ItemsDataSource = new List<TableItem>();// Items;
+//Items.Clear();
+//CurrentRenderRow = null;
+
+Clear2();
+
+
+}
+this.StateHasChanged();
+}
+
+public void SetPagerSize(string direction)
+{
+try
+{
+if (direction == "forward" && endPage < totalPages)
+{
+startPage = endPage + 1;
+if (endPage + pagerSize < totalPages)
+{
+endPage = startPage + pagerSize - 1;
+}
+else
+{
+endPage = totalPages;
+}
+this.StateHasChanged();
+}
+else if (direction == "back" && startPage > 1)
+{
+endPage = startPage - 1;
+startPage = startPage - pagerSize;
+}
+}
+catch (Exception ex)
+{
+
+}
+}
+
+public void NavigateToPage(string direction)
+{
+
+
+if (direction == "next")
+{
+if (curPage < totalPages)
+{
+if (curPage == endPage)
+{
+SetPagerSize("forward");
+}
+curPage += 1;
+}
+}
+else if (direction == "previous")
+{
+if (curPage > 1)
+{
+if (curPage == startPage)
+{
+SetPagerSize("back");
+}
+curPage -= 1;
+}
+}
+
+updateList(curPage);
+}
+
+protected async Task Submit(EditContext editContext)
+{
+
+}
+
+public string BoundValues(TableItem model, IEnumerable<string> Roles, string PropertyName)
+{
+var entity = editContext.Model.GetType();
+Type type = entity;
+PropertyInfo prop = type.GetProperty(PropertyName);
+
+FieldIdentifier ID = new FieldIdentifier(editContext.Model, PropertyName);
+
+if (Roles == null || Roles.Count() == 0)
+{
+
+prop.SetValue(editContext.Model, string.Empty, null);
+editContext.NotifyValidationStateChanged();
+editContext.NotifyFieldChanged(ID);
+
+return String.Empty;
+}
+
+
+var items = Roles;//Roles.Select(p => p.Value);
+var roles = string.Join(", ", items);
+if (model != null && !string.IsNullOrEmpty(roles))
+{
+prop.SetValue(model, roles, null);
+editContext.NotifyValidationStateChanged();
+editContext.NotifyFieldChanged(ID);
+}
+
+
+return "";
+}
+
+public string BoundValues(TableItem model, object Value, string PropertyName)
+{
+var entity = editContext.Model.GetType();
+Type type = entity;
+PropertyInfo prop = type.GetProperty(PropertyName);
+
+FieldIdentifier ID = new FieldIdentifier(editContext.Model, PropertyName);
+
+prop.SetValue(model, Value, null);
+editContext.NotifyValidationStateChanged();
+editContext.NotifyFieldChanged(ID);
+
+
+
+return "";
+}
+
+
+public int Height { get; set; }
+public int Width { get; set; }
+
+public async Task GetDimensions()
+{
+
+try
+{
+
+
+var dimension = await BrowserService.GetDimensions();
+Height = dimension.Height;
+Width = dimension.Width;
+}
+catch (Exception ex)
+{
+
+
+
+}
+
+}
+
+
+private string sortColumn = string.Empty;
+private bool sortAscending = true;
+/// <summary>
+///  Event occurs when the user clicks on a column header to sort.
+/// </summary>
+[Parameter]
+public EventCallback<SortEventArgs> OnSort { get; set; }
+
+protected string GetSortStyle(GridColumn<TableItem> _column)
+{
+
+string type = "";
+
+if (_column.SortDescending)
+{
+type = "desc";
+}
+else
+{
+type = "asc";
+}
+
+
+
+if (_column.Field == SortColumn)
+{
+
+return "sortable actual " + type;
+}
+else
+{
+return "sortable2 actual " + type; ;
+}
+}
+
+//protected string GetSortStyle(string columnName)
+//{
+//    return sortColumn == columnName ? (sortAscending ? "sorting_asc" : "sorting_desc") : string.Empty;
+//}
+
+protected void SortGrid(string columnName)
+{
+sortAscending = sortColumn == columnName ? !sortAscending : true;
+sortColumn = columnName;
+
+OnSort.InvokeAsync(new SortEventArgs { ColumnName = sortColumn, SortingAscending = sortAscending });
+}
+
+
+
+
+public async Task ExcecuteButtom(string control = "executebutton")
+{
+if (JSRuntime != null)
+{
+await JSRuntime.InvokeVoidAsync("executeMethod", control);
+}
+}
+
+
+
+
+
+
+
+
+
+[Parameter]
+public bool CheckxBox { get; set; }
+
+public List<SwitchItem> SwitchList { get; set; }
+
+public void ChangeSwitch(ChangeEventArgs arg)
+{
+var a = SwitchList.FirstOrDefault(x => x.ID == ((SwitchItem)arg.Value).ID);
+
+a.Value = !((SwitchItem)arg.Value).Value;
+}
+
+public RenderFragment RenderSwitch(SwitchItem Wod)
+{
+
+return
+@<TextInput Label="@Wod.Label"
+            TValue="bool"
+            Validate="false"
+            @bind-Value="@Wod.Value" Type="@Types.Switch" Model="Wod" OnChangeObjectControl="ChangeSwitch">
+</TextInput>;
+
+}
+
+public RenderFragment RenderSearch()
+{
+
+return@<input @bind-value="@SearchTerm" @onkeyup="Keyev"
+              class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" />;
+
+}
+
+async Task Keyev()
+{
+//await  KeyEvent("Name", SearchTerm);
+}
+
+
+
+public class SwitchItem
+{
+public int ID { get; set; }
+
+public string Label { get; set; }
+
+public bool Value { get; set; }
+
+
+}
+
+
+public Func<List<TableItem>, List<TableItem>> QueryList { get; set; }
+
+[Parameter]
+public string FilterColumn { get; set; }
+
+[Parameter]
+public object ValueFilter { get; set; }
+
+[Parameter]
+public FilterOperator FilterOperator { get; set; }
+
+public List<TableItem> Filter_List(string FilterExpression, object value, List<TableItem> data)
+{
+
+//      var predicate = new DynamicFilterBuilder<Product>()
+//.And("Enabled", FilterOperator.Equals, true)
+//.And(b => b.And("Brand", FilterOperator.Equals, "Nike").Or("Brand", FilterOperator.Equals, "Adidas"))
+//.And(b => b.And("Price", FilterOperator.GreaterThanOrEqual, 20).And("Price", FilterOperator.LessThanOrEqual, 100))
+//.Build();
+
+//      var products = _dbContext.Products.AsQueryable().Where(predicate).ToList();
+
+var predicate = DynamicExpressions.GetPredicate<TableItem>(FilterExpression, FilterOperator.Equals, value);
+
+
+
+// ^ can also be cached or compiled and used anywhere
+//var products = _dbContext.Products.AsQueryable().Where(predicate).ToList();
+// ^ or FirstByDefault, Any, etc...
+
+
+
+List<TableItem> data_sorted = new List<TableItem>();
+
+var a = data.Where(predicate.Compile()).ToList();
+
+//data_sorted = (from n in data
+//               where GetDynamicSortProperty(n, sortExpression)== value
+//               select n).ToList();
+
+
+return a;
+
+}
+
+
+
+
+
+
+
+public object GetDynamicSortProperty(object item, string propName)
+{
+try
+{
+string[] prop = propName.Split('.');
+
+//Use reflection to get order type
+int i = 0;
+while (i < prop.Count())
+{
+item = item.GetType().GetProperty(prop[i]).GetValue(item, null);
+i++;
+if (item == null)
+{
+return null;
+}
+}
+
+return item;
+}
+catch (Exception ex)
+{
+throw ex;
+}
+
+
+}
+
+
+
+
+@*RenderFragment Table()
+    {
+
+    return @<Modal Enabled="@EnableShowModal">
+        <CloseButton>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close"
+                    @onclick="@(async () => await CancelItem("" + "" + ""))"
+                    @onclick:stopPropagation @onclick:preventDefault>
+
+                <span aria-hidden="true">×</span>
+            </button>
+        </CloseButton>
+
+
+    </Modal>;
+
+
+
+    }*@
+
+
+
+}
+
+

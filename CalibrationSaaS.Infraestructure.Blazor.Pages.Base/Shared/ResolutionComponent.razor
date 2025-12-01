@@ -1,0 +1,1075 @@
+﻿@page "/resolution"
+@using Blazed.Controls
+@using BlazorApp1.Blazor.Blazor.Pages.Basics
+
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+
+
+@using CalibrationSaaS.Infraestructure.Blazor.Services;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@namespace BlazorApp1.Blazor.Blazor.Pages.Basics
+@inherits BlazorApp1.Blazor.Blazor.Pages.Basics.ResolutionComponentBase
+@using Grpc.Core;
+
+@using Helpers
+@using ProtoBuf.Grpc
+@*@inherits CalibrationSaaS.Infraestructure.Blazor.KavokuComponentBase*@
+
+@if (Tolerance != null && Tolerance.ToleranceTypeID.HasValue)
+{
+
+    <div class="card-body" style="z-index:100000">
+
+
+        @*<ValidationSummary />*
+    @*<h4>@LastSubmitResult</h4>*@
+
+        <div class="row">
+            @*<div class="col col-lg-2">Tolerance Type</div>*@
+            <div class="col">
+                @if (ToleranceList != null && ToleranceList?.Count() > 0)
+                {
+
+                    Console.WriteLine("resolution Enable");
+                    Console.WriteLine(Enabled);
+
+                    <TextInput @bind-Value="Tolerance.ToleranceTypeID"
+                    Label="Tolerance Type"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.select"
+                    ShowDefaultOption="true"
+                    ValidationFor="@(() => Tolerance.ToleranceTypeID)">
+
+                        @foreach (var item in ToleranceList)
+                        {
+                            //string name = item.Name + " " + @item.LastName;
+
+                            if (item != null && Tolerance.ToleranceTypeID.HasValue && Tolerance.ToleranceTypeID.Value == Convert.ToInt32(item.Key))
+                            {
+                                <option value="@item.Key" selected>@item.Value</option>
+                            }
+                            else
+                if (item != null)
+                            {
+                                <option value="@item.Key">@item.Value</option>
+                            }
+
+                            @*  <option value="@item.Key">@item.Value</option> *@
+
+                        }
+
+                    </TextInput>
+
+
+                }
+                else if (Tolerance != null && AppState.ToleranceListDynamic != null)
+                {
+
+                    <TextInput @bind-Value="Tolerance.ToleranceTypeID"
+                    Label="Tolerance Type"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.select"
+                    ShowDefaultOption="true"
+                    ValidationFor="@(() => Tolerance.ToleranceTypeID)">
+
+                        @foreach (ToleranceType item in AppState.ToleranceListDynamic)
+                        {
+                            if (item != null && item.Key != null && Tolerance.ToleranceTypeID.HasValue && Tolerance.ToleranceTypeID.Value == Convert.ToInt32(item.Key))
+                            {
+                                <option value="@item.Key.ToString()" selected>@item.Value</option>
+                            }
+                            else
+                if (item != null && item.Key != null)
+                            {
+                                <option value="@item.Key.ToString()">@item.Value</option>
+                            }
+
+
+                            @* <option value="@item.Key.ToString()">@item.Value</option> *@
+
+
+                        }
+
+                    </TextInput>
+
+                }
+            </div>
+            @if (IsPOE)
+            {
+                if (!IsToleranceImport)
+                {
+                    <div class="col">
+                        <div class="form-control-wrapper">
+                            <label class="form-control-label"></label>
+                            <button type="button" class="btn btn-primary" @onclick="@(async () => await Import())" style="margin-top:4%"
+                            disabled="@(false & !Enabled)"
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                <span aria-hidden="true">Import tolerance information from ET</span>
+                            </button>
+                        </div>
+                    </div>
+
+
+                    @*  <div class="col">
+                        <div class="form-control-wrapper">
+                            <label class="form-control-label"></label>
+                            <button type="button" class="btn btn-primary" @onclick="@(async () => await Delete())" style="margin-top:4%" disabled="@(!Enabled)"
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                <span aria-hidden="true">Delete tolerance information from POE</span>
+                            </button>
+                        </div>
+                    </div> *@
+                    <div class="col">
+                        <div class="form-control-wrapper">
+                            <label class="form-control-label"></label>
+                            <button type="button" class="btn btn-primary" @onclick="@(async () => await Delete())" style="margin-top:4%" disabled="@(true)"
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                <span aria-hidden="true">Delete tolerance information from POE</span>
+                            </button>
+                        </div>
+                    </div>
+
+                }
+                else
+                {
+                    <div class="col">
+                        <div class="form-control-wrapper">
+                            <label class="form-control-label"></label>
+                            <button type="button" class="btn btn-primary" @onclick="@(async () => await Import())" style="margin-top:4%"
+                            @onclick:stopPropagation @onclick:preventDefault disabled="@(true)">
+                                <span aria-hidden="true">Import tolerance information from ET</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="form-control-wrapper">
+                            <label class="form-control-label"></label>
+                            <button type="button" class="btn btn-primary" disabled="@(false & !Enabled)" @onclick="@(async () => await Delete())" style="margin-top:4%"
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                <span aria-hidden="true">Delete tolerance information from POE</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+
+
+            }
+        </div>
+
+
+        @if (Tolerance != null && ((Tolerance?.ToleranceTypeID.HasValue == true) && (Tolerance.ToleranceTypeID == 100))) //Accuracy%
+        {
+            <div class="row">
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.AccuracyPercentage"
+                    Label="Accuracy Percentage"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.AccuracyPercentage)">
+                    </TextInput>
+                </div>
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="eq.Resolution"
+                    Label="Poe Resolution Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    ValidationFor="@(() => eq.Resolution)" OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+
+                <div class="col-sm-4">
+                    <TextInput @bind-Value="eq.DecimalNumber"
+                    Label="Poe Decimal Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.ReadOnlyText"
+                    ValidationFor="@(() => eq.DecimalNumber)">
+                    </TextInput>
+                </div>
+                @*  <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.ToleranceValue"
+                               Label="Tolerance Resolution"
+                               Validate="true"
+                               LabelDown="@LabelDown"
+                               IsDisabled="!Enabled"
+                               TValue="double"
+                               Type="@Types.number"
+                               ValidationFor="@(() => Tolerance.ToleranceValue)" OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div> *@
+                <div class="col-sm-2">
+                    <TextInput @bind-Value="@Tolerance.FullScale" Label="Full Scale" Validate="false"
+                    LabelDown="@LabelDown" IsDisabled="!Enabled"
+                    ValidationFor="@(() => Tolerance.FullScale)"
+                    Type="@Types.Switch">
+                    </TextInput>
+                </div>
+            </div>
+        }
+
+        @if (Tolerance != null && ((Tolerance?.ToleranceTypeID.HasValue == true) && (Tolerance.ToleranceTypeID == 103))) // Accuracy% + resolution
+        {
+            <div class="row">
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.AccuracyPercentage"
+                    Label="Accuracy Percentage"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.AccuracyPercentage)">
+                    </TextInput>
+                </div>
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="eq.Resolution"
+                    Label="Poe Resolution Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    ValidationFor="@(() => eq.Resolution)" OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+
+                <div class="col-sm-4">
+                    <TextInput @bind-Value="eq.DecimalNumber"
+                    Label="Poe Decimal Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.ReadOnlyText"
+                    ValidationFor="@(() => eq.DecimalNumber)">
+                    </TextInput>
+                </div>
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.ToleranceValue"
+                    Label="Tolerance Resolution"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.ToleranceValue)" OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+                <div class="col-sm-2">
+                    <TextInput @bind-Value="@Tolerance.FullScale" Label="Full Scale" Validate="false"
+                    LabelDown="@LabelDown" IsDisabled="!Enabled"
+                    ValidationFor="@(() => Tolerance.FullScale)"
+                    Type="@Types.Switch">
+                    </TextInput>
+                </div>
+            </div>
+        }
+
+
+        @if (Tolerance != null && ((Tolerance.ToleranceTypeID.HasValue) && (Tolerance.ToleranceTypeID == 101
+      || Tolerance.ToleranceTypeID == 102))) //Accuracy% + Value  or Accuracy% * Value
+        {
+            <div class="row">
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.AccuracyPercentage"
+                    Label="Accuracy Percentage"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.AccuracyPercentage)">
+                    </TextInput>
+                </div>
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.ToleranceFixedValue"
+                    Label="Tolerance Fixed"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.ToleranceFixedValue)">
+                    </TextInput>
+                </div>
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="eq.Resolution"
+                    Label="Poe Resolution Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    ValidationFor="@(() => eq.Resolution)" OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+                <div class="col-sm-4">
+                    <TextInput @bind-Value="eq.DecimalNumber"
+                    Label="Poe Decimal Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.ReadOnlyText"
+                    ValidationFor="@(() => eq.DecimalNumber)">
+                    </TextInput>
+                </div>
+
+                <div class="col-sm-2">
+                    <TextInput @bind-Value="@Tolerance.FullScale" Label="Full Scale" Validate="false"
+                    LabelDown="@LabelDown" IsDisabled="!Enabled"
+                    ValidationFor="@(() => Tolerance.FullScale)"
+                    Type="@Types.Switch">
+                    </TextInput>
+                </div>
+            </div>
+
+        }
+
+
+        @if (Tolerance != null && ((Tolerance.ToleranceTypeID.HasValue) && (Tolerance.ToleranceTypeID == 200 || Tolerance.ToleranceTypeID == 201))) //Resolution + Value or Resolution * Value*@
+        {
+            <div class="row">
+
+                <div class="col-sm">
+                    <TextInput @bind-Value="eq.Resolution"
+                    Label="Poe Resolution Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    Min="0"
+                    Max="1000000000"
+                    ValidationFor="@(() => eq.Resolution)"
+                    OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+                <div class="col-sm">
+                    <TextInput @bind-Value="eq.DecimalNumber"
+                    Label="Poe Decimal Number"
+                    Validate="true"
+                    Min="0"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.ReadOnlyText"
+                    ValidationFor="@(() => eq.DecimalNumber)">
+                    </TextInput>
+                </div>
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.ToleranceValue"
+                    Label="Tolerance Resolution"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.ToleranceValue)" OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.ToleranceFixedValue"
+                    Label="Tolerance Fixed"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.ToleranceFixedValue)">
+                    </TextInput>
+                </div>
+
+            </div>
+        }
+
+        @if (Tolerance != null && ((Tolerance.ToleranceTypeID.HasValue) && Tolerance.ToleranceTypeID == 2))
+        {
+            <div class="row">
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.AccuracyPercentage"
+                    Label="Accuracy Percentage"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.AccuracyPercentage)">
+                    </TextInput>
+                </div>
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="eq.Resolution"
+                    Label="Poe Resolution Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    ValidationFor="@(() => eq.Resolution)" OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+                <div class="col-sm-4">
+                    <TextInput @bind-Value="eq.DecimalNumber"
+                    Label="Poe Decimal Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.ReadOnlyText"
+                    ValidationFor="@(() => eq.DecimalNumber)">
+                    </TextInput>
+                </div>  <!-- item-property-hor .// -->
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.ToleranceValue"
+                    Label="Tolerance Resolution"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.ToleranceValue)" OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+                <div class="col-sm-2">
+                    <TextInput @bind-Value="@Tolerance.FullScale" Label="Full Scale" Validate="false"
+                    LabelDown="@LabelDown" IsDisabled="!Enabled"
+                    ValidationFor="@(() => Tolerance.FullScale)"
+                    Type="@Types.Switch">
+                    </TextInput>
+                </div>
+            </div>
+
+
+        }
+
+        @if (Tolerance != null && ShowRanges && ((Tolerance.ToleranceTypeID.HasValue) && Tolerance.ToleranceTypeID > 0 && Tolerance.ToleranceTypeID == 2))
+        {
+
+
+            <div class="row">
+
+                <BlazorApp1.Blazor.Pages.Basics.TestPoints.RangeTestPoint @ref="@RangeAccuracy" Title="Accuracy Compound"
+                Type="2" GridID="gridAccuracy" ID="AccuracyComp" Enabled="@Enabled" AfterActionF="AfterAction" 
+                Component="@Component">
+            </BlazorApp1.Blazor.Pages.Basics.TestPoints.RangeTestPoint>
+            </div>
+        }
+
+        @if (Tolerance != null && ((Tolerance.ToleranceTypeID.HasValue) && Tolerance.ToleranceTypeID == 1 ))
+        {
+            <div class="row">
+
+                <div class="col-sm">
+                    <TextInput @bind-Value="eq.Resolution"
+                    Label="Poe Resolution Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    Min="0"
+                    Max="1000000000"
+                    ValidationFor="@(() => eq.Resolution)"
+                    OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+
+                <div class="col-sm">
+                    <TextInput @bind-Value="eq.DecimalNumber"
+                    Label="Poe Decimal Number"
+                    Validate="true"
+                    Min="0"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.ReadOnlyText"
+                    ValidationFor="@(() => eq.DecimalNumber)">
+                    </TextInput>
+                </div>  <!-- item-property-hor .// -->
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.ToleranceValue"
+                    Label="Tolerance Resolution"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.ToleranceValue)"
+                    OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+            </div>
+        }
+        @if (Tolerance != null && ((Tolerance.ToleranceTypeID.HasValue) && Tolerance.ToleranceTypeID == 3))
+        {
+            <div class="row">
+
+                <div class="col-sm">
+                    <TextInput @bind-Value="eq.Resolution"
+                    Label="Poe Resolution Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    Min="0"
+                    Max="1000000000"
+                    ValidationFor="@(() => eq.Resolution)"
+                    OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+
+                <div class="col-sm">
+                    <TextInput @bind-Value="eq.DecimalNumber"
+                    Label="Poe Decimal Number"
+                    Validate="true"
+                    Min="0"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.ReadOnlyText"
+                    ValidationFor="@(() => eq.DecimalNumber)">
+                    </TextInput>
+                </div>  <!-- item-property-hor .// -->
+
+            </div>
+        }
+        else if (Tolerance != null && ((Tolerance.ToleranceTypeID.HasValue) && (Tolerance.ToleranceTypeID == 4 || Tolerance.ToleranceTypeID == 5)))
+        {
+            <div class="row">
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.AccuracyPercentage"
+                    Label="Accuracy Percentage"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.number"
+                    ValidationFor="@(() => Tolerance.AccuracyPercentage)">
+                    </TextInput>
+                </div>
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="eq.Resolution"
+                    Label="Poe Resolution Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    TValue="double"
+                    Type="@Types.number"
+                    ValidationFor="@(() => eq.Resolution)" OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div>
+                <div class="col-sm-4">
+                    <TextInput @bind-Value="eq.DecimalNumber"
+                    Label="Poe Decimal Number"
+                    Validate="true"
+                    LabelDown="@LabelDown"
+                    IsDisabled="!Enabled"
+                    Type="@Types.ReadOnlyText"
+                    ValidationFor="@(() => eq.DecimalNumber)">
+                    </TextInput>
+                </div>  <!-- item-property-hor .// -->
+                @*   <div class="col-sm-3">
+                    <TextInput @bind-Value="Tolerance.ToleranceValue"
+                               Label="Tolerance Resolution"
+                               Validate="true"
+                               LabelDown="@LabelDown"
+                               IsDisabled="!Enabled"
+                               TValue="double"
+                               Type="@Types.number"
+                               ValidationFor="@(() => Tolerance.ToleranceValue)"
+                               OnChangeControl="DecimalCalculate">
+                    </TextInput>
+                </div> *@
+                <div class="col-sm-2">
+                    <TextInput @bind-Value="@eq.FullScale" Label="Full Scale" Validate="false"
+                    LabelDown="@LabelDown" IsDisabled="!Enabled"
+                    ValidationFor="@(() => eq.FullScale)"
+                    Type="@Types.Switch">
+                    </TextInput>
+                </div>
+            </div>
+
+        }
+
+        @if (Tolerance != null && ShowRanges && ((Tolerance.ToleranceTypeID.HasValue) && Tolerance.ToleranceTypeID > 0 && Tolerance.ToleranceTypeID != 3))
+        {
+            List<RangeTolerance> ds = null;
+
+            if (RangeComponent != null && eq.Ranges != null)
+            {
+                ds = eq.Ranges.Where(x => x.ToleranceTypeID == RangeComponent.Type).ToList();
+
+                //ds.AddRange(ds1);
+                //RangeComponent.Show(ds);
+            }
+
+            <div class="row">
+                <BlazorApp1.Blazor.Pages.Basics.TestPoints.RangeTestPoint @ref="@RangeComponent" Title="Resolution Compound" Type="1" GridID="griTolerance"
+                ID="ResolutionComp" Enabled="@Enabled" AfterActionF="AfterAction" Component="Component">
+
+                </BlazorApp1.Blazor.Pages.Basics.TestPoints.RangeTestPoint>
+            </div>
+        }
+
+        @if (Tolerance != null && ((Tolerance.ToleranceTypeID.HasValue) && (ShowClass || Tolerance.ToleranceTypeID == 3)))
+        {
+            <div class="row">
+
+                <div class="col-sm">
+                    <TextInput @bind-Value="eq.ClassHB44"
+                    IsDisabled="!Enabled"
+                    Label="Class"
+                    LabelDown="@LabelDown"
+                    TValue="int"
+                    ValidationFor="(()=> eq.ClassHB44)">
+                        @foreach (var item in AppState.ClassList)
+                        {
+
+                            if (item.Key == eq.ClassHB44)
+                            {
+                                <option value="@item.Key" selected>@item.Value</option>
+                            }
+                            else
+                            {
+                                <option value="@item.Key">@item.Value</option>
+                            }
+                        }
+                    </TextInput>
+                </div>
+                @if (ShowComercial)
+                {
+                    <div class="col-sm">
+                        <TextInput @bind-Value="eq.IsComercial"
+                        IsDisabled="!Enabled"
+                        Label="Is Commercial?"
+                        LabelDown="@LabelDown"
+                        ValidationFor="(()=> eq.IsComercial)"
+                        Type="@Types.Switch">
+
+                        </TextInput>
+
+                    </div>
+                }
+            </div>
+
+        }
+        @if (usePreviusCalibration == true)
+        {
+            <div class="row">
+                <div class="col-sm-2">
+                    <TextInput @bind-Value="Tolerance.UsePreviousCalibrationData" Label="Use Previous Calibration Data" Validate="false"
+                    LabelDown="@LabelDown" IsDisabled="!Enabled"
+                    ValidationFor="@(() => Tolerance.UsePreviousCalibrationData)"
+                    Type="@Types.Switch">
+                    </TextInput>
+                </div>
+            </div>
+        }
+
+
+        @Bound()
+    </div> <!-- row.// -->
+}
+
+@code {
+
+
+    string Bound()
+    {
+
+        if (Tolerance != null && eq != null)
+        {
+            Tolerance.Resolution = eq.Resolution;
+            Tolerance.DecimalNumber = eq.DecimalNumber;
+            //Tolerance.ResolutionValue = eq.ResolutionValue;
+            eq.Tolerance = Tolerance;
+        }
+
+        return "";
+
+    }
+
+
+    [CascadingParameter] BlazoredModalInstance BlazoredModal1 { get; set; }
+    [CascadingParameter] public IModalService Modal { get; set; }
+
+    // //YPP
+
+    // [Parameter]
+    // public string Message { get; set; }
+
+
+
+    // [Parameter]
+    // public int calibrationTypeId { get; set; }
+
+    // [Parameter]
+    // public Tolerance ToleranceModal { get; set; }
+
+    // public Tolerance ToleranceGeneral { get; set; }
+
+
+
+    ////
+    [Parameter]
+    public Func<Task> Refresh { get; set; }
+
+    [Parameter]
+    public Func<Task> DeleteTolerance { get; set; }
+
+
+    public bool ResolutionChanged { get; set; }
+
+
+    public bool EnabledDisabled()
+    {
+        if (IsPOE && IsToleranceImport == false)
+        {
+            return true;
+        }
+
+        var r = !Enabled;
+
+        return r;
+    }
+
+    public async Task Delete()
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", new object[] { "Are you sure do you want to delete the Tolerance Settings?" });
+        if (!confirmed)
+        {
+            return;
+        }
+        IsToleranceImport = false;
+        Enabled = true;
+        eq.Tolerance.AccuracyPercentage = 0;
+        eq.DecimalNumber = 0;
+        eq.Resolution = 0;
+        //eq.ToleranceTypeID = 0;
+        eq.Tolerance.ToleranceFixedValue = 0;
+        eq.Tolerance.ToleranceValue = 0;
+
+        if (DeleteTolerance != null)
+        {
+            await DeleteTolerance();
+            await DeleteTolerance();
+        }
+
+
+
+    }
+
+
+    public async Task Import()
+    {
+        bool confirmed = await ConfirmAsync("Are you sure do you want to import tolerance from Equipment Template?");   //JSRuntime.InvokeAsync<bool>("confirm", "Are you sure do you want to import tolerance from Equipment Template?");
+
+        if (confirmed)
+        {
+            IsToleranceImport = true;
+            Enabled = true;
+            if (Refresh != null)
+            {
+                if (IsPOE)
+                {
+                    await Refresh();
+                    //await Refresh();
+                }
+                else
+                {
+                    await Refresh();
+                    await Refresh();
+                }
+
+                //await Refresh();
+            }
+            StateHasChanged();
+        }
+
+
+    }
+
+    [Parameter]
+    public bool IsToleranceImport { get; set; }
+
+    [Parameter]
+    public IEnumerable<ToleranceType> ToleranceList { get; set; }
+
+
+    public BlazorApp1.Blazor.Pages.Basics.TestPoints.RangeTestPoint RangeComponent;
+
+    public BlazorApp1.Blazor.Pages.Basics.TestPoints.RangeTestPoint RangeAccuracy;
+    public List<RangeTolerance> Ranges = new List<RangeTolerance>();
+
+
+
+    [Parameter]
+    public int Type { get; set; }
+
+    [Parameter]
+    public new string Title { get; set; } = "Accuracy";
+
+
+    public new bool LabelDown { get; set; }
+
+
+    [Parameter]
+    public bool IsPercentage { get; set; }
+
+    List<RangeTolerance> _Group;
+
+
+    [Inject] public Func<dynamic, CalibrationSaaS.Application.Services.IBasicsServices<CallContext>> Basics { get; set; }
+
+
+    void DecimalCalculate(ChangeEventArgs args)
+    {
+        try
+        {
+            var val = args.Value;
+            if (val != null)
+            {
+                eq.DecimalNumber = 0;
+                var result = NumericExtensions.CalculateDecimalNumber(Convert.ToDecimal(val));
+                eq.DecimalNumber = (int)result;
+                ResolutionChanged = true;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+
+    }
+
+    public string selectedAnswer = "";
+
+
+    public bool ShowRanges { get; set; } = false;
+
+    public bool ShowClass { get; set; } = false;
+    public bool ShowComercial { get; set; } = false;
+
+    [Parameter]
+    public bool IsWOD { get; set; } = false;
+
+    [Parameter]
+    public bool IsPOE { get; set; } = false;
+
+    public bool usePreviusCalibration { get; set; }
+
+    void SelectionChanged(ChangeEventArgs args)
+    {
+        IsPercentage = false;
+
+        ShowClass = false;
+
+        ShowComercial = false;
+
+
+        selectedAnswer = args.Value.ToString();
+
+        if (selectedAnswer.Contains("2"))
+        {
+            IsPercentage = true;
+
+            eq.Tolerance.ToleranceTypeID = 2;
+
+            ShowRanges = true;
+        }
+
+        if (selectedAnswer.Contains("3"))
+        {
+            IsPercentage = false;
+
+            ShowRanges = false;
+
+            ShowClass = true;
+
+            eq.Tolerance.ToleranceTypeID = 3;
+
+            if (IsWOD)
+            {
+                ShowComercial = true;
+            }
+        }
+
+
+        else if (selectedAnswer.Contains("1"))
+        {
+            IsPercentage = false;
+            eq.Tolerance.ToleranceTypeID = 1;
+
+
+        }
+        else if (selectedAnswer.Contains("4"))
+        {
+            IsPercentage = false;
+            eq.Tolerance.ToleranceTypeID = 4;
+            ShowRanges = true;
+
+        }
+        else if (selectedAnswer.Contains("5"))
+        {
+            IsPercentage = false;
+            eq.Tolerance.ToleranceTypeID = 5;
+            ShowRanges = true;
+
+        }
+
+        ResolutionChanged = true;
+
+
+
+        StateHasChanged();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            CalibrationSaaS.Infraestructure.Blazor.Services.BasicsServiceGRPC basic = new CalibrationSaaS.Infraestructure.Blazor.Services.BasicsServiceGRPC(Basics, DbFactory);
+
+            var result = await basic.GetToleranceTypes(new CallContext());
+
+            var result1 = result.AsQueryable();
+
+            if (eq.EquipmentTypeObject != null && eq.EquipmentTypeObject.CalibrationTypeID != null)
+            {
+                ToleranceList = result1.Where(x => x.CalibrationTypeId == eq.EquipmentTypeObject.CalibrationTypeID).ToList();
+
+                int caltypeid = 0;
+
+                caltypeid = eq.EquipmentTypeObject.CalibrationTypeID;
+
+
+
+                CalibrationType calibrationType = new CalibrationType()
+                    {
+                        CalibrationTypeId = eq.EquipmentTypeObject.CalibrationTypeID
+                    };
+                var ct = await basic.GetCalibrationTypeById(calibrationType);
+
+
+            }
+
+            await Load(eq);
+
+
+            //}
+            // catch (Exception ex)
+            // {
+
+            // }
+        }
+
+    }
+
+
+
+
+    [CascadingParameter(Name = "CascadeTolerance")]
+    public Tolerance Tolerance { get; set; }
+
+    [CascadingParameter(Name = "CascadeParam1")]
+    public PieceOfEquipment POE { get; set; }
+
+    [CascadingParameter(Name = "CascadeParamET")]
+    public EquipmentTemplate ET { get; set; }
+
+
+    public async Task Load(EquipmentTemplate et)
+    {
+        eq = et;
+
+        //Tolerance = et.Tolerance;
+
+        //_Group = group;
+        // ToleranceList = AppState.ToleranceList;
+
+        if (eq.Ranges != null)
+        {
+            if (RangeComponent != null && eq.Ranges != null)
+            {
+                //var ds = eq.Ranges.Where(x => x.ToleranceTypeID == RangeComponent.Type).ToList();
+
+                await RangeComponent.Show(eq.Ranges.ToList());
+            }
+
+
+            if (RangeAccuracy != null && eq.Ranges != null)
+            {
+                //var dss = eq.Ranges.Where(x => x.ToleranceTypeID == RangeAccuracy.Type).ToList();
+                await RangeAccuracy.Show(eq.Ranges.ToList());
+            }
+        }
+
+
+        if ((ET != null && ET.EquipmentTypeObject != null && ET.EquipmentTypeObject.CalibrationType != null && ET.EquipmentTypeObject.CalibrationType.UsePreviousCalibrationData == true)
+            || (POE != null && POE.EquipmentTemplate != null && POE.EquipmentTemplate.EquipmentTypeObject != null && POE.EquipmentTemplate.EquipmentTypeObject.CalibrationType != null && POE.EquipmentTemplate.EquipmentTypeObject.CalibrationType.UsePreviousCalibrationData == true)
+            || (Tolerance != null && Tolerance.UsePreviousCalibrationData !=null && Tolerance.UsePreviousCalibrationData == true)
+        )
+        {
+            usePreviusCalibration = true;
+
+        }
+        if(((ET?._equipmentTypeObject?.CalibrationType?.UsePreviousCalibrationData== true && ET?.Tolerance.UsePreviousCalibrationData == true) ||
+            (POE?.EquipmentTemplate?.EquipmentTypeObject?.CalibrationType?.UsePreviousCalibrationData == true && POE?.EquipmentTemplate?.Tolerance.UsePreviousCalibrationData == true))
+            && Tolerance.UsePreviousCalibrationData == null
+           )
+        {
+            Tolerance.UsePreviousCalibrationData = true;
+        }
+        try
+        {
+            var rs = Convert.ToDecimal(eq.Resolution);
+
+            var result = NumericExtensions.CalculateDecimalNumber(rs);
+
+            eq.DecimalNumber = (int)result;
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+    }
+
+
+    public async Task Show(EquipmentTemplate et)
+    {
+        await Load(et);
+
+        StateHasChanged();
+
+
+    }
+
+    [Parameter]
+    public Func<RangeTolerance, Task<bool>> DeleteFun { get; set; }
+
+
+    public async Task<bool> Delete(RangeTolerance range)
+    {
+
+        return await DeleteFun(range);
+
+    }
+
+    [Parameter]
+    public Func<RangeTolerance, string, Task> AfterActionF { get; set; }
+
+
+    public async Task AfterAction(RangeTolerance range, string tipo)
+    {
+
+        await AfterActionF(range, tipo);
+
+    }
+}

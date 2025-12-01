@@ -1,0 +1,26 @@
+﻿@namespace CalibrationSaaS.Infraestructure.Blazor
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+@if (demoEnabled == "true")
+{
+    <img class="img-fluid" style="width: 8rem;" src="img/Calibrify.svg" alt="Calibrify">
+}
+else
+{
+    <img class="img-fluid" style="width: 8rem;" src="_content/@customer/Logo.png" alt="Logo">
+}
+@code
+{
+    public string customer  { get; set; }
+    public string demoEnabled { get; set; }
+    protected override async Task OnInitializedAsync()
+
+    {
+        customer = Configuration.GetSection("Reports")["Customer"];
+        // Demo mode is enabled when Customer is "Demo"
+        demoEnabled = (customer == "Demo") ? "true" : "false";
+    }
+
+
+}

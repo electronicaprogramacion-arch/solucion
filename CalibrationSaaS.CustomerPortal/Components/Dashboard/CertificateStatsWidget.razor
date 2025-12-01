@@ -1,0 +1,120 @@
+@using CalibrationSaaS.CustomerPortal.Models.Certificates
+@using CalibrationSaaS.CustomerPortal.Services.Certificates
+
+<RadzenCard Class="rz-p-4">
+    <RadzenStack Gap="1rem">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenText TextStyle="TextStyle.H6">Certificate Statistics</RadzenText>
+            <RadzenButton Icon="refresh" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+                        Click="@RefreshStats" IsBusy="@isLoading" />
+        </RadzenStack>
+
+        @if (isLoading)
+        {
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Medium" />
+        }
+        else if (statistics != null)
+        {
+            <RadzenRow>
+                <RadzenColumn Size="6">
+                    <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-primary-lighter) 0%, var(--rz-primary-light) 100%);">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="description" Style="font-size: 1.5rem; color: var(--rz-primary);" />
+                            <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0">@statistics.TotalCertificates</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Total</RadzenText>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="6">
+                    <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-success-lighter) 0%, var(--rz-success-light) 100%);">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="check_circle" Style="font-size: 1.5rem; color: var(--rz-success);" />
+                            <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0">@statistics.CompliantCertificates</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Compliant</RadzenText>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenRow>
+                <RadzenColumn Size="6">
+                    <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-warning-lighter) 0%, var(--rz-warning-light) 100%);">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="schedule" Style="font-size: 1.5rem; color: var(--rz-warning);" />
+                            <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0">@statistics.ExpiringSoonCertificates</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Expiring Soon</RadzenText>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="6">
+                    <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-info-lighter) 0%, var(--rz-info-light) 100%);">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="error" Style="font-size: 1.5rem; color: var(--rz-danger);" />
+                            <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0">@statistics.OverdueCertificates</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Overdue</RadzenText>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+
+            @if (statistics.LastCertificateDate.HasValue)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Info" Icon="info" Title="Latest Certificate">
+                    Last certificate issued on @statistics.LastCertificateDate.Value.ToString("MMM dd, yyyy")
+                </RadzenAlert>
+            }
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Icon="error" Title="Error Loading Statistics">
+                @errorMessage
+                <RadzenButton Text="Retry" Click="@RefreshStats" Size="ButtonSize.Small" Style="margin-top: 0.5rem;" />
+            </RadzenAlert>
+        }
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter] public int CustomerId { get; set; }
+    [Inject] private ICertificateService CertificateService { get; set; } = default!;
+    [Inject] private ILogger<CertificateStatsWidget> Logger { get; set; } = default!;
+
+    private CertificateStatistics? statistics;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshStats();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CustomerId > 0)
+        {
+            await RefreshStats();
+        }
+    }
+
+    private async Task RefreshStats()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            statistics = await CertificateService.GetCertificateStatisticsAsync(CustomerId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading certificate statistics for customer {CustomerId}", CustomerId);
+            errorMessage = "Failed to load certificate statistics. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

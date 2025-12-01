@@ -1,0 +1,35 @@
+﻿@page "/GetReportByTestPoint/{TestPointID}"
+@namespace BlazorApp1.Pages.Order
+@inherits GetReportByTestPoint_Base
+
+<h3>GetReport</h3>
+
+<div class="container" id="my_pdf_viewer">
+    @*<div class="row">
+        <div class="col-sm-3">
+            <button class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm btn-icon-split" onclick="print_canvas()"><i class="fa fa-download"></i> Print</button>
+        </div>
+        <div class="col-sm-3">
+            <button class="d-none d-sm-inline-block btn btn-sm btn-info shadow-sm btn-icon-split" onclick="download()"><i class="fa fa-download"></i> Download</button>
+        </div>
+    </div>*@
+    <br />
+    <div class="row">
+        <div class="col-sm" id="canvas_container">
+            <canvas id="pdf_renderer"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm" id="navigation_controls">
+            <button id="go_previous">Previous</button>
+            <input id="current_page" value="1" type="number" />
+            <button id="go_next">Next</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm" id="zoom_controls">
+            <button id="zoom_in">+</button>
+            <button id="zoom_out">-</button>
+        </div>
+    </div>
+</div>

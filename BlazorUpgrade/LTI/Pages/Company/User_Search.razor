@@ -1,0 +1,206 @@
+﻿@page "/UserSearch"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@inherits User_SearchBase
+@using Blazed.Controls
+
+<div >
+   
+    @* @if (Loading)
+    {
+        <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+            <div class="row" style="width:100%,display:flex;flex-dirección:columna;justify-content: center;">
+                <div class="col">
+                </div>
+                <div class="col">
+                    <p><em>Loading...</em></p>
+                    <FluentProgressRing></FluentProgressRing>
+
+                </div>
+                <div class="col">
+                </div>
+
+
+            </div>
+        </div>
+    } *@
+   @*  else
+    { *@
+        <HeaderComponent Title="Technician" ActionBar="false" Enabled="false"></HeaderComponent>
+        @* <EditForm OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+            <DataAnnotationsValidator /> *@
+         
+            <ResponsiveTable ItemsDataSource="@ListUser"
+                             PageSize="5"
+                             HasAction="true"
+                             Context="Entity"
+                             @ref="@Grid"
+                             GridID="gridUser"
+                             InLineEdit="false"
+                             RowEditClass=""
+                             RowNewClass=""
+                             TableItem="User"
+                             EnabledSearch="true"
+                             editContext="@CurrentEditContext"
+                             EnabledModal="false"
+                             OnChangeWindow="ClearList"
+                             SelectOnly="@SelectOnly"
+                             SaveButtonSubmit="false"
+                             PaginationFunction1="LoadData"
+                             DeleteAction="Delete"
+                             Component="@Component">
+
+
+                <ChildContent>
+
+                    <GridColumns>
+                        <GridColumn TableItem="User" Field="@Grid.GetPropertyName(() => eq.UserID)" Title="ID" DefaultSort="true" CSScol="col-sm-1 customcol" />
+                        <GridColumn TableItem="User" Field="@Grid.GetPropertyName(() => eq.UserName)" />
+                        <GridColumn TableItem="User" Field="@Grid.GetPropertyName(() => eq.Name)" />
+                        <GridColumn TableItem="User" Field="@Grid.GetPropertyName(() => eq.LastName)" />
+                        <GridColumn TableItem="User" Field="@Grid.GetPropertyName(() => eq.Email)" />
+
+
+                    </GridColumns>
+
+
+                </ChildContent>
+
+
+                @*<GridHeader>
+            <div class="col-sm-2 customcol"></div>
+            <div class="col-sm-3 customcol">Id</div>
+            <div class="col-sm-3 customcol">Name</div>
+            <div class="col-sm-3 customcol">Description</div>
+
+            </GridHeader>*@
+
+                <GridRow>
+
+                    @*<div class="col-sm-2 customcol inv">Id</div>
+                <div class="col-sm-2 customcol">@Format(@Entity.UserID)</div>
+                <div class="col-sm-2 customcol inv">Name</div>
+                <div class="col-sm-2 customcol">@Format(@Entity.Name)</div>
+                <div class="col-sm-2 customcol inv">Description</div>
+                <div class="col-sm-2 customcol">@Format(@Entity.Description)</div>*@
+                </GridRow>
+
+
+
+                <GridSelect>
+
+                    <button class="btn btn-sm btn-primary" id="_btnselect"
+                            @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                        Select
+                    </button>
+
+                </GridSelect>
+                <NewButton>
+                    <a class="btn btn-primary btn-sm" href="UserCreate/0">new</a>
+                    @*<SearchButtonComponent TForm="User_Create" ID="0"
+                Type="new" Size="@ModalSize.LargeWindow" CloseWindow="CloseAdd">
+                </SearchButtonComponent>*@
+                </NewButton>
+
+                <EditButton>
+                    <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                        <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton" href="UserCreate/@Entity.UserID">edit</a>
+                    </div>
+                    @*<SearchButtonComponent TForm="User_Create" ID="@Entity.UserID.ToString()"
+                Type="edit" Size="@ModalSize.LargeWindow" CloseWindow="CloseEdit">
+                </SearchButtonComponent>*@
+                </EditButton>
+                <GridSelect>
+
+                    <button class="btn btn-sm btn-primary" id="_btnselect"
+                            @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                        Select
+                    </button>
+
+                </GridSelect>
+
+            </ResponsiveTable>
+       @*  </EditForm> *@
+    @* } *@
+
+
+   
+
+</div>
+
+@code {
+
+    async Task Select(object arg, User entity)
+    {
+
+        await CloseModal(entity);
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+
+    }
+
+    async Task CloseAdd(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Cancelled)
+        {
+            await Grid.SearchFunction(Grid.currentColumn);
+        }
+
+
+        //if (a.Data != null)
+        //{
+        //    var yy = Grid.Items.Where(x => x.UserID == ((User)a.Data).UserID).FirstOrDefault();
+
+        //    Grid.Items.Remove(yy);
+
+        //    Grid.Items.Add((User)a.Data);
+
+        //    StateHasChanged();
+        //}
+    }
+
+    async Task CloseEdit(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Cancelled)
+        {
+            var cc = Grid.currentColumn;
+            if(cc != null)
+            {
+                cc.SortDescending = true;
+                await Grid.SearchFunction(cc);
+            }
+            else
+            {
+                await Grid.SearchFunction();
+            }
+
+        }
+
+
+        //if (a.Data != null)
+        //{
+        //    var yy = Grid.Items.Where(x => x.UserID == ((User)a.Data).UserID).FirstOrDefault();
+
+        //    Grid.Items.Remove(yy);
+
+        //    Grid.Items.Add((User)a.Data);
+
+        //    StateHasChanged();
+        //}
+    }
+
+    async Task Select(object arg, PieceOfEquipment entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+}

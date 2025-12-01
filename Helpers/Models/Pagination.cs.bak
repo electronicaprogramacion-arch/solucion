@@ -1,0 +1,192 @@
+﻿
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Text;
+
+namespace Helpers.Controls.ValueObjects
+{
+    [DataContract]
+    public class PaginationBase : IPaginationBase
+    {
+        [DataMember(Order = 1)]
+        public int Page { get; set; } = 1;
+        [DataMember(Order = 2)]
+        public int Show { get; set; } = 1;
+        [DataMember(Order = 3)]
+        public string Filter { get; set; }
+
+        [DataMember(Order = 4)]
+        public string ColumnName { get; set; }
+
+        [DataMember(Order = 5)]
+        public bool SortingAscending { get; set; }
+
+        
+
+        [DataMember(Order = 6)]
+        public int Top { get; set; } = 100000;
+
+        [DataMember(Order = 7)]
+        public Component Component { get; set; }
+
+        public string EntityType { get; set; }
+
+    }
+
+    
+
+    [DataContract]
+    public class Pagination<T,S>: IPaginationBase
+    {
+
+        string _EntityType;
+
+        public string EntityType { get
+            {
+                _EntityType = typeof(T).Name;   
+                
+                return _EntityType;
+
+            } set 
+            {
+                _EntityType = value;
+            } 
+        
+        
+        }
+
+
+        [DataMember(Order = 1)]
+        public int Page { get; set; } = 1;
+        [DataMember(Order = 2)]
+        public int Show { get; set; } = 1;
+
+
+        [DataMember(Order = 3)]
+        public string Filter { get; set; }
+
+        [DataMember(Order = 4)]
+        public string ColumnName { get; set; }
+
+        [DataMember(Order = 5)]
+        public bool SortingAscending { get; set; }
+
+
+        [DataMember(Order = 6)]
+        public int Top { get; set; } = 100000;
+
+        [DataMember(Order = 7)]
+        public T Entity { get; set; }
+
+        [DataMember(Order = 8)]
+        public FilterObject<T> Object { get; set; }
+
+        [DataMember(Order = 9)]
+        public Component Component { get; set; }
+
+        [DataMember(Order = 10)]
+        public bool SaveCache { get; set; } = true;
+
+
+       [DataMember(Order = 11)]
+        public S Other { get; set; } 
+
+
+    }
+
+     [DataContract]
+    public class Pagination<T>: IPaginationBase
+    {
+
+        string _EntityType;
+
+        public string EntityType { get
+            {
+                _EntityType = typeof(T).Name;   
+                
+                return _EntityType;
+
+            } set 
+            {
+                _EntityType = value;
+            } 
+        
+        
+        }
+
+
+        [DataMember(Order = 1)]
+        public int Page { get; set; } = 1;
+        [DataMember(Order = 2)]
+        public int Show { get; set; } = 1;
+
+
+        [DataMember(Order = 3)]
+        public string Filter { get; set; }
+
+        [DataMember(Order = 4)]
+        public string ColumnName { get; set; }
+
+        [DataMember(Order = 5)]
+        public bool SortingAscending { get; set; }
+
+
+        [DataMember(Order = 6)]
+        public int Top { get; set; } = 100000;
+
+        [DataMember(Order = 7)]
+        public T Entity { get; set; }
+
+        [DataMember(Order = 8)]
+        public FilterObject<T> Object { get; set; }
+
+        [DataMember(Order = 9)]
+        public Component Component { get; set; }
+
+        [DataMember(Order = 10)]
+        public bool SaveCache { get; set; } = true;
+
+        
+         [DataMember(Order = 11)]
+        public int Other { get; set; }
+
+
+
+    }
+
+    [DataContract]
+    public class FilterObject<T>
+    {
+        [DataMember(Order = 1)]
+        public T EntityFilter { get; set; } 
+
+        [DataMember(Order = 2)]
+        public DateTime? InitDate { get; set; } = null;
+        [DataMember(Order = 3)]
+        public DateTime? EndDate { get; set; } = null;
+    }
+
+    //[DataContract]
+    //public class Pagination2<T>
+    //{
+    //    [DataMember(Order = 1)]
+    //    public int Page { get; set; } = 1;
+    //    [DataMember(Order = 2)]
+    //    public int Show { get; set; } = 1;
+    //    [DataMember(Order = 3)]
+    //    public string Filter { get; set; }
+
+    //    [DataMember(Order = 4)]
+    //    public string ColumnName { get; set; }
+
+    //    [DataMember(Order = 5)]
+    //    public bool SortingAscending { get; set; }
+
+    //    [DataMember(Order = 6)]
+    //    public T Entity { get; set; }
+
+
+    //}
+
+}

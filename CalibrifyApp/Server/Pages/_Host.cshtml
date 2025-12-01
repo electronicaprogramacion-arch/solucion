@@ -1,0 +1,49 @@
+@page "/{**path:nonfile}"
+@using Microsoft.AspNetCore.Components.Web
+@namespace CalibrifyApp.Server.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <base href="~/" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta name="viewport" id="testViewport" content="width=device-width, initial-scale=0.75, maximum-scale=0.75" />
+    <title>Calibrify</title>
+    <meta name="description" content="Cloud Based Calibration Management System">
+    <meta name="author" content="Kavoku, LLC">
+
+    <link href="manifest.json" rel="manifest" />
+    <link rel="icon" type="image/svg+xml" href="img/logo/favicon.svg" />
+    <link href="css/loading-indicator.css" rel="stylesheet" />
+    <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
+
+    <!-- Add PDB error handler script -->
+    <script src="js/pdb-error-handler.js"></script>
+</head>
+<body id="page-top">
+    <component type="typeof(CalibrifyApp.Server.Components.App)" render-mode="ServerPrerendered" />
+
+    <div id="app-loading-indicator">
+        <img src="img/logo/Grayscale Transparent.svg" alt="Calibrify Logo" style="max-width: 300px; margin-bottom: 20px;" />
+        <p><i class="fas fa-spin fa-spinner"></i> The application is loading...</p>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <!-- Add PDB error handler script before Blazor scripts -->
+    <script src="js/pdb-error-handler.js"></script>
+
+    <script src="_framework/blazor.server.js"></script>
+    <script src="_framework/blazor.web.js"></script>
+    <script src="_content/Microsoft.Authentication.WebAssembly.Msal/AuthenticationService.js"></script>
+    <script src="_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/AuthenticationService.js"></script>
+</body>
+</html>

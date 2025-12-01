@@ -1,0 +1,678 @@
+﻿@model Reports.Domain.ReportViewModels.Header
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+    <link href=@Url.Content("~/css/Certified.css") rel="stylesheet" />
+    <style>
+        /* Style Definitions */
+        p.MsoNormal,
+        li.MsoNormal,
+        div.MsoNormal {
+        mso-style-unhide: no;
+        mso-style-qformat: yes;
+        mso-style-parent: "";
+        margin-top: 0cm;
+        margin-right: 0cm;
+        margin-bottom: .15pt;
+        margin-left: .5pt;
+        text-indent: -.5pt;
+        line-height: 107%;
+        mso-pagination: widow-orphan;
+        font-size: 6.0pt;
+        mso-bidi-font-size: 11.0pt;
+        font-family: "Arial", sans-serif;
+        mso-fareast-font-family: Arial;
+        color: black;
+        }
+
+        body {
+        margin-bottom: 0;
+         margin: 20px;
+        }
+
+        .invoice-box {
+        max-width: 800px;
+        margin: auto;
+        padding: 4px;
+       /*  box-shadow: 0 0 10px rgba(0, 0, 0, .15); */
+        font-family: Arial, sans-serif;
+        color: black;
+        font-size: 8.0pt;
+        mso-bidi-font-size: 11.0pt;
+        line-height: 107%;
+
+        }
+
+        .invoice-box table {
+        width: 100%;
+        line-height: inherit;
+        text-align: center;
+        border-collapse: collapse;
+        border-spacing: unset;
+        text-indent: unset;
+        }
+
+        .invoice-box table td {
+        vertical-align: top;
+        font-size: 8.0pt;
+        color: black;
+        line-height: 107%
+        }
+
+
+        .invoice-box table tr.top table td.title {
+        font-size: 45px;
+        line-height: 45px;
+        color: black;
+        }
+
+        .invoice-box table tr.information table td {
+        padding-bottom: 10px;
+        }
+
+        .invoice-box table tr.heading td {
+        background: #eee;
+        border: 1px solid black;
+        font-weight: bold;
+        }
+
+        .table-header {
+        text-align: left;
+        }
+
+        td {
+        text-align: center;
+        padding-top: 1px;
+        font-size: 10.0pt;
+        }
+
+        .td-left {
+        width: 12%;
+        text-align: right;
+        font-weight: bold;
+        border-collapse: separate;
+        border-spacing: 5px;
+        }
+
+        .td-detail {
+        width: 25%;
+        text-align: left;
+        padding-left: 1%;
+        border-collapse: separate;
+        border-spacing: 5px;
+        font-size: 10.0pt;
+        }
+
+        .td-left1 {
+        width: 15%;
+        text-align: right;
+        font-weight: bold;
+        border-collapse: separate;
+        border-spacing: 2px;
+        }
+
+        .td-detail2 {
+        width: 20%;
+        text-align: left;
+        padding-left: 1%;
+        border-collapse: separate;
+        border-spacing: 2px;
+        }
+
+        .td-title {
+        text-align: left;
+        padding-left: 5%;
+        font-weight: bold;
+        font-size: 10.0pt;
+        }
+
+        .container {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        gap: 5px; /* Espacio entre las tablas */
+        }
+
+        tableBody {
+        border-collapse: collapse;
+        width: 300px; /* Ancho fijo de las tablas */
+        }
+
+        th, tdBody {
+        border: 1px solid #000;
+        padding: 8px;
+        text-align: center;
+
+        }
+
+        th {
+            background-color: rgba(0, 0, 0, .35);
+        font-size: 10.0pt;
+        }
+
+        tdgrid
+        {
+        text-align: center;
+        padding-top: 1px;
+        font-size: 10.0pt;
+        font-weight: bold;
+        }
+
+        .vertical-text {
+        writing-mode: vertical-rl; 
+        transform: rotate(180deg);
+        text-align: center;
+        }
+
+        .td-leftStrain {
+        width: 30%;
+        text-align: right;
+        font-weight: bold;
+        border-collapse: separate;
+        border-spacing: 5px;
+        }
+
+        .col.center {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .col.right {
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .col {
+            flex: 1;
+            padding: 10px;
+        }
+
+         .col img {
+                max-width: 100%;
+                height: auto;
+            }
+
+        table {
+            width: 100%;
+            border-collapse: collapse; /* Asegura que los bordes no se dupliquen */
+        }
+
+        th, td {
+            border: 1px solid black; /* Agrega borde a todas las celdas */
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2; 
+        }
+
+        /*NEW */
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .logo img {
+            width: 80%; 
+            padding-left: 3%;
+        }
+
+        .company-info {
+            text-align: right;
+            font-size: 12px;
+            padding-right: 3%;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .inspection-info {
+            font-style: italic;
+            font-weight: bold;
+            margin-top: 10px;
+            padding-left: 3%;
+        }
+
+        .separator {
+            border-bottom: 2px solid black;
+            margin-top: 10px; /* Espacio entre INSPECTION INFORMATION y la línea */
+        }
+
+        .info-table {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+         .info-table td {
+                padding: 5px;
+                vertical-align: top;
+            }
+
+        .info-table .label {
+                font-weight: bold;
+            }
+
+        .tableSign {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 8pt;
+        }
+
+        .trSign {
+            height: 24px;
+        }
+
+        .tdSign {
+            padding: 4px;
+            border: none;
+        }
+
+        /* Reduce row height for data tables */
+        .tableBody tbody tr {
+            height: auto;
+        }
+
+        .tableBody tbody td {
+            padding: 2px 4px;
+            line-height: 1.2;
+            font-size: 7pt;
+            vertical-align: middle;
+        }
+
+        .tableBody tbody td[rowspan="3"] {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .tableBody thead tr {
+            height: auto;
+        }
+
+        .tableBody thead td {
+            padding: 3px 4px;
+            line-height: 1.2;
+            font-size: 7pt;
+        }
+
+    </style>
+</head>
+<body lang="ES-CO" style="margin:0;padding:0">
+    
+    <div class="title">
+        INSPECTION REPORT
+    </div>
+
+    <div class="header">
+        <div class="logo">
+            <img style="width:80%;top:0px;height:80%" alt=""
+                 src="data:image /jpg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4RDaRXhpZgAATU0AKgAAAAgABAE7AAIAAAAFAAAISodpAAQAAAABAAAIUJydAAEAAAAKAAAQyOocAAcAAAgMAAAAPgAAAAAc6gAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEFjZXIAAAAFkAMAAgAAABQAABCekAQAAgAAABQAABCykpEAAgAAAAMwNAAAkpIAAgAAAAMwNAAA6hwABwAACAwAAAiSAAAAABzqAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAyNTowMjoxOSAxODo0NTo1NgAyMDI1OjAyOjE5IDE4OjQ1OjU2AAAAQQBjAGUAcgAAAP/hCxdodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0n77u/JyBpZD0nVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkJz8+DQo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIj48cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIi8+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iPjx4bXA6Q3JlYXRlRGF0ZT4yMDI1LTAyLTE5VDE4OjQ1OjU2LjA0MTwveG1wOkNyZWF0ZURhdGU+PC9yZGY6RGVzY3JpcHRpb24+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iPjxkYzpjcmVhdG9yPjxyZGY6U2VxIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpsaT5BY2VyPC9yZGY6bGk+PC9yZGY6U2VxPg0KCQkJPC9kYzpjcmVhdG9yPjwvcmRmOkRlc2NyaXB0aW9uPjwvcmRmOlJERj48L3g6eG1wbWV0YT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgPD94cGFja2V0IGVuZD0ndyc/Pv/bAEMABwUFBgUEBwYFBggHBwgKEQsK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" />
+        </div>
+        <div class="company-info">
+            An ISO/IEC 17025 Accredited Company
+        </div>
+    </div>
+
+    <div class="inspection-info">
+        INSPECTION INFORMATION
+    </div>
+
+    <div class="separator"></div>
+      
+    <div class="invoice-box" style="margin-bottom: 0;">
+        
+    
+      
+        <p class="MsoNormal"
+        style="margin-top:0cm;margin-right:0cm;margin-bottom:3.95pt;margin-left:50.2pt;text-indent:0cm"></p>
+        <div>
+        </div>
+
+        <table style="border-bottom:none; border-right:none; border-left:none; border-top:none">
+
+            <tbody>
+                <tr style="border-bottom:none; border-right:none; border-left:none; border-top:none">
+                    <td style="border-bottom:none; border-right:none; border-left:none; border-top:none"> WORK ORDER:</td>
+                    <td style="border-bottom:none; border-right:none; border-left:none; border-top:none">@Model.WorkOrderId</td>
+                    <td style="border-bottom:none; border-right:none; border-left:none; border-top:none">INSPECTED FOR:</td>
+                    <td style="border-bottom:none; border-right:none; border-left:none; border-top:none">@Model.CalibratedFor <br>@Model.Address </td>
+                    
+                </tr>
+  
+               
+                <tr style="border-bottom:none; border-right:none; border-left:none; border-top:none">
+                    <td style="border-bottom:none; border-right:none; border-left:none; border-top:none"> CALIBRATION DATE:</td>
+                    <td style="border-bottom:none; border-right:none; border-left:none; border-top:none">@Model.CalibrtionDate</td>
+                    <td style="border-bottom:none; border-right:none; border-left:none; border-top:none">NEXT DUE DATE:</td>
+                    <td style="border-bottom:none; border-right:none; border-left:none; border-top:none">@Model.CalDueDate</td>
+                </tr>
+
+            </tbody>
+
+
+
+        </table>
+
+    </div>
+
+   
+   
+    @if (@Model.AdvanceWods != null)
+    {
+        <div class="invoice-box">
+            <table class="tableBody">
+                <thead>
+              
+                    <tr >
+                        <td class="tdgrid" style="font-weight:bold">
+                            Scale #
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                            Location
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                            Make
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                           Model
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                            Serial Number
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                            Equipment Type
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                           UoM
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold; width:10%">
+                            Test Points
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                            0
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                            1
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                            2
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                            3
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                            4
+                        </td>
+                        <td class="tdgrid" style="font-weight:bold">
+                            ACT
+                        </td>
+                     
+                    </tr>
+                   
+                 </thead>
+                <tbody>
+
+                    @for (int yy = 0; yy < @Model.AdvanceWods.Count; yy++)
+                    {
+                        <tr>
+                            <td rowspan="3">
+                                @Model.AdvanceWods[yy].Scale
+                            </td>
+                            <td rowspan="3">
+                                @Model.AdvanceWods[yy].Location
+                            </td>
+
+                            <td rowspan="3">
+                                @Model.AdvanceWods[yy].Make
+                            </td>
+
+                            <td rowspan="3">
+                                @Model.AdvanceWods[yy].Model
+                            </td>
+                            <td rowspan="3">
+                                @Model.AdvanceWods[yy].SerialNumber
+                            </td>
+
+                            <td rowspan="3">
+                                @Model.AdvanceWods[yy].EquipmentType
+                            </td>
+
+                            <td rowspan="3">
+                                @Model.AdvanceWods[yy].UOM
+                            </td>
+                            <td style="width:10%">
+                                Applied WT
+                            </td>
+                            @for (int xx = 0; xx < @Model.AdvanceWods[yy].TestPointsAdvances.Count; xx++)
+                            {
+                                <td>
+                                    @Model.AdvanceWods[yy].TestPointsAdvances[xx].WeightApplied
+                                </td>
+                            }
+                            <td rowspan="3">
+                                @Model.AdvanceWods[yy].Act
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                As Found
+                            </td>
+                            @for (int xx = 0; xx < @Model.AdvanceWods[yy].TestPointsAdvances.Count; xx++)
+                            {
+                                <td>
+                                    @Model.AdvanceWods[yy].TestPointsAdvances[xx].AsFound
+                                </td>
+                            }
+                        </tr>
+                        <tr>
+                            <td>
+                                As Left
+                            </td>
+                            @for (int xx = 0; xx < @Model.AdvanceWods[yy].TestPointsAdvances.Count; xx++)
+                            {
+                                <td>
+                                    @Model.AdvanceWods[yy].TestPointsAdvances[xx].AsLeft
+                                </td>
+                            }
+                        </tr>
+                       
+                    } 
+                </tbody>
+               
+            </table>
+
+          
+            </div>
+      }
+
+     <div class="invoice-box">
+
+        <table>
+            <thead>
+
+                <tr>
+                    <td class="tdgrid" style="font-weight:bold">
+                        Scale #
+                    </td>
+                    <td class="tdgrid" style="font-weight:bold">
+                        Comments
+                    </td>
+                </tr>
+
+            </thead>
+            <tbody>
+                @if (@Model.GenericStatementsWOD != null)
+            {
+                @for (int yy = 0; yy < Model.GenericStatementsWOD.Count; yy++)
+                {
+                    <tr >
+                        <td>
+                                @Model.GenericStatementsWOD[yy].DataGrid
+                        </td>
+                            <td>
+                                @Model.GenericStatementsWOD[yy].Statement
+                            </td>
+                    </tr>
+
+                }
+            } 
+        </tbody>
+        </table>
+    </div>
+     @if (@Model.WeightSetList != null)
+    { 
+    <div class="invoice-box">
+            <div class="inspection-info">
+                STANDARDS INFORMATION
+            </div>
+        <table>
+            <thead>
+
+                <tr>
+                    <td class="tdgrid" style="font-weight:bold">
+                       EQUIPMENT NUMBER
+                    </td>
+                    <td class="tdgrid" style="font-weight:bold">
+                        DESCRIPTION
+                    </td>
+                    <td class="tdgrid" style="font-weight:bold">
+                        CERTIFICATE NUMBER
+                    </td>
+                    <td class="tdgrid" style="font-weight:bold">
+                        DUE DATE
+                    </td>
+                </tr>
+
+            </thead>
+         <tbody>
+      
+            @for (int yy = 0; yy < Model.WeightSetList.Count; yy++)
+            {
+                <tr style="mso-yfti-irow:3;/* height:96.7pt; */">
+                    <td style="text-align: center; border-left: solid black 1.0pt;">
+                        @Model.WeightSetList[yy].PoE
+                    </td>
+                   
+                    <td style="text-align: center; border-left: solid black 1.0pt;">
+                        @Model.WeightSetList[yy].Description
+                    </td>
+
+                    <td style="text-align: center;">
+                        @Model.WeightSetList[yy].Ref
+                    </td>
+
+                     <td style="text-align: center;">
+                        @Model.WeightSetList[yy].CalibrationDueDate
+                    </td>
+
+                </tr>
+            }
+           
+        </tbody>
+    </table>
+   </div>
+}
+  @*   <div class="invoice-box" style="margin-top:20px">
+
+        <table>
+
+            <tbody>
+                <tr>
+                    <th colspan="3">
+                        Calibrated Performed By:
+                    </th>
+                    <th colspan="2">
+                        Certificate Issue Date:
+                    </th>
+
+                </tr>
+                <tr style="border-bottom:solid; border-right:solid; border-left:solid; border-width:1.0pt">
+                    <td>
+                        @Model.Technician <br />
+                        <hr color="black" width=100% />
+                        Name
+                    </td>
+                    <td>
+                        <br />
+                        <hr color="black" width=100% />
+                        Title
+                    </td>
+                    <td style="border-right:solid; border-width:1.0pt">
+                        <br />
+                        <hr color="black" width=100% />
+                        Phone
+                    </td>
+
+                    <td>
+                        @Model.TechnicianAprove <br />
+                        <hr color="black" width=100% />
+                        Quality Control
+                    </td>
+                    <td>
+                        @Model.LastCalDate <br />
+                        <hr color="black" width=100% />
+                        Date
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div> *@
+    <div style="margin-top:20px; font-size:7pt">
+        <table class="tableSign">
+            <tr class="trSign">
+                <td class="tdSign" colspan="3">
+                    <strong>Calibrated by:</strong> @Model.Technician
+                </td>
+            </tr>
+            @*   <tr class="trSign">
+        <td class="tdSign" colspan="3">
+          <strong>Tech License #</strong> 06423
+        </td>
+      </tr> *@
+            <tr class="trSign">
+                <td class="tdSign" colspan="3" style="font-size:7pt">
+                    THE SCALES IDENTIFIED ON THIS PAGE HAVE BEEN TESTED AND CALIBRATED, TRACEABLE TO SI UNITS THROUGH NIST.
+                </td>
+            </tr>
+            <tr class="trSign">
+                <td class="tdSign" colspan="3" style="font-size:7pt">
+                    [N]=No Adjustment, [I]=Inoperative, [R]=Removed for repair, [C]=Calibrated, [A]=add to list, [O]=Out of Service,
+                    [X]=Rejected, [P]=Pass, [F]=Fail, [NF]=Not Found
+                </td>
+            </tr>
+            <tr class="trSign">
+                <td class="tdSign" colspan="3" style="font-size:6pt">
+                    <strong>Questions?</strong> Call 888-447-2253 or 856-627-0700
+                </td>
+            </tr>
+            <tr class="trSign">
+                <td class="tdSign" colspan="3" style="font-size:7pt">
+                    Advance Scale - 2400 Egg Harbor Road, Lindenwold NJ 08021 - Visit:
+                    <a href="http://www.advancescale.com" target="_blank">www.advancescale.com</a>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+
+</body>
+</html>

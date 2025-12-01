@@ -1,0 +1,178 @@
+﻿@page "/ProcedureSearch"
+@using Blazed.Controls
+@using Blazored.Modal.Services
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@inherits Procedure_SearchBase
+
+<div class="">
+    @*<div class="d-flex bd-highlight bg-white shadow" id="headermodal" style="height: 50px">
+            <div class="bd-highlight">
+                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 5rem;"
+                     src="img/undraw_launch_day_4e04.svg" alt="">
+            </div>
+            <div class="align-self-end p-2 bd-highlight">
+
+                Procedure
+
+            </div>
+            <div class="p-2 bd-highlight"></div>
+        </div>
+
+
+        <nav class="navbar sticky-top navbar-dark bg-light topBar" id="toolbarmodal" style=" background-color:#563d7c !important; min-height:50px !important;width:100%">
+
+        </nav>*@
+
+    <HeaderComponent Title="Procedure" ActionBar="false"></HeaderComponent>
+
+
+    @*<EditForm OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+        <DataAnnotationsValidator />
+        <button class="btn btn-sm btn-info shadow-sm" id="executebutton"
+                type="submit" onclick="$('#progressBar').show()" style="display:none" @onkeypress:preventDefault>
+            Save
+            <i class="fas fa-save fa-sm text-white-50"></i>
+        </button>*@
+        <ResponsiveTable ItemsDataSource="@ListMan"
+                         PageSize="5"
+                         HasAction="true"
+                         Context="Entity"
+                         @ref="@Grid"
+                         GridID="gridMan"
+                         InLineEdit="false"
+                         RowEditClass=""
+                         RowNewClass=""
+                         TableItem="Procedure"
+                         EnabledSearch="true"
+                         editContext="@CurrentEditContext"
+                         EnabledModal="true"
+                         OnChangeWindow="ClearList"
+                         SelectOnly="@SelectOnly"
+                         SaveButtonSubmit="false"
+                         OnSave="@Submitted"
+                         OnUpdate="@SubmittedUP"
+                         PaginationFunction1="LoadData"                        
+                         DeleteAction="Delete"
+                         ExternalSave="true"
+                         Component="@Component"
+                         EnabledDrag="false">
+
+            @*<GridHeader>
+                <div class="col-sm-2 customcol"></div>
+                <div class="col-sm-3 customcol">Id</div>
+                <div class="col-sm-3 customcol">Name</div>
+                <div class="col-sm-3 customcol">Description</div>
+
+            </GridHeader>*@
+
+            <ChildContent>
+                <GridColumns>
+
+                    <GridColumn TableItem="Procedure" Field="@Grid.GetPropertyName(() => eq.ProcedureID)"  DefaultSort="true"/>
+                    <GridColumn TableItem="Procedure" Field="@Grid.GetPropertyName(() => eq.Name)"  />
+                 
+
+                </GridColumns>
+            </ChildContent>
+
+            <GridRow>
+
+              
+            </GridRow>
+
+            @*<GridEdit>
+              <Procedure_Create EntityID="@Entity.ProcedureID.ToString()"  EndExecute="@EndSave">
+
+              </Procedure_Create>
+            </GridEdit>*@
+
+            <GridSelect>
+
+                <button class="btn btn-sm btn-primary" id="_btnselect"
+                        @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                    Select
+                </button>
+
+            </GridSelect>
+            <NewButton>
+              
+                <a class="btn btn-primary btn-sm" href="Procedure/0">new</a>
+            </NewButton>
+            <EditButton>
+               
+                <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                    <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton" href="Procedure/@Entity.ProcedureID">edit</a>
+                </div>
+            </EditButton>
+        </ResponsiveTable>
+    @*</EditForm>*@
+
+</div>
+
+
+
+@code {
+
+
+    //private Address AddresInstance = new Address() { StreetAddress1 = "sssss" };
+
+    public async Task EndSave(Procedure m)
+    {
+
+    }
+
+
+    void Close(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+            searchComponent.List.Add((Procedure)a.Data);
+
+            StateHasChanged();
+        }
+
+    }
+
+    async Task CloseEdit(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        //if (a.Data != null)
+        //{
+        //    var yy = searchComponent.List.Where(x => x.ProcedureID == x.ProcedureID).FirstOrDefault();
+
+        //    searchComponent.List.Remove(yy);
+
+        //    searchComponent.List.Add((Procedure)a.Data);
+
+        //    StateHasChanged();
+        //}
+       
+        if (!a.Cancelled)
+        {
+            await Grid.SearchFunction(Grid.currentColumn);
+        }
+
+
+
+    }
+
+    async Task Select(object arg, Procedure entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+
+    }
+
+
+}

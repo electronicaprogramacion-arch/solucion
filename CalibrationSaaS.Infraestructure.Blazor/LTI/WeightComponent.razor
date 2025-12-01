@@ -1,0 +1,170 @@
+﻿
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@namespace CalibrationSaaS.Infraestructure.Blazor.LTI
+@using CalibrationSaaS.Infraestructure.Blazor.Helper
+@using CalibrationSaaS.Domain.Aggregates.Querys
+
+@typeparam Target
+@*@onchange="@(async (e) => await AddItem(e,item))"*@
+<div class="container" style="max-height:200px;overflow:auto">
+
+    <div class="row">
+        @*<div class="col-sm-12 d-inline-block">*@
+        <div class="col-sm" style="width:25%">
+        </div>
+        <div class="col-sm" style="width:25%">
+
+            <label>Initial. Value</label>
+        </div>
+        <div class="col-sm" style="width:25%">
+
+            <label>Final Value</label>
+        </div>
+        <div class="col-sm" style="width:15%">
+
+            <label>UoM</label>
+        </div>
+        <div class="col-sm">
+
+            <label>Standard ID</label>
+        </div>
+        <div class="col-sm">
+
+            <label>#Ref</label>
+        </div>
+
+
+
+    </div>
+
+
+    @if (DataSource != null)
+    {
+
+
+
+
+        cont = 0;
+        //TODO duplicate posible no se muy bien revisar parametros
+        var aaa = DataSource.GroupBy(i => i.PieceOfEquipmentID).Select(group => group.First());
+
+        @foreach (var item in aaa)
+        {
+            var exis = SelectWeight.Where(x => x.PieceOfEquipmentID == item.PieceOfEquipmentID && x.WeightSetID == item.WeightSetID).FirstOrDefault();
+
+            if (exis != null)
+            {
+                item.Check = true;
+            }
+            else
+            {
+                item.Check = false;
+            }
+
+        }
+        @foreach (var item in aaa)
+        {
+            if (item != null)
+            {
+
+<div class="row">
+   
+    <div class="col-sm" style="width:25%">
+
+        @*@{
+
+                var exis = SelectWeight
+                    .Where(x => x.PieceOfEquipmentID == item.PieceOfEquipmentID && x.WeightSetID == item.WeightSetID).FirstOrDefault();
+
+            }*@
+
+
+        @if (item.Check)
+        {
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="optradio"
+                       value="@item" checked="checked"
+                       @onchange="async eventArgs => { await AddItem( eventArgs.Value,item);}"
+                       id="@item.PieceOfEquipmentID + @cont">
+
+                <label class="custom-control-label" for="@item.PieceOfEquipmentID + @cont"></label>
+
+            </div>
+        }
+        else
+        {
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" value="@item" name="optradio"
+                       id="@item.PieceOfEquipmentID + @cont"
+                       @onchange="async eventArgs => { await AddItem( eventArgs.Value,item);}">
+
+                <label class="custom-control-label" for="@item.PieceOfEquipmentID + @cont"></label>
+
+            </div>
+        }
+
+
+    </div>
+    <div class="col-sm" style="width:25%">
+
+        <label>@item.WeightNominalValue</label>
+    </div>
+    <div class="col-sm" style="width:25%">
+
+        <label>@item.WeightNominalValue2</label>
+    </div>
+    <div class="col-sm" style="width:15%">
+
+        <label>@GetName(@item.UnitOfMeasureID.ToString())</label>
+    </div>
+    <div class="col-sm">
+
+        <label>@item.PieceOfEquipmentID</label>
+    </div>
+    <div class="col-sm">
+
+        <label>@item.Reference</label>
+    </div>
+
+    @*</div>*@
+</div>
+
+                cont = cont + 1;
+            }
+        }
+
+    }
+
+    @*@onclick="@(async () => await SelectModal())"*@
+</div>
+<div class="form-row">
+    <div class="col-sm-12">
+        @*@LabelConversion*@
+    </div>
+</div>
+<div class="form-row">
+    <div class="col-6">
+        <button class="btn btn-sm btn-success shadow-sm my-2 my-sm-0 btn-block" type="button"
+                @onclick="@(async () => await SelectModal())"
+                @onclick:stopPropagation @onclick:preventDefault>
+
+            <span aria-hidden="true">Save</span>
+        </button>
+    </div>
+    <div class="col-6">
+        <button class="btn btn-sm btn-secondary shadow-sm my-2 my-sm-0 btn-block" type="button"
+                @onclick="@(async () => await Clear())"
+                @onclick:stopPropagation @onclick:preventDefault>
+
+            <span aria-hidden="true">Clear</span>
+        </button>
+    </div>
+</div>
+
+@code {
+
+
+    
+}

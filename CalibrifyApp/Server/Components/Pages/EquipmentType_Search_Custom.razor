@@ -1,0 +1,48 @@
+@page "/EquipmentTypeCustom"
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.JSInterop
+@using System.Threading.Tasks
+@using Blazed.Controls.Toast
+@using CalibrifyApp.Server.Services
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using Helpers.Controls
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.Extensions.Logging
+@using Radzen
+@using Radzen.Blazor
+
+@inherits CustomKavokuComponentBase
+
+<PageTitle>Equipment Type (Custom)</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header">
+                    <h3 class="text-center font-weight-light my-4">Equipment Type (Custom)</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info" role="alert">
+                        <h4 class="alert-heading">Equipment Type Custom Page</h4>
+                        <p>This is a custom implementation of the Equipment Type page that doesn't require authentication.</p>
+                        <hr>
+                        <p class="mb-0">Please use the navigation menu to explore other pages or <a href="/EquipmentType">go to the standard Equipment Type page</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Custom initialization code
+    }
+}

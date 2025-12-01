@@ -1,0 +1,60 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using SqliteWasmHelper
+@inject IBrowserCache Cache
+<div class="row" >
+<div class="col">
+        <div id="bklinkdownload" class="bklinkclass" @ref="spanRef"></div>
+</div>
+<div class="col">
+        <div style="display:none">
+            <button class="btn btn-sm btn-primary shadow-sm editButton" id="_btnNew"
+                    @onclick=@(async () => await RefreshAsync()) @onclick:stopPropagation @onclick:preventDefault>
+                refresh
+            </button>
+        </div>
+</div>
+<div class="col">
+        <button class="btn btn-sm btn-primary shadow-sm editButton" id="_btnClear"
+                @onclick=@(async () => await RefreshAsync()) @onclick:stopPropagation @onclick:preventDefault>
+            Clear
+        </button>
+</div>
+</div>
+
+
+@code {
+    private ElementReference spanRef;
+
+    [Parameter]
+    public Type? DbContextType { get; set; }
+    private string filename = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (DbContextType == null || !(typeof(DbContext).IsAssignableFrom(DbContextType)))
+        {
+            throw new InvalidOperationException($"Parameter {nameof(DbContextType)} must be set to a DbContext type.");
+        }
+        var factory = typeof(SqliteWasmDbContextFactory<>).MakeGenericType(DbContextType);
+        var method = factory.GetMethod(nameof(SqliteWasmDbContextFactory<DbContext>.GetFilenameForType),
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+        filename = (string)method!.Invoke(null, null)!;
+        await base.OnInitializedAsync();
+    }
+
+    public async Task RefreshAsync()
+    {
+        var res=  await Cache.GenerateDownloadLinkAsync(spanRef, filename);
+        if (res)
+        {
+            //Console.WriteLine("Create link ok");
+        }
+        else
+        {
+            //Console.WriteLine("Create link fail");
+            
+        }
+
+
+    } 
+}

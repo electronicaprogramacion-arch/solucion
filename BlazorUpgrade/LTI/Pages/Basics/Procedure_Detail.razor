@@ -1,0 +1,68 @@
+﻿@page "/ProcedureDetail/{EntityID}"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@namespace CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@inherits Procedure_DetailBase
+@implements IDisposable
+@using System.Linq.Expressions
+
+
+<h3>Procedure Detail</h3>
+
+<div class="card mb-3">
+    <div class="row no-gutters">
+        <div class="col-md-4">
+            <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;" src="img/undraw_launch_day_4e04.svg" alt="">
+        </div>
+        <div class="col-md-8">
+            <div class="form-row">
+                <div class="col-md-12 mb-3">
+                    <div class="form-row">
+                        <div class="col-md-6 mb-3">
+                            <label for="validationServer01">Equipment Type ID</label>
+                            <input type="number" @bind-value="eq.ProcedureID" placeholder="ID" class="form-control" disabled="disabled" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-md-6 mb-3">
+                            <label for="ProcedureName">Procedure Name</label>
+
+                            <input type="text" class="form-control" placeholder="" aria-label="search" id="ProcedureName" disabled="disabled"
+                                   @bind-value="eq.Name" aria-describedby="basic-addon2">
+
+                            <div class="footermessage @NameValidationMessage">
+                                it cannot be an empty field
+                            </div>
+                        </div>
+
+                    </div>
+
+                 
+
+@*
+                    <div class="form-row">
+                        <div class="col-md-3 mb-3">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" @bind-value="eq.IsEnabled" placeholder="IsEnable" class="custom-control-input" id="customSwitch1" />
+                                <label class="custom-control-label" for="customSwitch1">IsEnable</label>
+                            </div>
+                        </div>
+                    </div>
+*@
+
+                    <div class="valid-feedback">
+                        Looks good!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code{
+
+
+
+
+}

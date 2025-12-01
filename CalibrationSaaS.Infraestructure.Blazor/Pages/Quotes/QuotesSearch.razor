@@ -1,0 +1,176 @@
+@page "/QuotesSearch"
+@inherits QuotesSearchBase
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "HasAccess")]
+
+<HeaderComponent Title="Quotes" ActionBar="false"></HeaderComponent>
+
+
+<ResponsiveTable ItemsDataSource="@ListQuotes.ToList()"
+                 PageSize="paginaSize"
+                 HasAction="true"
+                 HasEdit="true"
+                 HasDelete="true"
+                 HasNew="true"
+                 Context="Entity"
+                 @ref="@Grid"
+                 GridID="gridQuotes"
+                 InLineEdit="false"
+                 RowEditClass=""
+                 RowNewClass=""
+                 TableItem="Quote"
+                 EnabledSearch="true"
+                 editContext="@CurrentEditContext"
+                 EnabledModal="false"
+                 OnChangeWindow="ClearList"
+                 SelectOnly="@SelectOnly"
+                 SaveButtonSubmit="false"
+
+                 PaginationFunction1="LoadData"
+                 DeleteAction="Delete"
+                 Enabled="true"
+                 Policy="HasAccess"
+                 Component="@Component">
+
+    <ChildContent>
+        <GridColumns>
+            <GridColumn TableItem="Quote" Field="QuoteID" Title="ID" DefaultSort="true" />
+            <GridColumn TableItem="Quote" Field="QuoteNumber" Title="Quote Number" />
+            <GridColumn TableItem="Quote" Field="Customer.Name" Title="Customer Name">
+                <ResponsiveTemplate>
+                    @{
+                        var q = context as Quote;
+                    }
+                    @if (q != null && q.Customer != null)
+                    {
+                        @q.Customer.Name
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </ResponsiveTemplate>
+            </GridColumn>
+            <GridColumn TableItem="Quote" Field="TotalCost" Title="Total Cost">
+                <ResponsiveTemplate>
+                    @{
+                        var q = context as Quote;
+                    }
+                    @if (q != null)
+                    {
+                        @q.TotalCost.ToString("C")
+                    }
+                </ResponsiveTemplate>
+            </GridColumn>
+            <GridColumn TableItem="Quote" Field="Status" Title="Status" />
+            <GridColumn TableItem="Quote" Field="CreatedDate" Title="Created Date">
+                <ResponsiveTemplate>
+                    @{
+                        var q = context as Quote;
+                    }
+                    @if (q != null)
+                    {
+                        @q.CreatedDate.ToString("MM/dd/yyyy")
+                    }
+                </ResponsiveTemplate>
+            </GridColumn>
+        </GridColumns>
+    </ChildContent>
+
+    <GridRow>
+        @* Custom row content if needed *@
+    </GridRow>
+
+    <GridSelect>
+        <button class="btn btn-sm btn-primary" id="_btnselect"
+                @onclick=@(async (arg) => await ViewQuote(@Entity.QuoteID)) @onclick:stopPropagation @onclick:preventDefault>
+            Select
+        </button>
+    </GridSelect>
+
+    <NewButton>
+        <a class="d-sm-inline-block btn btn-sm btn-primary shadow-sm editButton" href="QuoteCreate/0">
+            <span>New Quote
+                <i class="fas fa-plus fa-sm"></i>
+            </span>
+        </a>
+    </NewButton>
+
+    <EditButton>
+        <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+            <a class="d-sm-inline-block btn btn-sm btn-primary shadow-sm editButton" href="QuoteCreate/@Entity.QuoteID.ToString()">
+                <span>Edit <i class="fas fa-pen fa-sm"></i></span>
+            </a>
+            <a href="@GetQuoteReportUrl(@Entity.QuoteID)" target="_blank" class="d-sm-inline-block btn btn-sm btn-info shadow-sm ml-1">
+                <i class="fas fa-file-pdf fa-sm"></i> PDF
+            </a>
+        </div>
+    </EditButton>
+
+    <GridFilter Context="filter">
+        @{
+            var a = filter as FilterObject<Quote>;
+
+            if (Filter == null)
+            {
+                Filter = new Quote();
+            }
+            if(a != null)
+            {
+                a.EntityFilter = Filter;
+            }
+        }
+
+        @if (a != null && a.EntityFilter != null)
+        {
+            <div class="row">
+                <div class="col">
+                    <TextInput @bind-Value="a.EntityFilter.QuoteNumber" Label="Quote Number" Validate="false"></TextInput>
+                </div>
+                <div class="col">
+                    <TextInput @bind-Value="a.EntityFilter.Status" Label="Status" Validate="false">
+                        <option value="">All</option>
+                        <option value="Draft">Draft</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Completed">Completed</option>
+                    </TextInput>
+                </div>
+                <div class="col">
+                    <TextInput @bind-Value="a.EntityFilter.CustomerID" Label="Customer ID" Validate="false"></TextInput>
+                </div>
+            </div>
+        }
+    </GridFilter>
+
+</ResponsiveTable>
+
+@code {
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Draft" => "badge-secondary",
+            "Pending" => "badge-warning",
+            "Accepted" => "badge-success",
+            "Rejected" => "badge-danger",
+            "Expired" => "badge-dark",
+            _ => "badge-light"
+        };
+    }
+
+    private string GetPriorityBadgeClass(string priority)
+    {
+        return priority switch
+        {
+            "High" => "badge-danger",
+            "Medium" => "badge-warning",
+            "Low" => "badge-info",
+            _ => "badge-light"
+        };
+    }
+}

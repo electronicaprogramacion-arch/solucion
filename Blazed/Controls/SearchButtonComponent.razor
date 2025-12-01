@@ -1,0 +1,382 @@
+﻿@using Microsoft.JSInterop
+@using Blazored.Modal.Services
+@using Blazored.Modal
+@namespace Blazed.Controls
+
+<style>
+
+    .largeWindow {
+        z-index: 2000;
+    }
+
+    /* .modal {
+        z-index: 0;
+    }*/
+
+    .topbar {
+        z-index: 0;
+    }
+
+    .alignCenter {
+        display: flex;
+        align-items: center;
+    }
+
+
+    .linkstyle {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+
+</style>
+@if (string.IsNullOrEmpty(Text))
+{
+    if (Type == "search")
+    {
+        Text = "";
+    }
+    else
+    {
+        Text = Type;
+    }
+
+}
+
+
+
+
+@if (string.IsNullOrEmpty(CSSButton))
+{
+    @if (Type == "delete")
+    {
+        CSSButton = "danger";
+    }
+    else
+    {
+        CSSButton = "primary";
+    }
+}
+
+@if (AllWidth == false)
+{
+    AllWidthCSS = "";
+}
+
+
+
+@if (Type.ToLower() == "link")
+{
+
+    <button type="button" class="btn btn-link @CSSLink"  id="@JSid"
+            @onclick="@(() => ShowModal())"
+            @onclick:stopPropagation @onclick:preventDefault>
+        @Prefix@Text
+    </button>
+
+
+}
+else
+{
+
+
+
+    <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+
+        @*d-none*@
+        @if (IsDisabled)
+        {
+            <button type="button" class="@CSSClass btn-@CSSButton @AllWidthCSS" style="@StyleBtn" id="@JSid"
+                    @onclick:stopPropagation @onclick:preventDefault disabled="disabled">
+                @if (Type == "search")
+                {
+                    <span class="icon">@Prefix@Text <i class="fas fa-search fa-sm"></i></span>
+                }
+                @if (Type == "edit")
+                {
+
+
+                    <span class="icon">@Prefix@Text <i class="fas fa-pen fa-sm"></i></span>
+                }
+                @if (Type == "new")
+                {
+
+                    <span class="icon">@Prefix@Text  
+                @*<i class="fas fa-plus fa-sm"></i>*@
+                </span>
+
+
+                }
+
+
+            </button>
+        }
+
+
+        else if (!string.IsNullOrEmpty(Link))
+        {
+
+            <button type="button" class="@CSSClass btn-@CSSButton  shadow-sm editButton @AllWidthCSS" style="@StyleBtn" id="@JSid"
+                    @onclick="@(() => Navigate())"
+                    @onclick:stopPropagation @onclick:preventDefault>
+                @if (Type == "search")
+                {
+
+
+                    <span class="icon">@Prefix@Text <i class="fas fa-search fa-sm"></i></span>
+                }
+                @if (Type == "edit")
+                {
+
+                    <span class="icon">@Prefix@Text <i class="fas fa-pen fa-sm"></i></span>
+                }
+                @if (Type == "new")
+                {
+
+                    <span class="icon">@Prefix@Text  
+                    @*<i class="fas fa-plus fa-sm"></i>*@
+                </span>
+
+
+                }
+
+
+            </button>
+
+
+        }
+
+        else
+        {
+
+
+
+            <button type="button" class="@CSSClass btn-@CSSButton  @AllWidthCSS" style="@StyleBtn" id="@JSid"
+                    @onclick="@(() => ShowModal())"
+                    @onclick:stopPropagation @onclick:preventDefault>
+                @if (Type == "search")
+                {
+
+
+                    <span class="icon">@Prefix@Text <i class="fas fa-search fa-sm"></i></span>
+                }
+                @if (Type == "edit")
+                {
+
+                    <span class="icon">@Prefix@Text <i class="fas fa-pen fa-sm"></i></span>
+                }
+                @if (Type == "new")
+                {
+
+                    <span class="icon">@Prefix@Text  <i class="fas fa-plus fa-sm"></i></span>
+
+
+                }
+
+
+            </button>
+
+        }
+
+    </div>
+}
+@code {
+
+    [Parameter]
+    public string CSSLink { get; set; } = "linkstyle";
+
+    [Parameter]
+    public string StyleBtn { get; set; } = "margin-right: 20px;";
+
+    [Parameter]
+    public string CSSClass { get; set; } = "d-sm-inline-block btn btn-sm";
+
+
+    [Parameter]
+    public string JSid { get; set; }
+
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+
+    [Parameter]
+    public string HideElement { get; set; }
+
+    [Parameter]
+    public string ShowElement { get; set; }
+
+
+    [Parameter]
+    public string Link { get; set; }
+
+    public string AllWidthCSS { get; set; } = " btn-sm btn-block";
+
+
+    [Parameter]
+    public string Icon { get; set; }
+
+
+    [Parameter]
+    public bool AllWidth { get; set; } = false;
+
+    [Parameter]
+    public bool IsDisabled { get; set; } = false;
+
+
+    [Parameter]
+    public EventCallback<ChangeEventArgs> CloseWindow { get; set; }
+
+
+    [Parameter]
+    public string Prefix { get; set; } = "";
+
+
+    [Parameter]
+    public string Text { get; set; }
+
+
+    [Parameter]
+    public string Size { get; set; }
+
+    [Parameter]
+    public string CSSButton { get; set; }
+
+    [Parameter]
+    public string Type { get; set; } = "search";
+
+    [Parameter]
+    public string ID { get; set; }
+
+    [Parameter]
+    public bool Enabled { get; set; } = true;
+
+    [CascadingParameter] public IModalService Modal { get; set; }
+
+    public string _message { get; set; }
+
+    [Parameter]
+    public ModalParameters Parameters { get; set; }
+
+    [Parameter]
+    public string Tittle { get; set; }
+
+    public object Result { get; set; }
+
+    [Parameter]
+    public bool NoModal { get; set; }
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+
+    [Parameter]
+    public Type FormType { get; set; }
+
+    [Parameter]
+    public Func<object, string> ModalResult { get; set; }
+
+    async Task<string> ShowModal()
+    {
+
+        //var parameters = new ModalParameters();
+        //parameters.Add("SelectOnly", true);
+        //parameters.Add("IsModal", true);
+        IModalReference messageForm;
+        ModalResult result;
+        if (Parameters == null && ID == null)
+        {
+            messageForm = Modal.Show(FormType, Tittle);
+            result = await messageForm.Result;
+        }
+        else
+        {
+
+            if (Parameters == null)
+            {
+                Parameters = new ModalParameters();
+
+            }
+
+            if (!string.IsNullOrEmpty(ID))
+            {
+                Parameters.Add("EntityID", ID);
+
+            }
+
+            Parameters.Add("Enabled", Enabled);
+
+            ModalOptions op = new ModalOptions();
+
+            op.HideHeader = false;
+
+            op.HideCloseButton = false;
+
+            op.Position = ModalPosition.Center;
+
+            op.ContentScrollable = true;
+
+
+
+            //op.Animation = ModalAnimation.FadeIn(200);
+
+            if (!string.IsNullOrEmpty(Size))
+            {
+                op.Class = "blazored-modal " + Size;  //blazored-modal blazored-modal-scrollable allWindow
+
+            }
+            if (NoModal)
+            {
+                op.UseCustomLayout = true;
+            }
+            //op.ContentScrollable = true;
+
+            if (JSRuntime != null && !string.IsNullOrEmpty(HideElement))
+            {
+                await JSRuntime.InvokeVoidAsync("hideElement", HideElement);
+                await JSRuntime.InvokeVoidAsync("hideProgress", "progressBar");
+            }
+           
+
+            messageForm = Modal.Show(FormType, Tittle, Parameters, op);
+            result = await messageForm.Result;
+
+        }
+
+        if (!result.Cancelled)
+            _message = result.Data?.ToString() ?? string.Empty;
+
+        Result = result;
+
+        ChangeEventArgs arg = new ChangeEventArgs();
+
+        arg.Value = Result;
+
+
+        if (JSRuntime != null && !string.IsNullOrEmpty(HideElement))
+        {
+            // await JSRuntime.InvokeVoidAsync("showElement", HideElement);
+        }
+
+        if (CloseWindow.HasDelegate)
+        {
+            await CloseWindow.InvokeAsync(arg);
+        }
+
+        if (ModalResult != null)
+        {
+            return ModalResult.Invoke(result?.Data);
+        }
+        else
+        {
+            return "";
+        }
+
+    }
+
+    public async Task Navigate()
+    {
+
+        NavigationManager.NavigateTo(Link + "/" + ID);
+
+    }
+
+}

@@ -1,0 +1,268 @@
+﻿@namespace Blazor.Controls
+@using Microsoft.AspNetCore.Components.Authorization
+@inherits RulesTemplateBase<TTYPE, TValue>
+@typeparam TTYPE
+@typeparam TValue
+@*<CascadingValue Value="@this" >
+        @ChildContent
+    </CascadingValue>*@
+@{
+
+    SetEnabled();
+
+
+}
+
+@if (MultiComponent == null || MultiComponent.Data == null)
+{
+    <p><em>Conmponent Loading...</em></p> }
+else
+{
+
+
+    @if (RulesValid == null)
+    {
+        RulesValid = new List<bool>();
+        FirstTime = 1;
+    }
+
+    @if (!MultiComponent.OnlyFirstTime)
+    {
+        RulesValid.Clear();
+    }
+    @foreach (var item in MultiComponent.Data)
+    {
+        @*@if (Data != null)
+            {*@
+
+
+
+        //var item = Data;
+        @if ((FirstTime == 1))
+        {
+            @foreach (var rule in MultiComponent.Rules)
+            {
+
+
+                //if (rule.Template == null)
+                //{
+
+                var ir = rule.LambdaCondition;
+
+                var result = MultiComponent.Data.Where(ir).FirstOrDefault();
+
+                if (result == null)
+                {
+                    //rule.ValidationTemplate(item);
+                    RulesValid.Clear();
+                }
+                else
+                {
+                    RulesValid.Add(true);
+                }
+
+                FirstTime = FirstTime + 1;
+                //var value = @item.GetType().GetProperty(rule.PropertyName).GetValue(item);
+
+                //}
+
+            }
+
+        }
+        else if (!MultiComponent.OnlyFirstTime && FirstTime > 1)
+        {
+            var r = MultiComponent.Rules.Where(x => x.OnlyFirsTime != true);
+            ValidationListMsg.Clear();
+            foreach (var rule2 in r)
+            {
+                var ir = rule2.LambdaCondition;
+
+                var result = MultiComponent.Data.Where(ir).FirstOrDefault();
+
+                if (result == null)
+                {
+                    RulesValid.Clear();
+                    InvalidValidationRule = true;
+                    @if (rule2.ValidationTemplate != null)
+                    {
+                        ValidationListMsg.Add(rule2.ValidationTemplate(item));
+                    }
+                }
+                else
+                {
+
+                    RulesValid.Add(true);
+                }
+
+                ActiveRules = ActiveRules + 1;
+
+            }
+
+        }
+
+
+
+
+        @*<AuthorizeView Policy="@MultiComponent.Policy">
+
+            <Authorized>*@
+
+        @if (Enabled)
+        {
+            @if ((RulesValid.Count == MultiComponent.Rules.Count) || (ValidTemplate && MultiComponent.OnlyFirstTime))
+            {
+
+                @if (ValidationListMsg.Count > 0)
+                {
+                    foreach (var ruletem in ValidationListMsg)
+                    {
+                        @ruletem;
+                    }
+                }
+
+                @if (ValidConditionsTemplate != null && string.IsNullOrEmpty(ValidType))
+                {
+                    try
+                    {
+                        @ValidConditionsTemplate(item)
+                    }
+                    catch (Exception ex)
+                    {
+                        <div> @ex.Message</div>
+                        //throw ex;
+                    }
+
+                }
+                else if (ValidType != null)
+                {
+
+                    if (1 == 2)
+                    {
+
+                        //DateTime.TryParse(Value, out var parsedValue);
+
+                        //DateTime vi = new DateTime();
+
+                        @*<InputDateTime  id="createdDate" class="form-control @CssClass" @bind-Value="@vi" @bind:format="yyyy-MM-ddTHH:mm"></InputDateTime>*@
+                    }
+                    else
+                    {
+                        <TextInput @bind-Value="@Value" OnChangeControl="@ChangeControl"
+                                   ValidationFor="ValidationFor" Type="@ValidType" Label="@Label" Id="@ID">
+
+                            @if (ChildContent != null)
+                                                    {
+                                @ChildContent
+                                                    }
+
+
+                        </TextInput>
+
+                        @*@render(typeof(TValue), false, @Value, ValidType, Model, Label, ChildContent);*@
+
+                    }
+                }
+
+                ValidTemplate = true;
+
+            }
+            else
+            {
+
+                //@InvalidConditionsTemplate(item)
+                @if (InvalidConditionsTemplate != null && string.IsNullOrEmpty(ValidType))
+                {
+                    try
+                    {
+                        @InvalidConditionsTemplate(item)
+
+                        @if (ValidationListMsg != null)
+                        {
+                            foreach (var ruletem in ValidationListMsg)
+                            {
+                                @ruletem;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        <div>rule erro: @ex.Message</div>
+                    }
+
+
+
+                }
+                else if (ValidType != null)
+                {
+
+
+
+                    <TextInput @bind-Value="@Value" OnChangeControl="@ChangeControl"
+                               ValidationFor="ValidationFor" Type="@InvalidType" Label="@Label" Id="@ID">
+
+                        @if (ChildContent != null)
+                                            {
+                            @ChildContent
+                                            }
+
+                        }
+                    </TextInput>
+
+
+                    @*@render(typeof(TValue), false, @Value, InvalidType, Model, Label, ChildContent);*@
+
+
+                }
+
+            }
+        }
+        else
+        {
+            @if (InvalidConditionsTemplate != null)
+            {
+                @InvalidConditionsTemplate(item)
+            }
+        }
+        @*</Authorized>
+            <NotAuthorized>
+
+
+                     </NotAuthorized>
+                 </AuthorizeView>*@
+
+        @if (MultiComponent.OnlyFirstTime && FirstTime == 1)
+        {
+            FirstTime = FirstTime + 1;
+        }
+
+    }
+
+}
+@code {
+
+    [Parameter]
+    public object Model { get; set; }
+
+    public RenderFragment render(Type type, bool Validate, TValue Value, string Style, object Model, string Label = "", RenderFragment child = null)
+    {
+
+
+        return@<TextInput Label="@Label" TValue="TValue"
+                          Validate="@Validate"
+                          @bind-Value="@Value" Type="@Style" Model="@Model" OnChangeObjectControl="Change">
+        @if (child != null)
+        {
+            @child;
+        }
+
+    </TextInput>;
+
+}
+
+
+public void Change(ChangeEventArgs arg)
+{
+
+}
+
+}

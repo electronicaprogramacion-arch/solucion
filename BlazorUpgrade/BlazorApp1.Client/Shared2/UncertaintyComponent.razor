@@ -1,0 +1,412 @@
+﻿
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic
+@using Blazed.Controls
+@using CalibrationSaaS.Application.Services
+@using CalibrationSaaS.Domain.Aggregates.Querys;
+
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics;
+@using DynamicExpressions;
+@using System;
+@using System.Linq;
+@using System.Collections.Generic;
+@using Microsoft.AspNetCore.Components.Web;
+
+@using Blazored.Modal;
+@using Blazored.Modal.Services;
+@using System.Runtime.CompilerServices;
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+@namespace BlazorApp1.Blazor.Shared
+@inherits BlazorApp1.Blazor.Shared.UncertaintyComponent_Base
+
+
+
+
+
+<div class="row">
+
+    <div class="col">
+        <EditForm EditContext="@CurrentEditContext">
+            <DataAnnotationsValidator />
+            <ResponsiveTable ItemsDataSource="@LIST"
+                             PageSize="20"
+                             HasAction="true"
+                             HasNew="true"
+                             TableItem="Uncertainty"
+                             @ref="@Grid"
+                             RowEditClass=""
+                             RowNewClass=""
+                             InLineEdit=false
+                             Context="Entity"
+                             EnabledSearch="true"
+                             EnabledModal="false"
+                             NewButtonText="Add Uncertainty"
+                             Component="@Component"
+                             ColActionCSS="col-sm"
+                             PaginationFunction1="LoadData"
+                             NewItemDefaultItem="AddNew">
+
+
+                <ChildContent>
+                    <GridColumns>
+
+                        @*<GridColumn TableItem="Uncertainty" Field="@Grid.GetPropertyName(() => eq.UncertaintyID)" Title="ID" />*@
+
+                        <GridColumn TableItem="Uncertainty" Field="@Grid.GetPropertyName(() => eq.Value)" Title="Value" />
+
+                        <GridColumn TableItem="Uncertainty" Field="@Grid.GetPropertyName(() => eq.RangeMin)" Title="Range Min" />
+
+                        <GridColumn TableItem="Uncertainty" Field="@Grid.GetPropertyName(() => eq.RangeMax)" Title="Range Max" />
+
+                        <GridColumn TableItem="Uncertainty" Field="@Grid.GetPropertyName(() => eq.UncertaintyID)" Title="UoM">
+
+                            <ResponsiveTemplate Context="_context">
+
+                                @{
+                                    UnitOfMeasure d;
+                                    string h = "";
+                                    var c = _context as Uncertainty;
+
+                                    d = c.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList);
+
+
+                                }
+
+                                @if (d != null)
+                                {
+                                    @d.Abbreviation
+                                }
+
+
+
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="Uncertainty" Field="@Grid.GetPropertyName(() => eq.Type)" Title="Type" >
+                             <ResponsiveTemplate Context="_context">
+
+                                @{
+                                    var a = _context as Uncertainty;
+                                    var b = a.Type.GetTypeUncert(AppState.WeightTypeList);
+
+                                }
+                                @b
+
+
+                            </ResponsiveTemplate>
+                            
+
+                        </GridColumn>
+
+                        <GridColumn TableItem="Uncertainty" Field="@Grid.GetPropertyName(() => eq.Distribution)" Title="Distribution" >
+                            <ResponsiveTemplate Context="_context">
+
+                                @{
+                                    var a = _context as Uncertainty;
+                                    var b = a.Distribution.GetDistribution(AppState.DistributionUncertList);
+
+                                }
+                                @b
+
+
+                            </ResponsiveTemplate>
+                        </GridColumn>
+
+                        <GridColumn TableItem="Uncertainty" Field="@Grid.GetPropertyName(() => eq.Divisor)" Title="Divisor" />
+
+                        <GridColumn TableItem="Uncertainty" Field="@Grid.GetPropertyName(() => eq.ConfidenceLevel)" Title="Confidence Level" />
+                        
+                        <GridColumn TableItem="Uncertainty" Field="@Grid.GetPropertyName(() => eq.Description)" Title="Description" />
+
+
+                    </GridColumns>
+
+
+
+
+                </ChildContent>
+
+                <GridRow>
+
+                </GridRow>
+
+
+
+                <GridEdit>
+
+                    <div class="form-row">
+
+                        @*<div class="col-sm-2">
+                            <TextInput @bind-Value="@Entity.UncertaintyID"
+                                       Type="@Types.number"
+                                       Validate="false"
+                                       ValidationFor="@(()=> Entity.UncertaintyID)"
+                                       TValue="int"
+                                       IsDisabled="true"
+                                       ShowControl="GetShowControl()"
+                                       ShowLabel="GetShowLabel()"
+                                       Label="ID">
+                            </TextInput>
+                        </div>*@
+
+
+
+
+                        <div class="col-sm">
+                            <TextInput @bind-Value="@Entity.RangeMin"
+                                       Type="@Types.number"
+                                       Validate="true"
+                                       ValidationFor="@(()=> Entity.RangeMin)"
+                                        IsDisabled="!Enabled"
+                                       Label="Range Min">
+                            </TextInput>
+                        </div>
+
+                        <div class="col-sm">
+                            <TextInput @bind-Value="@Entity.RangeMax"
+                                       Type="@Types.number"
+                                       Validate="true"
+                                       ValidationFor="@(()=> Entity.RangeMax)"
+                                       TValue="double?"
+                                       IsDisabled="!Enabled"
+                                       ShowControl="GetShowControl()"
+                                       ShowLabel="GetShowLabel()"
+                                       Label="Range Max">
+                            </TextInput>
+                        </div>
+                     
+
+                        <div class="col-sm">
+
+                            <TextInput @bind-Value="@Entity.Value"
+                                       Type="@Types.number"
+                                       Validate="true"
+                                       ValidationFor="@(()=> Entity.Value)"
+                                       TValue="double?"
+                                       IsDisabled="!Enabled"
+                                       ShowControl="GetShowControl()"
+                                       ShowLabel="GetShowLabel()"
+                                       Label="Value">
+                            </TextInput>
+                        </div>
+                        <div class="col-sm">
+
+                            <TextInput @bind-Value="@Entity.UnitOfMeasureID"
+                                       Type="@Types.select"
+                                       Validate="true"
+                                       ValidationFor="@(()=> Entity.UnitOfMeasureID)"
+                                       TValue="int"
+                                       IsDisabled="!Enabled"
+                                       ShowControl="GetShowControl()"
+                                       ShowLabel="GetShowLabel()"
+                                       Label="UoM">
+                                @if (AppState.UnitofMeasureList != null)
+                                {
+                                    @foreach (var item in AppState.GetUoMByEquipmentType(EquipmentTemplate.GetEquipmentType()))
+                                    {
+                                        //string name = item.Name + " " + @item.LastName;
+
+                                        <option value="@item.UnitOfMeasureID">@item.Abbreviation - @item.Name</option>
+
+                                    }
+
+                                }
+                            </TextInput>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-sm-2">
+
+                            <TextInput @bind-Value="@Entity.Type"
+                                       Type="@Types.select"
+                                       Validate="true"
+                                       ValidationFor="@(()=> Entity.Type)"
+                                       TValue="int"
+                                       IsDisabled="!Enabled"
+                                       ShowControl="GetShowControl()"
+                                       ShowLabel="GetShowLabel()"
+                                       Label="Type">
+                                <option value="1">A</option>
+                                <option value="2">B</option>
+                            </TextInput>
+                        </div>
+                        <div class="col-sm">
+                            <TextInput @bind-Value="@Entity.Distribution"
+                                       Label="Distribution" Validate="true"
+                                       Type="@Types.select" OnChangeControl="(arg)=>Changetype(arg,Entity)"
+                                       LabelDown="false">
+                                @foreach (KeyValuePair<int, string> item in AppState.DistributionUncertList)
+                                {
+                                    <option value="@item.Key"> @item.Value </option>
+                                }
+                            </TextInput>
+                        </div>
+                        <div class="col-sm">
+
+                            <TextInput @bind-Value="@Entity.Divisor"
+                                       Type="@Types.number"
+                                       Validate="true"
+                                       ValidationFor="@(()=> Entity.Divisor)"
+                                       TValue="double"
+                                       IsDisabled="!Enabled"
+                                       ShowControl="GetShowControl()"
+                                       ShowLabel="GetShowLabel()"
+                                       Label="Divisor">
+                            </TextInput>
+                        </div>
+                        <div class="col-sm">
+
+                            <TextInput @bind-Value="@Entity.SensitiveCoefficient"
+                                       Type="@Types.number"
+                                       Validate="true"
+                                       ValidationFor="@(()=> Entity.SensitiveCoefficient)"
+                                       TValue="double"
+                                       IsDisabled="!Enabled"
+                                       ShowControl="GetShowControl()"
+                                       ShowLabel="GetShowLabel()"
+                                       Label="Sensitivity Coefficient">
+
+                            </TextInput>
+                        </div>
+
+
+
+
+
+                        <div class="col-sm">
+                            
+                            <TextInput @bind-Value="@Entity.ConfidenceLevel"
+                                       Type="@Types.number"
+                                       Validate="true"
+                                       ValidationFor="@(()=> Entity.ConfidenceLevel)"
+                                       TValue="double"
+                                       IsDisabled="!Enabled"
+                                       ShowControl="GetShowControl()"
+                                       ShowLabel="GetShowLabel()"
+                                       Label="Confidence Level">
+                            </TextInput>
+                        </div>
+                        @*<div class="col-sm">
+
+            <TextInput @bind-Value="@Entity.Quotient"
+                       Type="@Types.number"
+                       Validate="false"
+                       ValidationFor="@(()=> Entity.Quotient)"
+                       TValue="double"
+                       IsDisabled="!Enabled"
+                       ShowControl="GetShowControl()"
+                       ShowLabel="GetShowLabel()"
+                       Label="Quotient">
+            </TextInput>
+        </div>*@
+                        @*<div class="col-sm">
+
+            <TextInput @bind-Value="@Entity.Square"
+                       Type="@Types.number"
+                       Validate="false"
+                       ValidationFor="@(()=> Entity.Square)"
+                       TValue="double"
+                       IsDisabled="!Enabled"
+                       ShowControl="GetShowControl()"
+                       ShowLabel="GetShowLabel()"
+                       Label="Square">
+            </TextInput>
+        </div>*@
+                    </div>
+                    @*<div class="form-row">
+                       
+                    </div>*@
+                    <div class="form-row">
+                        <div class="col-sm">
+
+                            <TextInput @bind-Value="@Entity.UncertantyOperation"
+                                       Type="@Types.TextArea"
+                                       Validate="false"
+                                       ValidationFor="@(()=> Entity.UncertantyOperation)"
+                                       TValue="string"
+                                       IsDisabled="!Enabled"
+                                       ShowControl="GetShowControl()"
+                                       ShowLabel="GetShowLabel()"
+                                       Label="Operation">
+                            </TextInput>
+                        </div>
+
+                    </div>
+                    <div class="form-row">
+                        <div class="col-sm">
+
+                            <TextInput @bind-Value="@Entity.Description"
+                                       Type="@Types.TextArea"
+                                       Validate="false"
+                                       ValidationFor="@(()=> Entity.Description)"
+                                       TValue="string"
+                                       IsDisabled="!Enabled"
+                                       ShowControl="GetShowControl()"
+                                       ShowLabel="GetShowLabel()"
+                                       Label="Description">
+                            </TextInput>
+                        </div>
+
+                    </div>
+
+                 
+
+                    @*<div class="form-row">
+
+                        <div class="col-sm">
+                            <a class="btn btn-sm btn-danger shadow-sm customlink"
+                               @onclick=@(async () => await  SaveMethod())
+                               @onclick:stopPropagation @onclick:preventDefault disabled="@(!Enabled)">
+                                Save
+                            </a>
+                        </div>
+
+                    </div>*@
+
+                </GridEdit>
+
+            </ResponsiveTable>
+
+        </EditForm>
+    </div>
+
+</div>
+
+
+<div class="row">
+
+    @*<div class="col-sm">
+        <a class="btn btn-sm btn-success shadow-sm customlink btn-sm btn-block"
+           @onclick=@(async () => await  SaveMethod())
+           @onclick:stopPropagation @onclick:preventDefault disabled="@(!Enabled)">
+            Save && Close
+        </a>
+    </div>*@
+
+</div>
+
+
+
+@code {
+
+
+    public async Task SaveMethod()
+    {
+        //await CloseModal(Grid.Items);
+
+
+        //MessagingCenter.Subscribe<Component1, string>(this, "greeting_message", (sender, value) =>
+        //{
+        //    // Do actions against the value 
+        //    // If the value is updating the component make sure to call 
+        //    string greeting = $"Welcome {value}";
+        //    StateHasChanged(); // To update the state of the component 
+        //});
+        //MessagingCenter.Send(this, "item_added", Grid.Items);
+
+    }
+
+
+
+}

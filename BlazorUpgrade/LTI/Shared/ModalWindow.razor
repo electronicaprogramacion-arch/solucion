@@ -1,0 +1,85 @@
+﻿@*@inherits CalibrationSaaS.Infraestructure.Blazor.Shared.ModalWindow*@
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<div class="modal fade bd-example-modal-lg" id="@contenModal.ID" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">@contenModal.Title</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @foreach(var row in contenModal.Rows) { 
+                <div class="row" style="justify-content: center">
+                    @foreach(var card in row.Cards) { 
+                    <div class="col-6">
+                        <div class="card border-left-@card.Border shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">@card.Category</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">@card.Title</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;" src="@card.ImageUrl" alt="">
+                                    </div>
+                                </div>
+                                <div class="row no-gutters align-items-center">
+                                    @if(card != null && card.Buttons != null) 
+                                    { 
+                                    @foreach(var bt in card.Buttons) 
+                                    { 
+                                    <NavLink class="@bt.Class" href="@bt.Action" data-dismiss="modal"  @onclick="CloseModalWindow">@bt.Text</NavLink>
+                                    }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                    @*<div class="col-6">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Customer Contact</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">Billing Address</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;" src="img/undraw_reviewed_docs_neeb.svg" alt="">
+                                    </div>
+                                </div>
+                                <div class="row no-gutters align-items-center">
+                                    <NavLink class="btn btn-primary" href="CreateCustomer" data-dismiss="modal">Create</NavLink>
+                                </div>
+                            </div>
+                        </div>
+                    </div>*@
+                </div>
+                }
+            </div>
+            <div class="modal-footer">
+                @if (contenModal.HasCancelButton)
+                {
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                }
+
+                @foreach (var item in contenModal.Buttons)
+                {
+                   <NavLink class="@item.Class" href="login.html" @onclick="CloseModalWindow">@item.Text </NavLink>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+   
+
+
+}

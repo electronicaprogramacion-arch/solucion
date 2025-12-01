@@ -1,0 +1,305 @@
+﻿@page "/POEByEqTemplate/{EntityID}"
+@using Blazed.Controls
+@namespace CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+@inherits POEByEqTemplate_SearchBase
+@using System.Text.RegularExpressions
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@inject ILogger<POEByEqTemplate_Search> Logger
+@*<EditForm style="margin:10px" OnValidSubmit="Submit" Model="@eq" Context="CurrenEditContext">
+    <DataAnnotationsValidator />*@
+
+<style>
+
+    .expired {
+        background-color: mistyrose !important;
+        color: aliceblue !important;
+    }
+
+    .almostexpired {
+        background-color: lightyellow !important;
+    }
+
+    .Approved {
+        background-color: azure !important;
+    }
+
+    .Inactive {
+        background-color: darkgrey !important;
+    }
+
+    .Rejected {
+    }
+
+    .expired > div {
+        color: black !important;
+    }
+
+    .almostexpired > div {
+        color: black !important;
+    }
+</style>
+
+
+@if (LIST1 != null && LIST1.Count > 0)
+{
+    <EditForm style="margin:10px" OnSubmit="Submit" EditContext="@CurrentEditContext">
+        <DataAnnotationsValidator />
+
+        <ResponsiveTable ItemsDataSource="@LIST1"
+                         PageSize="5"
+                         HasAction="true"
+                         Context="Entity"
+                         @ref="@Grid"
+                         GridID="gridPoe"
+                         RowEditClass=""
+                         RowNewClass=""
+                         InLineEdit=false
+                         TableItem="PieceOfEquipment"
+                         EnabledSearch="true"
+                         editContext="@CurrentEditContext"
+                         OnChangeWindow="ClearList"
+                         HasEdit="true"
+                         HasDelete="false"
+                         HasNew="false"
+                         HasSelect="false"
+                         ClientPagination="false"
+                         Component="@Component"
+                         RowExecute="InvalidDueDate"
+                         PaginationFunction1="LoadData">
+
+
+            <ChildContent>
+
+
+                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Customer.Name)" Title="Customer" IsVisble="!IsCustomer">
+
+
+
+
+                </GridColumn>
+
+
+
+
+                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.EquipmentTemplate.EquipmentTypeObject.Name)" Title="Type" CSScol="col-sm text-justify" />
+
+
+                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.EquipmentTemplate.Manufacturer1.Name)" Title="Manufacturer" />
+
+
+                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.EquipmentTemplate.Model)" Title="Model" />
+
+
+                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Capacity)" Title="Capacity">
+
+                    <ResponsiveTemplate Context="POE">
+
+                        @{
+
+                            string s = "";
+
+                            var a = POE as PieceOfEquipment;
+
+                            if (a != null && a?.EquipmentTemplate != null)
+                            {
+                                var result = a.Capacity;
+
+                        if (a.Capacity == 0 && a.EquipmentTemplate != null && a.EquipmentTemplate.EquipmentTypeObject != null && a.EquipmentTemplate.EquipmentTypeObject.HasWorkOrderDetail)//&& a?.EquipmentTemplate?.EquipmentTypeID == 3)
+                                {
+                                    result = a.EquipmentTemplate.Capacity;
+                                }
+                                else if (a.EquipmentTemplate != null && a?.EquipmentTemplate?.EquipmentTypeID != 3)
+                                {
+                                    result = 0;
+                                }
+
+                                var b = a.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList, result);
+
+                                if (b != null)
+                                {
+                                    s = b.CapacityFull;
+                                }
+
+                            }
+                        }
+                        @s
+
+
+                    </ResponsiveTemplate>
+
+                </GridColumn>
+
+
+
+                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.SerialNumber)" DefaultSort="true" Title="Serial Number" />
+
+                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Status)">
+
+                    <ResponsiveTemplate Context="POE">
+
+                        @{
+
+                            var a = POE as PieceOfEquipment;
+
+                            var b = a.Status.GetStatus(AppState.StatusListET);
+                        }
+                        @b
+                    </ResponsiveTemplate>
+
+
+                </GridColumn>
+
+                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.InstallLocation)" Title="Location" />
+
+                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.DueDate)" DefaultSort="true">
+
+                    <ResponsiveTemplate Context="POE">
+
+                        @{
+
+                            var a = POE as PieceOfEquipment;
+                            var b = "";
+                            if (a != null && a?.EquipmentTemplate != null && a.EquipmentTemplate.EquipmentTypeObject != null && a.EquipmentTemplate.EquipmentTypeObject.HasWorkOrderDetail)
+                            {
+                                b = String.Format("{0:MM/dd/yy}", a.DueDate);
+                            }
+
+                        }
+                        @b
+                    </ResponsiveTemplate>
+
+
+                </GridColumn>
+
+                @*<GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.DueDate)" Format="{0:MM/dd/yy}" DefaultSort="true" />*@
+
+            </ChildContent>
+
+            <NewButton>
+
+            </NewButton>
+            <GridRow>
+
+
+            </GridRow>
+
+
+            <EditButton>
+                <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton"
+                   type="button" data-dismiss="modal" href="PieceOfEquipmentCreate/@Entity?.PieceOfEquipmentID.ToString()">
+                    <span aria-hidden="true">View</span>
+                </a>
+            </EditButton>
+
+        </ResponsiveTable>
+    </EditForm>
+}
+
+@*</EditForm>*@
+
+@code
+{
+
+    PieceOfEquipment InvalidDueDate(PieceOfEquipment POE)
+    {
+
+        var a = POE.SelectSingle(Querys.POEGridDueDateCondition());
+        var already = false;
+        if (POE.SelectSingle(Querys.POEGridDalmostueDateCondition()))
+        {
+            Grid.RowClass = "row grid-row almostexpired";
+            already = true;
+        }
+        else if (a)
+        {
+
+            Grid.RowClass = " row grid-row expired";
+            already = true;
+        }
+        else
+        {
+            Grid.RowClass = "row grid-row";
+        }
+
+
+        if (POE.Status.GetStatus(AppState.StatusListET) == "N/A")
+        {
+            Grid.RowClass = Grid.RowClass + " Inactive";
+        }
+        else if (!already)
+        {
+            Grid.RowClass = Grid.RowClass + " " + POE.Status.GetStatus(AppState.StatusListET);
+        }
+
+        return POE;
+    }
+
+
+
+
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        //eq = Grid.currentEdit;
+        //CurrentEditContext = Grid.editContext;
+
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        //editContex = new EditContext(user);
+
+        await base.OnInitializedAsync();
+
+
+    }
+
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        return base.OnParametersSetAsync();
+    }
+
+
+
+    public string _strroles { get; set; }
+
+    //IList<Rol> result= GetRoles(_strroles)
+
+
+
+    protected async Task Submit(EditContext editContext)
+    {
+
+    }
+
+
+    public void ClearList(EventArgs arg)
+    {
+        List.Clear();
+
+    }
+
+    public async void Show(List<PieceOfEquipment> group)
+    {
+        if (Grid != null && group != null)
+        {
+            LIST1 = group;
+
+            StateHasChanged();
+
+        }
+
+
+    }
+
+
+
+}
+
+

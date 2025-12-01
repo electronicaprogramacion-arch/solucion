@@ -1,0 +1,109 @@
+@namespace CalibrationSaaS.Infraestructure.Blazor.Controls
+@typeparam TableItem
+
+<CascadingValue Value="this">
+    @ChildContent
+</CascadingValue>
+
+<div class="responsive-table-container @(Scrollable ? "scrollable" : "")">
+    <RadzenDataGrid @ref="DataGrid"
+                   TItem="TableItem"
+                   Data="@ItemsDataSource"
+                   AllowFiltering="@EnabledSearch"
+                   AllowColumnResize="true"
+                   AllowAlternatingRows="true"
+                   AllowSorting="true"
+                   AllowPaging="@ClientPagination"
+                   PageSize="@PageSize"
+                   SelectionMode="@(HasSelect.HasValue && HasSelect.Value ? DataGridSelectionMode.Single : DataGridSelectionMode.Multiple)"
+                   RowClick="@(args => OnRowClick(args))"
+                   EditMode="@(InLineEdit ? DataGridEditMode.Single : DataGridEditMode.Multiple)"
+                   RowRender="@OnRowRender"
+                   CellRender="@OnCellRender"
+                   RowUpdate="@OnRowUpdate"
+                   RowCreate="@OnRowCreate"
+                   Style="@(Scrollable ? "height: 400px;" : "")">
+        <Columns>
+            @if (HasAction || HasEdit.HasValue || HasDelete.HasValue || HasDuplicate.HasValue || ActionBeginRow)
+            {
+                <RadzenDataGridColumn TItem="TableItem" Width="@ColActionCSS" TextAlign="TextAlign.Center" Filterable="false" Sortable="false">
+                    <HeaderTemplate>
+                        @if (HasNew.HasValue && HasNew.Value)
+                        {
+                            <RadzenButton Icon="add_circle_outline" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                         Click="@InsertRow" Text="@NewButtonText" />
+                        }
+                    </HeaderTemplate>
+
+                </RadzenDataGridColumn>
+            }
+
+            @foreach (var column in Columns)
+            {
+                <RadzenDataGridColumn TItem="TableItem"
+                                     Property="@column.Property"
+                                     Title="@column.Title"
+                                     Width="@column.Width"
+                                     Sortable="@column.Sortable"
+                                     Filterable="@column.Filterable"
+                                     Visible="@column.Visible"
+                                     FormatString="@column.FormatString"
+                                     TextAlign="@column.TextAlign">
+
+                </RadzenDataGridColumn>
+            }
+        </Columns>
+    </RadzenDataGrid>
+</div>
+
+@code {
+    private void OnRowRender(RowRenderEventArgs<TableItem> args)
+    {
+        if (RowAfterRender != null)
+        {
+            RowAfterRender(args.Data);
+        }
+
+        // Apply custom row classes
+        if (editItem != null && args.Data.Equals(editItem) && !string.IsNullOrEmpty(RowEditClass))
+        {
+            args.Attributes.Add("class", RowEditClass);
+        }
+    }
+
+    private void OnCellRender(DataGridCellRenderEventArgs<TableItem> args)
+    {
+        // Custom cell rendering logic if needed
+    }
+
+    private async Task OnRowUpdate(TableItem item)
+    {
+        if (OnUpdate.HasDelegate)
+        {
+            await OnUpdate.InvokeAsync(item);
+        }
+
+        if (AfterAction.HasDelegate)
+        {
+            await AfterAction.InvokeAsync(item);
+        }
+    }
+
+    private async Task OnRowCreate(TableItem item)
+    {
+        if (SaveNewItemFunc != null)
+        {
+            SaveNewItemFunc(item);
+        }
+
+        if (OnSave.HasDelegate)
+        {
+            await OnSave.InvokeAsync(item);
+        }
+
+        if (AfterAction.HasDelegate)
+        {
+            await AfterAction.InvokeAsync(item);
+        }
+    }
+}

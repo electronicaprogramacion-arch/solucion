@@ -1,0 +1,174 @@
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using Microsoft.AspNetCore.Authorization
+@inherits QuoteItemModalBase
+@attribute [Authorize(Policy = "HasAccess")]
+
+<div class="modal-header">
+    <h5 class="modal-title">@ModalTitle</h5>
+    <button type="button" class="close" @onclick="Cancel">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<div class="modal-body">
+    <EditForm Model="@CurrentQuoteItem" OnValidSubmit="@SaveQuoteItem">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="row">
+            <div class="col-12">
+                <div class="form-group">
+                    <label for="equipment">Piece of Equipment (Optional)</label>
+                    <div class="input-group">
+                        <InputText id="equipment" class="form-control" @bind-Value="SelectedEquipmentName" readonly />
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" @onclick="OpenEquipmentSelector">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            @if (!string.IsNullOrEmpty(SelectedEquipmentName))
+                            {
+                                <button class="btn btn-outline-danger" type="button" @onclick="ClearEquipmentSelection" title="Clear Equipment Selection">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                    @if (string.IsNullOrEmpty(SelectedEquipmentName))
+                    {
+                        <small class="form-text text-muted">No equipment selected - manual price entry required</small>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="equipmentType">Equipment Type</label>
+                    <input type="text" id="equipmentType" class="form-control" value="@EquipmentTypeDisplay" readonly />
+                    <small class="form-text text-muted">Automatically populated based on selected equipment</small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="quantity">Quantity *</label>
+                    <InputNumber id="quantity" class="form-control" @bind-Value="CurrentQuoteItem.Quantity" @onchange="OnValueChanged" />
+                    <ValidationMessage For="@(() => CurrentQuoteItem.Quantity)" />
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="priceType">Price Type *</label>
+                    <select id="priceType" class="form-control" value="@SelectedPriceTypeId" @onchange="OnPriceTypeChanged">
+                        <option value="">Select Price Type</option>
+                        @foreach (var priceType in ActivePriceTypes)
+                        {
+                            <option value="@priceType.PriceTypeId">
+                                @priceType.Name
+                                @if (priceType.IncludesTravel)
+                                {
+                                    <text> (Includes Travel)</text>
+                                }
+                            </option>
+                        }
+                    </select>
+                    <ValidationMessage For="@(() => CurrentQuoteItem.PriceTypeId)" />
+                    <small class="form-text text-muted">
+                        Select the service type for this quote item. This affects pricing calculations.
+                    </small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                @if (GetSelectedPriceTypeIncludesTravel())
+                {
+                    <div class="alert alert-warning mt-4">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Travel Expenses:</strong> This price type will automatically add travel expenses to the quote.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="unitPrice">Unit Price *</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">$</span>
+                        </div>
+                        <InputNumber id="unitPrice" class="form-control" @bind-Value="CurrentQuoteItem.UnitPrice" @onchange="OnValueChanged" />
+                    </div>
+                    <ValidationMessage For="@(() => CurrentQuoteItem.UnitPrice)" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>Total Price</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">$</span>
+                        </div>
+                        <input type="text" class="form-control" value="@TotalPrice.ToString("N2")" readonly />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(PriceSource))
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>@PriceSource</strong>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-12">
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <InputTextArea id="description" class="form-control" rows="3" @bind-Value="CurrentQuoteItem.ItemDescription" />
+                    <ValidationMessage For="@(() => CurrentQuoteItem.ItemDescription)" />
+                </div>
+            </div>
+        </div>
+
+        @if (SelectedEquipment != null && HasChildEquipment)
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        This equipment has child components that will be automatically included in the quote.
+                    </div>
+                </div>
+            </div>
+        }
+
+    </EditForm>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+    <button type="button" class="btn btn-primary" @onclick="SaveQuoteItem" disabled="@IsSaving">
+        @if (IsSaving)
+        {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <text>Saving...</text>
+        }
+        else
+        {
+            <i class="fas fa-save"></i>
+            <text>@SaveButtonText</text>
+        }
+    </button>
+</div>

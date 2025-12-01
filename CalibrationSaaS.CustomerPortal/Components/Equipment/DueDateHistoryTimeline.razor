@@ -1,0 +1,268 @@
+@using CalibrationSaaS.CustomerPortal.Models.Equipment
+@using CalibrationSaaS.CustomerPortal.Services.Equipment
+
+<RadzenStack Gap="1rem">
+    <!-- Header -->
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+        <RadzenText TextStyle="TextStyle.H6">Due Date History</RadzenText>
+        <RadzenButton Text="Refresh" Icon="refresh" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+                     Click="@LoadHistory" IsBusy="@isLoading" />
+    </RadzenStack>
+
+    <!-- Loading State -->
+    @if (isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-4">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+            <RadzenText TextStyle="TextStyle.Body2">Loading history...</RadzenText>
+        </RadzenStack>
+    }
+    else if (historyEntries?.Any() == true)
+    {
+        <!-- Timeline -->
+        <div class="timeline-container">
+            @foreach (var entry in historyEntries)
+            {
+                <div class="timeline-item">
+                    <div class="timeline-marker" style="@($"background-color: {GetEventColor(entry.EventType)};")">
+                        <RadzenIcon Icon="@entry.EventIcon" Style="color: white; font-size: 0.875rem;" />
+                    </div>
+                    
+                    <div class="timeline-content">
+                        <RadzenCard Class="rz-p-3">
+                            <RadzenStack Gap="0.5rem">
+                                <!-- Event Header -->
+                                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Start">
+                                    <RadzenStack Gap="0.25rem">
+                                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-font-weight-bold">
+                                            @entry.EventDescription
+                                        </RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                                            @entry.EventDate.ToString("MMM dd, yyyy HH:mm")
+                                            @if (!string.IsNullOrEmpty(entry.PerformedBy))
+                                            {
+                                                <span> by @entry.PerformedBy</span>
+                                            }
+                                        </RadzenText>
+                                    </RadzenStack>
+                                    
+                                    <RadzenBadge Text="@entry.EventType" BadgeStyle="@GetEventBadgeStyle(entry.EventType)" />
+                                </RadzenStack>
+
+                                <!-- Due Date Changes -->
+                                @if (entry.PreviousDueDate.HasValue || entry.NewDueDate.HasValue)
+                                {
+                                    <RadzenStack Gap="0.25rem">
+                                        @if (entry.PreviousDueDate.HasValue)
+                                        {
+                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                                <RadzenIcon Icon="event" Style="font-size: 1rem; color: var(--rz-secondary);" />
+                                                <RadzenText TextStyle="TextStyle.Caption">
+                                                    Previous Due: @entry.PreviousDueDate.Value.ToString("MMM dd, yyyy")
+                                                </RadzenText>
+                                                @if (entry.PreviousStatus.HasValue)
+                                                {
+                                                    <RadzenBadge Text="@entry.PreviousStatus.Value.ToString()" 
+                                                               BadgeStyle="@GetStatusBadgeStyle(entry.PreviousStatus.Value)" />
+                                                }
+                                            </RadzenStack>
+                                        }
+                                        
+                                        @if (entry.NewDueDate.HasValue)
+                                        {
+                                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                                <RadzenIcon Icon="event" Style="font-size: 1rem; color: var(--rz-primary);" />
+                                                <RadzenText TextStyle="TextStyle.Caption">
+                                                    New Due: @entry.NewDueDate.Value.ToString("MMM dd, yyyy")
+                                                </RadzenText>
+                                                @if (entry.NewStatus.HasValue)
+                                                {
+                                                    <RadzenBadge Text="@entry.NewStatus.Value.ToString()" 
+                                                               BadgeStyle="@GetStatusBadgeStyle(entry.NewStatus.Value)" />
+                                                }
+                                            </RadzenStack>
+                                        }
+                                    </RadzenStack>
+                                }
+
+                                <!-- Work Order and Certificate Links -->
+                                @if (entry.WorkOrderId.HasValue || entry.CertificateId.HasValue)
+                                {
+                                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                                        @if (entry.WorkOrderId.HasValue)
+                                        {
+                                            <RadzenButton Text="@($"WO: {entry.WorkOrderNumber}")" Icon="assignment" 
+                                                         ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall" 
+                                                         Click="@(() => OnViewWorkOrder.InvokeAsync(entry.WorkOrderId.Value))" />
+                                        }
+                                        
+                                        @if (entry.CertificateId.HasValue)
+                                        {
+                                            <RadzenButton Text="@($"Cert: {entry.CertificateNumber}")" Icon="verified" 
+                                                         ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall" 
+                                                         Click="@(() => OnViewCertificate.InvokeAsync(entry.CertificateId.Value))" />
+                                        }
+                                    </RadzenStack>
+                                }
+
+                                <!-- Notes -->
+                                @if (!string.IsNullOrEmpty(entry.Notes))
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                                        @entry.Notes
+                                    </RadzenText>
+                                }
+                            </RadzenStack>
+                        </RadzenCard>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else if (!isLoading)
+    {
+        <!-- No History -->
+        <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-4">
+            <RadzenIcon Icon="history" Style="font-size: 3rem; color: var(--rz-secondary);" />
+            <RadzenText TextStyle="TextStyle.H6" Class="rz-color-secondary">No History Available</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">
+                No due date history found for this equipment.
+            </RadzenText>
+        </RadzenStack>
+    }
+</RadzenStack>
+
+<style>
+    .timeline-container {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .timeline-container::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: var(--rz-border-color);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -2rem;
+        top: 0.5rem;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 1;
+    }
+
+    .timeline-content {
+        margin-left: 1rem;
+    }
+</style>
+
+@code {
+    [Parameter] public int EquipmentId { get; set; }
+    [Parameter] public int CustomerId { get; set; }
+    [Parameter] public EventCallback<int> OnViewWorkOrder { get; set; }
+    [Parameter] public EventCallback<int> OnViewCertificate { get; set; }
+    [Inject] private IEquipmentDueDateService DueDateService { get; set; } = default!;
+    [Inject] private ILogger<DueDateHistoryTimeline> Logger { get; set; } = default!;
+
+    private List<DueDateHistoryEntry>? historyEntries;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHistory();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EquipmentId > 0)
+        {
+            await LoadHistory();
+        }
+    }
+
+    private async Task LoadHistory()
+    {
+        if (EquipmentId <= 0)
+            return;
+
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            historyEntries = await DueDateService.GetDueDateHistoryAsync(EquipmentId, CustomerId);
+            
+            Logger.LogInformation("Loaded {Count} history entries for equipment {EquipmentId}", 
+                historyEntries?.Count ?? 0, EquipmentId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading due date history for equipment {EquipmentId}", EquipmentId);
+            historyEntries = new List<DueDateHistoryEntry>();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetEventColor(string eventType)
+    {
+        return eventType switch
+        {
+            "Calibration" => "var(--rz-success)",
+            "Maintenance" => "var(--rz-info)",
+            "Due Date Change" => "var(--rz-warning)",
+            "Work Order Created" => "var(--rz-primary)",
+            "Certificate Issued" => "var(--rz-success)",
+            _ => "var(--rz-secondary)"
+        };
+    }
+
+    private BadgeStyle GetEventBadgeStyle(string eventType)
+    {
+        return eventType switch
+        {
+            "Calibration" => BadgeStyle.Success,
+            "Maintenance" => BadgeStyle.Info,
+            "Due Date Change" => BadgeStyle.Warning,
+            "Work Order Created" => BadgeStyle.Primary,
+            "Certificate Issued" => BadgeStyle.Success,
+            _ => BadgeStyle.Secondary
+        };
+    }
+
+    private BadgeStyle GetStatusBadgeStyle(DueDateStatus status)
+    {
+        return status switch
+        {
+            DueDateStatus.Current => BadgeStyle.Success,
+            DueDateStatus.ExpiringSoon => BadgeStyle.Warning,
+            DueDateStatus.Overdue => BadgeStyle.Danger,
+            DueDateStatus.Unknown => BadgeStyle.Secondary,
+            _ => BadgeStyle.Secondary
+        };
+    }
+}

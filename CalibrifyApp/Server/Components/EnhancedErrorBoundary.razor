@@ -1,0 +1,294 @@
+@using Microsoft.AspNetCore.Components.Web
+@inject IJSRuntime JSRuntime
+@inherits Microsoft.AspNetCore.Components.Web.ErrorBoundary
+
+<div class="enhanced-error-boundary">
+    @if (HasError)
+    {
+        <div class="error-container">
+            <div class="error-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Something went wrong</h3>
+            </div>
+            
+            <div class="error-content">
+                @if (ShowDetails)
+                {
+                    <div class="error-details">
+                        <h4>Error Details:</h4>
+                        <pre class="error-message">@CurrentException?.Message</pre>
+                        
+                        @if (!string.IsNullOrEmpty(CurrentException?.StackTrace))
+                        {
+                            <details class="error-stack">
+                                <summary>Stack Trace</summary>
+                                <pre>@CurrentException.StackTrace</pre>
+                            </details>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="error-description">
+                        An unexpected error occurred while loading this component. 
+                        This might be a temporary issue.
+                    </p>
+                }
+            </div>
+            
+            <div class="error-actions">
+                <button class="btn btn-primary" @onclick="Retry">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
+                
+                <button class="btn btn-secondary" @onclick="ToggleDetails">
+                    <i class="fas fa-info-circle"></i> 
+                    @(ShowDetails ? "Hide" : "Show") Details
+                </button>
+                
+                <button class="btn btn-outline-secondary" @onclick="ReloadPage">
+                    <i class="fas fa-refresh"></i> Reload Page
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        @ChildContent
+    }
+</div>
+
+<style>
+    .enhanced-error-boundary {
+        width: 100%;
+    }
+    
+    .error-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 30px;
+        background: #fff;
+        border: 1px solid #e3e6f0;
+        border-radius: 10px;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        text-align: center;
+    }
+    
+    .error-header {
+        margin-bottom: 20px;
+    }
+    
+    .error-header i {
+        font-size: 48px;
+        color: #e74a3b;
+        margin-bottom: 15px;
+    }
+    
+    .error-header h3 {
+        color: #5a5c69;
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .error-content {
+        margin-bottom: 25px;
+        text-align: left;
+    }
+    
+    .error-description {
+        color: #6c757d;
+        font-size: 16px;
+        line-height: 1.5;
+        text-align: center;
+    }
+    
+    .error-details {
+        background: #f8f9fc;
+        border: 1px solid #e3e6f0;
+        border-radius: 5px;
+        padding: 15px;
+    }
+    
+    .error-details h4 {
+        color: #5a5c69;
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    
+    .error-message {
+        background: #fff;
+        border: 1px solid #e3e6f0;
+        border-radius: 3px;
+        padding: 10px;
+        font-size: 12px;
+        color: #e74a3b;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    
+    .error-stack {
+        margin-top: 15px;
+    }
+    
+    .error-stack summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: #5a5c69;
+        margin-bottom: 10px;
+    }
+    
+    .error-stack pre {
+        background: #fff;
+        border: 1px solid #e3e6f0;
+        border-radius: 3px;
+        padding: 10px;
+        font-size: 11px;
+        color: #6c757d;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .error-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border-radius: 5px;
+        border: 1px solid transparent;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background: #4e73df;
+        color: white;
+        border-color: #4e73df;
+    }
+    
+    .btn-primary:hover {
+        background: #2e59d9;
+        border-color: #2e59d9;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border-color: #6c757d;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        border-color: #5a6268;
+    }
+    
+    .btn-outline-secondary {
+        background: transparent;
+        color: #6c757d;
+        border-color: #6c757d;
+    }
+    
+    .btn-outline-secondary:hover {
+        background: #6c757d;
+        color: white;
+    }
+</style>
+
+@code {
+    [Parameter] public bool ShowDetails { get; set; } = false;
+    
+    private bool HasError => CurrentException != null;
+    private Exception? CurrentException { get; set; }
+    private int RetryCount { get; set; } = 0;
+    private const int MaxRetries = 3;
+
+    protected override Task OnErrorAsync(Exception exception)
+    {
+        Console.WriteLine($"[ENHANCED ERROR BOUNDARY] Error caught: {exception.Message}");
+        Console.WriteLine($"[ENHANCED ERROR BOUNDARY] Stack trace: {exception.StackTrace}");
+        
+        CurrentException = exception;
+        RetryCount++;
+        
+        // Log to JavaScript console as well
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("console.error", 
+                    $"[ENHANCED ERROR BOUNDARY] {exception.Message}", exception.StackTrace);
+            }
+            catch
+            {
+                // Ignore JS interop errors during error handling
+            }
+        });
+        
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private void Retry()
+    {
+        Console.WriteLine($"[ENHANCED ERROR BOUNDARY] Retry attempt {RetryCount}/{MaxRetries}");
+        
+        if (RetryCount < MaxRetries)
+        {
+            CurrentException = null;
+            Recover(); // Use built-in recovery method
+            StateHasChanged();
+        }
+        else
+        {
+            // Max retries reached, suggest page reload
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", 
+                        "Maximum retry attempts reached. The page will be reloaded.");
+                    await JSRuntime.InvokeVoidAsync("location.reload");
+                }
+                catch
+                {
+                    // Fallback if JS interop fails
+                    ReloadPage();
+                }
+            });
+        }
+    }
+
+    private void ToggleDetails()
+    {
+        ShowDetails = !ShowDetails;
+        StateHasChanged();
+    }
+
+    private void ReloadPage()
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("location.reload");
+            }
+            catch
+            {
+                // If JS interop fails, try alternative approach
+                Console.WriteLine("[ENHANCED ERROR BOUNDARY] Failed to reload page via JS, trying navigation");
+            }
+        });
+    }
+}

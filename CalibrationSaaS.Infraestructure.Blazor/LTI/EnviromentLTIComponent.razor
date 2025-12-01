@@ -1,0 +1,435 @@
+﻿@using Blazed.Controls
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Infraestructure.Blazor.LTI
+@using Domain.Aggregates.Shared.Basic
+@namespace CalibrationSaaS.Infraestructure.Blazor
+@inherits EnviromentLTIComponentBase
+<div class="card shadow">
+    <div class="card-header" id="EnvironmentHeader">
+        <h2 class="mb-0">
+            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#Environment"
+                    aria-expanded="false" aria-controls="Environment">
+                Environment & Comments
+            </button>
+        </h2>
+    </div>
+    <div id="Environment" class="collapse" aria-labelledby="headingThree" data-parent="#accordionEquipmentCondition">
+        <div class="card-body">
+            <EditForm Model="@WorkOrderItemCreate.eq" Context="context">
+                <DataAnnotationsValidator />
+
+                @if (@WorkOrderItemCreate.eq.IsAccredited == true)
+                {
+                <div class="form-row">
+                    <div class="col-md">
+
+                        <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())" TTYPE="WorkOrderDetail">
+                                    <div> la regla no se cumple</div>
+                                </Rule>
+                                <RulesTemplate TValue="double"
+                                               TTYPE="WorkOrderDetail"
+                                               Context="Entity">
+
+                                    <ValidConditionsTemplate>
+                                        <TextInput TValue="double"
+                                                   Label="Temperature Before Calibration"
+                                                   @bind-Value="@WorkOrderItemCreate.eq.Temperature"
+                                                   ValidationFor="@(() => WorkOrderItemCreate.eq.Temperature)"
+                                                   Model="WorkOrderItemCreate.eq"
+                                                   Min="10"
+                                                   Max="35"
+                                                   Type="@Types.numberdecimal"
+                                                   ToastMessageForce="@messageTempBefore">
+
+                                        </TextInput>
+                                    </ValidConditionsTemplate>
+
+                                    <InvalidConditionsTemplate>
+                                        <TextInput TValue="double"
+                                                   Label="Temperature Before Calibration"
+                                                   @bind-Value="@WorkOrderItemCreate.eq.Temperature"
+                                                   ValidationFor="@(() => WorkOrderItemCreate.eq.Temperature)"
+                                                   Model="WorkOrderItemCreate.eq"
+                                                   IsDisabled="true"
+                                                   >
+
+                                        </TextInput>
+                                    </InvalidConditionsTemplate>
+                                </RulesTemplate>
+                            </Rules>
+                        </MultiComponent>
+                    </div>
+                    <div class="col-md">
+                        @if (WorkOrderItemCreate.TemperatureUnitofMeasureList != null)
+                        {
+                            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                <Rules>
+                                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())" TTYPE="WorkOrderDetail">
+                                        <div> la regla no se cumple</div>
+                                    </Rule>
+                                    <RulesTemplate TValue="int"
+                                                   TTYPE="WorkOrderDetail"
+                                                   Context="Entity">
+
+
+                                        <ValidConditionsTemplate>
+
+                                            <TextInput @bind-Value="@Entity.TemperatureUOMID"
+                                                       Label="UoM Temperature" ValidationFor="@(() => WorkOrderItemCreate.eq.TemperatureUOMID)">
+
+                                                @foreach (var item in WorkOrderItemCreate.TemperatureUnitofMeasureList)
+                                                    {
+
+                                                        if (item.UnitOfMeasureID == 2 && Entity.TemperatureUOMID == 0)
+                                                        {
+                                                        <option value="@item.UnitOfMeasureID" selected>@item.Abbreviation </option>
+                                                        }
+                                                        else
+                                                        {
+                                                        <option value="@item.UnitOfMeasureID">@item.Abbreviation </option>
+                                                        }
+
+
+                                                    }
+                                            </TextInput>
+
+                                        </ValidConditionsTemplate>
+                                        <InvalidConditionsTemplate>
+                                            <TextInput @bind-Value="@Entity.TemperatureUOMID" Type="@Types.ReadOnlySelect"
+                                                       Label="UoM Temperature"
+                                                       ValidationFor="@(() => WorkOrderItemCreate.eq.TemperatureUOMID)">
+
+                                                @foreach (var item in WorkOrderItemCreate.TemperatureUnitofMeasureList)
+                                                    {
+
+
+                                                    <option value="@item.UnitOfMeasureID">@item.Abbreviation </option>
+
+                                                    }
+                                            </TextInput>
+
+                                        </InvalidConditionsTemplate>
+                                    </RulesTemplate>
+                                </Rules>
+                            </MultiComponent>
+                        }
+                    </div>
+
+                    <div class="col-md">
+
+                        <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())" TTYPE="WorkOrderDetail">
+                                    <div> la regla no se cumple</div>
+                                </Rule>
+                                <RulesTemplate TValue="double"
+                                               TTYPE="WorkOrderDetail"
+                                               Context="Entity">
+
+                                    <ValidConditionsTemplate>
+                                        <TextInput TValue="double"
+                                                   Label="Temperature after Calibration"
+                                                   @bind-Value="@WorkOrderItemCreate.eq.TemperatureAfter"
+                                                   ValidationFor="@(() => WorkOrderItemCreate.eq.TemperatureAfter)"
+                                                   Model="WorkOrderItemCreate.eq"
+                                                       ToastMessageForce="@messageTempAfter"
+                                                   Type="@Types.numberdecimal">
+
+                                        </TextInput>
+                                    </ValidConditionsTemplate>
+
+                                    <InvalidConditionsTemplate>
+                                        <TextInput TValue="double"
+                                                   Label="Temperature after Calibration"
+                                                   @bind-Value="@WorkOrderItemCreate.eq.TemperatureAfter"
+                                                   @bind-Value="MM/dd/yyyy"
+                                                   ValidationFor="@(() => WorkOrderItemCreate.eq.TemperatureAfter)"
+                                                   Model="WorkOrderItemCreate.eq"
+                                                   IsDisabled="true"
+                                                   format =" "
+                                                       ToastMessageForce="@messageTempAfter">
+
+                                        </TextInput>
+                                    </InvalidConditionsTemplate>
+                                </RulesTemplate>
+                            </Rules>
+                        </MultiComponent>
+                    </div>
+                    <div class="form-group col-md">
+                        @if (WorkOrderItemCreate.TemperatureUnitofMeasureList != null)
+                        {
+                            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                <Rules>
+                                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())" TTYPE="WorkOrderDetail">
+                                        <div> la regla no se cumple</div>
+                                    </Rule>
+                                    <RulesTemplate TValue="int"
+                                                   TTYPE="WorkOrderDetail"
+                                                   Context="Entity">
+
+
+                                        <ValidConditionsTemplate>
+
+                                            <TextInput @bind-Value="@Entity.TemperatureUOMID"
+                                                       Label="UoM Temperature" ValidationFor="@(() => WorkOrderItemCreate.eq.TemperatureUOMID)">
+
+                                                @foreach (var item in WorkOrderItemCreate.TemperatureUnitofMeasureList)
+                                                    {
+
+                                                        if (item.UnitOfMeasureID == 2 && Entity.TemperatureUOMID == 0)
+                                                        {
+                                                        <option value="@item.UnitOfMeasureID" selected>@item.Abbreviation </option>
+                                                        }
+                                                        else
+                                                        {
+                                                        <option value="@item.UnitOfMeasureID">@item.Abbreviation </option>
+                                                        }
+
+
+
+                                                    }
+                                            </TextInput>
+
+                                        </ValidConditionsTemplate>
+                                        <InvalidConditionsTemplate>
+                                            <TextInput @bind-Value="@Entity.TemperatureUOMID" Type="@Types.ReadOnlySelect"
+                                                       Label="UoM Temperature"
+                                                       ValidationFor="@(() => WorkOrderItemCreate.eq.TemperatureUOMID)">
+
+                                                @foreach (var item in WorkOrderItemCreate.TemperatureUnitofMeasureList)
+                                                    {
+
+
+                                                    <option value="@item.UnitOfMeasureID">@item.Abbreviation </option>
+
+                                                    }
+                                            </TextInput>
+
+                                        </InvalidConditionsTemplate>
+                                    </RulesTemplate>
+                                </Rules>
+                            </MultiComponent>
+                        }
+                    </div>
+
+                </div>
+             
+                 <div class="form-row">
+                    <div class="col-md">
+                        <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())" TTYPE="WorkOrderDetail">
+                                    <div> la regla no se cumple</div>
+                                </Rule>
+                                <RulesTemplate Context="Entity"
+                                               TValue="double"
+                                               TTYPE="WorkOrderDetail">
+
+                                    <ValidConditionsTemplate>
+                                        <TextInput Label="Humidity"
+                                                   TValue="double"
+                                                   @bind-Value="@WorkOrderItemCreate.eq.Humidity"
+                                                   ValidationFor="@(() => WorkOrderItemCreate.eq.Humidity)"
+                                                   ToastMessageForce="@messageHumidity">
+                                        </TextInput>
+
+
+                                    </ValidConditionsTemplate>
+                                    <InvalidConditionsTemplate>
+                                        <TextInput Label="Humidity"
+                                                   TValue="double"
+                                                   @bind-Value="@WorkOrderItemCreate.eq.Humidity"
+                                                   Type="@Types.ReadOnlyText"
+                                                   ValidationFor="@(() => WorkOrderItemCreate.eq.Humidity)"
+                                                   IsDisabled="true">
+                                        </TextInput>
+                                    </InvalidConditionsTemplate>
+                                </RulesTemplate>
+                            </Rules>
+                        </MultiComponent>
+                    </div>
+                    <div class="col-md">
+                        @if (WorkOrderItemCreate.HumidityUnitofMeasureList != null)
+                        {
+                            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                <Rules>
+                                    <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                                    </Rule>
+                                    <RulesTemplate TValue="int"
+                                                   TTYPE="WorkOrderDetail"
+                                                   Context="Entity">
+
+
+                                        <ValidConditionsTemplate>
+                                            <TextInput Label="UoM Humidity"
+                                                       TValue="int"
+                                                       @bind-Value="@WorkOrderItemCreate.eq.HumidityUOMID"
+                                                       ValidationFor="@(() => WorkOrderItemCreate.eq.HumidityUOMID)">
+                                                @foreach (var item in WorkOrderItemCreate.HumidityUnitofMeasureList)
+                                                {
+                                                    <option value="@item.UnitOfMeasureID">@item.Abbreviation </option>
+
+                                                }
+                                            </TextInput>
+                                        </ValidConditionsTemplate>
+                                        <InvalidConditionsTemplate>
+                                            <TextInput Label="UoM Humidity"
+                                                       TValue="int"
+                                                       @bind-Value="@WorkOrderItemCreate.eq.HumidityUOMID"
+                                                       ValidationFor="@(() => WorkOrderItemCreate.eq.HumidityUOMID)"
+                                                       Type="@Types.ReadOnlySelect">
+                                                @foreach (var item in WorkOrderItemCreate.HumidityUnitofMeasureList)
+                                                {
+                                                    <option value="@item.UnitOfMeasureID">@item.Abbreviation </option>
+
+                                                }
+                                            </TextInput>
+                                        </InvalidConditionsTemplate>
+
+                                    </RulesTemplate>
+                                </Rules>
+                            </MultiComponent>
+                        }
+                        else
+                        {
+
+                            <div>Not Configured</div>
+                        }
+                    </div>
+                    <div class="col-sm">
+                        <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())" TTYPE="WorkOrderDetail">
+                                    <div> la regla no se cumple</div>
+                                </Rule>
+                                <RulesTemplate ID="environment"
+                                               Label="Environment"
+                                               TValue="string"
+                                               TTYPE="WorkOrderDetail"
+                                               ValidType=@Types.select
+                                               InvalidType=@Types.ReadOnlySelect
+                                               @bind-Value="@WorkOrderItemCreate.eq.Environment"
+                                               ValidationFor="@(() => WorkOrderItemCreate.eq.Environment)">
+
+                                    <option value="Acceptable">Acceptable</option>
+                                    <option value="NotAcceptable">Not Acceptable</option>
+
+
+
+                                </RulesTemplate>
+                            </Rules>
+                        </MultiComponent>
+
+
+                    </div>
+                </div>
+                 <div class="row">
+                    <div class="col-sm">
+                        <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())" TTYPE="WorkOrderDetail">
+                                    <div> la regla no se cumple</div>
+                                </Rule>
+                                    @if (TemperatureStandardList != null && TemperatureStandardList?.Count > 0)
+                                {
+                                 <TextInput Label="Temperature Standard"
+                                                       TValue="string"
+                                                       @bind-Value="@WorkOrderItemCreate.eq.TemperatureStandardId"
+                                                       ValidationFor="@(() => WorkOrderItemCreate.eq.TemperatureStandardId)">
+                                                      
+                                                       
+                                                @foreach (var item in TemperatureStandardList)
+                                                {
+                                            //Console.WriteLine(" ***** " + WorkOrderItemCreate.eq.TemperatureStandardId + " ----" + item.PieceOfEquipmentID);
+                                            if(WorkOrderItemCreate.eq.TemperatureStandardId==item.PieceOfEquipmentID)
+                                                    {
+                                                    <option value="@item.PieceOfEquipmentID" selected>@item.PieceOfEquipmentID</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.PieceOfEquipmentID">@item.PieceOfEquipmentID</option>
+
+                                                    }
+
+                                                }
+                                            </TextInput>
+                                            }
+                             
+                            </Rules>
+                        </MultiComponent>
+
+
+                    </div>
+
+           
+                 </div>
+                 }
+                <div class="row">
+                    <div class="col-sm-12">
+                        <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())" TTYPE="WorkOrderDetail">
+                                    <div> la regla no se cumple</div>
+                                </Rule>
+                                <RulesTemplate ID="technicianComment"
+                                               Label="Technician Comments"
+                                               TValue="string"
+                                               TTYPE="WorkOrderDetail"
+                                               ValidType=@Types.TextArea
+                                               InvalidType=@Types.ReadOnlyTextArea
+                                               @bind-Value="@WorkOrderItemCreate.eq.TechnicianComment"
+                                               ValidationFor="@(() => WorkOrderItemCreate.eq.TechnicianComment)">
+                                </RulesTemplate>
+                            </Rules>
+                        </MultiComponent>
+
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12">
+                        <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationStatus().Compile())"
+                                      TTYPE="WorkOrderDetail">
+                                    <div> la regla no se cumple</div>
+                                </Rule>
+                                <RulesTemplate ID="certificateComment"
+                                               Label="Certificate Comment"
+                                               TValue="string"
+                                               TTYPE="WorkOrderDetail"
+                                               ValidType=@Types.TextArea
+                                               InvalidType=@Types.ReadOnlyTextArea
+                                               @bind-Value="@WorkOrderItemCreate.eq.CertificateComment"
+                                               ValidationFor="@(() => WorkOrderItemCreate.eq.CertificateComment)">
+                                </RulesTemplate>
+                            </Rules>
+                        </MultiComponent>
+
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    public AppState AppState { get; set; }
+
+
+
+    // [CascadingParameter(Name = "CascadeParam1")]
+    // public WorkOrderItemCreate WorkOrderItemCreate { get; set; }
+
+    public string UsersAccess { get; set; } = "HasAccess";
+
+
+
+   
+
+}

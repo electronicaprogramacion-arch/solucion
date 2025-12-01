@@ -1,0 +1,212 @@
+﻿@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using CalibrationSaaS.Domain.Aggregates.Querys;
+
+
+@namespace CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+
+@if (WoD.EquipmentCondition != null)
+{
+    Col = 2;
+    Rows = 4;
+}
+
+
+@if (@editContext != null && CurrentStatus != null && WoD != null && WoD?.EquipmentCondition != null)
+{
+    <EditForm Model="@WoD.EquipmentCondition" Context="context">
+        <DataAnnotationsValidator />
+
+        @if (1 == 1)
+        {
+            cont = 0;
+            cont2 = 0;
+
+            if (Rows > Col)
+            {
+                Divisor = Col;
+            }
+            else
+            {
+                Divisor = Rows;
+            }
+
+        }
+
+        <div class="row">
+
+            @*<div class="col-sm-2">
+
+            </div>*@
+            @for (int y = 0; y < Titles.Count; y++)
+            {
+                <div class="col-sm-2 condition">
+                    @Titles[y]
+                </div>
+            }
+
+
+        </div>
+
+
+        @for (int e = 0; e < WoD.EquipmentCondition.OrderBy(x => x.Name).Count(); e++)
+        {
+
+            if ((cont % Divisor) == 0)
+            {
+                <div class="row">
+                    @for (int i = cont2; i < cont2 + Col; i++)
+                    {
+                        if (i < WoD.EquipmentCondition.Count)
+                        {
+
+                            @if (i == cont2)
+                            {
+                                <div class="col-sm-2 condition">
+
+                                    @WoD.EquipmentCondition.ElementAt(i).Name
+                                </div>
+                            }
+                            <div class="col-sm-2 condition">
+
+
+
+                                @render(@WoD.EquipmentCondition.ElementAt(i), i)
+                            </div>
+
+
+
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+
+                </div>
+                cont2 = cont2 + Col;
+            }
+
+
+
+
+            cont = cont + 1;
+        }
+
+    </EditForm>
+}
+
+
+
+@code {
+
+
+    [Parameter]
+    public bool Enabled { get; set; }
+
+    public int cont2 { get; set; } = 0;
+    public int cont { get; set; }
+
+    public List<string> Titles { get; set; } = new List<string>();
+
+
+    public int Divisor { get; set; }
+
+    public int Col { get; set; }
+
+    public int Rows { get; set; }
+
+    public bool FirstRender { get; set; }
+
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        FirstRender = firstRender;
+
+        //WoD.EquipmentCondition = WoD.EquipmentCondition.OrderBy(x => x.Name).ToList();
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+
+    [Parameter]
+    public Status CurrentStatus { get; set; } = new Status();
+
+    public EditContext editContext { get; set; }
+
+    [Parameter]
+    public WorkOrderDetail WoD { get; set; } = new WorkOrderDetail();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+
+        await base.OnParametersSetAsync();
+
+        if (WoD.EquipmentCondition != null)
+        {
+
+            editContext = new EditContext(WoD.EquipmentCondition);
+        }
+    }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        if ((WoD != null && WoD?.EquipmentCondition == null) || WoD?.EquipmentCondition?.Count == 0)
+        {
+            WoD.EquipmentCondition = Querys.DefaultEquipmentConditionForBalance().ToList();
+        }
+
+        editContext = new EditContext(WoD.EquipmentCondition);
+
+        await base.OnInitializedAsync();
+        Titles.Add("_");
+        Titles.Add("Received Condition");
+        Titles.Add("Returned Condition");
+
+    }
+
+    public int MyProperty { get; set; }
+
+
+    public RenderFragment render(EquipmentCondition Wod, int i)
+    {
+        if (WoD.SelectSingle(Querys.WODRules.RuleReadyForCalibrationStatus()) && Enabled)
+        {
+            return@<TextInput Label="@Wod.Label"
+                              TValue="bool"
+                              Validate="false"
+                              @bind-Value="@Wod.Value" Type="@Types.Switch" Model="Wod" OnChangeObjectControl="Change">
+    </TextInput>;
+    }
+        else
+        {
+
+            return@<TextInput Label="@Wod.Label"
+                              TValue="bool"
+                              Validate="false"
+                              @bind-Value="@Wod.Value" Type="@Types.Switch" Model="Wod" OnChangeObjectControl="Change" IsDisabled="true">
+    </TextInput>;
+    }
+
+
+
+    }
+
+
+    public void Change(ChangeEventArgs arg)
+    {
+
+    }
+
+
+
+
+}

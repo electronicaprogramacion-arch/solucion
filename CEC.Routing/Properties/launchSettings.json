@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CEC.Routing": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

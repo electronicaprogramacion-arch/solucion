@@ -1,0 +1,123 @@
+﻿using Blazored.Modal;
+using Blazored.Modal.Services;
+using CalibrationSaaS.Application.Services;
+using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+using CalibrationSaaS.Infraestructure.Blazor.Pages.Base;
+using CalibrationSaaS.Infraestructure.Blazor.Shared.Component;
+using Microsoft.AspNetCore.Components;
+using ProtoBuf.Grpc;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+{
+    public class Certified_SearchBase : ComponentBase, IPage<Certificate, Application.Services.IAssetsServices<CallContext>, AppState>
+    {
+
+        [Parameter]
+        public PieceOfEquipment POE { get; set; }
+
+        [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+        [CascadingParameter] public IModalService Modal { get; set; }
+
+
+        [Parameter]
+        public bool SelectOnly { get; set; }
+
+        [Parameter]
+        public bool IsModal { get; set; }
+
+
+        public Search<Certificate, IAssetsServices<CallContext>, AppState> searchComponent
+        { get; set; }
+
+
+
+
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (!firstRender)
+            {
+                return;
+            }
+
+
+            searchComponent.BaseCreateUrl = "CertificateCreate";
+
+            searchComponent.BaseDetailUrl = "CertificateDetail";
+
+            searchComponent.FormName = "Search Certificate";
+
+            searchComponent.IsModal = IsModal;
+
+            searchComponent.SelectOnly = SelectOnly;
+
+            if (searchComponent.Client != null)
+            {
+                //PieceOfEquipment POE = new PieceOfEquipment();
+
+                var Eq = (await searchComponent.Client.GetCertificateXPoE(POE));
+
+                if (Eq != null)
+                {
+                    //searchComponent.List = Eq.ToList();
+
+
+                    //searchComponent.FilteredToDos = Eq;
+
+                    StateHasChanged();
+
+
+                }
+            }
+
+
+
+
+        }
+
+        public IEnumerable<Certificate> FilterList(string filter)
+        {
+
+            return searchComponent.List.Where(i => i.Name.ToLower().Contains(filter.ToLower())).ToList();
+
+        }
+
+        public async Task GetDetail(Certificate DTO)
+        {
+            searchComponent.Detail = DTO; // searchComponent.FilteredToDos.Where(x => x.UserID == ID).FirstOrDefault();
+
+            await ModalDetail.ShowModal(searchComponent.Detail);
+            //await ShowModal();
+
+            //StateHasChanged();
+        }
+
+        public DetailView<Certificate> ModalDetail = new DetailView<Certificate>();
+
+        public async Task SelectModal(Certificate DTO)
+        {
+            await BlazoredModal.CloseAsync(ModalResult.Ok(searchComponent.Detail));
+        }
+
+#pragma warning disable CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
+        public async Task Delete(Certificate DTO)
+#pragma warning restore CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
+        {
+            //await searchComponent.ShowModalAction();
+
+            //searchComponent.Detail = await searchComponent.Client.DeleteManufacturer(DTO);
+
+            //searchComponent.ShowResult();
+        }
+
+        public void Dispose()
+        {
+
+        }
+
+    }
+}

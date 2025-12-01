@@ -1,0 +1,204 @@
+{
+  "examples": [
+    {
+      "name": "Basic Units of Measure Grouping",
+      "description": "Groups all units of measure by their TypeID using GetAllUnitOfMeasure method",
+      "selectFilter": {
+        "Filter": "",
+        "Key": "UnitOfMeasureID",
+        "Value": "Name",
+        "Group": "TypeID",
+        "Method": "GetAllUnitOfMeasure"
+      },
+      "usage": "This calls AppState.GetAllUnitOfMeasure() and groups results by TypeID",
+      "expectedResult": {
+        "1": {
+          "101": "Millimeter",
+          "102": "Centimeter",
+          "103": "Meter"
+        },
+        "2": {
+          "201": "Gram",
+          "202": "Kilogram",
+          "203": "Pound"
+        },
+        "3": {
+          "301": "Celsius",
+          "302": "Fahrenheit",
+          "303": "Kelvin"
+        }
+      }
+    },
+    {
+      "name": "Units by Calibration Types with Parameters",
+      "description": "Groups units of measure filtered by specific calibration types",
+      "selectFilter": {
+        "Filter": "[1,2,3]",
+        "Key": "UnitOfMeasureID",
+        "Value": "Abbreviation",
+        "Group": "TypeID",
+        "Method": "GetUoMByTypes"
+      },
+      "usage": "This calls AppState.GetUoMByTypes(int[] calibrationTypes) with [1,2,3] as parameter",
+      "methodParameters": [1, 2, 3],
+      "expectedResult": {
+        "1": {
+          "101": "mm",
+          "102": "cm",
+          "103": "m"
+        },
+        "2": {
+          "201": "g",
+          "202": "kg"
+        }
+      }
+    },
+    {
+      "name": "Units by Equipment Type",
+      "description": "Groups units of measure for a specific equipment type",
+      "selectFilter": {
+        "Filter": "{\"EquipmentTypeID\":5,\"Name\":\"Pressure Gauge\"}",
+        "Key": "UnitOfMeasureID",
+        "Value": "Name",
+        "Group": "TypeID",
+        "Method": "GetUoMByEquipmentType"
+      },
+      "usage": "This calls AppState.GetUoMByEquipmentType(EquipmentType equipmentType)",
+      "methodParameters": {
+        "EquipmentTypeID": 5,
+        "Name": "Pressure Gauge",
+        "CalibrationTypeID": 2
+      },
+      "expectedResult": {
+        "4": {
+          "401": "Pascal",
+          "402": "Bar",
+          "403": "PSI"
+        }
+      }
+    },
+    {
+      "name": "Alternative Grouping - By Name",
+      "description": "Groups units showing TypeID as key and UnitOfMeasureID as value, grouped by Name",
+      "selectFilter": {
+        "Filter": "",
+        "Key": "TypeID",
+        "Value": "UnitOfMeasureID",
+        "Group": "Name",
+        "Method": "GetAllUnitOfMeasure"
+      },
+      "usage": "Alternative grouping to show different property combinations",
+      "expectedResult": {
+        "Millimeter": {
+          "1": "101"
+        },
+        "Gram": {
+          "2": "201"
+        },
+        "Celsius": {
+          "3": "301"
+        }
+      }
+    },
+    {
+      "name": "Equipment Types Grouping",
+      "description": "Groups equipment types by calibration type (if method exists)",
+      "selectFilter": {
+        "Filter": "",
+        "Key": "EquipmentTypeID",
+        "Value": "Name",
+        "Group": "CalibrationTypeID",
+        "Method": "GetEquipmentTypes"
+      },
+      "usage": "Groups equipment types by their calibration type",
+      "expectedResult": {
+        "1": {
+          "10": "Digital Multimeter",
+          "11": "Oscilloscope"
+        },
+        "2": {
+          "20": "Pressure Gauge",
+          "21": "Pressure Transducer"
+        },
+        "3": {
+          "30": "Analytical Balance",
+          "31": "Precision Scale"
+        }
+      }
+    },
+    {
+      "name": "Tolerance Types Grouping",
+      "description": "Groups tolerance types if available in AppState",
+      "selectFilter": {
+        "Filter": "",
+        "Key": "ToleranceTypeID",
+        "Value": "Name",
+        "Group": "Category",
+        "Method": "GetToleranceTypes"
+      },
+      "usage": "Groups tolerance types by category",
+      "expectedResult": {
+        "Accuracy": {
+          "1": "±0.1%",
+          "2": "±0.5%"
+        },
+        "Resolution": {
+          "3": "0.001",
+          "4": "0.01"
+        }
+      }
+    }
+  ],
+  "implementation_notes": {
+    "filter_property": "The Filter property can contain JSON-serialized parameters for methods that require complex objects",
+    "method_resolution": "The Method property specifies the exact AppState method name to call",
+    "parameter_handling": "For methods with parameters, the Filter property can contain serialized parameter data",
+    "property_mapping": {
+      "Key": "Property name to use as dictionary key",
+      "Value": "Property name to use as dictionary value", 
+      "Group": "Property name to use for grouping (outer dictionary key)",
+      "Method": "AppState method name to call",
+      "Filter": "Optional parameters for the method (can be JSON string)"
+    }
+  },
+  "usage_in_code": {
+    "deserialization": "var sf = JsonConvert.DeserializeObject<SelectFilter>(jsonString);",
+    "method_call": "var result = CreateGroupedDictionaryFromAppState(sf.Method, sf.Key, sf.Value, sf.Group);",
+    "with_parameters": "// Parameters would need to be parsed from sf.Filter if present"
+  },
+  "real_world_scenarios": [
+    {
+      "scenario": "Dynamic UI Dropdowns",
+      "description": "Use SelectFilter JSON to configure dropdown lists that are grouped by categories",
+      "example": {
+        "Filter": "",
+        "Key": "UnitOfMeasureID",
+        "Value": "Abbreviation",
+        "Group": "TypeName",
+        "Method": "GetAllUnitOfMeasure"
+      }
+    },
+    {
+      "scenario": "Filtered Equipment Selection",
+      "description": "Filter equipment by specific criteria and group by type",
+      "example": {
+        "Filter": "{\"CalibrationTypeID\":2}",
+        "Key": "EquipmentID",
+        "Value": "SerialNumber",
+        "Group": "ManufacturerName",
+        "Method": "GetEquipmentByType"
+      }
+    },
+    {
+      "scenario": "Standards Selection",
+      "description": "Group available standards by their classification",
+      "example": {
+        "Filter": "",
+        "Key": "StandardID",
+        "Value": "Description",
+        "Group": "Classification",
+        "Method": "GetAvailableStandards"
+      }
+    }
+  ]
+}

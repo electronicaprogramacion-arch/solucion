@@ -1,0 +1,336 @@
+@page "/QuoteCreate"
+@page "/QuoteCreate/{QuoteId:int}"
+@page "/QuoteEdit/{QuoteId:int}"
+@inherits QuoteCreateBase
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "HasAccess")]
+
+<HeaderComponent Title="@PageTitle" ActionBar="false"></HeaderComponent>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quote Information</h6>
+                </div>
+                <div class="card-body">
+                    @if (IsInitializing)
+                    {
+                        <div class="text-center py-4">
+                            <div class="spinner-border" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading quote...</p>
+                        </div>
+                    }
+                    else if (CurrentQuote != null)
+                    {
+                        <EditForm Model="@CurrentQuote" OnValidSubmit="@SaveQuote">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="quoteNumber">Quote Number</label>
+                                    <InputText id="quoteNumber" class="form-control" @bind-Value="CurrentQuote.QuoteNumber" readonly="@IsEdit" />
+                                    <ValidationMessage For="@(() => CurrentQuote.QuoteNumber)" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="customerType">Customer Type *</label>
+                                    <InputSelect id="customerType" class="form-control" @bind-Value="CustomerType" @onchange="OnCustomerTypeChanged">
+                                        <option value="">Select Customer Type</option>
+                                        <option value="Official">Official Customer</option>
+                                        <option value="Text">Text-based Customer</option>
+                                    </InputSelect>
+                                </div>
+
+                                @if (CustomerType == "Official")
+                                {
+                                    <div class="form-group">
+                                        <label for="customer">Official Customer *</label>
+                                        <div class="input-group">
+                                            <InputText id="customer" class="form-control" @bind-Value="SelectedCustomerName" readonly />
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" @onclick="OpenCustomerSelector">
+                                                    <i class="fas fa-search"></i>
+                                                </button>
+                                                @if (CurrentQuote != null && CurrentQuote.CustomerID.HasValue && CurrentQuote.CustomerID.Value > 0)
+                                                {
+                                                    <button class="btn btn-outline-danger" type="button" @onclick="ClearCustomerSelection" title="Clear Selection">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </div>
+                                        <ValidationMessage For="@(() => CurrentQuote.CustomerID)" />
+                                    </div>
+                                }
+                                else if (CustomerType == "Text")
+                                {
+                                    <div class="form-group">
+                                        <label for="customerName">Customer Name *</label>
+                                        <InputText id="customerName" class="form-control" @bind-Value="CurrentQuote.CustomerName" placeholder="Enter customer name" />
+                                        <ValidationMessage For="@(() => CurrentQuote.CustomerName)" />
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @* Quote Multiplier Section *@
+                        @if (CurrentQuote != null && CurrentQuote.CustomerID > 0 && SelectedCustomer != null && SelectedCustomer.QuoteMultiplier.HasValue && SelectedCustomer.QuoteMultiplier.Value != 1.0m)
+                        {
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong>Quote Multiplier Applied:</strong> All prices in this quote will be multiplied by @SelectedCustomer.QuoteMultiplier.Value.ToString("N2")
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="status">Status</label>
+                                    <InputSelect id="status" class="form-control" @bind-Value="CurrentQuote.Status">
+                                        <option value="Draft">Draft</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Accepted">Accepted</option>
+                                        <option value="Rejected">Rejected</option>
+                                        <option value="Expired">Expired</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => CurrentQuote.Status)" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="priority">Priority</label>
+                                    <InputSelect id="priority" class="form-control" @bind-Value="CurrentQuote.Priority">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => CurrentQuote.Priority)" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="estimatedDelivery">Estimated Delivery</label>
+                                    <InputDate id="estimatedDelivery" class="form-control" @bind-Value="CurrentQuote.EstimatedDelivery" />
+                                    <ValidationMessage For="@(() => CurrentQuote.EstimatedDelivery)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="customerAddress">Customer Address *</label>
+                                    <select id="customerAddress" class="form-control" value="@SelectedCustomerAddressId" @onchange="OnCustomerAddressChanged">
+                                        <option value="">Select Customer Address</option>
+                                        @if (CustomerAddresses != null)
+                                        {
+                                            @foreach (var address in CustomerAddresses)
+                                            {
+                                                <option value="@address.CustomerAddressId">
+                                                    @address.Address1, @address.City, @address.State @address.ZipCode
+                                                    @if (address.TravelExpense.HasValue && address.TravelExpense.Value > 0)
+                                                    {
+                                                        <text> (Travel: @address.TravelExpense.Value.ToString("C"))</text>
+                                                    }
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+                                    <ValidationMessage For="@(() => CurrentQuote.CustomerAddressId)" />
+                                    <small class="form-text text-muted">
+                                        Select the customer address for this quote. Required for official customers.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="notes">Notes</label>
+                                    <InputTextArea id="notes" class="form-control" rows="3" @bind-Value="CurrentQuote.Notes" />
+                                    <ValidationMessage For="@(() => CurrentQuote.Notes)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Total Cost</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input type="text" class="form-control" value="@CurrentQuote.TotalCost.ToString("N2")" readonly />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary" disabled="@IsSaving">
+                                @if (IsSaving)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <text>Saving...</text>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-save"></i>
+                                    <text>Save Quote</text>
+                                }
+                            </button>
+                            @if (IsEdit && CurrentQuote?.QuoteID > 0)
+                            {
+                                <button type="button" class="btn btn-info ml-2" @onclick="@(async () => await GenerateQuoteReport())" disabled="@IsGeneratingReport">
+                                    @if (IsGeneratingReport)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <text>Generating...</text>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-file-pdf"></i>
+                                        <text>Download PDF</text>
+                                    }
+                                </button>
+                            }
+                            <button type="button" class="btn btn-secondary ml-2" @onclick="Cancel">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </EditForm>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <div class="spinner-border" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading quote...</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (!IsInitializing && IsEdit && CurrentQuote != null && CurrentQuote.QuoteID > 0)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Quote Items</h6>
+                        <button type="button" class="btn btn-sm btn-primary" @onclick="AddQuoteItem">
+                            <i class="fas fa-plus"></i> Add Item
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @if (QuoteItems != null && QuoteItems.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Equipment</th>
+                                            <th>Equipment Type</th>
+                                            <th>Price Type</th>
+                                            <th>Quantity</th>
+                                            <th>Unit Price</th>
+                                            <th>Total Price</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in QuoteItems)
+                                        {
+                                            <tr>
+                                                <td>@item.EquipmentDescription</td>
+                                                <td>@item.EquipmentTypeGroupAndType</td>
+                                                <td>
+                                                    @if (item.PriceType != null)
+                                                    {
+                                                        <span class="badge @(item.PriceType.IncludesTravel ? "badge-warning" : "badge-info")">
+                                                            @item.PriceType.Name
+                                                            @if (item.PriceType.IncludesTravel)
+                                                            {
+                                                                <i class="fas fa-car ml-1" title="Includes Travel"></i>
+                                                            }
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">-</span>
+                                                    }
+                                                </td>
+                                                <td>@item.Quantity</td>
+                                                <td>@item.UnitPrice.ToString("C")</td>
+                                                <td>@item.TotalPrice.ToString("C")</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => EditQuoteItem(item)">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger ml-1" @onclick="() => DeleteQuoteItem(item)">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <p>No items added to this quote yet.</p>
+                                <button type="button" class="btn btn-primary" @onclick="AddQuoteItem">
+                                    <i class="fas fa-plus"></i> Add First Item
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Accept and Schedule Work Order button - positioned in bottom right *@
+        @if (!IsInitializing && IsEdit && CurrentQuote != null && CurrentQuote.QuoteID > 0 && CurrentQuote.Status != "Scheduled" && QuoteItems != null && QuoteItems.Any())
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end mb-4">
+                        <button type="button" class="btn btn-success btn-lg" @onclick="@(async () => await AcceptAndScheduleWorkOrder())" disabled="@IsAcceptingAndScheduling">
+                            @if (IsAcceptingAndScheduling)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <text>Processing...</text>
+                            }
+                            else
+                            {
+                                <i class="fas fa-check-circle"></i>
+                                <text>Accept and Schedule Work Order</text>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

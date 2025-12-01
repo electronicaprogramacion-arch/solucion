@@ -1,0 +1,155 @@
+﻿@page "/range"
+@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using BlazorApp1.Blazor.Pages.Basics.TestPoints
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+
+@using Microsoft.JSInterop
+@namespace BlazorApp1.Blazor.Pages.Basics.TestPoints
+@inherits RangeTestPoint_base
+@*@if (Group != null)*@
+@if (1 == 1)
+{
+
+    //if (RT != null && RT.Items != null && Group.Count > 0)
+    //{
+    //    RT.Items.Clear();
+    //    RT.ItemList = new List<RangeTolerance>();
+    //    RT.ItemsDataSource = new List<RangeTolerance>();
+    //}
+
+    var comum1 = Group;
+
+    var comum = comum1;
+
+    <div class="row" style="width:100%" id="@ID">
+        <div class="col-sm-12">
+            <div class="row">
+
+            </div>
+
+            <ResponsiveTable ItemsDataSource="@comum"
+                             PageSize="5" HasAction="true"
+                             TableItem="RangeTolerance"
+                             NewButtonText="@NewText"
+                             OnSave="SaveGrid"
+                             OnUpdate="SaveGrid"
+                             @ref="RT"
+                             GridID="@GridID"
+                             FilterColumn="@RT.GetPropertyName(() => DefultTestPoint.ToleranceTypeID)"
+                             ValueFilter="@Type"
+                             ColActionCSS="col-sm customcol"
+                             Enabled="@Enabled"
+                             AfterAction="AfterAction"
+                             Component="@Component">
+
+
+                <ChildContent>
+
+                    <GridColumn TableItem="RangeTolerance" Field="@RT.GetPropertyName(() => DefultTestPoint.MinValue)" DefaultSort="true">
+
+                    </GridColumn>
+
+                    <GridColumn TableItem="RangeTolerance" Field="@RT.GetPropertyName(() => DefultTestPoint.MaxValue)">
+                    </GridColumn>
+                    @if (Type == 2)
+                    {
+                        <GridColumn TableItem="RangeTolerance" Field="@RT.GetPropertyName(() => DefultTestPoint.Percent)">
+                        </GridColumn>
+                    }
+                    @if (Type == 1)
+                    {
+                        <GridColumn TableItem="RangeTolerance" Field="@RT.GetPropertyName(() => DefultTestPoint.Resolution)">
+                        </GridColumn>
+                    }
+                </ChildContent>
+
+                @*<GridHeader>
+                        <div class="col-sm-2 customcol">Nominal<br />TestPoit</div>
+                        <div class="col-sm-3 customcol">Min<br />Value</div>
+                        <div class="col-sm-3 customcol">Max<br />Value</div>
+                        <div class="col-sm-2 customcol">Tolerance</div>
+                        <div class="col-sm-2 customcol">Res</div>
+
+                    </GridHeader>*@
+                <GridRow>
+                    @*<div class="col-sm-2 customcol inv">MinValue</div>
+                        <div class="col-sm-2 customcol">@context.MinValue</div>
+                        <div class="col-sm-3 customcol inv">MaxValue</div>
+                        <div class="col-sm-3 customcol">@context.MaxValue</div>
+                        <div class="col-sm-3 customcol inv">Percent</div>
+                        <div class="col-sm-3 customcol">@context.Percent</div>
+                        <div class="col-sm-2 customcol inv">Resolution</div>
+                        <div class="col-sm-2 customcol">@context.Resolution</div>*@
+
+                </GridRow>
+
+                <GridEdit>
+                    @*<div class="col-sm-2 customcol inv">NominalTestPoit</div>*@
+
+
+                    <div class="col-sm customcol">
+                        @*<div class="form-group">
+                                <InputNumber @bind-Value="@context.NominalTestPoit" class="form-control" id="@nameof(context.NominalTestPoit)">
+
+                                </InputNumber>
+                                <label class="form-control-placeholder" for="@nameof(context.NominalTestPoit)">Nominal TestPoit</label>
+                            </div>*@
+
+                        <TextInput @bind-Value="@context.MinValue" Label="MinValue" Validate="false" Type="@Types.number" IsDisabled="!Enabled"
+                                   OnChangeControl="@((arg) => ChangeMin(context, arg))"></TextInput>
+
+
+                    </div>
+                    @*<div class="col-sm-3 customcol inv">UnitOfMeasurement</div>*@
+                    <div class="col-sm customcol">
+
+
+                        <TextInput @bind-Value="@context.MaxValue" Label="MaxValue" Validate="false" Type="@Types.number"
+                                   OnChangeControl="@((arg) => ChangeMax(context, arg))" IsDisabled="!Enabled"></TextInput>
+
+                    </div>
+                    <div class="col-sm customcol">
+
+                        @if (Type == 1)
+                        {
+
+                            <TextInput @bind-Value="@context.Resolution" Label="@Title" Validate="false" Type="@Types.number" IsDisabled="!Enabled"></TextInput>
+                        }
+                        @if (Type == 2)
+                        {
+                            <TextInput @bind-Value="@context.Percent" Label="@Title" Validate="false" Type="@Types.number" IsDisabled="!Enabled"></TextInput>
+                        }
+
+                    </div>
+
+
+                    @if (Type == 1)
+                    {<div class="col-sm customcol">
+
+                            @*<TextInput @bind-Value="@context.Resolution" Label="Decimal" Validate="false" Type="@Types.number"></TextInput>*@
+                            <label class="form-control-label">Decimal</label>
+                            <label class="form-control">@DecimalCalculate(@context)</label>
+
+                        </div>
+                    }
+
+                    @Bound(@context)
+
+                </GridEdit>
+            </ResponsiveTable>
+            <div>@Message</div>
+
+        </div>
+    </div>
+}
+
+@code
+{
+
+
+
+   
+}

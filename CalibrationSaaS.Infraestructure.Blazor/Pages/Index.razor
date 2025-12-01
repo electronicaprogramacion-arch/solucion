@@ -1,0 +1,1268 @@
+﻿@page "/"
+@using CalibrationSaaS.Infraestructure.Blazor.Services.Offline.Sqlite
+@using CalibrationSaaS.Infraestructure.Blazor.Shared
+@using ChartJs.Blazor.PieChart
+@using System.Drawing
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.Extensions.Configuration
+@using ProtoBuf.Grpc
+@using Grpc.Core
+@using ChartJs.Blazor.LineChart
+@using ChartJs.Blazor.Samples.Shared
+@using ChartJs.Blazor.BarChart
+@using ChartJs.Blazor.BarChart.Axes
+@using ChartJs.Blazor
+@using Blazed.Controls
+@using System.Timers
+@inherits CalibrationSaaS.Infraestructure.Blazor.KavokuComponentBase2
+
+
+@inject IAccessTokenProvider TokenProvider
+
+@using SqliteWasmHelper
+
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+
+
+@attribute [Authorize("HasAccess")]
+
+    <AuthorizeView>
+        <Authorized>
+        @if (this.Loading)
+        {
+
+            @if (!AppSecurity.AlreadyLoad)
+            {
+                <CalibrationSaaS.Infraestructure.Blazor.LoadConfiguration>
+
+                </CalibrationSaaS.Infraestructure.Blazor.LoadConfiguration>
+            }
+
+            <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+                <div class="row" style="width:100%,display:flex;flex-direccin:columna;justify-content: center;">
+                    <div class="col">
+                    </div>
+                    <div class="col">
+                        <p><em>Loading...</em></p>
+                        <FluentProgressRing></FluentProgressRing>
+
+                    </div>
+                    <div class="col">
+                    </div>
+
+
+                </div>
+            </div>
+        }
+        else
+        {
+            <div style="min-height:600px; height:100%">
+                <!-- Page Heading -->
+                <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                    <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+                    @*<NavLink href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#newCustomerModal"><i class="fas fa-plus fa-sm text-white-50"></i>New Customer</NavLink>*@
+
+                    <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="customerNavigate" @onclick=@(async () =>await NavigateCustomer())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        <i class="fas fa-plus fa-sm text-white-50"></i>New Customer
+                    </button>
+
+                    <button class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" id="customerNavigate" @onclick=@(async () =>await NavigateAsset())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        <i class="fas fa-plus fa-sm text-white-50"></i>New Asset
+                    </button>
+
+                    <button class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" id="customerNavigate" @onclick=@(async () =>await NavigateOrder())
+                    @onclick:stopPropagation @onclick:preventDefault>
+                        <i class="fas fa-plus fa-sm text-white-50"></i>New Order
+                    </button>
+
+
+
+                </div>
+
+                <!-- Content Row -->
+                <div class="row">
+                </div>
+
+                <!-- Content Row -->
+
+                <div class="row">
+
+                    <!-- Area Chart -->
+                    <div class="col-xl-8 col-lg-7">
+                        <div class="card shadow mb-4">
+                            <!-- Card Header - Dropdown -->
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <h6 class="m-0 font-weight-bold text-primary">Orders Overview</h6>
+                                <div class="dropdown no-arrow">
+                                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                                        <div class="dropdown-header">Dropdown Header:</div>
+                                        <a class="dropdown-item" href="#">Action</a>
+                                        <a class="dropdown-item" href="#">Another action</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="#">Something else here</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card Body -->
+                            <div class="card-body">
+                                @*<div class="chart-area">*@
+                                <div class="">
+                                    @if (_config4 != null && AppStateBasics != null
+                                   && AppStateBasics.WODByDay != null
+                                   && AppStateBasics.WODByDay.Count() > 0)
+                                    {
+
+                                        <Chart Config="_config4" @ref="_chart3"></Chart>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pie Chart -->
+                    <div class="col-xl-4 col-lg-5">
+                        <div class="card shadow mb-4">
+                            <!-- Card Header - Dropdown -->
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <h6 class="m-0 font-weight-bold text-primary">Order Statuses</h6>
+                                <div class="dropdown no-arrow">
+                                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                                        <div class="dropdown-header">Dropdown Header:</div>
+                                        <a class="dropdown-item" href="#">Action</a>
+                                        <a class="dropdown-item" href="#">Another action</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="#">Something else here</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Card Body -->
+                            <div class="card-body">
+                                <div class="chart-pie pt-4 pb-2">
+                                    @*<canvas id="myPieChart"></canvas>*@
+                                    @*<Chart Config="_config"></Chart>*@
+                                    @if (_config != null && AppStateBasics != null)
+                                    {
+                                        <ChartJs.Blazor.Chart Config="_config"></ChartJs.Blazor.Chart>
+                                    }
+
+                                </div>
+                                @*<div class="mt-4 text-center small">
+                            <span class="mr-2">
+                            <i class="fas fa-circle text-primary"></i> Calibration
+                            </span>
+                            <span class="mr-2">
+                            <i class="fas fa-circle text-success"></i> Repair
+                            </span>
+                            <span class="mr-2">
+                            <i class="fas fa-circle text-info"></i> Rental
+                            </span>
+                            </div>*@
+                            </div>
+                        </div>
+
+                        <div style="width:100%">
+                            <div class="col mb-4" style="width:100%">
+                                <div class="card border-left-info shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                            @if (Customer?.ToLower() == "lti")
+                                            {    <NavLink class="nav-link" href="BackLog/0">
+                                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Active Work Order Details</div>
+                                                    </NavLink>
+                                                }
+                                                else
+                                                {
+                                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Active Work Order Details</div>
+                                                }
+                                                <div class="row no-gutters align-items-center">
+                                                    <div class="col-auto">
+                                                        @*<div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">@ActiveWorkOrderDetails</div>*@
+
+                                                        @if (AppStateBasics != null && AppStateBasics?.ActiveWorkOrderDetails.HasValue==true)
+                                                        {
+                                                            @if (Customer?.ToLower() == "lti")
+                                                            {
+                                                            <div class="nav-item active">
+                                                            <NavLink class="nav-link" href="BackLog/0">
+                                                             <div class="h5 mb-0 font-weight-bold text-gray-800">@ActiveWorkOrderDetails</div>
+                                                            </NavLink>
+                                                            </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="h5 mb-0 font-weight-bold text-gray-800">@ActiveWorkOrderDetails</div>
+                                                            }
+                                                          
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="h5 mb-0 font-weight-bold text-gray-800"></div>
+                                                        }
+
+
+                                                    </div>
+                                                    @*<div class="col">
+                                                <div class="progress progress-sm mr-2">
+                                                <div class="progress-bar bg-info" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                                </div>*@
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div id="modalWindow">
+                    <ModalWindow Type="Customer"></ModalWindow>
+                </div>
+                <div id="modalWindow2">
+                    <ModalWindow Type="Assets"></ModalWindow>
+                </div>
+            </div>
+        }
+        
+
+        </Authorized>
+        <NotAuthorized>
+
+
+
+            <div style="min-height:600px" class="LoginMessage">
+                @* <input @bind="userIdentifier" />
+                <button @onclick="SignIn">Sign in</button> *@
+                You are not logged in please click <LoginDisplay /> to authenticate
+
+           
+            </div>
+
+           
+
+
+        </NotAuthorized>
+    </AuthorizeView>
+
+
+
+
+
+
+
+
+
+@code{
+    // @inject ISqliteWasmDbContextFactory<ThingContext> Factory
+    [Inject]
+    public IConfiguration Configuration { get; set; }
+    public string Customer { get; set; }
+
+    [Inject]
+    AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+
+    // [Inject] CustomAuthenticationService AuthService { get; set; }
+
+    private static System.Timers.Timer aTimer;
+
+
+    public string userIdentifier = string.Empty;
+
+    private void OnUserFinish(Object source, ElapsedEventArgs e)
+    {
+        aTimer.Stop();
+        SignIn().ConfigureAwait(false).GetAwaiter().GetResult();
+
+    }
+
+
+    private async Task SignIn()
+    {
+        //var currentUser = AuthService.CurrentUser;
+        var user = await GetTechOffline();
+
+        if(user != null)
+        {
+            List<Claim> claims = new List<Claim>();
+
+            foreach (var item in user.Claims)
+            {
+                claims.Add(new Claim(item.Key, item.Value));
+            }
+            claims.Add(new Claim(ClaimTypes.Name, user.Name));
+
+            if (!string.IsNullOrEmpty(user.Roles))
+            {
+                var roles = user.Roles.Split(",");
+                foreach(var rol in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, rol));
+                }
+
+            }
+
+            var identity = new ClaimsIdentity(
+                claims,
+                "Custom Authentication");
+
+            var newUser = new ClaimsPrincipal(identity);
+
+            // AuthService.CurrentUser = newUser;
+        }
+
+
+        // var identity = new ClaimsIdentity(
+        //     new[]
+        //     {
+        //         new Claim(ClaimTypes.Name, userIdentifier),
+        //         new Claim(ClaimTypes.Role, "tech"),
+        //         },
+        //     "Custom Authentication");
+
+        // var newUser = new ClaimsPrincipal(identity);
+
+        // AuthService.CurrentUser = newUser;
+    }
+
+
+
+
+
+
+    [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.AppStateCompany AppState { get; set; }
+    [Inject]
+    public ISqliteWasmDbContextFactory<CalibrationSaaSDBContextOff2> DbFactory { get; set; }
+
+    [Inject]
+    public Func<dynamic, Application.Services.ISampleService2<CallContext>> OffLineClient { get; set; }
+
+
+
+    public bool busy { get; set; }
+    private async Task RefreshUiAsync()
+    {
+        //using var ctx = await Factory.CreateDbContextAsync();
+        busy = true;
+        await OffLineClient(DbFactory).InitializeAsync();
+
+
+
+        // things = await ctx.Things.ToArrayAsync();
+        // await bl.RefreshAsync();
+        busy = false;
+        //StateHasChanged();
+    }
+
+    // private async Task AddThingAsync()
+    // {
+    //     if (!string.IsNullOrWhiteSpace(newThing))
+    //     {
+    //         using var ctx = await Factory.CreateDbContextAsync();
+    //         ctx.Things.Add(new Thing { Name = newThing });
+    //         busy = true;
+    //         await ctx.SaveChangesAsync();
+    //         newThing = string.Empty;
+    //         busy = false;
+    //         await RefreshUiAsync();
+    //     }
+    // }
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+    public async Task NavigateCustomer()
+    {
+        NavigationManager.NavigateTo("Customer/0");
+
+    }
+
+    public async Task NavigateAsset()
+    {
+        NavigationManager.NavigateTo("PieceOfEquipmentCreate/0");
+
+
+    }
+
+    public async Task NavigateOrder()
+    {
+        NavigationManager.NavigateTo("WorkOrderCreate/0");
+
+    }
+
+    public static string RolesC { get; set; }
+
+    private const int InitalCount = 30;
+
+    public int TotalWorkOrder { get; set; }
+
+    public int UpcomingWorkOrderDetails { get; set; }
+
+    public int ActiveWorkOrderDetails { get; set; }
+
+    private LineConfig _config2;
+    private Chart _chart;
+
+
+    private int[] _data = ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor(InitalCount).ToArray();
+    private string[] _labels = new string[InitalCount];
+    private Variant[] _variants = new[]
+    {
+        //new Variant
+        //{
+        //    SteppedLine = SteppedLine.False,
+        //    Title = "No Step Interpolation",
+        //    Color = ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Red
+        //},
+        new Variant
+        {
+            SteppedLine = SteppedLine.True,
+            Title = "Step Before Interpolation",
+            Color = ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Green
+        },
+        //new Variant
+        //{
+        //    SteppedLine = SteppedLine.Before,
+        //    Title = "Step Before Interpolation",
+        //    Color = ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Green
+        //},
+        //new Variant
+        //{
+        //    SteppedLine = SteppedLine.After,
+        //    Title = "Step After Interpolation",
+        //    Color = ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Purple
+        //},
+        //new Variant
+        //{
+        //    SteppedLine = SteppedLine.Middle,
+        //    Title = "Step Middle Interpolation",
+        //    Color = ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Blue
+        //}
+    };
+
+
+
+
+
+    [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.Basic.AppState AppStateBasics { get; set; }
+
+    [Inject]
+    Func<dynamic, Application.Services.IWorkOrderDetailServices<CallContext>> Service2 { get; set; }
+
+
+    [Inject] public Func<dynamic, CalibrationSaaS.Application.Services.IUOMService<CallContext>> UOM { get; set; }
+    [Inject] public Func<dynamic, CalibrationSaaS.Application.Services.IBasicsServices<CallContext>> Basics { get; set; }
+    [Inject] public Func<dynamic, CalibrationSaaS.Application.Services.IAssetsServices<CallContext>> Assets { get; set; }
+
+
+
+    //[Inject]
+    //public IAccessTokenProvider TokenProvider { get; set; }
+
+    private PieConfig _config;
+
+    private async Task<Metadata> GetHeaderAsync()
+    {
+        var headers = new Metadata();
+        var accessTokenResult = await TokenProvider.RequestAccessToken();
+        var AccessToken = string.Empty;
+        if (accessTokenResult?.TryGetToken(out var token)==true)
+        {
+            AccessToken = token.Value;
+            headers.Add("Authorization", $"Bearer {AccessToken}");
+        }
+
+        return headers;
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        // await ShowProgress();
+
+        if ((AppStateBasics.TotalWorkOrder.HasValue && AppStateBasics.UpcomingWorkOrderDetails.HasValue && AppStateBasics.ActiveWorkOrderDetails.HasValue))
+        {
+            //var a = await client.GetTotals(g);
+            if ((TotalWorkOrder != AppStateBasics.TotalWorkOrder) || UpcomingWorkOrderDetails != AppStateBasics.UpcomingWorkOrderDetails || ActiveWorkOrderDetails != AppStateBasics.ActiveWorkOrderDetails)
+            {
+                TotalWorkOrder = AppStateBasics.TotalWorkOrder.Value;
+                UpcomingWorkOrderDetails = AppStateBasics.UpcomingWorkOrderDetails.Value;
+                ActiveWorkOrderDetails = AppStateBasics.ActiveWorkOrderDetails.Value;
+                StateHasChanged();
+            }
+
+        }
+        await base.OnAfterRenderAsync(firstRender);
+        // await CloseProgress();
+    }
+
+
+    private void IniLine()
+    {
+        _config2 = new LineConfig
+        {
+            Options = new LineOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "ChartJs.Blazor Line Chart"
+                },
+                Tooltips = new Tooltips
+                {
+                    Mode = InteractionMode.Nearest,
+                    Intersect = true
+                },
+                Hover = new Hover
+                {
+                    Mode = InteractionMode.Nearest,
+                    Intersect = true
+                },
+                Scales = new Scales
+                {
+                    XAxes = new List<CartesianAxis>
+        {
+                        new CategoryAxis
+                        {
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "Month"
+                            }
+                        }
+                    },
+                    YAxes = new List<CartesianAxis>
+        {
+                        new LinearCartesianAxis
+                        {
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "Value"
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        IDataset<int> dataset1 = new LineDataset<int>(ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor(InitalCount))
+        {
+            Label = "My first dataset",
+            BackgroundColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Red),
+            BorderColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Red),
+            Fill = FillingMode.Disabled
+        };
+
+        IDataset<int> dataset2 = new LineDataset<int>(ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor(InitalCount))
+        {
+            Label = "My second dataset",
+            BackgroundColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Blue),
+            BorderColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Blue),
+            Fill = FillingMode.Disabled
+        };
+
+        _config2.Data.Labels.AddRange(ChartJs.Blazor.Samples.Shared.SampleUtils.Months.Take(InitalCount));
+        _config2.Data.Datasets.Add(dataset1);
+        _config2.Data.Datasets.Add(dataset2);
+    }
+    //protected override void OnAfterRender(bool firstRender)
+    //{
+    //    //return base.OnAfterRenderAsync(firstRender);
+
+    //    //if ((AppStateBasics.TotalWorkOrder.HasValue && AppStateBasics.UpcomingWorkOrderDetails.HasValue && AppStateBasics.ActiveWorkOrderDetails.HasValue))
+    //    //{
+    //    //    //var a = await client.GetTotals(g);
+    //    //    if ((TotalWorkOrder != AppStateBasics.TotalWorkOrder) || UpcomingWorkOrderDetails != AppStateBasics.UpcomingWorkOrderDetails || ActiveWorkOrderDetails != AppStateBasics.ActiveWorkOrderDetails)
+    //    //    {
+    //    //        TotalWorkOrder = AppStateBasics.TotalWorkOrder.Value;
+    //    //        UpcomingWorkOrderDetails = AppStateBasics.UpcomingWorkOrderDetails.Value;
+    //    //        ActiveWorkOrderDetails = AppStateBasics.ActiveWorkOrderDetails.Value;
+    //    //        StateHasChanged();
+    //    //    }
+
+    //    //}
+
+    //}
+
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    await  base.OnInitializedAsync();
+    //}
+
+    // async Task LoadMeasurament()
+    // {
+    //     BasicsServiceGRPC basic = new BasicsServiceGRPC(Basics, DbFactory);
+    //     var g = new CallOptions(await GetHeaderAsync());
+
+    //     if (AppStateBasics.UnitofMeasureList == null || AppState?.UnitofMeasureList?.Count > 0 
+    //         || AppState.UnitofMeasureList==null || AppState.UnitofMeasureList.Count == 0)
+    //     {
+    //         AppState.UnitofMeasureTypeList = new List<UnitOfMeasureType>();
+
+    //         AppState.UnitofMeasureList = new List<UnitOfMeasure>();
+
+    //         UOMServiceGRPC uom = new UOMServiceGRPC(UOM, DbFactory);
+
+    //         var a = await uom.GetTypes();
+
+    //         AppState.UnitofMeasureTypeList = a.ToList();
+    //         AppStateBasics.UnitofMeasureTypeList = a.ToList();
+
+    //         var b = await uom.GetAll();
+
+    //         if (b != null && b?.UnitOfMeasureList != null && b?.UnitOfMeasureList?.Count > 0)
+    //         {
+
+    //             AppState.UnitofMeasureList = b.UnitOfMeasureList.ToList();
+    //             AppStateBasics.UnitofMeasureList = b.UnitOfMeasureList.ToList();
+
+    //         }
+    //     }
+
+     
+
+    //     if (AppSecurity.RolesList == null)
+    //     {
+            
+
+    //         var a = await basic.GetRoles();
+    //         if (a != null && a.Roles != null)
+    //         {
+
+    //             AppSecurity.RolesList = a.Roles;
+    //         }
+
+    //     }
+
+    //     if (AppSecurity?.Permissions?.Count == 0)
+    //     {
+
+    //         AppSecurity.Permissions = Enum.GetNames(typeof(Policies)).ConvertListStringinKeyValue();
+         
+    //     }
+
+
+    //     if (AppSecurity?.UserList == null || AppSecurity?.UserList?.Count == 0)
+    //     {
+
+
+    //         AssetsServiceGRPC assets = new Services.AssetsServiceGRPC(Assets,DbFactory);
+
+    //         var _user = await assets.GetUsers();  //Tecnhicians_companyService.GetAll();
+    //         var _userList = _user.Users;
+
+    //         AppSecurity.UserList = _userList;
+            
+    //     }
+
+
+    //     if (AppSecurity?.CertificationList == null || AppSecurity?.CertificationList?.Count == 0)
+    //     {
+
+
+    //         // BasicsServiceGRPC basic = new BasicsServiceGRPC(Basics,DbFactory);
+
+    //         var result = await basic.GetCertifications();
+
+    //         AppSecurity.CertificationList = result.ToList();
+
+    //     }
+
+
+    //     if (AppSecurity?.CalibrtionTypeList == null || AppSecurity?.CalibrtionTypeList?.Count == 0 || AppStateBasics?.EquipmentTypes?.Count == 0)
+    //     {
+    //         AppSecurity.CalibrtionTypeList = new List<CalibrationType>();
+
+    //         AppSecurity.EquipmentTypeWODList = new List<EquipmentType>();
+
+    //         //BasicsServiceGRPC assets = new BasicsServiceGRPC(Basics,DbFactory);
+
+    //         var _calibType = await basic.GetEquipmenTypes();
+
+    //         foreach (var item in _calibType.EquipmentTypes)
+    //         {
+    //             AppStateBasics.AddEquipmentType(item);
+    //         }
+
+    //         foreach (var item in _calibType.EquipmentTypes.Where(x => x.HasWorkOrderDetail == true))
+    //         {
+    //             CalibrationType c = new CalibrationType();
+
+    //             c.CalibrationTypeId = item.CalibrationTypeID;
+    //             c.Name = item.Name;
+
+    //             AppSecurity.CalibrtionTypeList.Add(c);
+
+    //             AppSecurity.EquipmentTypeWODList.Add(item);
+
+
+
+    //         }
+    //         //AppSecurity.CalibrtionTypeList.Add(new CalibrationType() { CalibrationTypeId=1, Name= "Balance & Scale" });
+    //         //AppSecurity.CalibrtionTypeList.Add(new CalibrationType() { CalibrationTypeId = 2, Name = "Force" });
+
+
+    //     }
+
+
+
+
+        
+
+    //     if (AppState?.ToleranceList2 == null || AppState?.ToleranceList2?.Count == 0 || AppStateBasics.ToleranceList2 == null || AppStateBasics?.ToleranceList2?.Count == 0)
+    //     {
+           
+
+    //         var result = await basic.GetToleranceTypes();
+
+    //         AppState.ToleranceList2 = result.ToList();
+
+    //         AppStateBasics.ToleranceList2 = result.ToList();
+
+
+    //     }
+
+    //     // if (AppStateBasics?.EquipmentTypes?.Count == 0)
+    //     // {
+    //     //     var etypes = await basic.GetEquipmenTypes();
+
+    //     //     foreach (var item in etypes.EquipmentTypes)
+    //     //     {
+    //     //         AppStateBasics.AddEquipmentType(item);
+    //     //     }
+    //     //     //EquipmentTypes = etypes.EquipmentTypes;
+
+    //     // }
+
+    //     //WorkOrderDetailGrpc client = new WorkOrderDetailGrpc(Service2);
+    //     //var s = await client.GetStatus(new CallOptions());
+    //     //if (s != null)
+    //     //{
+    //     //    AppStateBasics.WODStatus = s.ToList();
+    //     //}
+    //     //var ac = await client.GetChartPie(new CallOptions());
+
+    //     //if(ac != null)
+    //     //{
+    //     //    AppStateBasics.WODStatusCount = ac;
+    //     //}
+
+    //     //var ta = await client.GetTotals(new CallOptions());
+
+    //     //if(ta != null)
+    //     //{
+    //     //    AppStateBasics.TotalWorkOrder = ta.ElementAtOrDefault(0);
+    //     //    AppStateBasics.UpcomingWorkOrderDetails = ta.ElementAtOrDefault(1);
+    //     //    AppStateBasics.ActiveWorkOrderDetails = ta.ElementAtOrDefault(2);
+    //     //}
+
+
+
+    //     //var res= await client.GetWODCountPerDay(new CallOptions());
+    //     //if (res != null)
+    //     //{
+    //     //    AppStateBasics.WODByDay = res;
+
+    //     //}
+
+    // }
+
+
+    public async Task<CurrentUser> GetTechOffline()
+    {
+
+        CurrentUser uss1 = await OffLineClient(DbFactory).GetUser(new CallOptions());
+        BasicsServiceGRPC basics = new BasicsServiceGRPC(Basics, DbFactory);
+        var users = await basics.GetUsers();
+
+        if (uss1?.Claims?.Count > 5)
+        {
+            var user = uss1.Claims.Where(x => x.Key == "name").FirstOrDefault();
+
+            if (user != null)
+            {
+                var uss = users.Users.Where(x => x.UserName == user.Value).FirstOrDefault();
+                if (uss != null)
+                {
+                    // Technician = uss.UserID;
+                    // UserDomain = uss;
+                    uss1.Name = uss.Name;
+                    uss1.TechID = uss.UserID;
+                    uss1.Roles = uss.Roles;
+                    return uss1;
+
+
+                }
+            }
+
+
+        }
+        return null;
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    //protected override void OnInitialized()
+    {
+        await RefreshUiAsync();
+        this.Loading = true;
+        var AccessToken = string.Empty;
+        var accessToken = await TokenProvider.RequestAccessToken();
+        if (accessToken?.TryGetToken(out var token)==true)
+        {
+            AppSecurity.Token = token.Value;
+            //headers.Add("Authorization", $"Bearer {AccessToken}");
+        }
+        else
+        {
+            AppSecurity.Token = "";
+        }
+
+
+        if (AppStateBasics == null)
+        {
+            return;
+        }
+
+
+        var User0 = await GetUser();
+
+        if (User0.Identity == null || !User0.Identity.IsAuthenticated)
+        {
+            //Code for offline
+            //return;
+        }
+
+
+        WorkOrderDetailGrpc client = new WorkOrderDetailGrpc(Service2, DbFactory);
+
+
+        var s = await client.GetStatus(new CallOptions());
+
+
+        if (s != null)
+        {
+            AppStateBasics.WODStatus = s.ToList();
+        }
+        var ac = await client.GetChartPie(new CallOptions());
+
+        if (ac != null)
+        {
+            AppStateBasics.WODStatusCount = ac;
+        }
+
+        var ta = await client.GetTotals(new CallOptions());
+
+        if (ta != null)
+        {
+            AppStateBasics.TotalWorkOrder = ta.ElementAtOrDefault(0);
+            AppStateBasics.UpcomingWorkOrderDetails = ta.ElementAtOrDefault(1);
+            AppStateBasics.ActiveWorkOrderDetails = ta.ElementAtOrDefault(2);
+        }
+
+
+
+        var res = await client.GetWODCountPerDay(new CallOptions());
+        if (res != null)
+        {
+            AppStateBasics.WODByDay = res;
+
+        }
+
+
+
+
+        //var g = new CallOptions(await GetHeaderAsync());
+
+
+        var a = AppStateBasics.WODStatusCount;//client.GetChartPie(new CallOptions());
+
+        var s2 = AppStateBasics.WODStatus;//client.GetStatus(new CallOptions());
+
+
+        if (s2 != null && a != null)
+        {
+            _config = new PieConfig
+            {
+                Options = new PieOptions
+                {
+                    Responsive = true,
+                    MaintainAspectRatio = false,
+                    Title = new OptionsTitle
+                    {
+                        Display = true,
+                        Text = "Order Statuses"
+                    },
+
+                }
+            };
+
+            //foreach (string color in new[] { "Red", "Yellow", "Green", "Blue" })
+            //{
+            //    _config.Data.Labels.Add(color);
+            //}
+
+            foreach (var item in s2.Where(x => x.IsLast == false).ToList())
+            {
+                _config.Data.Labels.Add(item.Name);
+            }
+
+
+            //PieDataset<int> dataset = new PieDataset<int>(new[] { 6, 5, 3, 7 })
+
+            PieDataset<int> dataset = new PieDataset<int>(a)
+            {
+                BackgroundColor = new[]
+        {
+            ColorUtil.ColorHexString(255, 99, 132), // Slice 1 aka "Red"
+            ColorUtil.ColorHexString(255, 205, 86), // Slice 2 aka "Yellow"
+            ColorUtil.ColorHexString(75, 192, 192), // Slice 3 aka "Green"
+            ColorUtil.ColorHexString(54, 162, 235), // Slice 4 aka "Blue"
+        }
+            };
+
+            _config.Data.Datasets.Add(dataset);
+
+
+            //IniLine();
+
+        }
+        //for (int i = 0; i < _labels.Length; i++)
+        //{
+        //    _labels[i] = $"Day {i + 1}";
+        //}
+
+        //WorkOrderDetailGrpc ccc = new WorkOrderDetailGrpc(Service2);
+
+        if (AppStateBasics.WODByDay != null)
+        {
+            var data = new List<int>();
+            var labels = new List<string>();
+
+            //foreach (var item in AppStateBasics.WODByDay)
+            //{
+            //    data.Add(item.Value);
+            //    labels.Add(item.Key);
+            //}
+
+
+            //IniBar(data,labels);
+            iniLine(data, labels);
+
+
+        }
+
+        // await LoadMeasurament();
+
+        
+
+        if (!ConnectionStatusService.GetCurrentStatus())
+        {
+            aTimer = new System.Timers.Timer(100);
+
+            aTimer.AutoReset = false;
+
+            aTimer.Elapsed += OnUserFinish;
+
+            aTimer.Stop();
+
+            aTimer.Start();
+        }
+
+        Customer = Configuration.GetSection("Reports")["Customer"];
+        this.Loading = false;
+
+    }
+
+    //protected override async Task OnInitializedAsync()
+    //{
+
+
+
+    //}
+    private void RandomizeData()
+    {
+        foreach (IDataset<int> dataset in _config2.Data.Datasets)
+        {
+            int count = dataset.Count;
+            dataset.Clear();
+            dataset.AddRange(ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor(count));
+        }
+
+        _chart.Update();
+    }
+
+    private void AddDataset()
+    {
+        string color = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.All[_config2.Data.Datasets.Count % ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.All.Count]);
+        IDataset<int> dataset = new LineDataset<int>(ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor(_config2.Data.Labels.Count))
+        {
+            Label = $"Dataset {_config2.Data.Datasets.Count}",
+            BackgroundColor = color,
+            BorderColor = color,
+            Fill = FillingMode.Disabled
+        };
+
+        _config2.Data.Datasets.Add(dataset);
+        _chart.Update();
+    }
+
+    private void RemoveDataset()
+    {
+        IList<IDataset> datasets = _config2.Data.Datasets;
+        if (datasets.Count == 0)
+            return;
+
+        datasets.RemoveAt(datasets.Count - 1);
+        _chart.Update();
+    }
+
+    private void AddData()
+    {
+        if (_config2.Data.Datasets.Count == 0)
+            return;
+
+        string month = ChartJs.Blazor.Samples.Shared.SampleUtils.Months[_config2.Data.Labels.Count % ChartJs.Blazor.Samples.Shared.SampleUtils.Months.Count];
+        _config2.Data.Labels.Add(month);
+
+        foreach (IDataset<int> dataset in _config2.Data.Datasets)
+        {
+            dataset.Add(ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor());
+        }
+
+        _chart.Update();
+    }
+
+    private void RemoveData()
+    {
+        if (_config2.Data.Datasets.Count == 0 ||
+            _config2.Data.Labels.Count == 0)
+        {
+            return;
+        }
+
+        _config2.Data.Labels.RemoveAt(_config2.Data.Labels.Count - 1);
+
+        foreach (IDataset<int> dataset in _config2.Data.Datasets)
+        {
+            dataset.RemoveAt(dataset.Count - 1);
+        }
+
+        _chart.Update();
+    }
+
+
+    private LineConfig GetConfig(Variant variant)
+    {
+        LineConfig config = new LineConfig
+        {
+            Options = new LineOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = variant.Title
+                }
+            }
+        };
+
+        string steppedLineCamel = variant.SteppedLine.ToString();
+        steppedLineCamel = char.ToUpperInvariant(steppedLineCamel[0]) + steppedLineCamel.Substring(1);
+
+        config.Data.Labels.AddRange(_labels);
+        config.Data.Datasets.Add(new LineDataset<int>(_data)
+        {
+            Label = $"SteppedLine: SteppedLine.{steppedLineCamel}",
+            SteppedLine = variant.SteppedLine,
+            BorderColor = ColorUtil.FromDrawingColor(variant.Color),
+            Fill = FillingMode.Disabled
+        });
+
+        return config;
+    }
+    private class Variant
+    {
+        public SteppedLine SteppedLine { get; set; }
+        public string Title { get; set; }
+        public System.Drawing.Color Color { get; set; }
+    }
+
+    private BarConfig _config3;
+    private Chart _chart3;
+
+    public void IniBar(IEnumerable<int> data, IEnumerable<string> Labels)
+    {
+        _config3 = new BarConfig
+        {
+            Options = new BarOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "WOD by Day"
+                },
+                Tooltips = new Tooltips
+                {
+                    Mode = InteractionMode.Index,
+                    Intersect = false
+                },
+                Scales = new BarScales
+                {
+                    XAxes = new List<CartesianAxis>
+        {
+                        new BarCategoryAxis
+                        {
+                            Stacked = false
+                        }
+                    },
+                    YAxes = new List<CartesianAxis>
+        {
+                        new BarLinearCartesianAxis
+                        {
+                            Stacked = false
+                        }
+                    }
+                }
+            }
+        };
+
+        IDataset<int> dataset1 = new BarDataset<int>(data)
+        {
+            Label = "",
+            BackgroundColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Blue)
+        };
+
+
+        _config3.Data.Labels.AddRange(Labels);
+        _config3.Data.Datasets.Add(dataset1);
+
+    }
+
+
+    private LineConfig _config4;
+
+    public void iniLine(IEnumerable<int> data, IEnumerable<string> Labels)
+    {
+
+        _config4 = new LineConfig
+        {
+            Options = new LineOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "wod byday"
+                },
+                Tooltips = new Tooltips
+                {
+                    Mode = InteractionMode.Nearest,
+                    Intersect = true
+                },
+                Hover = new Hover
+                {
+                    Mode = InteractionMode.Nearest,
+                    Intersect = true
+                },
+                Scales = new Scales
+                {
+                    XAxes = new List<CartesianAxis>
+            {
+                        new TimeAxis
+                        {
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "Date"
+                            },
+                            Time = new TimeOptions
+                            {
+                                TooltipFormat = "ll HH:mm"
+                            },
+                        }
+                    },
+                    YAxes = new List<CartesianAxis>
+            {
+                        new LinearCartesianAxis
+                        {
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "Value"
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+
+        //_config4.Data.Labels.AddRange(ChartJs.Blazor.Samples.Shared.SampleUtils.GetNextDays(InitalCount).Select(d => d.ToShortTimeString()));
+        _config4.Data.Labels.AddRange(ChartJs.Blazor.Samples.Shared.SampleUtils.GetNextDays(InitalCount + 7).Select(d => d.ToString("o")));
+        //_config4.Data.Labels.AddRange(Labels);
+        //IDataset<int> dataset1 = new LineDataset<int>(ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor(InitalCount))
+        //{
+        //    Label = "My first dataset",
+        //    BackgroundColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Red),
+        //    BorderColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Red),
+        //    Fill = FillingMode.Disabled
+        //};
+
+        //IDataset<int> dataset2 = new LineDataset<int>(data)
+        //{
+        //    Label = "wod by day",
+        //    BackgroundColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Blue),
+        //    BorderColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Blue),
+        //    Fill = FillingMode.Disabled
+        //};
+
+        IDataset<TimePoint> dataset3 = new LineDataset<TimePoint>()
+        {
+            Label = "Jobs per day ",
+            BackgroundColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Green),
+            BorderColor = ColorUtil.FromDrawingColor(ChartJs.Blazor.Samples.Shared.SampleUtils.ChartColors.Green),
+            Fill = FillingMode.Disabled
+        };
+
+        //DateTime now = DateTime.Now;
+        //dataset3.Add(new TimePoint(now, ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor()));
+        //dataset3.Add(new TimePoint(now.AddDays(5), ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor()));
+        //dataset3.Add(new TimePoint(now.AddDays(7), ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor()));
+        //dataset3.Add(new TimePoint(now.AddDays(15), ChartJs.Blazor.Samples.Shared.SampleUtils.RandomScalingFactor()));
+
+
+        foreach (var item in AppStateBasics.WODByDay)
+        {
+            //data.Add(item.Value);
+            //labels.Add(item.Key);
+
+            dataset3.Add(new TimePoint(item.Key, item.Value));
+
+
+        }
+
+
+
+        //_config4.Data.Datasets.Add(dataset1);
+        _config4.Data.Datasets.Add(dataset3);
+        //_config4.Data.Datasets.Add(dataset3);
+
+    }
+
+
+
+}

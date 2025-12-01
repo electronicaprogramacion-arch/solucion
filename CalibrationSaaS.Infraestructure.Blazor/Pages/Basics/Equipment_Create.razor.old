@@ -1,0 +1,541 @@
+﻿@page "/EquipmentCreate/{EntityID}"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics.TestPoints
+@inherits Equipment_CreateBase
+@implements IDisposable
+@using System.Linq.Expressions
+@using CalibrationSaaS.Blazor.Controls
+@inject ILogger<Equipment_Create> Logger
+
+
+
+
+<div class="col-md">
+    <div class="d-flex bd-highlight bg-white shadow" id="headermodal" style="height: 50px">
+        <div class="bd-highlight">
+            <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 5rem;"
+                 src="img/undraw_launch_day_4e04.svg" alt="">
+        </div>
+        <div class="align-self-end p-2 bd-highlight">
+
+            @TypeName Create
+
+        </div>
+        <div class="p-2 bd-highlight"></div>
+    </div>
+
+    <div class="progress" style="display:none" id="progressBar">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div>
+    </div>
+    <nav class="navbar sticky-top navbar-dark bg-light" id="toolbarmodal" style=" background-color:#563d7c !important; min-height:50px !important;width:100%">
+        @if (Enabled)
+        {
+            <button class="btn btn-sm btn-info shadow-sm"
+                    type="submit" onclick="$('#executebutton').click();">
+                Save
+                <i class="fas fa-save fa-sm text-white-50"></i>
+            </button>
+        }
+    </nav>
+    <EditForm OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+        @*<EditForm Model="@eq" style="margin:10px" OnSubmit="FormSubmitted"  Context="CurrentEditContext">*@
+        <DataAnnotationsValidator />
+        @*<ValidationSummary />*
+            @*<h4>@LastSubmitResult</h4>*@
+        <button class="btn btn-sm btn-info shadow-sm" id="executebutton"
+                type="submit" onclick="$('#progressBar').show()" style="display:none" @onkeypress="KeyHandler" @onkeypress:preventDefault>
+            Save
+            <i class="fas fa-save fa-sm text-white-50"></i>
+        </button>
+        <div class="contenido">
+
+            @*<article class="card-body">
+                <br><br><br><br><br><br><br>*@
+            <div id="accordion">
+                <div class="card">
+                    <div class="card-header" id="headingOne">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-4">
+                                </div>
+                                <div class="col-8">
+
+                                    <button class="btn btn-link" data-toggle="collapse"
+                                            style="padding:0px"
+                                            data-target="#collapseOne"
+                                            aria-expanded="true"
+                                            aria-controls="collapseOne"
+                                            @onclick:stopPropagation @onclick:preventDefault>
+                                        Basic Information
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
+
+
+                        @*<h5 class="mb-0">
+                                <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseOne">
+                                    Basic Information
+                                </button>
+                            </h5>*@
+                    </div>
+
+                    <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <dl class="param param-feature">
+                                        @*<dt>Category</dt><dd></dd>*@
+                                        <TextInput @bind-Value="eq.EquipmentTypeID"
+                                                   IsDisabled="!Enabled"
+                                                   Label="Equipment Type"
+                                                   LabelDown="@LabelDown"
+                                                   ValidationFor="(()=> eq.EquipmentTypeID)">
+                                            @foreach (EquipmentType item in AppState.EquipmentTypes)
+                                            {
+                                                <option value="@item.EquipmentTypeID">@item.Name</option>
+                                            }
+                                        </TextInput>
+                                    </dl>
+                                </div>
+                                <div class="col-sm-5">
+                                    <dl class="param param-feature">
+                                        @*<dt>ManuFacturer</dt>
+                                            <dd>
+                                                <InputSelect @bind-Value="eq.ManufacturerID" class="form-control">
+                                                    @foreach (Manufacturer item in AppState.Manufacturers)
+                                                    {
+                                                        <option value="@item.ManufacturerID">@item.Name</option>
+                                                    }
+                                                </InputSelect>
+
+                                            </dd>*@
+
+                                        <TextInput @bind-Value="eq.ManufacturerID"
+                                                   IsDisabled="!Enabled"
+                                                   Label="Manufacturer"
+                                                   LabelDown="@LabelDown"
+                                                   ValidationFor="(()=> eq.ManufacturerID)">
+                                            @foreach (Manufacturer item in AppState.Manufacturers)
+                                            {
+                                                @*if (@item.ManufacturerID == eq.ManufacturerID)
+                                                    {
+                                                        <option value="@item.ManufacturerID" selected>@item.Name</option>
+                                                    }
+                                                    else
+                                                    {*@
+                                                <option value="@item.ManufacturerID">@item.Name</option>
+                                                @*}*@
+
+                                            }
+                                        </TextInput>
+                                    </dl>
+                                </div>
+                                <div class="col-sm-4">
+                                    <dl class="param param-feature">
+                                        @*<dt>Status</dt>
+                                            <dd>
+                                                <InputSelect @bind-Value="eq.StatusID" class="form-control">
+
+                                                    @foreach (KeyValuePair<string, string> item in AppState.StatusList)
+                                                    {
+                                                        <option value="@item.Key">@item.Value</option>
+                                                    }
+                                                </InputSelect>
+
+
+                                            </dd>*@
+
+
+                                        <TextInput @bind-Value="eq.StatusID"
+                                                   IsDisabled="!Enabled"
+                                                   Label="Status"
+                                                   LabelDown="@LabelDown"
+                                                   ValidationFor="(()=> eq.StatusID)">
+
+                                            @foreach (KeyValuePair<string, string> item in AppState.StatusList)
+                                            {
+                                                <option value="@item.Key">@item.Value</option>
+                                            }
+                                        </TextInput>
+                                    </dl>
+                                </div>
+                            </div>
+                            @*<dl class="param param-feature">
+                                        <dt>Name</dt>
+                                        <dd>
+
+                                            <input type="text" class="form-control" placeholder="" aria-label="search" id="manufacturerName" required
+                                                   @bind-value="eq.Name" @bind-value:event="oninput" @onkeyup=@(() => IsEmptyValidator("Name",eq.Name)) aria-describedby="basic-addon2" />
+
+
+                                            <div class="footermessage @EmptyValidationDictionary["Name"]">
+                                                @EmptyValidationMessage["Name"]
+                                            </div>
+
+
+
+
+
+                                </dd>
+                                </dl>*@
+                            @*<div class="form-group">
+                                    <input type="text" id="name" class="form-control" required>
+                                    <label class="form-control-placeholder" for="name">Name</label>
+                                </div>*@
+                            <TextInput @bind-Value="eq.Name" Label="Name" Validate="true"
+                                       LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                       ValidationFor="@(() => eq.Name)">
+
+
+                            </TextInput>
+
+
+                            <dl class="param param-feature">
+                                @*<dt>Model#</dt>
+                                    <dd>*@
+                                @*<InputText @bind-Value="@eq.Model" class="form-control"> </InputText>*@
+                                @*<input type="text" class="form-control" placeholder="" aria-label="search" id="manufacturerName" required
+                                           @bind-value="eq.Model" @bind-value:event="oninput" @onkeyup=@(() => IsEmptyValidator("Model",eq.Model)) aria-describedby="basic-addon2" />
+
+                                    <div class="footermessage @EmptyValidationDictionary["Model"]">
+                                        @EmptyValidationMessage["Model"]
+                                    </div>*@
+
+                                @*</dd>*@
+
+                                <TextInput @bind-Value="eq.Model" Label="Model#" Validate="true"
+                                           LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                           ValidationFor="@(() => eq.Model)">
+                                </TextInput>
+
+                            </dl>  <!-- item-property-hor .// -->
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    @*<dl class="param param-feature">
+                                            <dt>Capacity</dt>
+                                            <dd>
+                                                <InputNumber @bind-Value="@eq.Capacity" class="form-control">
+
+                                                </InputNumber>
+                                            </dd>
+                                        </dl>*@
+                                    <TextInput @bind-Value="eq.Capacity" Label="Capacity" Validate="true"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                               ValidationFor="@(() => eq.Capacity)">
+                                    </TextInput>
+                                </div>
+                                <div class="col-sm-5">
+                                    <dl class="param param-feature">
+                                        @*<dt>Unit of Measure</dt>
+                                            <dd>
+
+                                            </dd>*@
+                                        <TextInput @bind-Value="@eq.UnitofmeasurementID" class="form-control"
+                                                   LabelDown="LabelDown"
+                                                   IsDisabled="!Enabled"
+                                                   Label="Unit of Measure"
+                                                   ValidationFor="@(() => eq.UnitofmeasurementID)">
+                                            @foreach (UnitOfMeasure item in AppState.UnitofMeasureList)
+                                            {
+                                                <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                            }
+                                        </TextInput>
+                                    </dl>  <!-- item-property-hor .// -->
+                                </div>
+                                <div class="col-sm-4">
+                                    <dl class="param param-feature">
+                                        <TextInput @bind-Value="@eq.IsEnabled" Label="IsEnabled" Validate="false"
+                                                   LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                                   ValidationFor="@(() => eq.IsEnabled)"
+                                                   Type="@Types.Switch">
+                                        </TextInput>
+                                    </dl>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header" id="headingTwo">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseTwo">
+                                Tolerance and resolution Information
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-10">
+                                    <dl class="param param-inline">
+                                        <dt>Tolerance Type</dt>
+                                        <dd>
+                                            @foreach (KeyValuePair<string, string> item in AppState.ToleranceList)
+                                            {
+                                                <label class="form-check form-check-inline">
+                                                    <input type="radio" name="question1" id="@item" value="@item"
+                                                           @onchange="SelectionChanged" class="form-check-input" />
+
+                                                    <span class="form-check-label"> @item.Value </span>
+                                                </label>
+                                            }
+                                        </dd>
+                                    </dl>  <!-- item-property .// -->
+                                </div> <!-- col.// -->
+                                <div class="col-sm-0">
+                                    <dl class="param param-inline">
+                                        <dt></dt>
+                                        <dd>
+
+                                        </dd>
+                                    </dl>
+                                </div>
+
+                            </div> <!-- row.// -->
+                            @if (IsPercentage)
+                            {
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <dl class="param param-feature">
+                                            @*<dt>Accuracy Percentage</dt>
+                                                <dd>
+
+                                                    <InputNumber @bind-Value="eq.AccuracyPercentage" class="form-control"></InputNumber>
+
+                                                </dd>*@
+                                            <TextInput @bind-Value="eq.AccuracyPercentage"
+                                                       Label="Accuracy Percentage"
+                                                       Validate="true"
+                                                       LabelDown="@LabelDown"
+                                                       IsDisabled="!Enabled"
+                                                       Type="@Types.number"
+                                                       ValidationFor="@(() => eq.AccuracyPercentage)">
+                                            </TextInput>
+                                        </dl>  <!-- item-property-hor .// -->
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <dl class="param param-feature">
+                                            @*<dt>Resolution Number</dt>
+                                                <dd>
+
+                                                    <InputNumber @bind-Value="eq.DecimalNumber" class="form-control"></InputNumber>
+
+                                                </dd>*@
+                                            <TextInput @bind-Value="eq.Resolution"
+                                                       Label="Resolution Number"
+                                                       Validate="true"
+                                                       LabelDown="@LabelDown"
+                                                       IsDisabled="!Enabled"
+                                                       TValue="double"
+                                                       Type="@Types.number"
+                                                       ValidationFor="@(() => eq.Resolution)">
+                                            </TextInput>
+                                        </dl>  <!-- item-property-hor .// -->
+                                    </div>
+                                    <dl class="col-sm-3">
+                                        @*<dt>Resolution</dt>
+                                            <dd>
+                                                <InputNumber @bind-Value="eq.Resolution" class="form-control"></InputNumber>
+
+                                            </dd>*@
+
+                                        <TextInput @bind-Value="eq.DecimalNumber"
+                                                   Label="Decimal Number"
+                                                   Validate="true"
+                                                   LabelDown="@LabelDown"
+                                                   IsDisabled="!Enabled"
+                                                   Type="@Types.number"
+                                                   ValidationFor="@(() => eq.DecimalNumber)">
+                                        </TextInput>
+                                    </dl>  <!-- item-property-hor .// -->
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="row">
+                                    <dl class="col-sm-3">
+                                        @*<dt>Tolerance</dt>
+                                            <dd>
+                                                <InputNumber @bind-Value="eq.Tolerance" class="form-control"></InputNumber>
+
+                                            </dd>*@
+                                        <TextInput @bind-Value="eq.Tolerance"
+                                                   Label="Tolerance"
+                                                   Validate="true"
+                                                   LabelDown="@LabelDown"
+                                                   IsDisabled="!Enabled"
+                                                   Type="@Types.number"
+                                                   ValidationFor="@(() => eq.Tolerance)">
+                                        </TextInput>
+
+                                    </dl>  <!-- item-property-hor .// -->
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header" id="headingThree">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed" data-toggle="collapse"
+                                    data-target="#collapseThree" @onclick:stopPropagation @onclick:preventDefault
+                                    aria-expanded="false" aria-controls="collapseThree">
+                                Other Information
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                        <div class="card-body">
+                            <dl class="item-property">
+                                @*<dt>Description</dt>
+                                    <dd>
+                                        <InputTextArea @bind-Value="@eq.Description" class="form-control">
+
+                                        </InputTextArea>
+
+
+                                    </dd>*@
+                                <TextInput @bind-Value="eq.Description" Label="Description" Validate="false"
+                                           LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                           ValidationFor="@(() => eq.Description)"
+                                           Type="@Types.TextArea">
+                                </TextInput>
+                            </dl>
+
+                            <dl class="param param-feature">
+                                <TextInput @bind-Value="@eq.ImageUrl" Label="ImageUrl" Validate="false"
+                                           LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                           ValidationFor="@(() => eq.ImageUrl)"
+                                           Type="@Types.TextArea">
+                                </TextInput>
+
+
+                                @*<dt>ImageUrl</dt>
+                                    <dd>
+                                        <InputText @bind-Value="@eq.ImageUrl" class="form-control">
+
+                                        </InputText>
+                                    </dd>*@
+                            </dl>
+                            <!-- item-property-hor .// -->
+
+
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+
+                    <div id="accordion2">
+                        <div class="card">
+                            <div class="card-header" id="headingFive">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseFive"
+                                            @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseFive">
+                                        Range
+                                    </button>
+                                </h5>
+                            </div>
+                            <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordion">
+                                <div class="card-body">
+
+                                    @*@if (eq.Ranges != null)
+                                        {*@
+                                    <RangeTestPoint @ref="@RangeComponent">
+
+                                    </RangeTestPoint>
+                                    @*}*@
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingFour">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseFour" @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseFour">
+                                        Test Points
+                                    </button>
+                                </h5>
+                            </div>
+
+                            <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
+                                <div class="card-body">
+
+                                    @*@if (eq.TestGroups != null && eq.TestGroups.Count > 0)
+                                    {*@
+                                        <GroupTestPoint @ref="@GroupComponent" Eq="@eq">
+
+                                    </GroupTestPoint>
+                                    @*}*@
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+            <br><br><br><br><br><br><br><br><br><br>
+            @*<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>*@
+            @*@if (@EntityID != "disabled")
+                {
+                    <button class="btn btn-primary" type="submit">Submit form</button>
+                }*@
+
+
+            @*</article>*@
+
+        </div>
+    </EditForm>
+    <button class="rounded" onclick="$('.contenido').animate({scrollTop: 0}, 500);"><i class="fas fa-angle-up"></i></button>
+    @*<a class="scroll-to-top rounded" href="#page-top" style="display: inline;">
+            <i class="fas fa-angle-up"></i>
+        </a>*@
+</div>
+
+
+<div id="dvModalCreateCustomer">
+    <StandardModal @ref="child"></StandardModal>
+</div>
+
+@code{
+
+
+    void KeyHandler(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            return;
+        }
+    }
+
+
+   
+
+    void SelectionChanged(ChangeEventArgs args)
+    {
+
+
+        selectedAnswer = args.Value.ToString();
+
+        Logger.LogDebug(selectedAnswer);
+
+        if (selectedAnswer.Contains("Percentage"))
+        {
+            IsPercentage = true;
+            eq.ToleranceTypeID = 1;
+        }
+        else
+        {
+            eq.ToleranceTypeID = 0;
+            IsPercentage = false;
+        }
+
+        StateHasChanged();
+    }
+
+}

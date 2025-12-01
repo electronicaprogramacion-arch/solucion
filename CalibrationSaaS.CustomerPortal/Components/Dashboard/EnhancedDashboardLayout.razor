@@ -1,0 +1,238 @@
+@using CalibrationSaaS.CustomerPortal.Models.ViewModels
+@using CalibrationSaaS.CustomerPortal.Services.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+@using Radzen
+@using Radzen.Blazor
+
+<RadzenStack Gap="1.5rem">
+    <!-- Welcome Header -->
+    <RadzenCard Class="welcome-header">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.H4" Class="rz-mb-0">
+                    Welcome back, @CustomerName
+                </RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1" Class="rz-color-secondary">
+                    Here's what's happening with your calibration equipment
+                </RadzenText>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">
+                    @DateTime.Now.ToString("MMMM dd, yyyy")
+                </RadzenText>
+                <RadzenButton Icon="refresh" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium"
+                             Click="@OnRefreshData" IsBusy="@IsLoading" Title="Refresh Data" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+
+    <!-- Key Metrics Row -->
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Class="metric-card metric-primary">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
+                    <!-- Inline SVG: Document icon -->
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: var(--rz-primary);">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                        <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                        <path d="M8 13h8M8 17h8M8 9h4" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H3" Class="rz-mb-0">@TotalCertificates</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">Total Certificates</RadzenText>
+                    </RadzenStack>
+                    <RadzenButton Text="View All" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                 Click="@(() => OnNavigate.InvokeAsync("/certificates"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Class="metric-card metric-success">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
+                    <!-- Inline SVG: Cog icon -->
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: var(--rz-success);">
+                        <path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                        <path d="M3 12h3M18 12h3M12 3v3M12 18v3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H3" Class="rz-mb-0">@TotalEquipment</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">Equipment Items</RadzenText>
+                    </RadzenStack>
+                    <RadzenButton Text="Manage" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                 Click="@(() => OnNavigate.InvokeAsync("/equipment"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Class="metric-card metric-warning">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
+                    <!-- Inline SVG: Calendar icon -->
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: var(--rz-warning);">
+                        <rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                        <path d="M8 2v4M16 2v4M3 9h18" stroke="currentColor" stroke-width="1.5"/>
+                        <rect x="7" y="12" width="3" height="3" fill="currentColor"/>
+                    </svg>
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H3" Class="rz-mb-0">@EquipmentDueSoon</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">Due Soon</RadzenText>
+                    </RadzenStack>
+                    <RadzenButton Text="Review" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                 Click="@(() => OnNavigate.InvokeAsync("/equipment/due-dates?filter=upcoming"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Class="metric-card metric-danger">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
+                    <!-- Inline SVG: Warning icon -->
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: var(--rz-danger);">
+                        <path d="M12 3l10 18H2L12 3z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                        <path d="M12 9v5" stroke="currentColor" stroke-width="1.5"/>
+                        <circle cx="12" cy="17" r="1" fill="currentColor"/>
+                    </svg>
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H3" Class="rz-mb-0">@EquipmentOverdue</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">Overdue</RadzenText>
+                    </RadzenStack>
+                    <RadzenButton Text="Action Required" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                 Click="@(() => OnNavigate.InvokeAsync("/equipment/due-dates?filter=overdue"))" />
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <!-- Compliance Overview -->
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeMD="8">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H5">Compliance Overview</RadzenText>
+                    
+                    <!-- Compliance Rate -->
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween">
+                            <RadzenText TextStyle="TextStyle.Body1">Overall Compliance Rate</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H6" Style="@($"color: {GetComplianceColor(ComplianceRate)};")">
+                                @ComplianceRate.ToString("F1")%
+                            </RadzenText>
+                        </RadzenStack>
+                        <RadzenProgressBar Value="@ComplianceRate" Max="100" 
+                                          Style="@($"--rz-progressbar-color: {GetComplianceColor(ComplianceRate)}; height: 8px;")" />
+                    </RadzenStack>
+
+                    <!-- Compliance Breakdown -->
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="4">
+                            <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-success);">
+                                    @EquipmentCurrent
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Current</RadzenText>
+                            </RadzenStack>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-warning);">
+                                    @EquipmentDueSoon
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Due Soon</RadzenText>
+                            </RadzenStack>
+                        </RadzenColumn>
+                        <RadzenColumn Size="4">
+                            <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-danger);">
+                                    @EquipmentOverdue
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Overdue</RadzenText>
+                            </RadzenStack>
+                        </RadzenColumn>
+                    </RadzenRow>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H5">Quick Actions</RadzenText>
+                    <RadzenStack Gap="0.75rem">
+                        <RadzenButton Text="Download Certificates" Icon="download" ButtonStyle="ButtonStyle.Primary"
+                                     Click="@(() => OnNavigate.InvokeAsync("/certificates"))" />
+                        <RadzenButton Text="View Due Dates" Icon="event" ButtonStyle="ButtonStyle.Secondary"
+                                     Click="@(() => OnNavigate.InvokeAsync("/equipment/due-dates"))" />
+                        <RadzenButton Text="Equipment Search" Icon="search" ButtonStyle="ButtonStyle.Info"
+                                     Click="@(() => OnNavigate.InvokeAsync("/equipment/search"))" />
+                        <RadzenButton Text="Compliance Report" Icon="assessment" ButtonStyle="ButtonStyle.Success"
+                                     Click="@(() => OnNavigate.InvokeAsync("/reports/compliance"))" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>
+
+<style>
+    .welcome-header {
+        background: linear-gradient(135deg, var(--rz-primary-lighter) 0%, var(--rz-primary-light) 100%);
+        border: none;
+        color: var(--rz-primary-darker);
+    }
+
+    .metric-card {
+        text-align: center;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border: none;
+        box-shadow: var(--shadow-2);
+    }
+
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-3);
+    }
+
+    .metric-primary {
+        background: linear-gradient(135deg, var(--rz-primary-lighter) 0%, rgba(255,255,255,0.9) 100%);
+        border-left: 4px solid var(--rz-primary);
+    }
+
+    .metric-success {
+        background: linear-gradient(135deg, var(--rz-success-lighter) 0%, rgba(255,255,255,0.9) 100%);
+        border-left: 4px solid var(--rz-success);
+    }
+
+    .metric-warning {
+        background: linear-gradient(135deg, var(--rz-warning-lighter) 0%, rgba(255,255,255,0.9) 100%);
+        border-left: 4px solid var(--rz-warning);
+    }
+
+    .metric-danger {
+        background: linear-gradient(135deg, var(--rz-danger-lighter) 0%, rgba(255,255,255,0.9) 100%);
+        border-left: 4px solid var(--rz-danger);
+    }
+</style>
+
+@code {
+    [Parameter] public string CustomerName { get; set; } = "Customer";
+    [Parameter] public int TotalCertificates { get; set; }
+    [Parameter] public int TotalEquipment { get; set; }
+    [Parameter] public int EquipmentDueSoon { get; set; }
+    [Parameter] public int EquipmentOverdue { get; set; }
+    [Parameter] public int EquipmentCurrent { get; set; }
+    [Parameter] public double ComplianceRate { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback OnRefreshData { get; set; }
+    [Parameter] public EventCallback<string> OnNavigate { get; set; }
+
+    private string GetComplianceColor(double rate)
+    {
+        return rate switch
+        {
+            >= 95 => "var(--rz-success)",
+            >= 85 => "var(--rz-warning)",
+            _ => "var(--rz-danger)"
+        };
+    }
+}

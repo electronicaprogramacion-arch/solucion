@@ -1,0 +1,364 @@
+﻿<style>
+
+    .ContainerPage {
+        min-height: 400px;
+        padding: 25px !important;
+    }
+</style>
+@page "/group"
+@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using CalibrationSaaS.Infraestructure.Blazor.Helper;
+@using CalibrationSaaS.Infraestructure.Blazor.Services;
+@using Grpc.Core;
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using Helpers
+@using System.Linq.Expressions;
+
+@inherits CalibrationSaaS.Infraestructure.Blazor.KavokuComponentBase<int>
+@if (Group != null)
+{
+    if (!string.IsNullOrEmpty(EntityID))
+    {
+
+        <HeaderComponent Enabled="@Enabled" Title="Set TestPoint" ActionBar="@ActionBar" >
+
+        </HeaderComponent>
+
+        ContainerCss = "ContainerPage";
+
+    }
+
+    <div class="row @ContainerCss" style="overflow:scroll">
+        <div class="col-sm-12">
+
+            <EditForm EditContext="@editContext" OnSubmit="FormSubmit">
+                <DataAnnotationsValidator />
+                @*<button class="btn btn-primary" type="submit" onclick="$('#progressBar').show()" id="executebutton" style="display:none">Submit form</button>*@
+                <SubmitComponent>
+
+                </SubmitComponent>
+                @*<div class="row">
+                    @if (Eq != null && ShowResolution)
+                    {
+                        <div class="col-md-12">
+
+                            <ResolutionComponent eq="Eq" ToleranceList="ToleranceList" Enabled="true">
+
+                            </ResolutionComponent>
+
+                            
+                        </div>
+                    }
+                    else if (Eq != null && !ShowResolution)
+                    {
+                        <div class="col-md-12" style="display:none">
+
+                            <ResolutionComponent eq="Eq" ToleranceList="ToleranceList" Enabled="true">
+
+                            </ResolutionComponent>
+
+                           
+                        </div>
+                    }
+                </div>*@
+                <div class="row" style="min-height:10px">
+
+                </div>
+                <div class="row" style="min-height:20px">
+
+                </div>
+                <div class="row">
+
+                    @*<EditForm Model="@Group">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />*@
+
+                    @if (Eq != null && Eq.EquipmentTypeObject != null && Eq.EquipmentTypeObject.HasRepeateabilityAndEccentricity)
+                    {
+                        <div class="col-sm d-inline-flex">
+
+                            @for (int i = 0; i < SwitchList.Count; i++)
+                            {
+                                SwitchList[i].ID = i + 1;
+                                @render(SwitchList[i])
+                            }
+
+                            @*<TextInput @bind-Value="@Group.TypeID" Label="Type" Validate="true" ValidationFor="@(()=> Group.TypeID)" OnChangeControl="ChangeType">
+                    @foreach (KeyValuePair<string, string> item in AppState.TestPointGroupTypeList)
+                    {
+                    <option value="@item.Key"> @item.Value </option>
+                    }
+                    </TextInput>*@
+
+
+                        </div>
+                    }
+
+                    <div class="col-sm">
+
+
+                        <TextInput @bind-Value="@Capacity" OnChangeControl="@((arg) =>Change2(arg))"  Label="Capacity" Validate="false" Type="@Types.number" IsDisabled="!Enabled">
+
+                            </TextInput>
+                        
+                      
+
+
+                    </div>
+                   
+                    <div class="col-sm">
+
+                        <TextInput @bind-Value="@Group.OutUnitOfMeasurementID" Label="UoM" Validate="true" ValidationFor="@(()=> Group.OutUnitOfMeasurementID)" IsDisabled="!Enabled">
+                            @foreach (UnitOfMeasure item in AppState.GetUoMByEquipmentType(Eq.GetEquipmentType()))
+                                {
+                                <option value="@item.UnitOfMeasureID"> @item.Name </option>
+                                }
+                        </TextInput>
+                    </div>
+
+                    <div class="col-sm">
+
+                        <TextInput @bind-Value="@NumberTestPoint" Label="Number of Test Points" Validate="false" Type="@Types.text" IsDisabled="!Enabled">
+
+                        </TextInput>
+                    </div>
+                    <div class="col-sm">
+
+                        <button class="btn btn-sm btn-success shadow-sm" type="button" aria-label="Close" disabled="@(!Enabled)"
+                                @onclick="@(async () => await Generate2(@Group))"
+                                @onclick:stopPropagation @onclick:preventDefault>
+
+                            <span aria-hidden="true">Generate Test Point</span>
+                        </button>
+
+                    </div>
+                    @*</EditForm>*@
+                </div>
+                <div class="row" style="min-height:10px">
+
+                </div>
+                <div class="row">
+                    <div class="col-sm">
+                        <TextInput @bind-Value="@Group.Description" Label="Description" Validate="true" ValidationFor="@(()=> Group.Description)" Type="@Types.TextArea" IsDisabled="!Enabled">
+
+                        </TextInput>
+                    </div>
+                </div>
+                <div class="validation-message">
+                    @Message
+                </div>
+
+                @if (Group != null && Group?.TestPoints != null)
+                {
+
+                    <ResponsiveTable ItemsDataSource="@Group.TestPoints.ToList()"
+                                     PageSize="20" HasAction="true" TableItem="TestPoint" @ref="RT" NewButtonText="Add New TestPoint"
+                                     OnSave="SaveGrid"
+                                     OnUpdate="EditGrid"
+                                     Context="Entity"
+                                     NewItemDefaultItem="NewItem"
+                                     InLineEdit="true"
+                                     ClientPagination="true"
+                                     Enabled="@Enabled"
+                                     ClientDefaultSortField="@RT.GetPropertyName(() => TestPoint.Position)"
+                                     ClientDefaultSortDirection="asc"
+                                     RowExecute="RowExceute"
+                                     Component="@Component"
+                                     EnabledDrag="true">
+
+
+                        <ChildContent>
+
+                            <GridColumns>
+
+
+
+                                <GridColumn TableItem="TestPoint" Field="@RT.GetPropertyName(() => TestPoint.NominalTestPoit)"
+                                            Title="Nominal Weight" IsToolTip="true" ToolTipField="@RT.GetPropertyName(() => TestPoint.Description)" CSScol="col-2">
+
+                                </GridColumn>
+
+                                <GridColumn TableItem="TestPoint" Field="@RT.GetPropertyName(() => TestPoint.UnitOfMeasurement.Abbreviation)" Title="UoM" >
+
+                                    <ResponsiveTemplate Context="entity">
+                                        @{
+                                            var a = entity as TestPoint;
+
+                                            var uoa = a.UnitOfMeasurementID.GetUoM(AppState.UnitofMeasureList);
+
+                                        }
+
+                                        @if (uoa != null)
+                                        {
+                                            @uoa.Abbreviation
+                                        }
+
+
+
+
+                                    </ResponsiveTemplate>
+
+                                </GridColumn>
+
+                                <GridColumn TableItem="TestPoint" Field="@RT.GetPropertyName(() => TestPoint.LowerTolerance)">
+
+                                </GridColumn>
+                                <GridColumn TableItem="TestPoint" Field="@RT.GetPropertyName(() => TestPoint.UpperTolerance)">
+
+                                </GridColumn>
+                                <GridColumn TableItem="TestPoint" Field="@RT.GetPropertyName(() => TestPoint.Resolution)">
+
+                                </GridColumn>
+                                <GridColumn TableItem="TestPoint" Field="@RT.GetPropertyName(() => TestPoint.CalibrationType)" Title="Type" >
+
+                                </GridColumn>
+                            </GridColumns>
+
+                        </ChildContent>
+
+                        @*<GridHeader>
+
+                                <div class="col-sm-2 customcol">Nominal<br />TestPoit</div>
+                                <div class="col-sm-2 customcol">UnitOf<br />Measurement</div>
+                                <div class="col-sm-2 customcol">Lower<br />Tolerance</div>
+                                <div class="col-sm-2 customcol">Upper<br />Tolerance</div>
+                                <div class="col-sm-2 customcol">Type</div>
+                            </GridHeader>*@
+                        <GridRow>
+
+                            @*<div class="col-sm-2 customcol inv">NominalTestPoint</div>
+                                <div class="col-sm-2 customcol">@Entity?.NominalTestPoit</div>
+                                <div class="col-sm-2 customcol inv">UnitOfMeasurement</div>
+                                <div class="col-sm-2 customcol">@Entity?.UnitOfMeasurement.Abbreviation</div>
+                                <div class="col-sm-2 customcol inv">LowerTolerance</div>
+                                <div class="col-sm-2 customcol">@Entity?.LowerTolerance</div>
+                                <div class="col-sm-2 customcol inv">UpperTolerance</div>
+                                <div class="col-sm-2 customcol">@Entity?.UpperTolerance</div>
+                                <div class="col-sm-2 customcol inv">Type</div>
+                                <div class="col-sm-2 customcol">@Entity?.CalibrationType</div>*@
+                        </GridRow>
+
+                        <GridEdit>
+                            @if (Entity != null)
+                            {
+                                @*<div class="col-sm-2 customcol inv">NominalTestPoit</div>*@
+
+                                <div class="col-sm-2 customcol">
+
+                                    @*@{
+                                            var cssinvalid2 = Entity.NominalTestPoit.GetInvalidClass(Entity.Resolution);
+                                        }*@
+
+                                    @*<TextInput @bind-Value="@Entity.NominalTestPoit"  Label="Nominal Test Point"
+                                                   StepResol="@Entity.Resolution.ToString()" Validate="true"
+                                                   Type="@Types.numberdecimal"
+                                                   LabelDown="false"
+                                                   IsDisabled="!Enabled"
+                                                   DecimalNumbers="@Entity.DecimalNumber">
+
+                                        </TextInput>*@
+                                    <TextInput @bind-Value="@Entity.NominalTestPoit"
+                                               Label="Nominal Test Point"
+                                               CSSClass="@("inputgrid")"
+                                               Type=@Types.numberdecimal
+                                               Validate="false"
+                                               ValidationFor="@(()=> @Entity.NominalTestPoit)"
+                                               TValue="double"
+                                               IsDisabled="!Enabled"
+                                               StepResol="@Entity.Resolution.ToString()"
+                                               DecimalNumbers="@Entity.DecimalNumber"
+                                               DecimalRoundType="RoundType.RoundToResolution"
+                                               EnableToastMessage="true"
+                                               ToastMessage=@("in Testpoint (Weight) the typed value {0} was rounded to {1}")
+                                               ChangeBackground="true">
+                                    </TextInput>
+
+
+                                </div>
+                                @*<div class="col-sm-3 customcol inv">UnitOfMeasurement</div>*@
+                                <div class="col-sm-2 customcol">
+
+                                    @if (Entity.UnitOfMeasurement == null)
+                                    {
+                                        Entity.UnitOfMeasurement = new UnitOfMeasure();
+                                    }
+
+                                    <TextInput @bind-Value="@Entity.UnitOfMeasurementID"
+                                               OnChangeControl="@((arg) =>Helpers.NumericExtensions.Conversion<UnitOfMeasure>(Entity.UnitOfMeasurement,arg.Value.ToString(),AppState.UnitofMeasureList,
+                                                          nameof(Entity.UnitOfMeasurementID)))"
+                                               Label="UOM" Validate="true" LabelDown="false">
+                                        @foreach (UnitOfMeasure item in AppState.GetUoMByEquipmentType(Eq.GetEquipmentType()))
+                                                    {
+                                            <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                                    }
+                                    </TextInput>
+
+                                </div>
+                                <div class="col-sm-2 customcol">
+                                    <TextInput @bind-Value="@Entity.Resolution" Label="Resolution" StepResol="@Entity.Resolution.ToString()" LabelDown="false" Validate="true" Type="@Types.number" OnChangeControl="@((arg) =>Change(Entity,arg))"></TextInput>
+                                </div>
+                                <div class="col-sm-1 customcol">
+                                    <TextInput @bind-Value="@Entity.DecimalNumber" Label="DecimalNumber" Validate="true" Type="@Types.ReadOnlyText" LabelDown="false"></TextInput>
+                                </div>
+                                <div class="col-sm-2 customcol" style="display:block">
+                                    <TextInput @bind-Value="@Entity.CalibrationType" Label="Type" Validate="true" Type="@Types.select" OnChangeControl="Changetype" LabelDown="false">
+                                        @foreach (KeyValuePair<string, string> item in AppState.TestPointGroupTypeList)
+                                                    {
+                                            <option value="@item.Key"> @item.Value </option>
+                                                    }
+                                    </TextInput>
+                                </div>
+                                <div class="col-sm-2 customcol" style="display:block">
+                                    <TextInput @bind-Value="@Entity.IsDescendant" Label="Send to Last"
+                                               Validate="true" Type="@Types.Switch" LabelDown="false">
+
+                                    </TextInput>
+                                </div>
+
+                                <div class="row" style="width:100%">
+                                    <div class="col-sm-2 customcol">
+                                        --
+                                    </div>
+                                    <div class="col-sm-10 customcol">
+                                        <TextInput @bind-Value="@Entity.Description" Label="Description" Validate="true" Type="@Types.TextArea" LabelDown="false"></TextInput>
+                                    </div>
+                                </div>
+                                <div style="display:none">
+                                    @Bound(Entity);
+                                </div>
+                                @*<div class="col-sm-3 customcol inv">LowerTolerance</div>
+                                    <div class="col-sm-3 customcol">@context.LowerTolerance</div>
+                                    <div class="col-sm-3 customcol inv">UpperTolerance</div>
+                                    <div class="col-sm-2 customcol">@context.UpperTolerance</div>*@
+                            }
+                        </GridEdit>
+                    </ResponsiveTable>
+                }
+
+            </EditForm>
+
+        </div>
+    </div>
+}
+
+@code
+{
+
+
+    public RenderFragment render(SwitchItem Wod)
+    {
+
+        return@<TextInput Label="@Wod.Label"
+                          TValue="bool"
+                          Validate="false"
+                          @bind-Value="@Wod.Value" Type="@Types.Switch" Model="Wod" OnChangeObjectControl="ChangeSwitch">
+    </TextInput>;
+
+}
+
+
+}
+

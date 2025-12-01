@@ -1,0 +1,158 @@
+@using System.Reflection
+@using Microsoft.AspNetCore.Components.WebAssembly.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@* @using Microsoft.FluentUI.AspNetCore.Components *@
+@inject LazyAssemblyLoader AssemblyLoader
+@inject SignOutSessionStateManager SignOutManager
+<script src="_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.lib.module.js" type="module" async></script>
+@* <FluentDesignTheme Mode="DesignThemeModes.Light" CustomColor="#ff0000" /> *@
+<Fluxor.Blazor.Web.StoreInitializer />
+<CascadingAuthenticationState>
+    <CascadingBlazoredModal>
+        <Router AppAssembly="@typeof(Program).Assembly"
+                      OnNavigateAsync="OnNavigateAsync"
+                      AdditionalAssemblies="_lazyLoadedAssemblies">
+            <Found Context="routeData">
+                <AuthorizeRouteView Context="_context" RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <Authorizing>
+                       @* @if (!_context.User.Identity.IsAuthenticated)
+                        {
+                            <RedirectToLogin />
+                        }*@
+
+
+                    </Authorizing>
+                    <NotAuthorized>
+                        @if (_context?.User?.Identity?.IsAuthenticated==false)
+                        {
+                            <RedirectToLogin />
+                        }
+                        else if (_context?.User?.Identity?.IsAuthenticated == true)
+                        {
+
+                            var a = _context.User.Claims.Where(x => x.Type == "role" && x.Value == "disable").FirstOrDefault();
+
+                            if(a != null)
+                            {
+                                BeginSignOut();
+
+                                <RedirectToLogin />
+                                //close session and redirect to login
+                            }
+
+                            <p>You are not authorized to access this resource.</p>
+                        }
+                        else
+                        {
+                            <CalibrationSaaS.Infraestructure.Blazor.Pages.Index />
+                        }
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            </Found>
+            <NotFound>
+                <LayoutView Layout="@typeof(MainLayout)">
+                    <div class="card mb-3">
+                        <div class="row no-gutters">
+                            <div class="col-md-4">
+                                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;" src="img/undraw_shopping_app_flsj.svg" alt="">
+                            </div>
+                            <div class="col-md-8">
+                                <label>Upgrade your subscription to access this feature</label>
+                            </div>
+                        </div>
+                    </div>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </CascadingBlazoredModal>
+</CascadingAuthenticationState>
+
+@code
+{
+    [Inject]
+    public Blazed.Controls.Route.Services.RouterSessionService RouterSessionService { get; set; }
+
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+
+    [Inject]
+    public CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity { get; set; }
+
+    private List<Assembly> _lazyLoadedAssemblies = new List<Assembly>();
+
+    public void BeginSignOut()
+    {
+        SignOutManager.SetSignOutState().ConfigureAwait(false).GetAwaiter().GetResult(); ;
+        
+    }
+
+    private async Task OnNavigateAsync(NavigationContext context)
+    {
+
+        var CurrUrl = NavigationManager.Uri;
+
+        //if (context.Path == "fetchdata2")
+        // if (!string.IsNullOrEmpty(AppSecurity.AssemblyName))
+        // {
+        //     var assemblies = await AssemblyLoader.LoadAssembliesAsync(new[] { AppSecurity.AssemblyName + ".dll" });
+        //     _lazyLoadedAssemblies.AddRange(assemblies);
+        // }
+
+        if (1 == 1)
+        //if (!HistoryButton) 
+        {
+
+            Blazed.Controls.Route.Services.HistoryNavigation h = new Blazed.Controls.Route.Services.HistoryNavigation();
+
+            h.Route = context.Path;
+
+            h.user = "test";
+
+            //h.Data = this.ActiveComponent;
+
+            //if(History.Count > 1 && (History[History.Count-1].Route== _LastRouteUrl 
+            //        || History[History.Count - 1].Route == _LastRouteUrl + "?h=y"))
+            //{
+
+            //    }
+            //    else{
+            //        History.Add(h);
+            //    }
+
+
+            if (context.Path.Contains("?h=y"))
+
+            {
+
+
+                if (RouterSessionService.History.Count > 0 && RouterSessionService.CurrentNavigationIndex >= 0)
+                {
+                    for (int i = RouterSessionService.CurrentNavigationIndex + 1; i < RouterSessionService.History.Count; i++)
+                    {
+                        RouterSessionService.History.RemoveAt(i);
+                    }
+                }
+
+                RouterSessionService.History.Add(h);
+            }
+            else
+            {
+                RouterSessionService.History.Add(h);
+                RouterSessionService.CurrentNavigationIndex = RouterSessionService.History.Count - 1;
+            }
+
+
+            //Console.WriteLine("xxxxxxxxxxxxxxxxxxxxxxx");
+            //Console.WriteLine(h.Route);
+
+
+        }
+        //RouterSessionService.History.Add(context.Path);
+
+    }
+}
+

@@ -1,0 +1,216 @@
+@using CalibrationSaaS.CustomerPortal.Models.Equipment
+@using CalibrationSaaS.CustomerPortal.Components.Equipment
+
+<RadzenCard Class="@GetCardClass()" Style="@GetCardStyle()">
+    <RadzenStack Gap="1rem">
+        <!-- Header with Selection and Status -->
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Start">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" Gap="0.5rem">
+                @if (ShowSelection)
+                {
+                    <RadzenCheckBox Value="@isSelected" ValueChanged="@((bool value) => OnSelectionChanged(value))" />
+                }
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0">@Equipment.Description</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                        SN: @Equipment.SerialNumber
+                        @if (!string.IsNullOrEmpty(Equipment.AssetTag))
+                        {
+                            <span> | AT: @Equipment.AssetTag</span>
+                        }
+                    </RadzenText>
+                </RadzenStack>
+            </RadzenStack>
+            
+            <DueDateStatusIndicator Equipment="@Equipment" ShowIcon="true" ShowText="false" ShowBadge="true" />
+        </RadzenStack>
+
+        <!-- Equipment Details -->
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="6">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenIcon Icon="category" Style="font-size: 1rem; color: var(--rz-secondary);" />
+                        <RadzenText TextStyle="TextStyle.Body2">@Equipment.EquipmentType</RadzenText>
+                    </RadzenStack>
+                    
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenIcon Icon="business" Style="font-size: 1rem; color: var(--rz-secondary);" />
+                        <RadzenText TextStyle="TextStyle.Body2">@Equipment.Manufacturer</RadzenText>
+                    </RadzenStack>
+                    
+                    @if (!string.IsNullOrEmpty(Equipment.Location))
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="location_on" Style="font-size: 1rem; color: var(--rz-secondary);" />
+                            <RadzenText TextStyle="TextStyle.Body2">@Equipment.Location</RadzenText>
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+            </RadzenColumn>
+            
+            <RadzenColumn Size="6">
+                <RadzenStack Gap="0.5rem">
+                    @if (Equipment.LastCalibrationDate.HasValue)
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="build" Style="font-size: 1rem; color: var(--rz-secondary);" />
+                            <RadzenText TextStyle="TextStyle.Body2">
+                                Last: @Equipment.LastCalibrationDate.Value.ToString("MMM dd, yyyy")
+                            </RadzenText>
+                        </RadzenStack>
+                    }
+                    
+                    @if (Equipment.NextCalibrationDate.HasValue)
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="event" Style="font-size: 1rem; color: var(--rz-secondary);" />
+                            <RadzenText TextStyle="TextStyle.Body2">
+                                Due: @Equipment.NextCalibrationDate.Value.ToString("MMM dd, yyyy")
+                            </RadzenText>
+                        </RadzenStack>
+                    }
+                    
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenIcon Icon="schedule" Style="font-size: 1rem; color: var(--rz-secondary);" />
+                        <RadzenText TextStyle="TextStyle.Body2">
+                            Interval: @Equipment.CalibrationIntervalMonths months
+                        </RadzenText>
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <!-- Due Date Progress -->
+        @if (ShowProgress)
+        {
+            <RadzenStack Gap="0.5rem">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Due Date Status</RadzenText>
+                    <DueDateStatusIndicator Equipment="@Equipment" ShowIcon="false" ShowText="true" 
+                                          ShowDaysInfo="true" TextStyle="TextStyle.Caption" />
+                </RadzenStack>
+                
+                <DueDateStatusIndicator Equipment="@Equipment" ShowIcon="false" ShowText="false" 
+                                      ShowProgressBar="true" ProgressBarWidth="100%" />
+            </RadzenStack>
+        }
+
+        <!-- Work Order and Certificate Info -->
+        @if (ShowWorkOrderInfo && (Equipment.LastWorkOrderId.HasValue || Equipment.LastCertificateId.HasValue))
+        {
+            <RadzenStack Gap="0.5rem">
+                @if (Equipment.LastWorkOrderId.HasValue)
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenIcon Icon="assignment" Style="font-size: 1rem; color: var(--rz-info);" />
+                        <RadzenText TextStyle="TextStyle.Caption">
+                            WO: @Equipment.LastWorkOrderNumber
+                            @if (Equipment.LastWorkOrderDate.HasValue)
+                            {
+                                <span> (@Equipment.LastWorkOrderDate.Value.ToString("MMM dd, yyyy"))</span>
+                            }
+                        </RadzenText>
+                    </RadzenStack>
+                }
+                
+                @if (Equipment.LastCertificateId.HasValue)
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenIcon Icon="verified" Style="font-size: 1rem; color: var(--rz-success);" />
+                        <RadzenText TextStyle="TextStyle.Caption">
+                            Cert: @Equipment.LastCertificateNumber
+                            @if (Equipment.LastCertificateIssueDate.HasValue)
+                            {
+                                <span> (@Equipment.LastCertificateIssueDate.Value.ToString("MMM dd, yyyy"))</span>
+                            }
+                        </RadzenText>
+                    </RadzenStack>
+                }
+            </RadzenStack>
+        }
+
+        <!-- Action Buttons -->
+        @if (ShowActions)
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                <RadzenButton Text="View Details" Icon="visibility" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+                             Click="@(() => OnViewDetails.InvokeAsync(Equipment))" />
+                
+                @if (Equipment.LastCertificateId.HasValue)
+                {
+                    <RadzenButton Text="Certificate" Icon="description" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" 
+                                 Click="@(() => OnViewCertificate.InvokeAsync(Equipment.LastCertificateId.Value))" />
+                }
+                
+                @if (Equipment.LastWorkOrderId.HasValue)
+                {
+                    <RadzenButton Text="Work Order" Icon="assignment" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small" 
+                                 Click="@(() => OnViewWorkOrder.InvokeAsync(Equipment.LastWorkOrderId.Value))" />
+                }
+            </RadzenStack>
+        }
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter] public EquipmentDueDateDto Equipment { get; set; } = default!;
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public bool ShowSelection { get; set; } = false;
+    [Parameter] public bool ShowProgress { get; set; } = true;
+    [Parameter] public bool ShowWorkOrderInfo { get; set; } = true;
+    [Parameter] public bool ShowActions { get; set; } = true;
+    [Parameter] public EventCallback<bool> SelectedChanged { get; set; }
+    [Parameter] public EventCallback<EquipmentDueDateDto> OnViewDetails { get; set; }
+    [Parameter] public EventCallback<int> OnViewCertificate { get; set; }
+    [Parameter] public EventCallback<int> OnViewWorkOrder { get; set; }
+
+    private bool isSelected;
+
+    protected override void OnParametersSet()
+    {
+        isSelected = IsSelected;
+    }
+
+    private async Task OnSelectionChanged(bool selected)
+    {
+        isSelected = selected;
+        await SelectedChanged.InvokeAsync(selected);
+    }
+
+    private string GetCardClass()
+    {
+        var baseClass = "rz-border-radius-1";
+        
+        if (IsSelected)
+        {
+            baseClass += " rz-border-primary";
+        }
+        
+        return baseClass;
+    }
+
+    private string GetCardStyle()
+    {
+        var style = "";
+        
+        // Add border color based on due date status
+        var borderColor = Equipment.DueStatus switch
+        {
+            DueDateStatus.Current => "var(--rz-success-light)",
+            DueDateStatus.ExpiringSoon => "var(--rz-warning-light)",
+            DueDateStatus.Overdue => "var(--rz-danger-light)",
+            DueDateStatus.Unknown => "var(--rz-secondary-light)",
+            _ => "var(--rz-secondary-light)"
+        };
+        
+        style += $"border-left: 4px solid {borderColor};";
+        
+        if (IsSelected)
+        {
+            style += " box-shadow: 0 0 0 2px var(--rz-primary-lighter);";
+        }
+        
+        return style;
+    }
+}

@@ -1,0 +1,101 @@
+﻿@using CalibrationSaaS.Infraestructure.Blazor.Shared
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using System.Linq;
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using CalibrationSaaS.Blazor.Controls
+@inject IModalService modal
+@if (LIST1 != null)
+{
+    <div class="row">
+        <div class="col-sm-12">
+
+            <ResponsiveTable ItemsDataSource="@LIST1" PageSize="5" HasAction="true"
+                             TableItem="Certificate" @ref="RT" InLineEdit="true">
+                <GridHeader>
+                    <div class="col-sm-2 customcol">Certificate#<br />Value</div>
+                    <div class="col-sm-2 customcol">Company</div>
+                    <div class="col-sm-2 customcol">Due<br />Date</div>
+                    <div class="col-sm-2 customcol">Calibration<br />Date</div>
+                    <div class="col-sm-2 customcol">Certificate</div>
+
+                </GridHeader>
+                <GridRow>
+                    <div class="col-sm-2 customcol inv">Certificate#</div>
+                    <div class="col-sm-2 customcol">@context.CertificateNumber</div>
+                    <div class="col-sm-2 customcol inv">Company</div>
+                    <div class="col-sm-2 customcol">@context.CustomerId</div>
+                    <div class="col-sm-2 customcol inv">DueDate</div>
+                    <div class="col-sm-2 customcol">@context.DueDate</div>
+                    <div class="col-sm-2 customcol inv">CalibrationDate</div>
+                    <div class="col-sm-2 customcol">@context.CalibrationDate</div>
+                    <div class="col-sm-2 customcol inv">Certificate</div>
+                    <div class="col-sm-2 customcol"><a href="Files/ExamenOCA.jpeg" target="_blank">Download</a></div>
+                </GridRow>
+                <GridNew>
+                   
+                </GridNew>
+                <GridEdit>
+
+
+                </GridEdit>
+            </ResponsiveTable>
+
+
+        </div>
+    </div>
+}
+
+@code
+{
+    [Inject] Application.Services.IAssetsServices<CallContext> _assetsServices { get; set; }
+    [Inject] ILogger<Technician_Create> Logger { get; set; }
+
+    public WeightSet eqWeightSet = new WeightSet();
+
+
+
+    string _message;
+    int _equipmentTemplate;
+    bool isVisible = false;
+
+    public List<Certificate> LIST1 { get; set; }
+
+    [Inject] public AppState AppState { get; set; }
+
+
+    public ResponsiveTable<Certificate> RT { get; set; } = new ResponsiveTable<Certificate>();
+
+    public void NewItem()
+    {
+
+    }
+
+    public void Show(List<Certificate> group)
+    {
+
+        LIST1 = group;
+        //RT.ItemsDataSource = LIST1;
+        //Logger.LogDebug("Certificate on Show Wc" + LIST1.Count());
+        StateHasChanged();
+        //Logger.LogDebug(RT.ItemsDataSource.Count());
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+
+    {
+
+    }
+
+
+
+
+}

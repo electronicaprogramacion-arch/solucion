@@ -1,0 +1,690 @@
+﻿@*d-none d-sm-inline-flex navbar navbar-expand navbar-light bg-white topbar mb-4 sticky-top shadow*@
+@using Blazed.Controls
+@inject IJSRuntime jsr;
+@implements IDisposable
+@*//@inject CalibrationSaaS.Infraestructure.Blazor.Services.ConnectionStatusService connStatus;*@
+@using BrowserInterop.Extensions;
+@using System.Timers;
+@using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Offline
+@using ProtoBuf.Grpc;
+@using Grpc.Core;
+@using System.Reflection;
+@using System.Collections.Generic;
+@using System.Linq;
+@using Microsoft.Extensions.Options
+@using Helpers.Controls;
+@using Helpers.Controls.ValueObjects;
+@using Blazed.Controls.Toast;
+@inject Microsoft.Extensions.Configuration.IConfiguration config;
+@inject CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity
+@*@inject IOptions<CalibrationSaaS.Domain.Aggregates.Shared.VersionApp> _options*@
+@inherits CalibrationSaaS.Infraestructure.Blazor.KavokuComponentBase<int>
+@inject NavigationManager NavigationManager
+@attribute [Authorize("HasAccess")]
+<nav class="navbar navbar-expand navbar-light bg-white topbar static-top shadow" style="padding-left: 0rem;width:100%">
+
+    <button id="sidebarToggleTop" class="btn btn-link  rounded-circle mr-3" onclick="showSideNav()">
+        <i class="fa fa-bars"></i>
+    </button>
+
+
+    <AuthorizeView>
+        <Authorized>
+            <BackComponent>
+            </BackComponent>
+           
+        </Authorized>
+    </AuthorizeView>
+
+    <!-- Sidebar Toggle (Topbar) -->
+    @*<button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" data-target="#accordionSidebar" onclick="showSideNav()">
+            <i class="fa fa-bars"></i>
+        </button>*@
+
+
+
+    <AuthorizeView>
+        <Authorized>
+            <!-- Topbar Search -->
+            <form class="d-none d-sm-inline-block form-inline mr-auto my-2 my-md-0 mw-100">
+                @*<img width="40%" src="https://www.bittermanscales.com/wp-content/uploads/2012/06/bitterman-scales-logo1.png" alt="Bitterman">*@
+                @*<img class="img-fluid" style="width: 8rem;" src="https://www.bittermanscales.com/wp-content/uploads/2012/06/bitterman-scales-logo1.png" alt="Bitterman">*@
+
+                <CalibrationSaaS.Infraestructure.Blazor.Shared.Component.Logo TypeString="LTILogo">
+
+                </CalibrationSaaS.Infraestructure.Blazor.Shared.Component.Logo>
+            </form>
+
+            <!-- Topbar Search -->
+            <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                <div class="input-group mb-3">
+                    <input @bind-value="SearchTerm" @ref="searchE" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm,arg))
+                           class="form-control mr-sm-2" type="search" placeholder="Please enter a keyword." aria-label="Search" />
+
+
+                    <div class="input-group-append">
+                        <button class="d-sm-inline-block btn btn-sm btn-success shadow-sm" id="@("adv_btnSearch")"
+                                @onclick=@(async () => await SearchFunction()) @onclick:stopPropagation @onclick:preventDefault>
+                            Search
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="jsToDotNetSamples.printPersonFromDotNet()" style="display:none">Print</button>
+                    <br><br>
+                </div>
+            </form>
+
+            @if (1==1 || IsInstalled == true || !ConnectionStatusService.GetCurrentStatus())
+            {
+                <button type="button" class="btn @(ConnectionStatusService.GetCurrentStatus()?"btn-success":"btn-outline-secondary") btn-sm" @onclick="ToggleState"> @ConnectionStatusService.GetCurrentStatusLabel() </button>
+            }
+        </Authorized>
+    </AuthorizeView>
+    <!-- Topbar Navbar -->
+    <ul class="navbar-nav ml-auto">
+
+
+        <AuthorizeView>
+            <Authorized>
+
+                <!-- Nav Item - Search Dropdown (Visible Only XS) -->
+                <li class="nav-item dropdown no-arrow d-sm-none">
+                    <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-search fa-fw"></i>
+                    </a>
+                    <!-- Dropdown - Messages -->
+                    <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in" aria-labelledby="searchDropdown">
+                        <form class="form-inline mr-auto w-100 navbar-search">
+                            <div class="input-group">
+                                <input @bind-value="SearchTerm" @ref="searchE" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm,arg))
+                                       type="text" class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary"
+                                            id="@("adv_btnSearch")"
+                                            @onclick=@(async () => await SearchFunction())
+                                            @onclick:stopPropagation
+                                            @onclick:preventDefault
+                                            type="button">
+                                        <i class="fas fa-search fa-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </li>
+
+                <!-- Nav Item - Alerts -->
+                <!--<li class="nav-item dropdown no-arrow mx-1">
+                <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-bell fa-fw"></i>-->
+                <!-- Counter - Alerts -->
+                <!--<span class="badge badge-danger badge-counter">3+</span>
+                </a>-->
+                <!-- Dropdown - Alerts -->
+                <!--<div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="alertsDropdown">
+                        <h6 class="dropdown-header">
+                            Alerts Center
+                        </h6>
+                        <a class="dropdown-item d-flex align-items-center" href="#">
+                            <div class="mr-3">
+                                <div class="icon-circle bg-primary">
+                                    <i class="fas fa-file-alt text-white"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="small text-gray-500">December 12, 2019</div>
+                                <span class="font-weight-bold">A new monthly report is ready to download!</span>
+                            </div>
+                        </a>
+                        <a class="dropdown-item d-flex align-items-center" href="#">
+                            <div class="mr-3">
+                                <div class="icon-circle bg-success">
+                                    <i class="fas fa-donate text-white"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="small text-gray-500">December 7, 2019</div>
+                                $290.29 has been deposited into your account!
+                            </div>
+                        </a>
+                        <a class="dropdown-item d-flex align-items-center" href="#">
+                            <div class="mr-3">
+                                <div class="icon-circle bg-warning">
+                                    <i class="fas fa-exclamation-triangle text-white"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="small text-gray-500">December 2, 2019</div>
+                                Spending Alert: We've noticed unusually high spending for your account.
+                            </div>
+                        </a>
+                        <a class="dropdown-item text-center small text-gray-500" href="#">Show All Alerts</a>
+                    </div>
+                </li>-->
+                <!-- Nav Item - Messages -->
+                <!--<li class="nav-item dropdown no-arrow mx-1">
+                <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-envelope fa-fw"></i>-->
+                <!-- Counter - Messages -->
+                <!--<span class="badge badge-danger badge-counter">7</span>
+                </a>-->
+                <!-- Dropdown - Messages -->
+                <!--<div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="messagesDropdown">
+                        <h6 class="dropdown-header">
+                            Message Center
+                        </h6>
+                        <a class="dropdown-item d-flex align-items-center" href="#">
+                            <div class="dropdown-list-image mr-3">
+                                <img class="rounded-circle" src="https://source.unsplash.com/fn_BT9fwg_E/60x60" alt="">
+                                <div class="status-indicator bg-success"></div>
+                            </div>
+                            <div class="font-weight-bold">
+                                <div class="text-truncate">Hi there! I am wondering if you can help me with a problem I've been having.</div>
+                                <div class="small text-gray-500">Emily Fowler · 58m</div>
+                            </div>
+                        </a>
+                        <a class="dropdown-item d-flex align-items-center" href="#">
+                            <div class="dropdown-list-image mr-3">
+                                <img class="rounded-circle" src="https://source.unsplash.com/AU4VPcFN4LE/60x60" alt="">
+                                <div class="status-indicator"></div>
+                            </div>
+                            <div>
+                                <div class="text-truncate">I have the photos that you ordered last month, how would you like them sent to you?</div>
+                                <div class="small text-gray-500">Jae Chun · 1d</div>
+                            </div>
+                        </a>
+                        <a class="dropdown-item d-flex align-items-center" href="#">
+                            <div class="dropdown-list-image mr-3">
+                                <img class="rounded-circle" src="https://source.unsplash.com/CS2uCrpNzJY/60x60" alt="">
+                                <div class="status-indicator bg-warning"></div>
+                            </div>
+                            <div>
+                                <div class="text-truncate">Last month's report looks great, I am very happy with the progress so far, keep up the good work!</div>
+                                <div class="small text-gray-500">Morgan Alvarez · 2d</div>
+                            </div>
+                        </a>
+                        <a class="dropdown-item d-flex align-items-center" href="#">
+                            <div class="dropdown-list-image mr-3">
+                                <img class="rounded-circle" src="https://source.unsplash.com/Mv9hjnEUHR4/60x60" alt="">
+                                <div class="status-indicator bg-success"></div>
+                            </div>
+                            <div>
+                                <div class="text-truncate">Am I a good boy? The reason I ask is because someone told me that people say this to all dogs, even if they aren't good...</div>
+                                <div class="small text-gray-500">Chicken the Dog · 2w</div>
+                            </div>
+                        </a>
+                        <a class="dropdown-item text-center small text-gray-500" href="#">Read More Messages</a>
+                    </div>
+                </li>-->
+
+                <div class="mr-2 d-none d-lg-inline text-gray-600 small" style="margin-top: 25px;">
+                    @if (!string.IsNullOrEmpty(Version))
+                    {
+                        @Version
+                    }
+                </div>
+                <div class="topbar-divider d-none d-sm-block"></div>
+                @if (ConnectionStatusService.GetCurrentConnected())
+                {
+                    <span class="dot" id="Connectedindicator"></span>
+                }
+                else
+                {
+                    <span class="dot-off" id="Connectedindicator"></span>
+                }
+
+              
+
+            </Authorized>
+        </AuthorizeView>
+
+        <!-- Nav Item - User Information -->
+        <li class="nav-item  no-arrow" style="z-index:1050">
+            <a class="nav-link" href="#" id="userDropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                <ProfileDisplay />
+                <LoginDisplay />
+            </a>
+            @*<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                </a>*@
+
+
+            <!-- Dropdown - User Information -->
+            <!--<div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <a class="dropdown-item" href="#">-->
+            @*<i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>*@
+
+            <!--</a>-->
+            @*<a class="dropdown-item" href="#">
+                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Settings
+                </a>
+                <a class="dropdown-item" href="#">
+                    <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Activity Log
+                </a>
+                <div class="dropdown-divider"></div>
+                <LoginDisplay />*@
+            <!--</div>-->
+        </li>
+    </ul>
+</nav>
+<AuthorizeView>
+    <Authorized>
+      
+        <CalibrationSaaS.Infraestructure.Blazor.LoadConfiguration>
+
+        </CalibrationSaaS.Infraestructure.Blazor.LoadConfiguration>
+    </Authorized>
+</AuthorizeView>
+@code{
+
+    [CascadingParameter] public IModalService Modal { get; set; }
+    private ElementReference searchE;
+
+    public string SearchTerm { get; set; } = "";
+    private static System.Timers.Timer aTimer;
+    public async Task SearchFunction()
+    {
+        try
+        {
+            await ShowProgress();
+            await ShowModalPoEIndicator();
+
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        finally
+        {
+            await CloseProgress();
+        }
+
+    }
+
+    private void OnUserFinish(Object source, ElapsedEventArgs e)
+    {
+        //InvokeAsync(() =>
+        //{
+        //    SearchFunction().ConfigureAwait(false).GetAwaiter().GetResult();
+        //});
+        //aTimer.Stop();
+    }
+    public async Task KeyEvent(string FieldName, object Field, KeyboardEventArgs arg)
+    {
+        string value = Field.ToString();
+
+        var kp = arg.Key; //Backspace
+
+        if ((value.Length > 2 && kp != "Backspace") || kp == "Enter")
+        {
+
+            // remove previous one
+            aTimer.Stop();
+
+            // new timer
+            aTimer.Start();
+
+            //await SearchFunction();
+
+            //Pagination pag = new Pagination()
+            //{
+            //    Page = 1,
+            //    Show = PageSize,
+            //    Filter = SearchTerm
+
+            //};
+
+
+            //var resultitems = await PaginationFunction1(pag);
+
+            //await LoadData(PaginaActual, resultitems);
+
+        }
+
+        return;
+
+
+        //if (FuncFilter != null)
+        //{
+        //    var lst = await FuncFilter(Field.ToString());
+
+        //    if (lst != null)
+        //    {
+
+        //        ItemList = lst.Skip((curPage - 1) * PageSize).Take(PageSize);
+        //        totalPages = (int)Math.Ceiling(Items.Count() / (decimal)PageSize);
+
+        //        SetPagerSize("forward");
+        //    }
+
+        //}
+    }
+
+    [Inject]
+    public Application.Services.IBasicsServices<CallContext> basicServices { get; set; }
+    [Inject]
+    public Application.Services.IPieceOfEquipmentService<CallContext> poeServices { get; set; }
+    [Inject]
+    public Application.Services.IWorkOrderDetailServices<CallContext> wodServices { get; set; }
+    [Inject]
+    public Application.Services.ICustomerService<CallContext> CustomerServices { get; set; }
+    [Inject]
+    public Application.Services.IWorkOrderService<CallContext> woServices { get; set; }
+
+    [Inject]
+    public Application.Services.IAssetsServices<CallContext> assetsServices { get; set; }
+
+    public async Task ShowModalPoEIndicator()
+    {
+        Pagination<PieceOfEquipment> pag = new Pagination<PieceOfEquipment>();
+
+        pag.Filter = SearchTerm;
+        pag.Show = 5;
+        pag.Top = 5;
+        ResultSet<PieceOfEquipment> result0 = new ResultSet<PieceOfEquipment>();
+
+        var _poeGrpc = new PieceOfEquipmentGRPC(poeServices);
+
+        var g = new CallOptions();
+
+        if (String.IsNullOrEmpty(SearchTerm))
+        {
+            await ShowToast("Please enter a keyword.", ToastLevel.Warning);
+            return;
+        }
+        result0 = (await _poeGrpc.GetPiecesOfEquipmentXDueDate(pag, g));
+
+        List<KeyValueSearch> lista = new List<KeyValueSearch>();
+
+        if (result0.List != null)
+        {
+            foreach (var item in result0.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Piece Of Equipment";
+                KeyValueSearch.Link = "PieceOfEquipmentCreate/" + item.PieceOfEquipmentID;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+
+
+        //PieceOfEquipmentCreate
+        Pagination<EquipmentTemplate> pag2 = new Pagination<EquipmentTemplate>();
+
+        pag2.Filter = SearchTerm;
+        pag2.Show = 5;
+        pag2.Top = 5;
+
+
+        ResultSet<EquipmentTemplate> result3 = new ResultSet<EquipmentTemplate>();
+
+        var basic = new BasicsServiceGRPC(basicServices);
+
+        //var g = new CallOptions();
+
+        result3 = (await basic.GetEquipment(pag2, g));
+
+        if (result3.List != null)
+        {
+            foreach (var item in result3.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Equipment Template";
+                KeyValueSearch.Link = "EquipmentTemplate/" + item.EquipmentTemplateID;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+        Pagination<WorkOrder> pag3 = new Pagination<WorkOrder>();
+
+        pag3.Filter = SearchTerm;
+        pag3.Show = 5;
+        pag3.Top = 5;
+
+        ResultSet<WorkOrder> result4 = new ResultSet<WorkOrder>();
+
+        var wod = new AssetsServiceGRPC(assetsServices);
+
+        //var g = new CallOptions();
+
+        result4 = (await wod.GetWorkOrders(pag3, g));
+
+        if (result4.List != null)
+        {
+            foreach (var item in result4.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Work Order";
+                KeyValueSearch.Link = "WorkOrderCreate/" + item.WorkOrderId;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+
+
+        Pagination<Customer> pag4 = new Pagination<Customer>();
+
+        pag4.Filter = SearchTerm;
+        pag4.Show = 5;
+        pag4.Top = 5;
+
+        ResultSet<Customer> result5 = new ResultSet<Customer>();
+
+        var cust = new CustomerGRPC(CustomerServices);
+
+        //var g = new CallOptions();
+
+        result5 = (await cust.GetCustomers(pag4, g));
+
+        if (result5.List != null)
+        {
+            foreach (var item in result5.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Customer";
+                KeyValueSearch.Link = "Customer/" + item.CustomerID;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+
+
+        var parameters = new ModalParameters();
+        parameters.Add("SelectOnly", true);
+        parameters.Add("IsModal", true);
+        parameters.Add("Checkbox", false);
+        parameters.Add("Indicator", true);
+        parameters.Add("_pieceOfEquipmentsDueDate", lista);
+
+
+
+
+        ModalOptions op = new ModalOptions();
+        op.ContentScrollable = true;
+        op.Class = "blazored-modal " + ModalSize.MediumWindow;
+        //PieceOfEquipmentDueDate_Search
+        var messageForm = Modal.Show<CalibrationSaaS.Infraestructure.Blazor.Pages.Full_Search>("Results for Keyword " + SearchTerm, parameters, op);
+        var result = await messageForm.Result;
+        Console.Write("result " + result);
+        if (result != null && !result.Cancelled)
+        {
+
+            var res = (KeyValueSearch)result.Data;
+            //PieceOfEquipment _poe = new PieceOfEquipment();
+            //_poe.PieceOfEquipmentID = res.FirstOrDefault().PieceOfEquipmentID;
+
+            NavigationManager.NavigateTo(res.Link);
+
+            //StateHasChanged();
+        }
+
+
+
+
+
+    }
+
+
+
+
+    [Inject] ILogger<MainLayout> Logger { get; set; }
+
+    private bool stopPropagation = false;
+
+
+    private CustomEventInterop Interop { get; set; }
+
+    public bool HasRendered { get; set; }
+    private DotNetObjectReference<TopMenu> dotNetObjectReference;
+    public string Version { get; set; }
+    protected async override Task OnInitializedAsync()
+    {
+
+        Version = config.GetSection("VersionApp")["Title"].ToString();
+        //ConnectionStatusService.OnChange += ShowModal;
+        var biWindow = await jsr.Window();
+        var biNavigator = await biWindow.Navigator();
+        var b1 = await jsr.InvokeAsync<BrowserDimension>("getDimensions");
+        //setting the initial connection statius
+        //ConnectionStatusService.ChangeConnectionStatus(true);
+        ConnectionStatusService.ConnectedChangeStatus(b1.Online, b1.Install, AppSecurity.IsNotGrpc);
+
+        aTimer = new System.Timers.Timer(1500);
+        aTimer.Elapsed += OnUserFinish;
+        aTimer.AutoReset = false;
+
+        //Interop = new(jsr);
+        //await Interop.SetupCustomEventCallback(args => HandleCustomEvent(args));
+        //HasRendered = true;
+
+        dotNetObjectReference = DotNetObjectReference.Create(this);
+        await jsr.InvokeVoidAsync("jsToDotNetSamples.setDotNetReference", dotNetObjectReference);
+
+        // Check if the app is installed
+        IsInstalled = await ConnectionStatusService.IsInstalled();
+        //Logger.LogDebug($"IsInstalled: {IsInstalled}");
+        StateHasChanged();
+    }
+    private async Task HandleCustomEvent(EventArgs args)
+    {
+        // ... handle custom event here
+
+
+
+    }
+    [JSInvokable]
+    public object GetPerson()
+    {
+        var obj = new
+        {
+            FistName = "Jon",
+            LastName = "Doe",
+            Age = 27,
+            BirthDate = DateTime.Now.AddYears(-27),
+            LikesDotNet = true
+        };
+        return obj;
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var biWindow = await jsr.Window();
+            var biNavigator = await biWindow.Navigator();
+
+            await biNavigator.Connection.OnChange(async () =>
+            {
+                //Logger.LogDebug("Browser app changed");
+                //ConnectionStatusService.ChangeConnectionStatus(!ConnectionStatusService.GetCurrentStatus());
+                //TODO: fix the line above should be enabled and fixed
+                var b = biNavigator.Online;
+
+                var b1 = await jsr.InvokeAsync<BrowserDimension>("getDimensions");
+                ConnectionStatusService.ConnectedChangeStatus(b1.Online, b1.Install, AppSecurity.IsNotGrpc);
+                var a = ConnectionStatusService.GetCurrentStatus();
+                StateHasChanged();
+            });
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    [Inject] IModalService modal { get; set; }
+    public bool? IsInstalled { get; set; }
+    protected async void ToggleState()
+    {
+        //Logger.LogDebug("Application status changed manually");
+        var currentStatus = ConnectionStatusService.GetCurrentStatus();
+        IsInstalled = await ConnectionStatusService.IsInstalled();
+        if (currentStatus)//online
+        {
+            //var formModal = modal.Show<Shared.OfflineModal.DownloadOrders>("Please Select");
+            //var result = await formModal.Result;
+
+            //if (!result.Cancelled)
+            //{
+            //    Logger.LogDebug(result.Data.ToString());
+            //}
+            var formModal = modal.Show<UploadOrders>("Please Select");
+            var result = await formModal.Result;
+
+            if (!result.Cancelled && result?.Data != null)
+            {
+                //Logger.LogDebug(result.Data.ToString());
+            }
+            else
+            {
+                return;
+            }
+        }
+        else //offline
+        {
+            var formModal = modal.Show<DownloadOrders>("Please Select");
+            var result = await formModal.Result;
+
+            if (!result.Cancelled)
+            {
+                //Logger.LogDebug(result.Data.ToString());
+            }
+            else
+            {
+                return;
+            }
+        }
+        await ConnectionStatusService.ChangeConnectionStatus(!ConnectionStatusService.GetCurrentStatus());
+        StateHasChanged();
+    }
+
+
+    public void Dispose()
+    {
+        //dotNetObjectReference.Dispose();
+    }
+
+    //private void ShowModal(bool connectionStus)
+    //{
+    //    InvokeAsync(() =>
+    //    {
+    //        Logger.LogDebug("Connection Button Pressed");
+    //        //modal.Show<Pages.AssetsBasics.WorkOrder_SearchNew>("Modal Popup");
+    //        //StateHasChanged();
+    //    });
+    //}
+
+
+
+
+
+}

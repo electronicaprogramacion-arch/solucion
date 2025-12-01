@@ -1,0 +1,9 @@
+[submodule "Source/fakerjs"]
+	path = Source/fakerjs
+	url = https://github.com/faker-js/faker.js.git
+[submodule "Source/hashids"]
+	path = Source/hashids
+	url = https://github.com/ullmark/hashids.net.git
+[submodule "Source/speakingurl"]
+	path = Source/speakingurl
+	url = https://github.com/pid/speakingurl.git

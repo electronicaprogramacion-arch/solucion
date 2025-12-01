@@ -1,0 +1,369 @@
+@page "/EquipmentTemplate/{EntityID}"
+@using BlazorApp1.Blazor.Blazor.Pages.Basics
+@using BlazorApp1.Blazor.Shared
+
+
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Infraestructure.Blazor.Components
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using BlazorApp1.Blazor.Blazor.Pages.AssetsBasics
+@namespace BlazorApp1.Blazor.Blazor.Pages.Basics
+@inherits Equipment_CreateBase
+@implements IDisposable
+@using System.Linq.Expressions
+@using Blazed.Controls
+@using BlazorApp1.Blazor.Blazor.Helper
+@using Helpers
+
+@{ 
+    // CascadeParamET
+    SetEnabled();
+}
+
+@if (AppState.EquipmentTypes == null || AppState.EquipmentTypes.Count==0 || eq==null)
+{
+    <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+        <div class="row" style="width:100%,display:flex;flex-direccin:columna;justify-content: center;">
+            <div class="col">
+            </div>
+            <div class="col">
+                <p><em>Loading...</em></p>
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+               @*  <FluentProgressRing></FluentProgressRing> *@
+            </div>
+            <div class="col">
+            </div>
+        </div>
+    </div>
+}
+else{
+    <CascadingValue Value="@eq" Name="CascadeParamET">
+        <div class="">
+            <HeaderComponent Title="Equipment Template" ActionBar="@Enabled" Enabled="@Enabled"></HeaderComponent>
+            <EditForm OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+                <DataAnnotationsValidator />
+                <SubmitComponent>
+                </SubmitComponent>
+                <div class="accordion" id="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" @onclick:stopPropagation @onclick:preventDefault aria-expanded="true" aria-controls="collapseOne">
+                                Basic Information
+                            </button>
+                        </div>
+                        <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-bs-parent="#accordion">
+                            <div class="card-body">
+                                <div class="row">
+                                <div class="col-sm">
+                                    @{
+                                        List<EquipmentTypeGroup> etg = null;
+                                        if (AppState != null && AppState.EquipmentTypeGroups != null && AppState.EquipmentTypeGroups.Count > 0)
+                                        {
+                                            etg = AppState.EquipmentTypeGroups;
+                                        }
+                                    }
+                                    @if (etg != null)
+                                    {
+                                        <div class="col">
+                                            <TextInput @bind-Value="eq.EquipmentTypeGroupID"
+                                                       IsDisabled="!Enabled"
+                                                       Label="Equipment Type"
+                                                       LabelDown="@LabelDown"
+                                                       ValidationFor="(() => eq.EquipmentTypeGroupID)"
+                                                       OnChangeControl="@(async (arg) => await ChangeControlGroup(arg, eq, true))">
+                                                @foreach (var item in etg)
+                                                {
+                                                    <option value="@item.EquipmentTypeGroupID">@item.Name</option>
+                                                }
+                                            </TextInput>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="col-sm">
+                                    <TextInput @bind-Value="eq.ManufacturerID"
+                                               IsDisabled="!Enabled"
+                                               Label="Manufacturer"
+                                               LabelDown="@LabelDown"
+                                               ValidationFor="(() => eq.ManufacturerID)"
+                                               Validate="false">
+                                        @foreach (Manufacturer item in AppState.Manufacturers)
+                                        {
+                                            <option value="@item.ManufacturerID">@item.Name</option>
+                                        }
+                                    </TextInput>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm">
+                                    <TextInput @bind-Value="eq.StatusID"
+                                               IsDisabled="!Enabled"
+                                               Label="Status"
+                                               LabelDown="@LabelDown"
+                                               ValidationFor="(() => eq.StatusID)">
+                                        @foreach (KeyValuePair<string, string> item in AppState.StatusList)
+                                        {
+                                            <option value="@item.Key">@item.Value</option>
+                                        }
+                                    </TextInput>
+                                </div>
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.DeviceClass" Label="Device Class" Validate="true"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                               ValidationFor="@(() => eq.DeviceClass)">
+                                    </TextInput>
+                                </div>
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.Model" Label="Model#" Validate="true"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                               ValidationFor="@(() => eq.Model)">
+                                    </TextInput>
+                                </div>
+                                <div class="col-sm-2">
+                                    <TextInput @bind-Value="@eq.IsGeneric" Label="Generic" Validate="false"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                               ValidationFor="@(() => eq.IsGeneric)"
+                                               Type="@Types.Switch">
+                                    </TextInput>
+                                </div>
+                            </div>
+                            @if (EquipmentTypeObject != null && EquipmentTypeObject.HasCapacity)
+                            {
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <TextInput @bind-Value="eq.Capacity" Label="Capacity" Validate="true"
+                                                   LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                                   ValidationFor="@(() => eq.Capacity)">
+                                        </TextInput>
+                                    </div>
+                                    <div class="col-sm-5">
+                                        <TextInput @bind-Value="@eq.UnitofmeasurementID"
+                                                   LabelDown="LabelDown"
+                                                   IsDisabled="!Enabled"
+                                                   Label="Unit of Measure"
+                                                   OnChangeControl="ChangeUOM"
+                                                   ValidationFor="@(() => eq.UnitofmeasurementID)"
+                                                   Type="@Types.select">
+                                            @foreach (UnitOfMeasure item in AppState.GetUoMByEquipmentType(eq.EquipmentTypeObject))
+                                            {
+                                                <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                            }
+                                        </TextInput>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <TextInput @bind-Value="@eq.IsEnabled" Label="Enabled" Validate="false"
+                                                   LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                                   ValidationFor="@(() => eq.IsEnabled)"
+                                                   Type="@Types.Switch">
+                                        </TextInput>
+                                    </div>
+                                </div>
+                            }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (EquipmentTypeObject != null && EquipmentTypeObject.HasResolution)
+                    {
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="headingTolerance">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTolerance" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseTolerance">
+                                    Tolerance and resolution Information
+                                </button>
+                            </div>
+                            <div id="collapseTolerance" class="collapse" aria-labelledby="headingTolerance" data-bs-parent="#accordion">
+                                <div class="card-body">
+                           
+                          
+                                @if (eq.Tolerance?.ToleranceTypeID.HasValue == false)
+                                {
+                                    eq.Tolerance.ToleranceTypeID = 0;
+                                }
+                                <CascadingValue Value="@eq.Tolerance" Name="CascadeTolerance">
+                                    <BlazorApp1.Blazor.Blazor.Pages.Basics.ResolutionComponent @ref="@ResolutionComponent" Title="Resolution Component"
+                                                         ToleranceList="AppState.ToleranceList2.Where(x=>eq.GetEquipmentType().CalibrationTypeID > 0
+                                                         && x.CalibrationTypeId==eq.GetEquipmentType().CalibrationTypeID)" Type="1" Enabled="@Enabled">
+                            </BlazorApp1.Blazor.Blazor.Pages.Basics.ResolutionComponent>
+                                </CascadingValue>
+                            
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    <div class="accordion-item">
+                        <div class="accordion-header" id="headingOther">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOther" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseOther">
+                                Other Information
+                            </button>
+                        </div>
+                        <div id="collapseOther" class="collapse" aria-labelledby="headingOther" data-bs-parent="#accordion">
+                            <div class="card-body">
+                                <div class="row">
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.Description" Label="Description" Validate="false"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                               ValidationFor="@(() => eq.Description)"
+                                               Type="@Types.TextArea">
+                                    </TextInput>
+                                </div>
+                            </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" id="headingTestPoint">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePricing" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseTestPoint">
+                                Pricing Configuration
+                            </button>
+                        </div>
+                        <div id="collapsePricing" class="collapse" aria-labelledby="headingPricing" data-bs-parent="#accordion">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col">
+                                        <CalibrationSaaS.Infraestructure.Blazor.Components.PricingSection @ref="PricingSectionComponent"
+                                          EntityType="EntityType.EquipmentTemplate"
+                                          EntityId="@(eq?.EquipmentTemplateID ?? 0)"
+                                          Enabled="@Enabled"
+                                          OnPricesChanged="@OnPricesChanged" />
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                 
+                    @*  <FluentAccordionItem Class="acco3">
+                        <HeadingTemplate>
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" data-toggle="collapse" type="button"
+                                        data-target="#collapsePricing"
+                                        aria-expanded="true"
+                                        aria-controls="collapsePricing"
+                                @onclick:stopPropagation @onclick:preventDefault>
+                                    Pricing Configuration
+                                </button>
+                            </h2>
+                        </HeadingTemplate>
+                        <ChildContent>
+                            <PricingSection @ref="PricingSectionComponent"
+                                          EntityType="EntityType.EquipmentTemplate"
+                                          EntityId="@(eq?.EquipmentTemplateID ?? 0)"
+                                          Enabled="@Enabled"
+                                          OnPricesChanged="@OnPricesChanged" />
+                        </ChildContent>
+                    </FluentAccordionItem> *@
+
+                    @if (EquipmentTypeObject != null && EquipmentTypeObject.HasTestpoint)
+                    {
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="headingTestPoint">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTestPoint" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseTestPoint">
+                                    Test Point
+                                </button>
+                            </div>
+                            <div id="collapseTestPoint" class="collapse" aria-labelledby="headingTestPoint" data-bs-parent="#accordion">
+                                <div class="card-body">
+                                    <div class="row">
+                                    <div class="col">
+                                        <BlazorApp1.Client.Pages.Basics.TestPoints.GroupTestPoint2 @ref="@GroupComponent" Eq="@eq" Enabled="@Enabled"  Component="Component">
+
+                                            </BlazorApp1.Client.Pages.Basics.TestPoints.GroupTestPoint2>
+                                    </div>
+                                </div>
+                            
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (_listPieceOfEquipment != null && _listPieceOfEquipment.Count > 0)
+                    {
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="headingPOE">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePOE" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapsePOE">
+                                    Pieces Of Equipment
+                                </button>
+                            </div>
+                            <div id="collapsePOE" class="collapse" aria-labelledby="headingPOE" data-bs-parent="#accordion">
+                                <div class="card-body">
+                                    <POEByEqTemplate_Search @ref="@PieceOfEquipmentSearch" LIST1="_listPieceOfEquipment.ToList()" Component="Component">
+                                    </POEByEqTemplate_Search>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if (EquipmentTypeObject != null && EquipmentTypeObject.HasUncertanity)
+                    {
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="headingUncertainty">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUncertainty" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseUncertainty">
+                                    Uncertainty Attributes
+                                </button>
+                            </div>
+                            <div id="collapseUncertainty" class="collapse" aria-labelledby="headingUncertainty" data-bs-parent="#accordion">
+                                <div class="card-body">
+                                    <UncertaintyComponent @ref="UncertaintyComponent"
+                                                                                                     EquipmentTemplateID="@eq.EquipmentTemplateID">
+                                    </UncertaintyComponent>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if (eq != null && EquipmentTypeObject != null
+                   && EquipmentTypeObject.DynamicConfiguration2 == true
+                   && EquipmentTypeObject.CalibrationType != null)
+                    {
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="headingAdditional">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdditional" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseAdditional">
+                                    Additional Information
+                                </button>
+                            </div>
+                            <div id="collapseAdditional" class="collapse" aria-labelledby="headingAdditional" data-bs-parent="#accordion">
+                                <div class="card-body">
+                                    @if (eq != null && EquipmentTypeObject != null
+                                                                && EquipmentTypeObject.DynamicConfiguration2 == true
+                                                                && EquipmentTypeObject.CalibrationType != null)
+                                {
+                                    <div class="accordion" id="accordionDynamic">
+                                        @{
+                                            var nameform = this.FormName;
+                                            var componentTMP = (Helpers.Controls.Component)Component.CloneObject();
+                                            if (FormName != Component.Name)
+                                            {
+                                                componentTMP.Name = FormName;
+                                            }
+                                        }
+                                        <CascadingValue Value="@eq" Name="CascadeParam3">
+                                            <CascadingValue Value="@EquipmentTypeObject.CalibrationType" Name="CascadeParam2">
+                                                <CalibrationTypeComponent UseIsVisible="true" ShowProgress="true" Entity="EquipmentTemplate"
+                                                                                                                        CalibrationItem="GenericCalibration2"
+                                                                                                                        CalibrationItemResult="GenericCalibrationResult2"
+                                                                                                                        Component="@componentTMP"
+                                                                                                                        ChangeResolution="false"
+                                                                                                                        HasBeenCompleted="false"
+                                                                                                                        @ref="CalibrationTypeComponent"
+                                                                                                                        ResultCalibration="DynamicResult">
+                                                </CalibrationTypeComponent>
+                                            </CascadingValue>
+                                        </CascadingValue>
+                                    </div>
+                                }
+                           
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </EditForm>
+        </div>
+    </CascadingValue>
+}
+
+
+@code{
+   
+
+    
+}
+

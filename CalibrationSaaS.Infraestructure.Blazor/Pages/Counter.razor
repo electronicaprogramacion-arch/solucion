@@ -1,0 +1,108 @@
+﻿@page "/counter"
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+<h1>Counter</h1>
+
+<p>Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<div>
+    @*<CalibrationSaaS.Infraestructure.Blazor.Shared.Component.Chameleon TEntity="rules<Address>" Rules="User" Context="Model">
+        <EditTemplate>
+            <input type="text" @bind-value="@AddresInstance.Country" />
+
+        </EditTemplate>
+        <ReadTemplate>
+
+            @Model.ad.AddressId
+            @Model.MyProperty.City
+
+
+        </ReadTemplate>
+    </CalibrationSaaS.Infraestructure.Blazor.Shared.Component.Chameleon>*@
+</div>
+
+
+<div>
+
+    
+
+    <!--<Chamaleon2 Entity="Address"
+                Instance="AddresInstance" Rols="admin, tech" >
+
+       <PropertyName1 >-->
+         @*@context.GetPropertyName(() => context.Content.Instance.AddressId)*@
+       <!--</PropertyName1>
+       
+
+     
+
+    </Chamaleon2>-->
+
+
+</div>
+
+@*<MultiComponent Data="list" TTYPE="Register" Roles="admin,tech">
+    <Rules>
+        <Rule LambdaCondition="@(x=> x.DisplayName == "diego" )" TTYPE="Register">
+        </Rule>
+        <Rule LambdaCondition="@(x=> x.DisplayName.Length > 6 )" TTYPE="Register" Context="ModelR1">
+            <ValidationTemplate Context="Model2">
+                <label>DisplayName</label>
+                <div>@Model2.EmailAddress</div>
+            </ValidationTemplate>
+        </Rule>
+        <RulesTemplate TTYPE="Register">
+            <ValidConditionsTemplate Context="Model">
+                <input type="text" @bind-value="@Model.DisplayName" />
+            </ValidConditionsTemplate>
+            <InvalidConditionsTemplate Context="Model">
+                <label>@Model.DisplayName</label>
+            </InvalidConditionsTemplate>
+        </RulesTemplate>
+    </Rules>
+</MultiComponent>*@
+
+
+
+@code {
+
+
+    //public OperatorDefinition rule1 = new OperatorDefinition();
+
+    private Address AddresInstance = new Address();
+
+
+    public string GetPropertyName<T>(Expression<Func<T>> propertyLambda)
+    {
+        var me = propertyLambda.Body as MemberExpression;
+
+        if (me == null)
+        {
+            throw new ArgumentException("You must pass a lambda of the form: '() => Class.Property' or '() => object.Property'");
+        }
+
+        return me.Member.Name;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+
+        AddresInstance = new Address();
+        AddresInstance.StreetAddress1 = "sdsdsdsd";
+        //AddresInstance.Status = "test";
+
+
+    }
+
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}

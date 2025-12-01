@@ -1,0 +1,85 @@
+﻿@page "/Indicator"
+
+@using BlazorApp1.Blazor.Blazor.Pages.Basics
+@using BlazorApp1.Blazor.Blazor.Shared.Component
+@using BlazorApp1.Client.Pages.AssetsBasics
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base
+@using Blazed.Controls
+@namespace BlazorApp1.Blazor.Blazor.Shared.Component
+@inherits BlazorApp1.Blazor.Blazor.Shared.Component.Indicator_Base
+@if (_listPoE != null)
+{
+
+
+    <div class="table-responsive">
+            <dt>Indicator Detail</dt>
+            <table class="table table-bordered table-hover table-striped" width="100%" cellspacing="0">
+                <thead class="thead-dark">
+                    <tr>
+                        <th width="5%">ID</th>
+                        <th>Serial</th>
+                        <th>Manufacturer</th>
+                        <th>Model</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+
+                    <tr>
+                        <td>@_listPoE.PieceOfEquipmentID</td>
+                        <td>@_listPoE.SerialNumber</td>
+                        <td>@Manufacturer</td>
+                        <td>@Model</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(_listPoE.PieceOfEquipmentID))
+                            {
+                                <SearchButtonComponent FormType="typeof(PieceOfEquipment_Create)"
+                                                       Type="search"
+                                                       Size="@ModalSize.LargeWindow"
+                                                       Text="View"
+                                                       CSSButton="primary"
+                                                       IsDisabled="false"
+                                                       ID="@_listPoE.PieceOfEquipmentID.ToString()">
+
+                                </SearchButtonComponent>
+
+                                @*<a class="btn btn-sm btn-primary shadow-sm btn-sm editButton"
+               type="button" data-dismiss="modal" href="PieceOfEquipmentCreate/@_listPoE.PieceOfEquipmentID.ToString()">
+                <span aria-hidden="true">View Detail</span>
+            </a>*@
+
+                            }
+                            else
+                            {
+                                <SearchButtonComponent FormType="typeof(PieceOfEquipment_Create)"
+                                                       Type="search"
+                                                       Size="@ModalSize.LargeWindow"
+                                                       Text="View"
+                                                       CSSButton="primary"
+                                                       IsDisabled="true"
+                                                       ID="@_listPoE.PieceOfEquipmentID.ToString()"
+                                                       >
+
+                                </SearchButtonComponent>
+
+                            }
+
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+}
+
+@code
+
+{
+
+}

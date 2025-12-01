@@ -1,0 +1,669 @@
+﻿using AutoMapper;
+using CalibrationSaaS.Data.EntityFramework;
+using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.Views;
+using CalibrationSaaS.Domain.Aggregates.Querys;
+using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+using CalibrationSaaS.Domain.Repositories;
+using CalibrationSaaS.Infraestructure.EntityFramework.Helpers;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Principal;
+using System.Text;
+using System.Threading.Tasks;
+using Helpers.Controls.ValueObjects;
+using CalibrationSaaS.Domain.BusinessExceptions;
+
+namespace CalibrationSaaS.Infraestructure.EntityFramework.DataAccess
+{
+    public class AssetsRepositoryEF : IAssetsRepository, IDisposable
+    {
+        private CalibrationSaaSDBContext context;
+      
+
+        public AssetsRepositoryEF(CalibrationSaaSDBContext context)
+        {
+            this.context = context;
+            
+
+        }
+        public async Task<WorkOrder> DeleteWorkOrder(int workOrderId)
+        {
+            var result = await context.WorkOrder
+                    .Include(c => c.WorkOrderDetails)
+                    .FirstOrDefaultAsync(sc => sc.WorkOrderId == workOrderId);
+
+            if (result.WorkOrderDetails.Count() > 0)
+            {
+                throw new Exception("Work Order contains pending Jobs");
+            }
+           else
+            {
+                context.WorkOrder.Remove(result);
+                await context.SaveChangesAsync();
+                return result;
+            }
+               
+           
+        }
+
+        public async Task<WorkOrder> GetWorkOrderByID(int workOrderId, int CurrentStatus)
+        {
+            try {
+                var a = await context.WorkOrder
+                    //.Include(x => x.PieceOfEquipments)
+                    //.Include(c => c.WorkOrderDetails)
+                    //.ThenInclude(d=>d.PieceOfEquipment)
+                    //.Include(x => x.WorkOrderDetail).ThenInclude(x => x.WorkOder)
+                    //.Include(x => x.Customer)
+                    //.ThenInclude(x=>x.Aggregates)
+                    //.ThenInclude(x=>x.Contacts)
+                    // .Include(x => x.Customer)
+                    //.ThenInclude(x => x.Aggregates)
+                    //.ThenInclude(x => x.Addresses)
+                    .Include(x=>x.UserWorkOrders)
+                    .ThenInclude(x=>x.User)
+                    .FirstOrDefaultAsync(sc => sc.WorkOrderId == workOrderId);
+
+
+                //var a= from b in context.WorkOrder.Include(x=>x.Customer) 
+                //       join c in context.WorkOrderDetail on b.WorkOrderId equals c.wo
+
+                var b = await context.Customer.AsNoTracking()
+                    .Include(x => x.Aggregates)
+                    .ThenInclude(x => x.Contacts)
+                    .Include(x => x.Aggregates)
+                    .ThenInclude(x => x.Addresses).Where(x => x.CustomerID == a.CustomerId).FirstOrDefaultAsync();
+
+                a.Customer = b;
+
+                List<WorkOrderDetail> c = null;
+                if (CurrentStatus==0)
+                {
+                    c = await context.WorkOrderDetail.AsNoTracking()
+                 .Include(d => d.PieceOfEquipment).ThenInclude(c=>c.EquipmentTemplate).ThenInclude(d=>d.Manufacturer1)
+                 .Include(x => x.CurrentStatus)
+                 .Where(x => x.WorkOrderID == workOrderId).ToListAsync();
+                }
+                else
+                {
+                    c = await context.WorkOrderDetail.AsNoTracking()
+                      .Include(d => d.PieceOfEquipment).ThenInclude(c => c.EquipmentTemplate).ThenInclude(d => d.Manufacturer1)
+                    .Include(x => x.CurrentStatus)
+                    .Where(x => x.WorkOrderID == workOrderId && x.CurrentStatusID == CurrentStatus).ToListAsync();
+                }
+                
+
+
+                a.WorkOrderDetails = c;
+
+                return a;
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public async Task<ResultSet<WorkOrder>> GetWorkOrder(Pagination<WorkOrder> pagination)
+        {
+            //try { 
+            //var a= await context.WorkOrder.OrderBy(x => x.WorkOrderId).ToListAsync();
+            //return a;
+            //}
+            //catch(Exception ex)
+            //{
+            //    throw ex;
+            //}
+            var filterQuery = Querys.WorkOrderFilter(pagination.Filter);
+
+            var queriable = context.WorkOrder.Include(x=>x.Customer);//context.PieceOfEquipment.Include(x => x.EquipmentTemplate).Include(d => d.Customer).AsQueryable();
+
+            var simplequery = context.WorkOrder;
+
+            //var result = await QueryableExtensions.PaginationAndFilterQuery<PieceOfEquipment>(exprTree, pagination, context.PieceOfEquipment, queriable);
+            var result = await queriable.PaginationAndFilterQuery<WorkOrder>( pagination, simplequery, filterQuery);
+
+            return result;
+
+
+        }
+
+        public async Task<WorkOrder> GetWorkOrderByInvoice(WorkOrder DTO)
+        {
+                var result = await context.WorkOrder.AsNoTracking().Where(x=> !string.IsNullOrEmpty(DTO.Invoice) 
+                && x.Invoice==DTO.Invoice).FirstOrDefaultAsync();
+
+               if(result != null)
+                {
+                throw new AlreadyInUseException();
+                }
+                var custoid= await context.Customer.Where(x=> !string.IsNullOrEmpty(DTO.CustomerInvoice) 
+                && x.CustomID==DTO.CustomerInvoice)
+                .Include(x=>x.Aggregates).ThenInclude(x=>x.Addresses)
+                .Include(x=>x.Aggregates).ThenInclude(x=>x.Contacts)
+                .FirstOrDefaultAsync();
+
+                int? address = null;
+                int? contactid = null;
+
+                if(custoid?.Aggregates?.FirstOrDefault()?.Addresses?.FirstOrDefault() != null)
+                {
+                    address= custoid.Aggregates.FirstOrDefault().Addresses.FirstOrDefault().AddressId;
+                }
+
+                if (custoid?.Aggregates?.FirstOrDefault()?.Contacts?.FirstOrDefault() != null)
+                {
+                    contactid = custoid.Aggregates.FirstOrDefault().Contacts.FirstOrDefault().ContactID;
+                }
+
+
+
+            if (custoid != null)
+                {
+                    DTO.CustomerId = custoid.CustomerID;
+                    if (address.HasValue)
+                    {
+                    DTO.AddressId = address.Value;
+                    }
+                    if (contactid.HasValue)
+                    {
+                    DTO.ContactId = contactid.Value;
+                    }
+
+                    
+                }
+            
+
+
+            return DTO;
+        }
+
+        public async Task<ResultSet<WorkOrder>> GetWorkOrderOff(Pagination<WorkOrder> pagination)
+        {
+
+           
+
+            WorkOrder w = pagination.Entity;
+            int id = 0;
+            if (w.Users != null && w.Users.Count > 0)
+            {
+               id= w.Users[0].UserID;
+            }            
+
+            
+
+            Pagination<WorkOrderDetail> p = new Pagination<WorkOrderDetail>();
+
+                p.ColumnName = pagination.ColumnName;
+            p.Filter = pagination.Filter;
+            //p.Object = pagination.Object.;
+
+            p.Page = pagination.Page;
+            p.Show = pagination.Show;
+            p.SortingAscending = pagination.SortingAscending;
+            p.Entity = new WorkOrderDetail();
+            p.Entity.TechnicianID = id;
+
+            var a = (from WOD in context.WorkOrderDetail.Include(x => x.PieceOfEquipment).ThenInclude(x => x.Customer).Include(x => x.CurrentStatus)
+                     join U in context.User_WorkOrder on WOD.WorkOrderID equals U.WorkOrderID
+                     //where U.UserID == id
+                     select WOD);
+
+
+            var filterQuery = Querys.WODbyTech(id);
+
+            var queriable = a; // context.WorkOrder.Include(x => x.Customer);//context.PieceOfEquipment.Include(x => x.EquipmentTemplate).Include(d => d.Customer).AsQueryable();
+
+            var simplequery = a;
+
+            //var result = await QueryableExtensions.PaginationAndFilterQuery<PieceOfEquipment>(exprTree, pagination, context.PieceOfEquipment, queriable);
+            var result = await queriable.PaginationAndFilterQuery<WorkOrderDetail>(p, simplequery, filterQuery);
+
+            if (result.List != null)
+            {
+                foreach (var item in result.List)
+                {
+                    item.PieceOfEquipment.WorOrderDetails = null;
+                }
+            }
+
+            var filterQuery2 = Querys.WorkOrderFilter(pagination.Filter);
+            List<int> list2 = new List<int>();
+          foreach (var iten in result.List)
+            {
+                //WorkOrder w1 = new WorkOrder();
+                //w1.WorkOrderId = iten.WorkOrderID;
+                list2.Add(iten.WorkOrderID);
+            }
+
+
+
+
+            //var c = await context.PieceOfEquipment.Include(x => x.WeightSets).Where(x => context.WeightSet.Any(c => c.Reference == item.Reference && x.SerialNumber == item.Serial)).ToListAsync();
+            //var result = peopleList2.Where(p => !peopleList1.Any(p2 => p2.ID == p.ID));
+            var queriable2 =  context.WorkOrder.Include(x=>x.Customer).AsNoTracking().Where(z=> list2.Contains(z.WorkOrderId));//context.PieceOfEquipment.Include(x => x.EquipmentTemplate).Include(d => d.Customer).AsQueryable();
+            var simplequery2 = queriable2;
+
+            //ResultSet<WorkOrder> resultSet = new ResultSet<WorkOrder>();
+
+            //resultSet.List = queriable2;
+            //resultSet.CurrentPage = result.CurrentPage;
+            //resultSet.Shown = result.Shown;
+            //resultSet.PageTotal = result.PageTotal;
+            pagination.Show = 1000;
+            pagination.Page = 1;
+            var resultSet = await queriable2.PaginationAndFilterQuery<WorkOrder>(pagination, simplequery2, filterQuery2);
+
+            return resultSet;
+            //return result;
+
+            //return null;
+
+        }
+
+
+
+        public async Task<WorkOrder> InsertWokOrder(WorkOrder workOrder)
+        {
+            bool isWod = false;
+            //no se debe generar WOD sin POE
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(workOrder);
+
+            Console.WriteLine(json);    
+
+            workOrder.Address = null;
+
+            if (workOrder.WorkOrderDetails == null || workOrder.WorkOrderDetails.Count == 0)
+            {
+                workOrder.WorkOrderDetails = null;
+
+            }
+            else
+            {
+                isWod = true;
+
+                workOrder.WorkOrderDetails.ToList().ForEach(async item =>
+               {
+                   
+
+                    if (item.PieceOfEquipment != null)
+                   {
+                       item.PieceOfEquipmentId = item.PieceOfEquipment.PieceOfEquipmentID;
+                       item.CalibrationDate = DateTime.Now;
+                       item.PieceOfEquipment = null;
+                   }
+                   item.CurrentStatus = null;
+                   item.PossibleNextStatus = null;
+                   item.PreviusStatus = null;
+                   item.WorkOder = null;
+               });
+
+            }
+
+            List<User_WorkOrder> lst = new List<User_WorkOrder>();
+            List<User> users = new List<User>();
+
+            var usersserver = await context.User_WorkOrder.AsNoTracking().Where(x => x.WorkOrderID == workOrder.WorkOrderId).ToListAsync();
+
+            if(usersserver.Count > 0)
+            {
+                foreach (var itu in usersserver)
+                {
+                    User uuss = null;
+                    if(workOrder.Users != null)
+                    {
+                       uuss = workOrder.Users.Where(x => x.UserID == itu.UserID).FirstOrDefault();
+                    }
+                    if(uuss == null)
+                    {
+
+                        var aa = await context.WorkOrderDetail.AsNoTracking()
+                            .Where(x => x.WorkOrderID == workOrder.WorkOrderId && x.TechnicianID.HasValue && x.TechnicianID.Value==itu.UserID).FirstOrDefaultAsync();
+
+                        if (aa == null)
+                        {
+                            context.User_WorkOrder.Remove(itu);
+                        
+                        
+                        await context.SaveChangesAsync();
+                        }
+                        else
+                        {
+                            throw new Exception("Technician in Work Order Detail: " + aa.WorkOrderDetailID );
+                        }
+
+                        
+                    }          
+                   
+                        
+                
+                }
+            }
+            
+            if (workOrder.Users != null)
+            {
+                
+                foreach(var item  in workOrder.Users)
+                {
+
+                    //var uc = usersserver.Where(x => x.UserID == item.UserID && x.WorkOrderID==workOrder.WorkOrderId).FirstOrDefault();
+
+                    //if(uc != null)
+                    //{
+                    //    context.Remove(uc);
+                    //    await context.SaveChangesAsync();
+                    //}
+
+                    users.Add(item);
+                    //context.User_WorkOrder.Add(uw);
+                    //try { 
+                    ////await context.SaveChangesAsync();
+                    //}
+                    //catch(Exception ex)
+                    //{
+
+                    //}
+                }
+
+                foreach (var item in workOrder.Users)
+                {
+                    item.UserWorkOrders = lst;
+                }
+
+
+                workOrder.Users = null;
+                workOrder.UserWorkOrders = null;
+            }
+            //workOrder.PieceOfEquipments = null;
+
+            try { 
+            ///workOrder.WorkOrderId = 0;
+
+            var woo = await context.WorkOrder.Where(x => x.WorkOrderId == workOrder.WorkOrderId).FirstOrDefaultAsync();
+               if (woo != null)
+                {
+                    context.WorkOrder.Update(workOrder);
+                }
+                else
+                {
+                    context.WorkOrder.Add(workOrder);
+                }
+           
+             await context.SaveChangesAsync();
+
+                foreach(var item in users)
+                {
+                    item.UserID = item.UserID;
+                    User_WorkOrder uw = new User_WorkOrder();
+
+                    var uc = usersserver.Where(x => x.UserID == item.UserID && x.WorkOrderID==workOrder.WorkOrderId).FirstOrDefault();
+
+                    if (uc != null)
+                    {
+                        context.User_WorkOrder.Update(uc);
+                    }
+                    else
+                    {
+                       uw.UserID = item.UserID;
+                       uw.WorkOrderID = workOrder.WorkOrderId;
+                                   
+                    context.User_WorkOrder.Add(uw);
+                    }
+                   
+
+
+
+                    await context.SaveChangesAsync();
+                    //lst.Add(uw);
+                }
+
+                if (!isWod)
+                {
+                    return workOrder;
+                }
+                else
+                {
+                  var w = await context.WorkOrderDetail.Include(x => x.WorkOder).Include(d => d.PieceOfEquipment).Where(x => x.WorkOrderID == workOrder.WorkOrderId).ToArrayAsync();
+                                       
+                  foreach(var t in w)
+                    {
+                        t.PieceOfEquipment.WorOrderDetails = null;
+                        t.PieceOfEquipment.EquipmentTemplate = null;
+                        t.WorkOder.WorkOrderDetails = null;
+                    }
+
+                    workOrder.WorkOrderDetails = w;
+
+                    return workOrder;
+                }
+
+
+            
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+
+            //foreach (WorkOrderDetail wod in workOrder.WorkOrderDetail)
+            //{
+            //    wod.WorkOrderDetailID = 0;
+            //    wod.WorkOderID = workOrder.WorkOrderId;
+
+            //    context.WorkOrderDetail.Add(wod);
+            //    await context.SaveChangesAsync();
+            //}
+
+
+
+            
+        }
+
+        public async Task<WorkOrder> UpdateWorkOrder(WorkOrder workOrder)
+        {
+            //context.Entry(newWorkOrder).State = EntityState.Modified;
+            //context.SaveChanges();
+            context.WorkOrder.Update(workOrder);
+            //context.Entry(a).State= EntityState.Modified;
+            await context.SaveChangesAsync();
+            return workOrder;
+        }
+
+
+        public async Task<IEnumerable<Address>>  GetAddressByCustomerId(int customerId)
+        {
+            try
+            { //context.Customer.Include(c=>c.Aggregates).Where(x=>x.CustomerID== customerId).ToArrayAsync();
+
+                var res = await context.Customer.Include(x => x.Aggregates).
+                 ThenInclude(c => c.Addresses).Where(x => x.CustomerID == customerId).FirstOrDefaultAsync();
+                
+                if (res != null && res.Aggregates.Count > 0)
+                {
+                    List<Address> lst = new List<Address>();
+                    foreach(var item in res.Aggregates)
+                    {
+                        lst.AddRange(item.Addresses);
+                    }
+
+                    return lst;
+                }
+                return null;
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+            
+        }
+
+        public async Task<IEnumerable<Contact>> GetContactsByCustomerId(int customerId)
+        {
+            var res = await context.Customer.Include(x=>x.Aggregates).
+                ThenInclude(c=>c.Contacts).Where(x => x.CustomerID == customerId).FirstOrDefaultAsync();
+            if(res != null && res.Aggregates.Count > 0)
+            {
+
+                List<Contact> lst = new List<Contact>();
+                foreach (var item in res.Aggregates)
+                {
+                    
+                    lst.AddRange(item.Contacts);
+                }
+
+                return lst;
+
+
+                //return res.Aggregates.ElementAt(0).Contacts;
+            }
+            return null;
+        }
+
+        public async Task<IEnumerable<PieceOfEquipment>> GetPieceOfEquipmentByCustomerId(int id)
+        {
+            var res = await context.PieceOfEquipment.Where(x => x.CustomerId == id).ToArrayAsync();
+
+            return res;
+        }
+
+        public async Task<IEnumerable<User>> GetUsers()
+        {
+            var res = await context.User.AsNoTracking().ToArrayAsync();
+
+            return res;
+        }
+        public async Task<Status> GetDefaultStatus()
+        {
+            var res = await context.Status.Where(X=>X.IsDefault==true).FirstOrDefaultAsync();
+
+            return res;
+        }
+
+        public async Task<ResultSet<WorkOrderDetailByStatus>> GetWorkOrderDetailByStatus(Pagination<WorkOrderDetailByStatus> pagination)
+        {
+
+            var wod = pagination.Entity;
+            var filterQuery = Querys.WorkOrderDetailByStatusFilter(pagination.Entity);
+            var queriable = context.WorkOrderDetailByStatus.AsQueryable();
+   
+            var result = await queriable.PaginationAndFilterQuery<WorkOrderDetailByStatus>( pagination, context.WorkOrderDetailByStatus, filterQuery);
+
+            return result;
+
+
+           
+        }
+
+        public async Task<ResultSet<WorkOrderDetailByStatus>> GetWorkOrderDetailByEquipment(Pagination<WorkOrderDetailByStatus> pagination)
+        {
+
+            var wod = pagination.Entity;
+            var filterQuery = Querys.WorkOrderDetailByEquipmentFilter(pagination.Entity);
+            var queriable = context.WorkOrderDetailByEquipment
+            //.Where(x => (x.StatusId == wod.StatusId || wod.StatusId == 0)
+            //// && (x.WorkOrderReceiveDate == wod.WorkOrderReceiveDate || x.WorkOrderReceiveDate == Convert.ToDateTime("1/1/0001 12:00:00 AM"))
+             //&& (x.EquipmentTypeID == wod.EquipmentTypeID || x.EquipmentTypeID == 0)
+            // && (x.Model.ToUpper().Contains(wod.Model.ToUpper()) || x.Model == null)
+            // && (x.Company.ToUpper().Contains(wod.Company.ToUpper()) || x.Company == null)
+           // )
+            .AsQueryable();
+
+            var queriable1 = context.WorkOrderDetailByEquipment
+            .Where(x => (x.StatusId == wod.StatusId || wod.StatusId == 0)
+            //// && (x.WorkOrderReceiveDate == wod.WorkOrderReceiveDate || x.WorkOrderReceiveDate == Convert.ToDateTime("1/1/0001 12:00:00 AM"))
+             && (x.EquipmentTypeID == wod.EquipmentTypeID || x.EquipmentTypeID == 0)
+            // && (x.Model.ToUpper().Contains(wod.Model.ToUpper()) || x.Model == null)
+            // && (x.Company.ToUpper().Contains(wod.Company.ToUpper()) || x.Company == null)
+            )
+            .ToList();
+
+
+
+            var result = await queriable.PaginationAndFilterQuery<WorkOrderDetailByStatus>( pagination, context.WorkOrderDetailByStatus, filterQuery);
+
+            return result;
+       }
+
+        public async Task<ResultSet<WorkOrderDetailByCustomer>> GetWorkOrderDetailByCustomer(Pagination<WorkOrderDetailByCustomer> pagination)
+        {
+
+            var wod = pagination.Entity;
+            var filterQuery = Querys.WorkOrderDetailByCustomerFilter(pagination.Entity);
+            var queriable = context.WorkOrderDetailByCustomer
+            .AsQueryable();
+
+
+            var result = await queriable.PaginationAndFilterQuery<WorkOrderDetailByCustomer>( pagination, context.WorkOrderDetailByCustomer, filterQuery);
+
+            return result;
+        }
+
+        //public async Task<IEnumerable<User>> GetUserByCustomerId(int customerId)
+        //{
+        //    //var res = await context.User.Where(x => x == customerId).ToArrayAsync();
+
+        //    //return res;
+        //}
+        public async Task<bool> Save()
+        {
+            return (await context.SaveChangesAsync()) > 0;
+        }
+
+        public async Task<ICollection<Certificate>> GetCertificateByWod(int id)
+        {
+            var res = await  context.Certificate.Where(x => x.WorkOrderDetailId == id).ToListAsync();
+
+            return res;
+        }
+
+        public async Task<WeightSet> DeleteWeightSet(WeightSet id)
+        {
+            //id.Delete = true;
+            context.Entry(id).State = EntityState.Deleted;
+            await context.SaveChangesAsync();
+            return id;
+        }
+
+        #region Dispose
+        private bool disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!this.disposed)
+            {
+                if (disposing)
+                {
+                    context.Dispose();
+                }
+            }
+            this.disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+       
+
+        #endregion
+
+
+         public async Task<ICollection<CertificatePoE>> GetCertificateXPoE(PieceOfEquipment DTO)
+        {
+            var result = await context.CertificatePoE.AsNoTracking().Where(x=>x.PieceOfEquipmentID==DTO.PieceOfEquipmentID).ToArrayAsync();
+
+            return result;
+        }
+
+        public async Task<IEnumerable<CalibrationType>> GetCalibrationTypes()
+        {
+            var result = await context.CalibrationType.AsNoTracking().Include(x=>x.CalibrationSubTypes).ToArrayAsync();
+
+            return result;
+        }
+    }
+}

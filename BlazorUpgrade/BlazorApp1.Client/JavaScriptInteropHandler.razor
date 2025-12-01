@@ -1,0 +1,44 @@
+
+@implements IDisposable
+
+@code {
+
+    IJSRuntime JSRuntime { get; set; }
+
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public EventCallback<bool> OnInitialized { get; set; }
+
+    private bool _isInitialized = false;
+
+    [Inject]
+    IServiceProvider Services { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (Services.GetService<IJSRuntime>() is { } bs)
+        {
+            JSRuntime = bs;
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isInitialized = true;
+            await OnInitialized.InvokeAsync(true);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public void Dispose()
+    {
+        // Cleanup code if needed
+    }
+}
+
+@ChildContent

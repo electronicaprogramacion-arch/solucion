@@ -1,0 +1,651 @@
+@page "/index"
+@page "/"
+@page "/{__tenant__}/index"
+@using CalibrationSaaS.CustomerPortal.Services.Authentication
+@using CalibrationSaaS.CustomerPortal.Models.Certificates
+@using CalibrationSaaS.CustomerPortal.Models.Equipment
+@inject ICustomerAuthenticationService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard - CalibrationSaaS Customer Portal</PageTitle>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="dashboard-title">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Dashboard
+                </h1>
+                <p class="dashboard-subtitle text-muted">
+                    Welcome to your CalibrationSaaS Customer Portal
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="dashboard-date">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    @DateTime.Now.ToString("MMMM dd, yyyy")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <AuthorizeView>
+        <Authorized>
+            <!-- Quick Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-card stat-card-primary">
+                        <div class="stat-card-body">
+                            <div class="stat-icon">
+                                <i class="fas fa-certificate"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 class="stat-number">@totalCertificates</h3>
+                                <p class="stat-label">Total Certificates</p>
+                            </div>
+                        </div>
+                        <div class="stat-card-footer">
+                            <a href="/certificates" class="stat-link">
+                                View All <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-card stat-card-warning">
+                        <div class="stat-card-body">
+                            <div class="stat-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 class="stat-number">@overdueEquipment</h3>
+                                <p class="stat-label">Overdue Equipment</p>
+                            </div>
+                        </div>
+                        <div class="stat-card-footer">
+                            <a href="/equipment?status=overdue" class="stat-link">
+                                View Details <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-card stat-card-info">
+                        <div class="stat-card-body">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 class="stat-number">@dueSoonEquipment</h3>
+                                <p class="stat-label">Due Soon (30 days)</p>
+                            </div>
+                        </div>
+                        <div class="stat-card-footer">
+                            <a href="/equipment?status=due-soon" class="stat-link">
+                                View Details <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="stat-card stat-card-success">
+                        <div class="stat-card-body">
+                            <div class="stat-icon">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 class="stat-number">@totalEquipment</h3>
+                                <p class="stat-label">Total Equipment</p>
+                            </div>
+                        </div>
+                        <div class="stat-card-footer">
+                            <a href="/equipment" class="stat-link">
+                                View All <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-bolt me-2"></i>
+                                Quick Actions
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <a href="/certificates" class="quick-action-card">
+                                        <div class="quick-action-icon">
+                                            <i class="fas fa-download"></i>
+                                        </div>
+                                        <div class="quick-action-content">
+                                            <h6>Download Certificates</h6>
+                                            <p class="text-muted">Search and download calibration certificates</p>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <a href="/equipment" class="quick-action-card">
+                                        <div class="quick-action-icon">
+                                            <i class="fas fa-calendar-check"></i>
+                                        </div>
+                                        <div class="quick-action-content">
+                                            <h6>Check Due Dates</h6>
+                                            <p class="text-muted">View equipment calibration due dates</p>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <a href="/history" class="quick-action-card">
+                                        <div class="quick-action-icon">
+                                            <i class="fas fa-history"></i>
+                                        </div>
+                                        <div class="quick-action-content">
+                                            <h6>View History</h6>
+                                            <p class="text-muted">Browse calibration history</p>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <div class="col-lg-3 col-md-6 mb-3">
+                                    <a href="/support" class="quick-action-card">
+                                        <div class="quick-action-icon">
+                                            <i class="fas fa-question-circle"></i>
+                                        </div>
+                                        <div class="quick-action-content">
+                                            <h6>Get Support</h6>
+                                            <p class="text-muted">Contact our support team</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="row">
+                <div class="col-lg-8 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-clock me-2"></i>
+                                Recent Certificates
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (isLoading)
+                            {
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <div class="mt-2">Loading recent certificates...</div>
+                                </div>
+                            }
+                            else if (recentCertificates?.Any() == true)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Equipment</th>
+                                                <th>Serial Number</th>
+                                                <th>Calibration Date</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var cert in recentCertificates.Take(5))
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-semibold">@cert.Equipment.Model</div>
+                                                        <small class="text-muted">@cert.Equipment.EquipmentType</small>
+                                                    </td>
+                                                    <td>@cert.Equipment.SerialNumber</td>
+                                                    <td>@cert.CalibrationDate.ToString("MMM dd, yyyy")</td>
+                                                    <td>
+                                                        <span class="badge bg-@(cert.Status == "Valid" ? "success" : "warning")">@cert.Status</span>
+                                                    </td>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(cert.PdfFileName))
+                                                        {
+                                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => DownloadCertificate(cert.Id)">
+                                                                <i class="fas fa-download"></i>
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">N/A</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <a href="/certificates" class="btn btn-outline-primary">
+                                        View All Certificates <i class="fas fa-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="fas fa-certificate fa-3x text-muted mb-3"></i>
+                                    <h6>No Recent Certificates</h6>
+                                    <p class="text-muted">Your recent calibration certificates will appear here.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Upcoming Due Dates
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (isLoading)
+                            {
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            }
+                            else if (upcomingDueDates?.Any() == true)
+                            {
+                                @foreach (var equipment in upcomingDueDates.Take(5))
+                                {
+                                    <div class="due-date-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold">@equipment.Model</div>
+                                                <small class="text-muted">@equipment.SerialNumber</small>
+                                            </div>
+                                            <span class="badge bg-@(equipment.IsOverdue ? "danger" : equipment.IsExpiringSoon ? "warning" : "success")">@equipment.DueStatusText</span>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small class="text-muted">
+                                                Due: @equipment.DueDateDisplayText
+                                            </small>
+                                        </div>
+                                    </div>
+                                }
+                                <div class="text-center mt-3">
+                                    <a href="/equipment" class="btn btn-outline-primary btn-sm">
+                                        View All Equipment <i class="fas fa-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="fas fa-calendar-check fa-3x text-muted mb-3"></i>
+                                    <h6>No Upcoming Due Dates</h6>
+                                    <p class="text-muted">All equipment is current.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="text-center py-5">
+                <i class="fas fa-lock fa-4x text-muted mb-4"></i>
+                <h2>Access Required</h2>
+                <p class="lead text-muted">Please log in to access your dashboard.</p>
+                <a href="@GetLoginUrl()" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Login to Continue
+                </a>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    [Parameter] public string? __tenant__ { get; set; }
+
+    private bool isLoading = true;
+    private int totalCertificates = 0;
+    private int overdueEquipment = 0;
+    private int dueSoonEquipment = 0;
+    private int totalEquipment = 0;
+    private List<CertificateDto>? recentCertificates;
+    private List<EquipmentDueDateDto>? upcomingDueDates;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Check if we're at the root URL and redirect to tenant-specific URL
+            var currentUri = Navigation.Uri;
+            var baseUri = Navigation.BaseUri;
+
+            if (currentUri == baseUri || currentUri == baseUri.TrimEnd('/'))
+            {
+                Navigation.NavigateTo("/thermotemp", true);
+                return;
+            }
+
+            if (await AuthService.IsAuthenticatedAsync())
+            {
+                await LoadDashboardDataAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log error
+            Console.WriteLine($"Dashboard initialization error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadDashboardDataAsync()
+    {
+        // Demo: Load realistic mock data for demo purposes
+        await Task.Delay(1000); // Simulate loading
+
+        totalCertificates = 45;
+        overdueEquipment = 3;
+        dueSoonEquipment = 7;
+        totalEquipment = 28;
+
+        // Demo: Create realistic mock certificate data (5 items)
+        recentCertificates = new List<CertificateDto>
+        {
+            new CertificateDto
+            {
+                Id = 1001,
+                CertificateNumber = "CERT-WO-2024-001-1001",
+                WorkOrderNumber = "WO-2024-001",
+                WorkOrderId = 1001,
+                WorkOrderDetailId = 1001,
+                IssueDate = DateTime.Now.AddDays(-2),
+                CalibrationDate = DateTime.Now.AddDays(-3),
+                Status = "Issued",
+                Equipment = new Models.Certificates.EquipmentDto
+                {
+                    Id = 101,
+                    SerialNumber = "TH-001-2023",
+                    Description = "Digital Thermometer",
+                    Manufacturer = "Fluke",
+                    Model = "1523",
+                    Location = "Lab A",
+                    NextCalibrationDate = DateTime.Now.AddMonths(12)
+                },
+                Customer = new CustomerDto
+                {
+                    Id = 1,
+                    Name = "Kavoku",
+                    CompanyName = "Kavoku"
+                }
+            },
+            new CertificateDto
+            {
+                Id = 1002,
+                CertificateNumber = "CERT-WO-2024-002-1002",
+                WorkOrderNumber = "WO-2024-002",
+                WorkOrderId = 1002,
+                WorkOrderDetailId = 1002,
+                IssueDate = DateTime.Now.AddDays(-5),
+                CalibrationDate = DateTime.Now.AddDays(-6),
+                Status = "Issued",
+                Equipment = new Models.Certificates.EquipmentDto
+                {
+                    Id = 102,
+                    SerialNumber = "PR-002-2023",
+                    Description = "Pressure Gauge",
+                    Manufacturer = "Ashcroft",
+                    Model = "1009",
+                    Location = "Lab B",
+                    NextCalibrationDate = DateTime.Now.AddMonths(12)
+                },
+                Customer = new CustomerDto
+                {
+                    Id = 1,
+                    Name = "Kavoku",
+                    CompanyName = "Kavoku"
+                }
+            },
+            new CertificateDto
+            {
+                Id = 1003,
+                CertificateNumber = "CERT-WO-2024-003-1003",
+                WorkOrderNumber = "WO-2024-003",
+                WorkOrderId = 1003,
+                WorkOrderDetailId = 1003,
+                IssueDate = DateTime.Now.AddDays(-8),
+                CalibrationDate = DateTime.Now.AddDays(-9),
+                Status = "Issued",
+                Equipment = new Models.Certificates.EquipmentDto
+                {
+                    Id = 103,
+                    SerialNumber = "SC-003-2023",
+                    Description = "Analytical Scale",
+                    Manufacturer = "Mettler Toledo",
+                    Model = "XS205",
+                    Location = "QC Lab",
+                    NextCalibrationDate = DateTime.Now.AddMonths(6)
+                },
+                Customer = new CustomerDto
+                {
+                    Id = 1,
+                    Name = "Kavoku",
+                    CompanyName = "Kavoku"
+                }
+            },
+            new CertificateDto
+            {
+                Id = 1004,
+                CertificateNumber = "CERT-WO-2024-004-1004",
+                WorkOrderNumber = "WO-2024-004",
+                WorkOrderId = 1004,
+                WorkOrderDetailId = 1004,
+                IssueDate = DateTime.Now.AddDays(-12),
+                CalibrationDate = DateTime.Now.AddDays(-13),
+                Status = "Issued",
+                Equipment = new Models.Certificates.EquipmentDto
+                {
+                    Id = 104,
+                    SerialNumber = "VM-004-2023",
+                    Description = "Digital Voltmeter",
+                    Manufacturer = "Keysight",
+                    Model = "34461A",
+                    Location = "Electronics Lab",
+                    NextCalibrationDate = DateTime.Now.AddMonths(12)
+                },
+                Customer = new CustomerDto
+                {
+                    Id = 1,
+                    Name = "Kavoku",
+                    CompanyName = "Kavoku"
+                }
+            },
+            new CertificateDto
+            {
+                Id = 1005,
+                CertificateNumber = "CERT-WO-2024-005-1005",
+                WorkOrderNumber = "WO-2024-005",
+                WorkOrderId = 1005,
+                WorkOrderDetailId = 1005,
+                IssueDate = DateTime.Now.AddDays(-15),
+                CalibrationDate = DateTime.Now.AddDays(-16),
+                Status = "Issued",
+                Equipment = new Models.Certificates.EquipmentDto
+                {
+                    Id = 105,
+                    SerialNumber = "FL-005-2023",
+                    Description = "Flow Meter",
+                    Manufacturer = "Endress+Hauser",
+                    Model = "Proline 300",
+                    Location = "Process Lab",
+                    NextCalibrationDate = DateTime.Now.AddMonths(12)
+                },
+                Customer = new CustomerDto
+                {
+                    Id = 1,
+                    Name = "Kavoku",
+                    CompanyName = "Kavoku"
+                }
+            }
+        };
+
+        // Demo: Create realistic mock equipment due date data (5 items)
+        upcomingDueDates = new List<EquipmentDueDateDto>
+        {
+            new EquipmentDueDateDto
+            {
+                EquipmentId = 201,
+                SerialNumber = "TH-201-2022",
+                Description = "Infrared Thermometer",
+                Manufacturer = "Raytek",
+                Model = "ST80",
+                Location = "Production Floor",
+                Department = "Quality Control",
+                EquipmentType = "Temperature",
+                EquipmentTypeGroup = "Measurement",
+                LastCalibrationDate = DateTime.Now.AddMonths(-11),
+                NextCalibrationDate = DateTime.Now.AddDays(15),
+                CalibrationIntervalMonths = 12,
+                CalibrationStatus = "Current",
+                DueStatus = DueDateStatus.ExpiringSoon,
+                DaysUntilDue = 15,
+                DaysOverdue = 0,
+                CustomerId = 1,
+                CustomerName = "Kavoku"
+            },
+            new EquipmentDueDateDto
+            {
+                EquipmentId = 202,
+                SerialNumber = "PR-202-2022",
+                Description = "Digital Pressure Transducer",
+                Manufacturer = "Honeywell",
+                Model = "STG94L",
+                Location = "Test Bay 1",
+                Department = "Engineering",
+                EquipmentType = "Pressure",
+                EquipmentTypeGroup = "Measurement",
+                LastCalibrationDate = DateTime.Now.AddMonths(-11),
+                NextCalibrationDate = DateTime.Now.AddDays(22),
+                CalibrationIntervalMonths = 12,
+                CalibrationStatus = "Current",
+                DueStatus = DueDateStatus.ExpiringSoon,
+                DaysUntilDue = 22,
+                DaysOverdue = 0,
+                CustomerId = 1,
+                CustomerName = "Acme Manufacturing"
+            },
+            new EquipmentDueDateDto
+            {
+                EquipmentId = 203,
+                SerialNumber = "SC-203-2022",
+                Description = "Precision Balance",
+                Manufacturer = "Sartorius",
+                Model = "Entris224-1S",
+                Location = "Lab C",
+                Department = "Quality Control",
+                EquipmentType = "Mass",
+                EquipmentTypeGroup = "Measurement",
+                LastCalibrationDate = DateTime.Now.AddMonths(-5),
+                NextCalibrationDate = DateTime.Now.AddDays(28),
+                CalibrationIntervalMonths = 6,
+                CalibrationStatus = "Current",
+                DueStatus = DueDateStatus.ExpiringSoon,
+                DaysUntilDue = 28,
+                DaysOverdue = 0,
+                CustomerId = 1,
+                CustomerName = "Acme Manufacturing"
+            },
+            new EquipmentDueDateDto
+            {
+                EquipmentId = 204,
+                SerialNumber = "VM-204-2022",
+                Description = "Bench Multimeter",
+                Manufacturer = "Fluke",
+                Model = "8845A",
+                Location = "Electronics Lab",
+                Department = "R&D",
+                EquipmentType = "Electrical",
+                EquipmentTypeGroup = "Measurement",
+                LastCalibrationDate = DateTime.Now.AddMonths(-10),
+                NextCalibrationDate = DateTime.Now.AddDays(35),
+                CalibrationIntervalMonths = 12,
+                CalibrationStatus = "Current",
+                DueStatus = DueDateStatus.Current,
+                DaysUntilDue = 35,
+                DaysOverdue = 0,
+                CustomerId = 1,
+                CustomerName = "Acme Manufacturing"
+            },
+            new EquipmentDueDateDto
+            {
+                EquipmentId = 205,
+                SerialNumber = "FL-205-2022",
+                Description = "Ultrasonic Flow Meter",
+                Manufacturer = "Siemens",
+                Model = "SITRANS FUS1010",
+                Location = "Utility Room",
+                Department = "Maintenance",
+                EquipmentType = "Flow",
+                EquipmentTypeGroup = "Measurement",
+                LastCalibrationDate = DateTime.Now.AddMonths(-13),
+                NextCalibrationDate = DateTime.Now.AddDays(-5),
+                CalibrationIntervalMonths = 12,
+                CalibrationStatus = "Overdue",
+                DueStatus = DueDateStatus.Overdue,
+                DaysUntilDue = 0,
+                DaysOverdue = 5,
+                CustomerId = 1,
+                CustomerName = "Acme Manufacturing"
+            }
+        };
+    }
+
+    private async Task DownloadCertificate(int workOrderDetailId)
+    {
+        try
+        {
+            // TODO: Implement certificate download
+            await Task.Delay(100);
+            // Show success message
+        }
+        catch (Exception ex)
+        {
+            // Show error message
+            Console.WriteLine($"Download error: {ex.Message}");
+        }
+    }
+
+    private string GetLoginUrl()
+    {
+        return !string.IsNullOrEmpty(__tenant__) ? $"/{__tenant__}/login" : "/login";
+    }
+}

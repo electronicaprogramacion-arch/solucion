@@ -1,0 +1,3095 @@
+﻿@using System.Dynamic;
+@using Blazed.Controls.Toast;
+@using Blazored.Modal;
+@using Blazored.Modal.Services;
+@using Bogus;
+@using System;
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using Jint;
+@using Jint.Native;
+@using Microsoft.JSInterop
+@using Newtonsoft.Json;
+@using Microsoft.Extensions.Configuration;
+@using System.Text.RegularExpressions;
+@using Blazed.Controls;
+@using Helpers;
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+@using System.Globalization
+@namespace Blazed.Controls.MultiComponent
+@using Radzen
+@using Radzen.Blazor;
+@typeparam TableItem
+
+@if (DynamicProperties != null)
+{
+
+    //style="flex-wrap:nowrap"
+
+    @*<div class="row" >*@
+
+    @if (string.IsNullOrEmpty(GroupName))
+    {
+        return;
+    }
+    else
+    {
+        try
+        {
+            //Console.WriteLine("GroupName " + GenericCalibration2.GroupName);
+
+            //Console.WriteLine("GroupName " + GenericCalibrationResult.GroupName);
+
+            if (NewItem != null)
+            {
+                //Console.WriteLine("NewItem " + NewItem.GroupName);
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+
+    }
+
+    @foreach (var option in properties.OrderBy(x => x.DynamicProperty.ColPosition))
+    {
+
+        @* if (option.DynamicProperty.Name == "Load_KFG")
+        {
+            //Console.WriteLine("Entra a Load_KFG");
+        }
+
+        //Console.WriteLine(option.DynamicProperty.Name);*@
+
+        if (option?.DynamicProperty == null || option?.DynamicProperty?.ViewPropertyBase == null)
+        {
+            Error = "Error in configuration property: " + option.Key + "CalibrationSubType " + option.DynamicProperty.CalibrationSubtype;
+            //Console.WriteLine(Error);
+            ShowToast(Error, ToastLevel.Error).ConfigureAwait(false).GetAwaiter().GetResult();
+            return;
+
+        }
+
+        if (option.CurrentView == null)
+        {
+            option.CurrentView = new ViewPropertyBase();
+            option.CurrentView = (ViewPropertyBase)option.DynamicProperty.ViewPropertyBase.CloneObject();
+            //option.CurrentView.OptionsFilter = option.DynamicProperty.ViewPropertyBase.OptionsFilter;
+        }
+
+        if ((string.IsNullOrEmpty(option.DynamicProperty.ViewPropertyBase.StepResol) || option.DynamicProperty.ViewPropertyBase.StepResol == "any") && !string.IsNullOrEmpty(configureresolution))
+        {
+            option.CurrentView.StepResol = configureresolution;
+        }
+
+        //option.CurrentView.SelectOptionsTmP = option?.DynamicProperty?.ViewPropertyBase?.SelectOptions;
+
+        var controlType = option.CurrentView.ControlType;
+
+        var DynamicType = option.DynamicProperty.DataType;
+
+        var IsDisable = option.CurrentView.IsDisabled;
+
+        if (!Enabled)
+        {
+            option.CurrentView.IsDisabled = true;
+        }
+
+        var IsOnChange = option.DynamicProperty.ViewPropertyBase.OnChange;
+
+        var csscol = option.CurrentView.CSSCol;
+
+        var csscard = "card";
+
+        var csscardbody = "card-body";
+
+        string provalue = "";
+
+        string visi = "";
+
+
+
+
+
+        if (option.CurrentView.IsVisible.HasValue && option.CurrentView.IsVisible.Value == false)
+        {
+            csscol = " d-none ";
+
+            visi = " display:none; ";
+        }
+        else if (!IsRowView)
+        {
+            csscol = option.CurrentView.CSSCol;
+        }
+        else if (IsRowView)
+        {
+            csscol = option.CurrentView.RowCSSCol;
+        }
+
+        string colwidht = NumericExtensions.ColumnWidth(csscol);
+
+
+
+        @*if (string.IsNullOrEmpty(option.CurrentView.Group) || CurrentGroup == option.CurrentView.Group)
+        {
+            csscard = "";
+            csscardbody = "";
+        }
+        else
+        {
+            CurrentGroup = option.CurrentView.Group;
+        }*@
+
+        if (!string.IsNullOrEmpty(option.CurrentView.ColGroup) && CurrentGroup != option.CurrentView.ColGroup)
+        {
+            CurrentGroup = option.CurrentView.ColGroup;
+
+            TwoSeparator = true;
+
+            string title = "";
+
+            if (!string.IsNullOrEmpty(option.CurrentView.ColGroupTitle))
+            {
+                title = option.CurrentView.ColGroupTitle;
+            }
+
+            <div class="@option.CurrentView.ColGroupCSS">@title</div>
+        }
+        else
+        {
+            TwoSeparator = false;
+        }
+
+        @* @if (!string.IsNullOrEmpty(@option.CurrentView.SelectOptions) 
+        && (!string.IsNullOrEmpty(@option.CurrentView.OptionsFilter) 
+        && @option.CurrentView.OptionsFilter.ToLower().Contains("header")
+        && NewItem != null
+        )
+        )
+        {
+
+
+            //Console.WriteLine("SelectOptions ------- " + option.CurrentView.SelectOptions + " " + GroupName);
+
+            var optionswl = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(option.CurrentView.SelectOptions);
+
+            var property = @option.CurrentView.OptionsFilter.Replace("header.", "");
+
+            var HeaderModel = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(NewItem.Object);
+
+            if (!string.IsNullOrEmpty(property))
+            {
+                string provalue = HeaderModel[property];
+
+                //Console.WriteLine("propertyvalue +++++++++" + provalue + " " + GroupName + "NewItemGroup: " + NewItem.GroupName);
+
+                if (optionswl != null && optionswl.Count > 0)
+                {
+                    var optfilter = optionswl.Where(x => x.Key == provalue).FirstOrDefault();
+
+                    if (EqualityComparer<KeyValuePair<string, Dictionary<string, string>>>.Default.Equals(optfilter, default(KeyValuePair<string, Dictionary<string, string>>)))
+                    {
+
+                    }
+                    else
+                    {
+
+                        option.CurrentView.SelectOptionsTmP = Newtonsoft.Json.JsonConvert.SerializeObject(optfilter.Value);
+
+                    }
+                }
+                // Por esta versión corregida:
+
+            }
+
+        } *@
+
+
+        @if (!string.IsNullOrEmpty(option.CurrentView.SelectOptions)
+                    //&& option?.CurrentView?.OptionsFilter?.Count() > 0
+                    && !string.IsNullOrEmpty(option.CurrentView.OptionsFilter))
+        {
+            //option.CurrentView.SelectOptionsTmP = GetOptions(option?.CurrentView?.SelectOptions, option?.CurrentView.OptionsFilter);
+
+
+            List<string> errors2 = new List<string>();
+
+            //Console.WriteLine("OptionFilter:  ++++++++++++++++" + option.CurrentView.OptionsFilter);
+            string property = "";
+
+            string objectModel = "";
+
+            if (option.CurrentView.OptionsFilter.Contains("header.") && NewItem != null)
+            {
+                property = @option.CurrentView.OptionsFilter.Replace("header.", "");
+                objectModel = NewItem?.Object;
+            }
+            if (option.CurrentView.OptionsFilter.Contains("model.") && GenericCalibrationResult != null)
+            {
+                property = @option.CurrentView.OptionsFilter.Replace("model.", "");
+                objectModel = GenericCalibrationResult?.Object;
+            }
+
+            var HeaderModel = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(objectModel
+
+               , new JsonSerializerSettings()
+               {
+                   Error = (sender, error) =>
+                   {
+                       errors2.Add(error.ErrorContext.Error.Message);
+                       error.ErrorContext.Handled = true;
+
+                       //Console.WriteLine("GetOptions 2 error NewItem" + error.ErrorContext.Error.Message);
+                   }//error.ErrorContext.Handled = true
+
+               }
+            );
+
+            if (!string.IsNullOrEmpty(objectModel))
+            {
+                if (!string.IsNullOrEmpty(property) && errors2.Count == 0)
+                {
+                    provalue = HeaderModel[property];
+
+
+                    // Por esta versión corregida:
+
+                }
+                else
+                {
+                    foreach (var err in errors2)
+                    {
+                        //Console.WriteLine("Error in newitem: " + err);
+                    }
+                }
+            }
+
+
+
+        }
+
+
+
+        @if (controlType == "switch")
+        {
+
+            if (option.Value != null)
+            {
+                bool option2;
+
+                bool option1 = bool.TryParse(option.Value.ToString(), out option2);
+
+                if (option1)
+                {
+                    option.HasBoolValue = true;
+                    //option.BoolValue = option2;
+
+
+                    <CustomColumns Type="@ComponentType" Parameters="@Parameters" Style="@(visi + colwidht)">
+
+                        <TextInput @bind-Value="@option.BoolValue" IsRowView="@IsRowView"
+                                   IsDynamic="true" TValue="bool" DynamicType="@DynamicType"
+                                   PropertyName="@option.DynamicProperty.Name"
+                                   ViewProperty="@option.CurrentView"
+                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,Model,true))"
+                                   GroupName="@GroupName"
+                                   SelectFilter="@provalue"
+                                   OnlyHeader="@OnlyHeader"
+                                   OnCopyToClicked="OnCopyToClicked">
+                        </TextInput>
+                        @if (!string.IsNullOrEmpty(option.CurrentView.ToolTipMessage))
+                        {
+                            <span class="tooltipspan">@option.CurrentView.ToolTipMessage</span>
+                        }
+
+                    </CustomColumns>
+
+
+
+
+
+                }
+                else
+                {
+
+                    ShowToast("Error conversion " + option.Key + " error value " + option.Value, ToastLevel.Error).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                }
+            }
+
+
+        }
+        else
+        {
+            @if (IsOnChange && controlType != "radio")
+            {
+
+                <CustomColumns Type="@ComponentType" Parameters="@Parameters" Style="@(visi + colwidht)">
+
+                    <TextInput @bind-Value="option.Value" IsRowView="@IsRowView"
+                               IsDynamic="true" TValue="object" DynamicType="@DynamicType"
+                               PropertyName="@option.DynamicProperty.Name"
+                               ViewProperty="@option.CurrentView"
+                               OnChangeControl="@(async (arg) => await ChangeControl2(arg,Model,true))"
+                               SelectFilter="@provalue"
+                               GroupName="@GroupName"
+                               OnlyHeader="@OnlyHeader"
+                               OnCopyToClicked="OnCopyToClicked">
+
+                    </TextInput>
+                    @if (!string.IsNullOrEmpty(option.CurrentView.ToolTipMessage))
+                    {
+                        <span class="tooltipspan">@option.CurrentView.ToolTipMessage</span>
+                    }
+
+                </CustomColumns>
+            }
+            else if (IsOnChange && controlType == "radio")
+
+            {
+
+                if (string.IsNullOrEmpty(SelectValue) || SelectValue == "-1" || SelectValue != option.Value.ToString())
+                {
+                    SelectValue = "-1";
+                }
+                else
+                {
+
+                }
+
+                //SelectedValue = "@option.Value.ToString()"
+                Reload = true;
+
+
+
+                <CustomColumns Type="@ComponentType" Parameters="@Parameters" Style="@(visi + colwidht)">
+                    <TextInput @bind-Value="option.Value" IsRowView="@IsRowView"
+                               IsDynamic="true" TValue="object" DynamicType="@DynamicType"
+                               PropertyName="@option.DynamicProperty.Name"
+                               ViewProperty="@option.CurrentView"
+                               OnChangeControl="@(async (arg) => await ChangeControl2(arg,Model,true))"
+                               RefreshGrid="@RefreshAllGrid"
+                               OnlyHeader="@OnlyHeader"
+                               GroupName="@GroupName"
+                               SelectFilter="@provalue"
+                               SelectedValue="@SelectValue"
+                               OnCopyToClicked="OnCopyToClicked">
+
+                    </TextInput>
+
+
+                    @if (!string.IsNullOrEmpty(option.CurrentView.ToolTipMessage))
+                    {
+                        <span class="tooltipspan">@option.CurrentView.ToolTipMessage</span>
+                    }
+                </CustomColumns>
+            }
+            else
+            {
+
+
+                <CustomColumns Type="@ComponentType" Parameters="@Parameters" Style="@(visi + colwidht)">
+                    <TextInput @bind-Value="option.Value" IsRowView="@IsRowView"
+                               IsDynamic="true" TValue="object"
+                               DynamicType="@DynamicType"
+                               PropertyName="@option.DynamicProperty.Name"
+                               ViewProperty="option.DynamicProperty.ViewPropertyBase"
+                               GroupName="@GroupName"
+                               SelectFilter="@provalue"
+                               OnlyHeader="@OnlyHeader"
+                               OnCopyToClicked="OnCopyToClicked">
+
+                    </TextInput>
+                    @if (!string.IsNullOrEmpty(option.CurrentView.ToolTipMessage))
+                    {
+                        <span class="tooltipspan">@option.CurrentView.ToolTipMessage</span>
+                    }
+                </CustomColumns>
+
+            }
+
+
+        }
+
+        @if (!string.IsNullOrEmpty(HideElement) && Component != null && Component.ConfigMode)
+        {
+            <div class="col-1" style="padding:0px;left:-40px">
+                <button class="d-sm-inline-block btn btn-sm btn-danger" type="button"
+                        data-toggle="collapse" @onclick=@(async () => await CalibrationConfig(option.DynamicProperty))
+                        @onclick:stopPropagation @onclick:preventDefault>
+                    ...
+                </button>
+            </div>
+        }
+
+        @* @if (TwoSeparator)
+        {
+            TwoSeparator = false;
+
+            <div class="row" style="width:100%;min-height:20px;background-color:green"></div>
+
+        }*@
+
+
+    }
+
+
+    @* </div>*@
+    @if (!OnlyHeader)
+    {
+        @BoundValue()
+    }
+
+
+
+    @if (!string.IsNullOrEmpty(Error))
+    {
+        <div class="row">
+
+            <div class="col" style="min-height:5px">
+                @Error
+            </div>
+        </div>
+    }
+
+
+}
+
+
+
+@code {
+    // [Parameter]
+    // public int TypeColumn { get; set; } = 1;
+
+    [Parameter]
+    public IDictionary<string, object> Parameters { get; set; }
+
+    [Parameter]
+    public int ComponentType { get; set; } = 1;
+
+    /// <summary>
+    /// 1-gridcolumn for datalist for example
+    /// 2-DatagridRadzen
+    /// </summary>
+    [Parameter]
+    public int TypeRadzenControl { get; set; } = 1;
+
+
+    [Parameter]
+    public bool UseRadzen { get; set; }
+
+    public string GetOptions(string SelectOptions, string OptionsFilter)
+    {
+        var optionsstring = SelectOptions;
+
+        var errors = new List<string>();
+
+        var errors1 = new List<string>();
+
+        var errors2 = new List<string>();
+
+        if (string.IsNullOrEmpty(SelectOptions))
+        {
+            return "";
+        }
+
+
+        var Options = JsonConvert.DeserializeObject<Dictionary<string, string>>(optionsstring, new JsonSerializerSettings()
+        {
+            Error = (sender, error) =>
+            {
+                errors.Add(error.ErrorContext.Error.Message);
+                error.ErrorContext.Handled = true;
+
+                //Console.WriteLine("GetOptions error " + error.ErrorContext.Error.Message);
+            }//error.ErrorContext.Handled = true
+
+        });
+
+        if (errors?.Count > 0)
+        {
+
+            var optionswl = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(optionsstring
+            , new JsonSerializerSettings()
+            {
+                Error = (sender, error) =>
+                {
+                    errors1.Add(error.ErrorContext.Error.Message);
+                    error.ErrorContext.Handled = true;
+
+                    //Console.WriteLine("GetOptions 2 error " + error.ErrorContext.Error.Message);
+                }//error.ErrorContext.Handled = true
+
+            }
+            );
+            if (errors1.Count == 0
+                //&& OptionsFilter?.Count() > 0
+                && !string.IsNullOrEmpty(OptionsFilter)
+                && NewItem != null)
+            {
+                var property = OptionsFilter.Replace("header.", "");
+
+                var HeaderModel = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(NewItem.Object
+
+                   , new JsonSerializerSettings()
+                   {
+                       Error = (sender, error) =>
+                       {
+                           errors2.Add(error.ErrorContext.Error.Message);
+                           error.ErrorContext.Handled = true;
+
+                           //Console.WriteLine("GetOptions 2 error NewItem" + error.ErrorContext.Error.Message);
+                       }//error.ErrorContext.Handled = true
+
+                   }
+                );
+
+                if (!string.IsNullOrEmpty(property) && errors2.Count == 0)
+                {
+                    string provalue = HeaderModel[property];
+
+                    //Console.WriteLine("GetOptions " + provalue + " " + GroupName + " NewItemGroup: " + NewItem.GroupName);
+
+                    if (optionswl != null && optionswl.Count > 0)
+                    {
+                        var optfilter = optionswl.Where(x => x.Key == provalue).FirstOrDefault();
+
+                        if (EqualityComparer<KeyValuePair<string, Dictionary<string, string>>>.Default.Equals(optfilter, default(KeyValuePair<string, Dictionary<string, string>>)))
+                        {
+
+                        }
+                        else
+                        {
+
+                            return Newtonsoft.Json.JsonConvert.SerializeObject(optfilter.Value);
+
+
+
+                        }
+                    }
+                    // Por esta versión corregida:
+
+                }
+                else
+                {
+                    foreach (var err in errors2)
+                    {
+                        //Console.WriteLine("Error in newitem: " + err);
+                    }
+                }
+            }
+            else
+            {
+                //Console.WriteLine("Mal formated Json, review SelectOptions +++ " + OptionsFilter);
+            }
+
+
+        }
+        else
+        {
+            return optionsstring;
+        }
+
+
+        return "";
+    }
+
+
+    public string MessageError { get; set; }
+
+    public string Aggregates { get; set; }
+
+    [Parameter]
+    public string SelectValue { get; set; }
+
+    [Parameter]
+    public string GroupName { get; set; }
+
+
+
+    [Parameter]
+    public Action<string, int> RefreshGrid { get; set; }
+
+    [Parameter]
+    public bool Reload { get; set; }
+
+    [Parameter]
+    public bool Enabled { get; set; }
+
+
+    [Parameter]
+    public dynamic Context { get; set; }
+
+
+    [Parameter]
+    public dynamic Grid { get; set; }
+
+
+    [Parameter]
+    public dynamic NewItem { get; set; }
+
+
+    [Parameter]
+    public CalibrationSubType CalibrationSubType { get; set; }
+
+
+
+    [Parameter]
+    public Helpers.Controls.Component Component { get; set; }
+
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+
+    public ModalParameters ModalParameters = new ModalParameters();
+
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+    public async Task CalibrationConfig(DynamicProperty dynamicProperty)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("NewPerson", dynamicProperty);
+        //parameters.Add("IsModal", true);
+
+        ModalOptions op = new ModalOptions();
+
+
+
+        //op.ContentScrollable = true;
+        op.Class = "blazored-modal " + Blazed.Controls.ModalSize.MediumWindow;
+
+        if (JSRuntime != null && !string.IsNullOrEmpty(HideElement))
+        {
+            await JSRuntime.InvokeVoidAsync("hideElement", HideElement);
+        }
+
+        var messageForm = Modal.Show<DynamicPropertyForm>("Config", parameters, op);
+        var result = await messageForm.Result;
+
+        if (!result.Cancelled)
+        {
+
+        }
+        if (JSRuntime != null && !string.IsNullOrEmpty(HideElement))
+        {
+            await JSRuntime.InvokeVoidAsync("showElement", HideElement);
+        }
+
+    }
+
+
+    [Parameter]
+    public string HideElement { get; set; } = "modalLinearity";
+
+    [Parameter]
+    public dynamic MaxValue { get; set; }
+
+    [Parameter]
+    public dynamic Tolerance { get; set; }
+
+    public bool TwoSeparator { get; set; }
+
+    public string CurrentGroup { get; set; }
+
+    [Parameter]
+    public bool IsRowView { get; set; }
+    //ViewPropertyBase vpb;
+
+    public string Error { get; set; }
+
+    [Parameter]
+    public string Object { get; set; }
+
+
+    [Parameter]
+    public bool UseResult { get; set; } = false;
+
+
+    [Parameter]
+    public bool InvertModel { get; set; }
+
+
+
+    public dynamic GenericCalibrationResult { get; set; }
+
+
+    [CascadingParameter(Name = "itemgrid")]
+    // [Parameter]
+    public dynamic GenericCalibration2 { get; set; }
+
+
+    public dynamic GenericCalibration { get; set; }
+
+
+    //[Parameter]
+    //public dynamic GenericCalibrationResult { get; set; }
+
+
+    //private dynamic GenericCalibrationResult { get; set; }
+
+    [Parameter]
+    public bool OnlyHeader { get; set; }
+
+    [Parameter]
+    public dynamic Model { get; set; }
+
+    [Parameter]
+    public dynamic ModelHeader { get; set; }
+
+    [Parameter]
+    public string ModelStr { get; set; }
+
+    int render = 0;
+    [Parameter]
+    public bool Refresh { get; set; }
+
+    [Inject]
+    IConfiguration Configuration { get; set; }
+
+
+    public string Var1 { get; set; } = "";
+
+    public string Var2 { get; set; } = "";
+
+    [Parameter]
+    public int? Decimal { get; set; }
+
+
+    string BoundValue()
+    {
+
+        dynamic model2 = null;
+
+        //if (GenericCalibration != null && UseResult)
+        //{
+        //    GenericCalibrationResult = GenericCalibration.BasicCalibrationResult;
+        //}
+        //else
+        //{
+        //    GenericCalibrationResult = GenericCalibration;
+        //}
+
+        SetModel();
+
+        if (GenericCalibrationResult != null && !string.IsNullOrEmpty(GenericCalibrationResult.Object) && Refresh)
+        {
+            Model = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(GenericCalibrationResult.Object);
+            Refresh = false;
+        }
+        else
+        {
+
+            if (Model == null)
+            {
+                Model = new ExpandoObject();
+
+            }
+            IDictionary<string, object> dic = new Dictionary<string, object>();
+
+            foreach (var item in properties)
+            {
+
+                //if(model2 != null && model2[item.Key] != null)
+                //{
+                //    dic.Add(item.DynamicProperty.Name, model2[item.Key]);
+                //}
+
+                //   else
+                if (item.HasBoolValue)
+                {
+                    dic.Add(item.DynamicProperty.Name, item.BoolValue);
+                }
+                else
+                {
+                    dic.Add(item.DynamicProperty.Name, item.Value);
+                }
+            }
+
+            Model = dic.ToExpando();
+        }
+
+
+
+
+        if (render == 0)
+        {
+            //StateHasChanged();
+        }
+        render = 1;
+
+        if (GenericCalibrationResult != null)
+        {
+
+            if (Model != null)
+            {
+
+                string json1 = Newtonsoft.Json.JsonConvert.SerializeObject(Model);
+
+                Model = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json1);
+
+                CreateJintObject().ConfigureAwait(false).GetAwaiter().GetResult();
+
+
+                foreach (var item in properties)
+                {
+                    if (item.HasBoolValue)
+                    {
+                        item.BoolValue = Model[item.Key];
+                        item.Value = Model[item.Key];
+                    }
+                    else
+                    {
+                        if (Model[item.Key] != null)
+                        {
+                            var dfg = Model[item.Key];
+
+                            string resio = dfg.ToString();
+
+                            resio = resio.convertToDecimal();
+
+                            item.Value = resio;
+
+
+                        }
+                        else
+                        {
+                            item.Value = Model[item.Key];
+                        }
+
+
+                    }
+
+
+
+                }
+
+
+
+
+            }
+            //GenericCalibrationResult.Test = "hola mundo " + GenericCalibrationResult.SequenceID.ToString();
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(Model);
+
+            //Console.WriteLine(json);
+
+            GenericCalibrationResult.Object = json;
+
+            if (!string.IsNullOrEmpty(Aggregates))
+            {
+                GenericCalibrationResult.Aggregate = Aggregates;
+            }
+
+            //List<CustomProperty> CpList = new List<CustomProperty>();
+
+            IDictionary<string, object> dic2 = new Dictionary<string, object>();
+
+            List<DynamicProperty> tmpvw = new List<DynamicProperty>();
+
+            foreach (var item in properties)
+            {
+                CustomProperty cpp = new CustomProperty();
+
+                cpp.Key = item.Key;
+
+                cpp.Values = new List<object>();
+
+                cpp.Values.Add(item.CurrentView.Display.StripHTML());
+
+                cpp.Values.Add(item.DynamicProperty.ColPosition);
+
+
+                if (item.Value != null && item.Value.IsNumeric() && item.CurrentView.ControlType == Types.Coordinates)
+                {
+                    string resto = "";
+
+                    var valor = Convert.ToDouble(item.Value);
+
+                    var j = new JavaScriptFunctions();
+
+                    resto = j.Coordinates(valor);
+
+                    cpp.Values.Add(resto);
+
+                }
+
+                else
+
+                if (item.Value != null && item.Value.IsNumeric() && item.CurrentView.ControlType == Types.numberdecimal
+                && !string.IsNullOrEmpty(item.CurrentView.StepResol) && item.CurrentView.DecimalRoundType.HasValue && string.IsNullOrEmpty(item.CurrentView.SelectOptions))
+                {
+                    string res = item.Value.ToString();
+
+                    int decimalnum = 0;
+                    if (item.CurrentView.DecimalNumbers.HasValue && string.IsNullOrEmpty(item.CurrentView.StepResol))
+                    {
+                        decimalnum = item.CurrentView.DecimalNumbers.Value;
+                    }
+
+                    string resto = res.RoundedFunction(item.CurrentView.StepResol, decimalnum, (RoundType)item.CurrentView.DecimalRoundType.Value, item.DynamicProperty.DataType);
+
+
+                    cpp.Values.Add(resto);
+
+                }
+
+                else if (item.Value != null && item.Value.IsNumeric() &&
+                item.CurrentView.ControlType != Types.Coordinates &&
+                string.IsNullOrEmpty(item.CurrentView.StepResol) &&
+                item.CurrentView.DecimalRoundType.HasValue == false &&
+                string.IsNullOrEmpty(item.CurrentView.SelectOptions)
+                && Decimal.HasValue)
+                {
+
+                    string res = item.Value.ToString();
+
+                    decimal resultde = 0;
+
+                    var resto = decimal.TryParse(res, out resultde);//Convert.ToDecimal(res);
+                    if (resto)
+                    {
+                        var s = Math.Round(resultde, Decimal.Value);
+                        //string resto = res.
+
+                        string ss = s.ToString();
+                        ss = ss.convertToDecimal();
+
+                        cpp.Values.Add(ss);
+
+                        //Console.WriteLine("Add 581");
+                    }
+
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(item.CurrentView.SelectOptions))
+                    {
+
+                        var errors = new List<string>();
+
+                        var errors1 = new List<string>();
+
+
+
+                        // Console.WriteLine("BoundValue SelectOptions" + item.CurrentView.SelectOptions);
+
+                        // Console.WriteLine("Value " + item.Value.ToString());
+
+                        // if(NewItem != null)
+                        // {
+
+                        // }
+                        var optionsstring = item.CurrentView.SelectOptions;
+
+                        // Console.WriteLine("BoundValue SelectOptionsTmP" + item.CurrentView.SelectOptionsTmP);
+
+                        // if (!string.IsNullOrEmpty(item.CurrentView.SelectOptionsTmP))
+                        // {
+                        //     optionsstring = item.CurrentView.SelectOptionsTmP;
+                        // }
+                        var opt = GetOptions(optionsstring, item?.CurrentView?.OptionsFilter);
+
+                        //Console.WriteLine("BoundValue GetOptions " + opt);
+                        //Console.WriteLine("BoundValue GetOptions " + optionsstring);
+
+                        var Options = JsonConvert.DeserializeObject<Dictionary<string, string>>(opt, new JsonSerializerSettings()
+                        {
+                            Error = (sender, error) =>
+                            {
+                                errors.Add(error.ErrorContext.Error.Message);
+                                error.ErrorContext.Handled = true;
+
+                                //Console.WriteLine("bound error " + error.ErrorContext.Error.Message + " " + item.DynamicProperty.DynamicPropertyID);
+                            }//error.ErrorContext.Handled = true
+
+                        });
+
+                        if (errors?.Count > 0)
+                        {
+
+
+
+                            cpp.Values.Add("Mal formated Json, review SelectOptions");
+                        }
+                        else if (Options != null && Options?.Count > 0)
+                        {
+                            string resul = "";
+
+                            var corre = Options.TryGetValue(item.Value.ToString(), out resul);
+
+                            if (corre)
+                            {
+                                cpp.Values.Add(resul);
+                            }
+                            else
+                            {
+                                cpp.Values.Add(item.Value);
+                            }
+
+
+                        }
+
+                    }
+                    else
+                    {
+
+                        cpp.Values.Add(item.Value);
+
+                        //Console.WriteLine("Add 631");
+                    }
+
+
+                }
+
+
+
+
+
+                if (item.CurrentView.IsValid.HasValue)
+                {
+                    //string res = item.DynamicProperty.ValidationResult.ToString();
+
+                    //int decimalnum = 0;
+                    //if (item.DynamicProperty.ViewPropertyBase.DecimalNumbers.HasValue)
+                    //{
+                    //    decimalnum = item.DynamicProperty.ViewPropertyBase.DecimalNumbers.Value;
+                    //}
+
+                    //string resto = res.RoundedFunction(item.DynamicProperty.ViewPropertyBase.StepResol, decimalnum, (RoundType)item.DynamicProperty.ViewPropertyBase.DecimalRoundType.Value, item.DynamicProperty.DataType);
+
+                    //cpp.Values.Add(resto);
+                    cpp.Values.Add(item.CurrentView.IsValid);
+                }
+
+                if (item.CurrentView.PassOrFail.HasValue)
+                {
+                    //string res = item.DynamicProperty.ValidationResult.ToString();
+
+                    //int decimalnum = 0;
+                    //if (item.DynamicProperty.ViewPropertyBase.DecimalNumbers.HasValue)
+                    //{
+                    //    decimalnum = item.DynamicProperty.ViewPropertyBase.DecimalNumbers.Value;
+                    //}
+
+                    //string resto = res.RoundedFunction(item.DynamicProperty.ViewPropertyBase.StepResol, decimalnum, (RoundType)item.DynamicProperty.ViewPropertyBase.DecimalRoundType.Value, item.DynamicProperty.DataType);
+
+                    //cpp.Values.Add(resto);
+                    cpp.Values.Add(item.CurrentView.PassOrFail);
+                }
+
+                //
+
+
+                //CpList.Add(cpp);
+
+
+
+                if (item.CurrentView.ExtendedObject)
+                {
+                    dic2.Add(item.Key, cpp.Values);
+                }
+
+
+                var dp = item.DynamicProperty;
+                dp.ViewPropertyBase = item.CurrentView;
+
+                tmpvw.Add(dp);
+
+                //YP OnlyAccredited
+                cpp.Values.Add(item.CurrentView.OnlyAccredited);
+            }
+
+            var res1 = dic2.ToExpando();
+
+            //string jsonIgnoreNullValues = JsonConvert.SerializeObject(person, Formatting.Indented, new JsonSerializerSettings
+            //    {
+            //        NullValueHandling = NullValueHandling.Include
+            //    });
+
+            string json2 = Newtonsoft.Json.JsonConvert.SerializeObject(res1);
+
+
+            Console.WriteLine(json2);
+
+            GenericCalibrationResult.ExtendedObject = json2;
+
+            GenericCalibrationResult.CurrentViews = tmpvw;
+
+            if (change)
+            {
+                GenericCalibrationResult.Updated = DateTime.Now.Ticks;
+            }
+
+
+            change = false;
+
+
+        }
+
+
+
+        return "";
+    }
+
+
+    [Parameter]
+    public Func<ChangeEventArgs, dynamic, bool, Task> ChangeEvent { get; set; }
+
+    bool refreshgrid = false;
+    public void RefreshAllGrid(string valor)
+    {
+        if (RefreshGrid != null)
+        {
+
+            int position = GenericCalibrationResult.Position;
+            RefreshGrid(valor, position);
+            refreshgrid = true;
+        }
+    }
+
+
+    bool change;
+    public async Task ChangeControl2(ChangeEventArgs arg, dynamic lin, bool AddWeight = false)
+    {
+        change = true;
+        if (ChangeEvent != null)
+        {
+            await ChangeEvent(arg, lin, AddWeight);
+        }
+        //var Timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+        if (Reload && RefreshAllGrid != null && refreshgrid)
+        {
+            //RefreshGrid("");
+        }
+
+        //StateHasChanged();
+        render = 0;
+
+    }
+
+
+    [Parameter]
+    public dynamic cmcValues { get; set; }
+
+    [Parameter]
+    public List<Bogus.DynamicProperty> DynamicProperties { get; set; }
+
+    [Parameter]
+    public EventCallback OnCopyToClicked { get; set; }
+
+    /// <summary>
+    /// Model that is used for the form
+    /// </summary>
+    private dynamic selectedProduct = new ExpandoObject();
+
+    private IDictionary<string, object> product;
+
+    private dynamic expnProduct = new ExpandoObject();
+
+
+
+
+    //public T GetValue<T>(this object Value)
+    //{
+    //    return (T)Value;
+    //}
+
+
+    public class CustomProperty
+    {
+
+        public string Key { get; set; }
+
+
+        public List<object> Values { get; set; }
+
+
+
+    }
+
+
+
+
+    public List<list> properties { get; set; } = new List<list>();
+
+    private void SetModel()
+    {
+
+
+        if (GenericCalibration2 != null && UseResult && !InvertModel)
+        {
+            GenericCalibrationResult = GenericCalibration2.BasicCalibrationResult;
+            GenericCalibration = GenericCalibration2;
+        }
+        else if (!InvertModel && !UseResult)
+        {
+            GenericCalibrationResult = GenericCalibration2;
+        }
+
+        try
+        {
+            if (GenericCalibration2 != null && HasProperty(GenericCalibration2, "GenericCalibration2") && GenericCalibration2?.GenericCalibration2 != null && UseResult && InvertModel)
+            {
+                GenericCalibrationResult = GenericCalibration2;
+                GenericCalibration = GenericCalibration2.GenericCalibration2;
+            }
+            else if (InvertModel)
+            {
+                GenericCalibrationResult = GenericCalibration2;
+            }
+        }
+        catch (Exception ex)
+        {
+            //Console.WriteLine(ex.Message);
+        }
+
+    }
+
+    public bool HasProperty(dynamic obj, string name)
+    {
+        Type objType = obj.GetType();
+
+        if (objType == typeof(ExpandoObject))
+        {
+            return ((IDictionary<string, object>)obj).ContainsKey(name);
+        }
+
+        return objType.GetProperty(name) != null;
+    }
+
+    public void SetPropertyValue(dynamic obj, string name, object value)
+    {
+        Type objType = obj.GetType();
+
+        if (objType == typeof(ExpandoObject))
+        {
+            ((IDictionary<string, object>)obj)[name] = value;
+        }
+        else
+        {
+            var property = objType.GetProperty(name);
+            if (property != null && property.CanWrite)
+            {
+                property.SetValue(obj, value);
+            }
+        }
+    }
+
+
+    private async Task Ini()
+    {
+        SetModel();
+
+        if (GenericCalibrationResult != null && !string.IsNullOrEmpty(GenericCalibrationResult.Object))
+        {
+            //GenericCalibrationResult.Test = "hola mundo " + GenericCalibrationResult.SequenceID.ToString();
+            var json = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(GenericCalibrationResult.Object);
+
+            Model = json;
+        }
+
+        if (NewItem != null)
+        {
+            ModelHeader = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(NewItem.Object);
+        }
+
+
+
+        foreach (var item in DynamicProperties.Where(x => x.Enable == true).OrderBy(x => x.ColPosition))
+        {
+
+            //Console.WriteLine("+++Dynamic property");
+
+
+            string jsondy = Newtonsoft.Json.JsonConvert.SerializeObject(item);
+
+            //Console.WriteLine(jsondy);
+
+            if (item.ViewPropertyBase == null)
+            {
+                //Console.WriteLine(item.Name + " View Propeerty not configured");
+
+                await ShowToast(item.Name + " View Propeerty not configured", ToastLevel.Warning);
+            }
+
+
+
+            if (Model != null && Model[item.Name] != null)
+            {
+
+                bool option2;
+
+                bool option1 = bool.TryParse(Model[item.Name].ToString(), out option2);
+
+                if (option1)
+                {
+                    properties.Add(new list(item.Name, (object)Model[item.Name], item, false, option2));
+                }
+                else
+                {
+                    SetDefault(item);
+                    //properties.Add(new list(item.Name, (object)Model[item.Name], item));
+                }
+
+
+
+            }
+            //else if (Model != null && !string.IsNullOrEmpty(item.Map) && GenericCalibrationResult != null )
+            //{
+            //    properties.Add(new list(item.Name, (object)GenericCalibrationResult[item.Map], item));
+            //}
+            else
+            {
+
+                SetDefault(item);
+
+
+
+            }
+
+        }
+
+
+        if (Model != null)
+        {
+
+            await CreateJintObject();
+
+        }
+
+    }
+
+    public void SetDefault(DynamicProperty item)
+    {
+
+        bool usehelper = false;
+
+
+        if ((!string.IsNullOrEmpty(item.Formula)
+        && item.Formula.ToLower().Contains("helper")
+        )
+        || !string.IsNullOrEmpty(item.FormulaClass)
+        || !string.IsNullOrEmpty(item.ValidationFormula)
+        )
+        {
+            usehelper = true;
+        }
+
+        if (item.Name == "UoM")
+        {
+
+        }
+        if (!string.IsNullOrEmpty(item.DefaultValue) && string.IsNullOrEmpty(item.Map)
+        && !item.DefaultValue.Contains("result")
+        && !item.DefaultValue.Contains("context")
+        && Model[item.Name] != null)
+        {
+
+
+
+            properties.Add(new list(item.Name, (object)Model[item.Name], item, usehelper));
+
+
+
+
+
+        }
+
+        else if (GenericCalibrationResult != null && !string.IsNullOrEmpty(item.Map))
+        {
+            properties.Add(new list(item.Name, ((object)GenericCalibrationResult).GetPropValue(item.Map), item, usehelper)); //  [item.Map], item));
+        }
+        else if (Context != null && !string.IsNullOrEmpty(item.DefaultValue) && item.DefaultValue.Contains("context") && Model[item.Name] == null)
+        {
+
+            //&& item.DefaultValue.Contains("context")
+            var map = item.DefaultValue.Replace("context.", "");
+
+            //if (item.DefaultValue.Contains())
+            if (map.Contains("TestPointResult"))
+            {
+
+                var asp = map.Split("[");
+
+                var propi = asp[0];
+
+                var otroprop = asp[1].Split("]");
+
+                var indice = otroprop[0];
+
+                var propertyYes = otroprop[1].Replace(".", "").Replace("]", "");
+
+                var cxx = ((object)Context).GetPropValue(propi);
+
+                dynamic cx2 = cxx;
+
+
+
+                var cx = cx2[Convert.ToInt32(indice)];
+
+                if (!string.IsNullOrEmpty(cx.Object))
+                {
+                    var obj1 = Newtonsoft.Json.JsonConvert.DeserializeObject<ExpandoObject>(cx.Object);
+
+                    dynamic result;
+
+                    var assss = Helpers.DynamicHelper.PropertyExists(obj1, propertyYes, out result);
+
+                    if (assss == true)
+                    {
+                        properties.Add(new list(item.Name, result, item, usehelper));
+                    }
+                    else
+                    {
+                        properties.Add(new list(item.Name, ((object)Context).GetPropValue(map), item, usehelper)); //  [item.Map], item));
+                    }
+
+
+
+                }
+                else
+                {
+                    properties.Add(new list(item.Name, ((object)Context).GetPropValue(map), item, usehelper)); //  [item.Map], item));
+                }
+            }
+            else
+            {
+                properties.Add(new list(item.Name, ((object)Context).GetPropValue(map), item, usehelper)); //  [item.Map], item));
+
+            }
+
+            //((object)Context).GetPropValue(map)
+        }
+        else if (GenericCalibrationResult != null && !string.IsNullOrEmpty(item.DefaultValue) && item.DefaultValue.Contains("result") && Model[item.Name] == null)
+        {
+            var map = item.Map.Replace("result.", "");
+
+            properties.Add(new list(item.Name, ((object)GenericCalibrationResult).GetPropValue(map), item, usehelper)); //  [item.Map], item));
+        }
+        else if (GenericCalibrationResult != null
+            && !string.IsNullOrEmpty(item.DefaultValue) && item.DefaultValue.Contains("result.") && Model[item.Name] == null)
+        {
+            var map = item.DefaultValue.Replace("result.", "");
+
+            properties.Add(new list(item.Name, ((object)GenericCalibrationResult).GetPropValue(map), item, usehelper)); //  [item.Map], item));
+        }
+        else if (CalibrationSubType != null && !string.IsNullOrEmpty(item.DefaultValue) && item.DefaultValue.Contains("subtype.") && Model[item.Name] == null)
+        {
+            var map = item.DefaultValue.Replace("subtype.", "");
+
+            properties.Add(new list(item.Name, ((object)CalibrationSubType).GetPropValue(map), item, usehelper)); //  [item.Map], item));
+        }
+
+        else if (Model[item.Name] != null)
+        {
+
+            properties.Add(new list(item.Name, (object)Model[item.Name], item, usehelper));
+
+        }
+        else if (item.DefaultValue != null)
+        {
+            properties.Add(new list(item.Name, (object)item.DefaultValue, item, usehelper));
+        }
+        else
+        {
+            properties.Add(new list(item.Name, null, item, usehelper));
+        }
+    }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (OnlyHeader)
+        {
+            ComponentType = 2;
+            foreach (var item in DynamicProperties.Where(x => x.Enable == true).OrderBy(x => x.ColPosition))
+            {
+
+                properties.Add(new list(item.Name, null, item, false));
+
+            }
+
+        }
+        else
+        {
+            ComponentType = 1;
+            await Ini();
+        }
+
+        //StateHasChanged();
+    }
+
+
+
+
+
+
+    [Inject] public Blazed.Controls.Toast.IToastService Toast { get; set; }
+
+    public async Task ShowToast(string message, ToastLevel level)
+
+    {
+        if (level == ToastLevel.Success)
+        {
+
+            Toast.ShowSuccess(message);
+        }
+        if (level == ToastLevel.Error)
+        {
+            Toast.ShowError(message);
+        }
+        if (level == ToastLevel.Info)
+        {
+            Toast.ShowInfo(message);
+        }
+        if (level == ToastLevel.Warning)
+        {
+            Toast.ShowWarning(message);
+        }
+
+    }
+
+
+    string configureresolution = "";
+    public async Task CreateJintObject(bool ini = false)
+    {
+        string field = "";
+
+        try
+        {
+
+            var FR = CultureInfo.GetCultureInfo("en-US");
+
+            var engine2 = new Engine(cfg => cfg.Culture(FR));
+
+            //var engine2 = new Engine();
+            engine2.SetValue("model", Model);
+
+
+            if (ModelHeader != null && NewItem != null)
+            {
+                engine2.SetValue("header", ModelHeader);
+            }
+
+            if (GenericCalibration != null && UseResult)
+            {
+                engine2.SetValue("result", GenericCalibration);
+            }
+
+            if (Context != null)
+            {
+                engine2.SetValue("context", Context);
+            }
+
+            dynamic res2 = new ExpandoObject();
+            engine2
+                .SetValue("res2", res2)
+                .SetValue("helperclass",
+                    Jint.Runtime.Interop.TypeReference.CreateTypeReference(engine2, typeof(Helpers.JavaScriptFunctions)))
+                    .Execute("let helper= new helperclass();");
+
+
+            dynamic res3 = new ExpandoObject();
+            engine2
+                .SetValue("res3", res3)
+                .SetValue("helperclass2",
+                    Jint.Runtime.Interop.TypeReference.CreateTypeReference(engine2, typeof(Helpers.JavaScriptFunctions)))
+                    .Execute("let helper2= new helperclass2();");
+
+
+            var pro = properties.Where(x => !string.IsNullOrEmpty(x.DynamicProperty.FormulaClass) && x.DynamicProperty.FormulaClass.ToLower().Contains("uncertainty")).FirstOrDefault();
+
+            dynamic uncer = new ExpandoObject();
+            if (pro != null)
+            {
+                engine2
+               .SetValue("uncer", uncer)
+               .SetValue("UncertaintyClass",
+                   Jint.Runtime.Interop.TypeReference.CreateTypeReference(engine2, typeof(CalibrationSaaS.Domain.Aggregates.Shared.UncertaintyLogicDynamic)))
+                   .Execute("let uncertainty = new UncertaintyClass();");
+            }
+
+
+            //dynamic uncer = new ExpandoObject();
+            //if (GenericCalibration != null)
+            //{
+            //    engine2.SetValue("helper", new Helpers.JavaScriptFunctions());
+            //}
+            if (Tolerance != null)
+            {
+                engine2.SetValue("tolerance", Tolerance);
+
+            }
+
+            //if (MaxValue != null)
+            //{
+            //    engine2.SetValue("maxvalue", MaxValue);
+
+            //}
+            if (Configuration != null)
+            {
+                var sec = Configuration.GetSection("Dynamic");
+                //["Var1"]
+
+                if (sec.Exists() && sec["Var1"] != null)
+                {
+                    Var1 = sec["Var1"];
+                    engine2.SetValue("var1", Var1);
+                }
+
+                if (sec.Exists() && sec["Var2"] != null)
+                {
+                    Var2 = sec["Var2"];
+                    engine2.SetValue("var2", Var2);
+                }
+
+                if (sec.Exists() && sec["DecimalNumber"] != null && !Decimal.HasValue)
+                {
+                    Decimal = Convert.ToInt32(sec["DecimalNumber"]);
+                }
+            }
+            else
+            {
+                return;
+            }
+
+
+
+            //if (GenericCalibrationResult != null)
+            //{
+            //    engine2.SetValue("result", GenericCalibrationResult);
+            //}
+            //foreach (var item in DynamicProperties)
+            //{
+            //    field = item.Name;
+            //    if (Model[item.Name] != null)
+            //    {
+            //        engine2.Execute("model." + item.Name + " = " + Model[item.Name]);
+            //    }
+
+
+            //}
+
+
+
+            int configureredecimal = 0;
+
+            int cont = 1;
+            foreach (var item2 in properties)
+            {
+
+
+
+                field = "error in resolution asig or view asign";
+
+                var item = item2.DynamicProperty;
+
+
+
+                if (item2.CurrentView == null)
+                {
+                    item2.CurrentView = (ViewPropertyBase)item.ViewPropertyBase.CloneObject();
+                }
+
+                if (item.Name == "StepResol" && Model[item.Name] != null)
+                {
+                    configureresolution = Model[item.Name].ToString();
+                    break;
+                }
+                if (item.Name == "DecimalNumbers" && Model[item.Name] != null)
+                {
+                    configureredecimal = Model[item.Name];
+                    break;
+                }
+
+                if (item2.CurrentView == null)
+                {
+                    throw new Exception("--view is not configured--");
+                }
+                engine2.SetValue("view" + item.Name, item2.CurrentView);
+
+                cont++;
+            }
+
+            var orderProperties = properties.OrderBy(x => x.DynamicProperty.ColPosition);  //(x => x.UseHelper ? 0 : 1).ThenBy
+            foreach (var item in orderProperties)
+            {
+                //Console.WriteLine($"ColPosition: {item.DynamicProperty.ColPosition}");
+            }
+            foreach (var item2 in orderProperties)
+            {
+
+                var item = item2.DynamicProperty;
+                field = "Calibration SubType: " + item2.DynamicProperty.CalibrationSubtype + " field: " + item.Name;
+                //Console.WriteLine(field);
+
+                //formula
+                if (!string.IsNullOrEmpty(item.Formula) && Model[item.Name] != null && item?.ViewPropertyBase?.ControlType != "execute")
+                {
+
+
+                    if (item.Formula.ToString().Contains("parse"))
+                    {
+                        //Console.WriteLine(item.Formula);
+                    }
+                    field = field + "  error in Formula  ";
+
+                    JsValue obj2 = null;
+
+                    if (@item.Formula.Contains("helper"))
+                    {
+
+                        engine2.Execute(" res2.value = " + @item.Formula + " ; ");
+                        Console.WriteLine("helper -------xxxx------");
+                        Console.WriteLine(res2.value);
+
+                        //return;
+                        obj2 = engine2.Evaluate("res2.value");
+
+                        if (item.DataType == "System.String")
+                        {
+                            engine2.Execute("model." + item.Name + " = '" + res2.value + "'");
+                        }
+                        else
+                        {
+                            engine2.Execute("model." + item.Name + " = " + res2.value);
+                        }
+
+
+
+
+
+
+                    }
+                    else
+                    {
+
+                        obj2 = engine2.Evaluate(@item.Formula);
+
+                        if (obj2.IsNumber() && double.IsNaN(obj2.AsNumber()))
+                        {
+                            obj2 = JsValue.FromObject(engine2, 0);
+                        }
+
+                    }
+
+
+
+                    //var engine = new Engine();
+
+
+
+                    string resol = "";
+                    if (!string.IsNullOrEmpty(configureresolution))
+                    {
+                        resol = configureresolution;
+                    }
+
+                    if (!string.IsNullOrEmpty(item.ViewPropertyBase.StepResol))
+                    {
+                        resol = item.ViewPropertyBase.StepResol;
+                    }
+
+                    //var obj = obj2.ToObject();
+                    //&& obj.IsNumeric() && obj != null
+                    if (!obj2.IsNull() && !obj2.IsUndefined() && obj2.IsNumber() && !string.IsNullOrEmpty(resol) && item.ViewPropertyBase.DecimalRoundType.HasValue)
+                    {
+                        string res = obj2.ToString();
+
+                        int decimalnum = 0;
+                        if (item.ViewPropertyBase.DecimalNumbers.HasValue && string.IsNullOrEmpty(configureresolution))
+                        {
+                            decimalnum = item.ViewPropertyBase.DecimalNumbers.Value;
+                        }
+
+                        string resto = res.RoundedFunction(resol, decimalnum, (RoundType)item.ViewPropertyBase.DecimalRoundType.Value, item.DataType);
+
+                        engine2.Execute("model." + item.Name + " = " + resto);
+
+                    }
+                    else if (Decimal.HasValue && !obj2.IsNull() && obj2 != "NaN" && !obj2.IsUndefined() && obj2.IsNumber() && string.IsNullOrEmpty(resol) && item.ViewPropertyBase.DecimalRoundType.HasValue)
+                    {
+
+                        string res = obj2.ToString();
+
+                        var resto = Convert.ToDecimal(res);
+
+                        var s = Math.Round(resto, Decimal.Value);
+                        //string resto = res.
+
+                        string ss = s.ToString().convertToDecimal();
+
+                        engine2.Execute("model." + item.Name + " = " + ss);
+
+                    }
+
+
+
+                    else if (obj2.IsNull())
+                    {
+
+                        engine2.Execute("model." + item.Name + " = " + null);
+                    }
+                    else if (obj2.IsUndefined() || obj2 == "NaN")
+                    {
+
+                        engine2.Execute("model." + item.Name + " = " + "0");
+                    }
+                    else if (!obj2.IsNull() && !obj2.IsUndefined() && !obj2.IsNumber() && obj2 != "NaN")
+                    {
+                        var resultado = obj2.ToString();
+                        engine2.Execute("model." + item.Name + " = '" + @resultado + "'");
+                        ///  {
+                        //      "passWord": null,
+                        //      "failWord": null
+                        //  }
+                        if (!string.IsNullOrEmpty(item.ViewPropertyBase.PassOrFailJSON))
+                        {
+                            PassOrFail passOrFail = Newtonsoft.Json.JsonConvert.DeserializeObject<PassOrFail>(item.ViewPropertyBase.PassOrFailJSON);
+
+                            if (resultado == passOrFail.PassWord)
+                            {
+                                item.ViewPropertyBase.PassOrFail = true;
+                            }
+                            else if (resultado == passOrFail.FailWord)
+                            {
+                                item.ViewPropertyBase.PassOrFail = false;
+                            }
+
+
+                        }
+
+
+
+
+
+                    }
+                    else if (!obj2.IsNull() && !obj2.IsUndefined() && obj2.IsNumber() && obj2 != "NaN")
+                    {
+
+                        string ss = obj2.ToString().convertToDecimal();
+
+
+                        engine2.Execute("model." + item.Name + " = " + ss);
+                    }
+
+                    //TDOO test code example
+                    //if (item.Name == "Unc_Bias_HV")
+                    //{
+                    //    engine2.Execute("function square() { if (model.Test1Y == 5) { viewUnc_Bias_HV.Display = 'test 000' } else { viewUnc_Bias_HV.Display = 'test error' } }; square(); ");
+                    //}
+
+                }
+                //YP new Type: Execute
+                else if (item?.ViewPropertyBase?.ControlType == "execute" && item?.ViewPropertyBase.copyAsFoundToAsleft == true)
+                {
+                    var formula = item.Formula;
+
+                    if (!string.IsNullOrEmpty(formula))
+                    {
+
+                        formula = formula.Trim().TrimStart('{').TrimEnd('}').Trim();
+
+
+                        var assignments = formula.Split(',');
+
+                        foreach (var assignment in assignments)
+                        {
+                            if (string.IsNullOrWhiteSpace(assignment))
+                                continue;
+
+                            var parts = assignment.Split('=');
+                            if (parts.Length == 2)
+                            {
+
+                                var toField = parts[0].Trim();
+
+
+                                var fromField = parts[1].Trim();
+
+                                try
+                                {
+
+                                    var valFromField = engine2.Evaluate(fromField);
+
+
+                                    if (valFromField.IsNumber())
+                                    {
+                                        string ss = valFromField.ToString().convertToDecimal();
+                                        engine2.Execute(toField + " = " + ss);
+                                    }
+                                    else if (valFromField.IsString())
+                                    {
+                                        engine2.Execute(toField + " = '" + valFromField.ToString() + "'");
+                                    }
+                                    else if (valFromField.IsNull())
+                                    {
+                                        engine2.Execute(toField + " = null");
+                                    }
+                                    else if (valFromField.IsUndefined())
+                                    {
+                                        engine2.Execute(toField + " = 0");
+                                    }
+                                    else
+                                    {
+                                        engine2.Execute(toField + " = " + valFromField);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"Error processing assignment '{assignment}': {ex.Message}");
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(item.ValidationFormula) && Model[item.Name] != null)
+                {
+                    field = field + "  error in validationformula  ";
+
+                    JsValue obj = null;
+
+                    if (@item.ValidationFormula.Contains("helper2"))
+                    {
+
+                        engine2.Execute(" res3.value = " + @item.ValidationFormula + " ; ");
+                        //Console.WriteLine("helper2 -------xxxx------");
+                        //Console.WriteLine(res3.value);
+                        //engine2.Execute("model." + item.Name + " = " + res3.value);
+
+                        //return;
+                        obj = engine2.Evaluate("res3.value");
+
+                    }
+                    else
+                    {
+                        obj = engine2.Evaluate(item.ValidationFormula);//engine2.Evaluate(@item.Formula);
+                    }
+
+                    //var obj = engine2.Evaluate(item.ValidationFormula).ToObject();
+
+                    Type dataType = obj.GetType();
+                    if (obj is JsValue jsValue)
+                    {
+
+                        if (jsValue.Type == Jint.Runtime.Types.Number)
+                        {
+
+                            double numericValue = jsValue.AsNumber(); // Obtener el valor numérico
+                            bool booleanValue = numericValue != 0;  // Convertir a booleano
+                            obj = booleanValue;
+                        }
+
+
+                    }
+                    item.ValidationResult = obj.AsBoolean();
+
+                    try
+                    {
+                        bool res = obj.AsBoolean();//  Convert.ToBoolean(obj);
+
+                        item2.CurrentView.IsValid = res;
+                    }
+                    catch (Exception ex)
+                    {
+                        //Console.WriteLine("ValidationFormula no boolean");
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(item.FormulaClass) && Model[item.Name] != null && !item.FormulaClass.ToLower().Contains("getcontributtors"))
+                {
+
+                    field = field + "  error in FormulaClass  ";
+
+                    var createmetod = (CalibrationSaaS.Domain.Aggregates.Interfaces.IFormula)Helpers.DynamicHelper.GetInstance(item.FormulaClass);
+
+
+                    object obj = null;
+
+
+                    if (InvertModel)
+                    {
+                        FormulaResult res = await createmetod.FormulaMethod(GenericCalibrationResult, null, cmcValues);
+
+                        obj = res.uncertainty;
+
+                    }
+                    else
+                    {
+                        // obj = await createmetod.FormulaMethod(GenericCalibration, null, cmcValues);
+                        FormulaResult res = await createmetod.FormulaMethod(GenericCalibration, null, cmcValues);
+                        obj = res.uncertainty;
+
+                    }
+
+
+
+                    if (item.DataType == "System.Double")
+                    {
+                        obj = obj.ValidDouble();
+                    }
+                    if (item.DataType == "System.Boolean")
+                    {
+                        item2.BoolValue = Convert.ToBoolean(obj);
+                    }
+
+                    engine2.Execute("model." + item.Name + " = " + obj);
+
+
+
+                }
+                if (Model[item.Name] != null && item.Name.ToLower().Contains("uncertaintycmc"))
+                {
+
+                    field = field + "  error in FormulaClass  ";
+
+                    var createmetod = (CalibrationSaaS.Domain.Aggregates.Interfaces.IFormula)Helpers.DynamicHelper.GetInstance(item.FormulaClass);
+
+
+                    object obj = null;
+
+
+                    if (InvertModel)
+                    {
+                        FormulaResult res = await createmetod.FormulaMethod(GenericCalibrationResult, null, cmcValues);
+                        obj = res.uncertaintyCMC;
+
+                    }
+                    else
+                    {
+                        // obj = await createmetod.FormulaMethod(GenericCalibration, null, cmcValues);
+                        FormulaResult res = await createmetod.FormulaMethod(GenericCalibration, null, cmcValues);
+                        obj = res.uncertaintyCMC;
+                    }
+
+                    if (item.DataType == "System.Double")
+                    {
+                        obj = obj.ValidDouble();
+                    }
+                    if (item.DataType == "System.Boolean")
+                    {
+                        item2.BoolValue = Convert.ToBoolean(obj);
+                    }
+
+                    engine2.Execute("model." + item.Name + " = " + obj);
+
+                }
+
+                // if (!string.IsNullOrEmpty(item.FormulaClass) && Model[item.Name] != null && item.FormulaClass.ToLower().Contains("uncertainty"))
+                // {
+
+                //     field = field + "  error in FormulaClass  ";
+
+                //     //var createmetod = new UncertaintyLogicDynamic(); //(CalibrationSaaS.Domain.Aggregates.Interfaces.IFormula)Helpers.DynamicHelper.GetInstance(item.FormulaClass);
+
+
+                //     // object obj = null;
+
+                //     // if (InvertModel)
+                //     // {
+                //     //     string json1 = Newtonsoft.Json.JsonConvert.SerializeObject(Model);
+
+                //     //     //Model = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json1);
+                //     //     GenericCalibrationResult.Object = json1;
+
+                //     //     obj = await createmetod.GetContributors(Context,GenericCalibrationResult,Model[]);
+                //     // }
+                //     // else
+                //     // {
+                //     //     obj = await createmetod.FormulaMethod(GenericCalibration);
+                //     // }
+
+                //     engine2.Execute(" uncer.value = " + @item.FormulaClass + " ; ");
+                //     Console.WriteLine("uncertainty -------xxxx------");
+                //     Console.WriteLine(uncer.value);
+
+
+
+                //     //UncertaintyViewModel uncertaintyViewModel = new UncertaintyViewModel();
+
+                //     engine2.Execute("model." + item.Name + " = " + uncer.value.totales.ExpandedUncertainty);
+
+                //     //return;
+                //     // obj2 = engine2.Evaluate("res2.value");
+
+                //     // if (item.DataType == "System.Double")
+                //     // {
+                //     //     obj = obj.ValidDouble();
+                //     // }
+                //     // if (item.DataType == "System.Boolean")
+                //     // {
+                //     //     item2.BoolValue = Convert.ToBoolean(obj);
+                //     // }
+
+                //     // engine2.Execute("model." + item.Name + " = " + obj);
+
+
+
+                // }
+            }
+
+            foreach (var item2 in properties.Where(x => x.UseHelper == true).OrderBy(x => x.UseHelper ? 0 : 1))
+            {
+
+                var item = item2.DynamicProperty;
+
+                if (!string.IsNullOrEmpty(item.FormulaClass) && Model[item.Name] != null && item.FormulaClass.ToLower().Contains("getcontributtors"))
+                {
+
+                    field = field + "  error in uncertainty review usecontext in true  ";
+
+                    //var createmetod = new UncertaintyLogicDynamic(); //(CalibrationSaaS.Domain.Aggregates.Interfaces.IFormula)Helpers.DynamicHelper.GetInstance(item.FormulaClass);
+
+
+                    // object obj = null;
+
+                    // if (InvertModel)
+                    // {
+                    //     string json1 = Newtonsoft.Json.JsonConvert.SerializeObject(Model);
+
+                    //     //Model = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(json1);
+                    //     GenericCalibrationResult.Object = json1;
+
+
+                    //     obj = await createmetod.GetContributors(Context,GenericCalibrationResult,Model[]);
+                    // }
+                    // else
+                    // {
+                    //     obj = await createmetod.FormulaMethod(GenericCalibration);
+                    // }
+
+
+                    //GetContributtors
+
+                    //var method = @item.FormulaClass.Replace();
+
+                    engine2.Execute(" uncer.value = " + @item.FormulaClass + " ; ");
+                    //Console.WriteLine("uncertainty -------xxxx------");
+                    //Console.WriteLine(uncer.value);
+
+
+
+                    var obj3 = engine2.Evaluate("uncer.value.totales.ExpandedUncertainty");
+
+
+
+                    engine2.Execute("model." + item.Name + " = " + obj3);
+
+                    JsValue obj4 = engine2.Evaluate("uncer.value");
+
+                    var targ = obj4.ToObject();
+
+                    Aggregates = Newtonsoft.Json.JsonConvert.SerializeObject(targ);
+
+
+                    //Console.WriteLine("server uncertainty:  "  + Aggregates);
+
+
+                }
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            string errt = "Error in Formula configuration, please review " + Environment.NewLine + field + " --- " + ex.Message;
+
+            Console.WriteLine(errt);
+
+            if (MessageError != errt)
+            {
+                await ShowToast(errt, Blazed.Controls.Toast.ToastLevel.Error);
+
+                MessageError = errt;
+
+            }
+
+
+
+        }
+
+
+
+
+        //            var square = new Engine()
+        //.SetValue("x", 3) // define a new variable
+        //.Evaluate("x * x") // evaluate a statement
+        //.ToObject(); // converts the value to .NET
+    }
+    public string ToolTipClass { get; set; } = ""; //= "tooltip-wrapper";
+    RenderFragment ControlBool(bool BoolValue, bool IsRowView, string DynamicType,
+        string Name, ViewPropertyBase CurrentView, string GroupName, string provalue, bool OnlyHeader, string ToolTipMessage)
+    {
+        var a = typeof(System.Boolean);
+        return@<div class="@ToolTipClass">
+
+            <TextInput @bind-Value="@BoolValue" IsRowView="@IsRowView"
+                       IsDynamic="true" DynamicType="@DynamicType" TValue="bool"
+                       PropertyName="@Name"
+                       ViewProperty="@CurrentView"
+                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,Model,true))"
+                       GroupName="@GroupName"
+                       SelectFilter="@provalue"
+                       OnlyHeader="@OnlyHeader">
+            </TextInput>
+        @if (!string.IsNullOrEmpty(ToolTipMessage))
+        {
+                <span class="tooltipspan">@ToolTipMessage</span>
+        }
+        </div>;
+    }
+
+
+
+    RenderFragment ControlRadio(object Value, bool IsRowView, string DynamicType,
+       string Name, ViewPropertyBase CurrentView, string GroupName, string provalue, bool OnlyHeader, string ToolTipMessage)
+    {
+        var a = typeof(System.Boolean);
+        return@<div class="@ToolTipClass">
+            <TextInput @bind-Value="Value" IsRowView="@IsRowView"
+                       IsDynamic="true" TValue="object" DynamicType="@DynamicType"
+                       PropertyName="@Name"
+                       ViewProperty="@CurrentView"
+                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,Model,true))"
+                       RefreshGrid="@RefreshAllGrid"
+                       OnlyHeader="@OnlyHeader"
+                       GroupName="@GroupName"
+                       SelectFilter="@provalue"
+                       SelectedValue="@SelectValue">
+            </TextInput>
+        @if (!string.IsNullOrEmpty(ToolTipMessage))
+        {
+                <span class="tooltipspan">ToolTipMessage</span>
+        }
+        </div>
+    ;
+    }
+
+
+
+    RenderFragment ControlAny(object Value, bool IsRowView, string DynamicType,
+      string Name, ViewPropertyBase CurrentView, string GroupName, string provalue, bool OnlyHeader, string ToolTipMessage)
+    {
+
+        return@<div class="@ToolTipClass">
+
+            <TextInput @bind-Value="Value" IsRowView="@IsRowView"
+                       IsDynamic="true" TValue="object" DynamicType="@DynamicType"
+                       PropertyName="Name"
+                       ViewProperty="@CurrentView"
+                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,Model,true))"
+                       SelectFilter="@provalue"
+                       GroupName="@GroupName"
+                       OnlyHeader="@OnlyHeader">
+
+            </TextInput>
+        @if (!string.IsNullOrEmpty(ToolTipMessage))
+        {
+                <span class="tooltipspan">@ToolTipMessage</span>
+        }
+        </div>;
+    }
+
+
+    RenderFragment ControlAnyNoChange(object Value, bool IsRowView, string DynamicType,
+     string Name, ViewPropertyBase CurrentView, string GroupName, string provalue, bool OnlyHeader, string ToolTipMessage)
+    {
+
+        return@<div class="@ToolTipClass">
+
+            <TextInput @bind-Value="Value" IsRowView="@IsRowView"
+                       IsDynamic="true" TValue="object"
+                       DynamicType="@DynamicType"
+                       PropertyName="@Name"
+                       ViewProperty="CurrentView"
+                       GroupName="@GroupName"
+                       SelectFilter="@provalue"
+                       OnlyHeader="@OnlyHeader">
+
+            </TextInput>
+        @if (!string.IsNullOrEmpty(ToolTipMessage))
+        {
+                <span class="tooltipspan">@ToolTipMessage</span>
+        }
+        </div>
+    ;
+    }
+
+
+    RenderFragment MultiRadzenColumn(int ControlType, object Value, bool IsRowView, string DynamicType,
+     string Name, ViewPropertyBase CurrentView, string GroupName, string provalue, bool OnlyHeader, string ToolTipMessage)
+    {
+        switch (ControlType)
+        {
+            case 1:
+
+                bool val = Convert.ToBoolean(Value);
+
+                return@<RadzenColumn Size="12" SizeMD="6" SizeLG="2" class="rz-p-4 product-title">
+@ControlBool(val, IsRowView, DynamicType, Name
+    , CurrentView, GroupName, provalue, OnlyHeader,ToolTipMessage)
+</RadzenColumn>;
+                break;
+            case 2:
+                return@<RadzenColumn Size="12" SizeMD="6" SizeLG="2" class="rz-p-4 product-title">
+@ControlRadio(Value, IsRowView, DynamicType, Name
+    , CurrentView, GroupName, provalue, OnlyHeader,ToolTipMessage)
+</RadzenColumn>;
+                break;
+            case 3:
+                return@<RadzenColumn Size="12" SizeMD="6" SizeLG="2" class="rz-p-4 product-title">
+@ControlAny(Value, IsRowView, DynamicType, Name
+    , CurrentView, GroupName, provalue, OnlyHeader,ToolTipMessage)
+</RadzenColumn>
+    ;
+                break;
+
+        }
+
+        return null;
+    }
+
+
+    RenderFragment MultiRadzenDataGridColumn(list option, int ControlType, object Value, bool IsRowView, string GroupName, string provalue, bool OnlyHeader)
+    {
+
+        string title = option.CurrentView.Display;
+        if (string.IsNullOrEmpty(option.CurrentView.Display))
+        {
+            title = option.DynamicProperty.Name.SplitCamelCase();
+
+        }
+
+        var widthcolumn = "";
+
+        if (string.IsNullOrEmpty(widthcolumn))
+        {
+            string patron = @"(?:- *)?\d+(?:\.\d+)?";
+            string operacion = option.CurrentView.CSSCol;
+            Regex regex = new Regex(patron);
+
+
+            var nume = regex.Matches(operacion).FirstOrDefault();
+
+            string nume2 = "";
+
+            foreach (Match m in regex.Matches(operacion))
+            {
+                if (m.Success)
+                {
+                    nume2 = nume2 + m.Value;
+                }
+
+            }
+
+            if (!string.IsNullOrEmpty(nume2))
+            {
+
+                int.TryParse(nume2, out int number);
+                number = Math.Abs(number);
+
+                if (number > 0)
+                {
+                    widthcolumn = (number * 9).ToString() + "%";
+                }
+                else
+                {
+                    widthcolumn = "10%";
+                }
+            }
+        }
+
+
+        return @MultiRadzenTableColumn(ControlType, Value, IsRowView, option.DynamicProperty.DataType, option.DynamicProperty.Name
+                                , option.CurrentView, GroupName, provalue, OnlyHeader, option.CurrentView.ToolTipMessage, title, widthcolumn);
+
+
+
+    }
+
+
+
+    RenderFragment MultiRadzenDataGridColumn(int ControlType, object Value, bool IsRowView, string DynamicType,
+    string Name, ViewPropertyBase CurrentView, string GroupName, string provalue, bool OnlyHeader, string ToolTipMessage, string title, string widthcolumn)
+    {
+        bool visible = false;
+        if (CurrentView.IsVisible.HasValue)
+        {
+            visible = CurrentView.IsVisible.Value;
+        }
+        if (CurrentView.IsHide)
+        {
+            visible = false;
+        }
+
+
+        if (Value == null)
+        {
+            return @<div>NULL</div>;
+        }
+
+        Console.WriteLine("Radzen ini++++++++++++++++++++++++++++");
+
+        switch (ControlType)
+        {
+            case 1:
+
+                Console.WriteLine("Radzen ini 1 ++++++++++++++++++++++++++++");
+
+                bool val = false;
+
+                var rd = bool.TryParse(Value?.ToString(), out val);
+
+                return@<RadzenDataGridColumn Visible="@visible" TItem="TableItem" Title="@title" Sortable="true" Filterable="false" Width="@widthcolumn" TextAlign="TextAlign.Center">
+    <Template Context="data">
+
+
+        @ControlBool(val, IsRowView, DynamicType, Name
+                , CurrentView, GroupName, provalue, OnlyHeader,ToolTipMessage);
+    </Template>
+</RadzenDataGridColumn>;
+                break;
+            case 2:
+
+                Console.WriteLine("Radzen ini 2 ++++++++++++++++++++++++++++");
+                return@<RadzenDataGridColumn TItem="TableItem" Title="@title" Sortable="true" Filterable="false" Width="@widthcolumn" TextAlign="TextAlign.Center">
+    <Template Context="data">
+        @ControlRadio(Value, IsRowView, DynamicType, Name
+                , CurrentView, GroupName, provalue, OnlyHeader,ToolTipMessage)
+    </Template>
+</RadzenDataGridColumn>;
+                break;
+            case 3:
+                Console.WriteLine("Radzen ini 3 ++++++++++++++++++++++++++++");
+                return@<RadzenDataGridColumn TItem="TableItem" Title="@title" Sortable="true" Filterable="false" Width="@widthcolumn" TextAlign="TextAlign.Center">
+    <Template Context="data">
+        @ControlAny(Value, IsRowView, DynamicType, Name
+                , CurrentView, GroupName, provalue, OnlyHeader,ToolTipMessage)
+    </Template>
+</RadzenDataGridColumn>
+    ;
+                break;
+
+        }
+        Console.WriteLine("Radzen end 1 ++++++++++++++++++++++++++++");
+        return@<div></div>;
+    }
+
+
+    RenderFragment MultiRadzenTableColumn(int ControlType, object Value, bool IsRowView, string DynamicType,
+   string Name, ViewPropertyBase CurrentView, string GroupName, string provalue, bool OnlyHeader, string ToolTipMessage, string title, string widthcolumn)
+    {
+        bool visible = false;
+        if (CurrentView.IsVisible.HasValue)
+        {
+            visible = CurrentView.IsVisible.Value;
+        }
+        if (CurrentView.IsHide)
+        {
+            visible = false;
+        }
+
+
+        // if (Value == null)
+        // {
+        //     return @<div>NULL</div>;
+        // }
+
+        Console.WriteLine("Radzen ini++++++++++++++++++++++++++++");
+
+        switch (ControlType)
+        {
+            case 1:
+
+                Console.WriteLine("Radzen ini 1 ++++++++++++++++++++++++++++");
+
+                bool val = false;
+
+                var rd = bool.TryParse(Value?.ToString(), out val);
+
+                return@<RadzenTableCell>
+
+
+
+@ControlBool(val, IsRowView, DynamicType, Name
+    , CurrentView, GroupName, provalue, OnlyHeader,ToolTipMessage);
+
+</RadzenTableCell>;
+                break;
+            case 2:
+
+                Console.WriteLine("Radzen ini 2 ++++++++++++++++++++++++++++");
+                return@<RadzenTableCell>
+
+@ControlRadio(Value, IsRowView, DynamicType, Name
+    , CurrentView, GroupName, provalue, OnlyHeader,ToolTipMessage)
+
+</RadzenTableCell>;
+                break;
+            case 3:
+                Console.WriteLine("Radzen ini 3 ++++++++++++++++++++++++++++");
+                return@<RadzenTableCell>
+
+@ControlAny(Value, IsRowView, DynamicType, Name
+    , CurrentView, GroupName, provalue, OnlyHeader,ToolTipMessage)
+
+</RadzenTableCell>
+    ;
+                break;
+
+        }
+        Console.WriteLine("Radzen end 1 ++++++++++++++++++++++++++++");
+        return@<div></div>;
+    }
+
+
+
+
+    bool showPhoto;
+    bool refresh;
+
+    RenderFragment RenderColumns()
+    {
+        return __builder =>
+        {
+            if (refresh)
+            {
+                refresh = false;
+                <text>
+                </text>
+            }
+            else
+            {
+                <text>
+
+
+                    @if (DynamicProperties != null)
+                    {
+
+                        //style="flex-wrap:nowrap"
+
+                        @*<div class="row" >*@
+
+                        @if (string.IsNullOrEmpty(GroupName))
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            try
+                            {
+                                //Console.WriteLine("GroupName " + GenericCalibration2.GroupName);
+
+                                //Console.WriteLine("GroupName " + GenericCalibrationResult.GroupName);
+
+                                if (NewItem != null)
+                                {
+                                    //Console.WriteLine("NewItem " + NewItem.GroupName);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+
+
+                        }
+
+
+
+                        @foreach (var option in properties.OrderBy(x => x.DynamicProperty.ColPosition))
+                        {
+
+
+
+                            if (option?.DynamicProperty == null || option?.DynamicProperty?.ViewPropertyBase == null)
+                            {
+                                Error = "Error in configuration property: " + option.Key + "CalibrationSubType " + option.DynamicProperty.CalibrationSubtype;
+                                //Console.WriteLine(Error);
+                                ShowToast(Error, ToastLevel.Error).ConfigureAwait(false).GetAwaiter().GetResult();
+                                return;
+
+                            }
+
+                            if (option.CurrentView == null)
+                            {
+                                option.CurrentView = new ViewPropertyBase();
+                                option.CurrentView = (ViewPropertyBase)option.DynamicProperty.ViewPropertyBase.CloneObject();
+                                //option.CurrentView.OptionsFilter = option.DynamicProperty.ViewPropertyBase.OptionsFilter;
+                            }
+
+                            if ((string.IsNullOrEmpty(option.DynamicProperty.ViewPropertyBase.StepResol) || option.DynamicProperty.ViewPropertyBase.StepResol == "any") && !string.IsNullOrEmpty(configureresolution))
+                            {
+                                option.CurrentView.StepResol = configureresolution;
+                            }
+
+                            //option.CurrentView.SelectOptionsTmP = option?.DynamicProperty?.ViewPropertyBase?.SelectOptions;
+
+                            var controlType = option.CurrentView.ControlType;
+
+                            var DynamicType = option.DynamicProperty.DataType;
+
+                            var IsDisable = option.CurrentView.IsDisabled;
+
+                            if (!Enabled)
+                            {
+                                option.CurrentView.IsDisabled = true;
+                            }
+
+                            var IsOnChange = option.DynamicProperty.ViewPropertyBase.OnChange;
+
+                            var csscol = option.CurrentView.CSSCol;
+
+                            var csscard = "card";
+
+                            var csscardbody = "card-body";
+
+                            string provalue = "";
+
+                            if (option.CurrentView.IsVisible.HasValue && option.CurrentView.IsVisible.Value == false)
+                            {
+                                csscol = " d-none ";
+                            }
+                            else if (!IsRowView)
+                            {
+                                csscol = option.CurrentView.CSSCol;
+                            }
+                            else if (IsRowView)
+                            {
+                                csscol = option.CurrentView.RowCSSCol;
+                            }
+
+
+                            if (!string.IsNullOrEmpty(option.CurrentView.ColGroup) && CurrentGroup != option.CurrentView.ColGroup)
+                            {
+                                CurrentGroup = option.CurrentView.ColGroup;
+
+                                TwoSeparator = true;
+
+                                string title = "";
+
+                                if (!string.IsNullOrEmpty(option.CurrentView.ColGroupTitle))
+                                {
+                                    title = option.CurrentView.ColGroupTitle;
+                                }
+
+                                <div class="@option.CurrentView.ColGroupCSS">@title</div>
+                            }
+                            else
+                            {
+                                TwoSeparator = false;
+                            }
+
+
+
+
+                            @if (!string.IsNullOrEmpty(option.CurrentView.SelectOptions)
+                                //&& option?.CurrentView?.OptionsFilter?.Count() > 0
+                                && !string.IsNullOrEmpty(option.CurrentView.OptionsFilter))
+                            {
+
+
+
+                                List<string> errors2 = new List<string>();
+
+
+                                string property = "";
+
+                                string objectModel = "";
+
+                                if (option.CurrentView.OptionsFilter.Contains("header.") && NewItem != null)
+                                {
+                                    property = @option.CurrentView.OptionsFilter.Replace("header.", "");
+                                    objectModel = NewItem?.Object;
+                                }
+                                if (option.CurrentView.OptionsFilter.Contains("model.") && GenericCalibrationResult != null)
+                                {
+                                    property = @option.CurrentView.OptionsFilter.Replace("model.", "");
+                                    objectModel = GenericCalibrationResult?.Object;
+                                }
+
+                                var HeaderModel = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(objectModel
+
+                                , new JsonSerializerSettings()
+                                {
+                                    Error = (sender, error) =>
+            {
+                                    errors2.Add(error.ErrorContext.Error.Message);
+                                    error.ErrorContext.Handled = true;
+
+                //Console.WriteLine("GetOptions 2 error NewItem" + error.ErrorContext.Error.Message);
+                                }//error.ErrorContext.Handled = true
+
+                                }
+                                );
+
+                                if (!string.IsNullOrEmpty(objectModel))
+                                {
+                                    if (!string.IsNullOrEmpty(property) && errors2.Count == 0)
+                                    {
+                                        provalue = HeaderModel[property];
+
+                                    }
+                                    else
+                                    {
+                                        foreach (var err in errors2)
+                                        {
+                                            //Console.WriteLine("Error in newitem: " + err);
+                                        }
+                                    }
+                                }
+
+
+
+                            }
+
+                            @if (UseRadzen)
+                            {
+                                <div class="@csscol">
+
+                                    @if (controlType == "switch")
+                                    {
+
+                                        if (option.Value != null)
+                                        {
+                                            bool option2;
+
+                                            bool option1 = bool.TryParse(option.Value.ToString(), out option2);
+
+                                            if (option1)
+                                            {
+                                                option.HasBoolValue = true;
+
+
+
+                                                @if (TypeRadzenControl == 1)
+                                                {
+
+
+        @MultiRadzenColumn(1,option.BoolValue, IsRowView, DynamicType, option.DynamicProperty.Name
+                ,option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage)
+
+
+                }
+
+                                                @if (TypeRadzenControl == 2)
+                                                {
+
+
+                                                    @MultiRadzenDataGridColumn(option, 1, option.BoolValue, IsRowView, GroupName, provalue, OnlyHeader)
+
+
+                                                }
+
+
+
+
+                                            }
+                                            else
+                                            {
+
+                                                ShowToast("Error conversion " + option.Key + " error value " + option.Value, ToastLevel.Error).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                                            }
+                                        }
+
+
+                                    }
+                                    else
+                                    {
+                                        @if (IsOnChange && controlType != "radio")
+                                        {
+
+                                            if (TypeRadzenControl == 1)
+                                            {
+        @MultiRadzenColumn(3,option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+                , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage)
+                }
+
+                                            if (TypeRadzenControl == 2)
+                                            {
+                                                @* @MultiRadzenDataGridColumn(3,option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+                                , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage) *@
+
+
+                                                @MultiRadzenDataGridColumn(option, 3, option.Value, IsRowView, GroupName, provalue, OnlyHeader)
+
+
+
+                                            }
+
+
+                                        }
+                                        else if (IsOnChange && controlType == "radio")
+
+                                        {
+
+                                            if (string.IsNullOrEmpty(SelectValue) || SelectValue == "-1" || SelectValue != option.Value.ToString())
+                                            {
+                                                SelectValue = "-1";
+                                            }
+                                            else
+                                            {
+
+                                            }
+
+
+                                            Reload = true;
+
+
+
+                                            @* <RadzenColumn Size="12" SizeMD="6" SizeLG="2" class="rz-p-4 product-title">
+                                @ControlRadio(option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+                                , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage)
+                               
+                        </RadzenColumn> *@
+
+
+                                            if (TypeRadzenControl == 1)
+                                            {
+        @MultiRadzenColumn(2,option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+                , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage)
+                }
+
+                                            if (TypeRadzenControl == 2)
+                                            {
+                                                @*  @MultiRadzenDataGridColumn(2,option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+        , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage) *@
+
+
+                                                @MultiRadzenDataGridColumn(option, 2, option.Value, IsRowView, GroupName, provalue, OnlyHeader)
+
+
+                                            }
+
+
+
+
+
+                                        }
+                                        else
+                                        {
+
+                                            @* <RadzenColumn Size="12" SizeMD="6" SizeLG="2" class="rz-p-4 product-title">
+                                    @ControlAnyNoChange(option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+                                    , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage)
+                                     
+
+                                    </RadzenColumn> *@
+
+
+                                            if (TypeRadzenControl == 1)
+                                            {
+        @MultiRadzenColumn(3,option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+                , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage)
+                }
+                                            if (TypeRadzenControl == 2)
+                                            {
+                                                @*  @MultiRadzenDataGridColumn(3,option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+        , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage) *@
+
+
+                                                @MultiRadzenDataGridColumn(option, 3, option.Value, IsRowView, GroupName, provalue, OnlyHeader)
+
+
+                                            }
+
+
+                                        }
+
+
+                                    }
+
+
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="@csscol">
+
+                                    @if (controlType == "switch")
+                                    {
+
+                                        if (option.Value != null)
+                                        {
+                                            bool option2;
+
+                                            bool option1 = bool.TryParse(option.Value.ToString(), out option2);
+
+                                            if (option1)
+                                            {
+                                                option.HasBoolValue = true;
+                //option.BoolValue = option2;
+        @*  <div class="tooltip-wrapper">
+                            <TextInput @bind-Value="@option.BoolValue" IsRowView="@IsRowView"
+                            IsDynamic="true" TValue="bool" DynamicType="@DynamicType"
+                            PropertyName="@option.DynamicProperty.Name"
+                            ViewProperty="@option.CurrentView"
+                            OnChangeControl="@(async (arg) => await ChangeControl2(arg,Model,true))"
+                            GroupName="@GroupName"
+                            SelectFilter="@provalue"
+                            OnlyHeader="@OnlyHeader">
+                            </TextInput>
+                            @if (!string.IsNullOrEmpty(option.CurrentView.ToolTipMessage))
+                            {
+                                <span class="tooltipspan">@option.CurrentView.ToolTipMessage</span>
+                            }
+                        </div> *@
+
+        @ControlBool(option.BoolValue, IsRowView, DynamicType, option.DynamicProperty.Name
+                , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage)
+                ;
+
+
+
+                                            }
+                                            else
+                                            {
+
+                                                ShowToast("Error conversion " + option.Key + " error value " + option.Value, ToastLevel.Error).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                                            }
+                                        }
+
+
+                                    }
+                                    else
+                                    {
+                                        @if (IsOnChange && controlType != "radio")
+                                        {
+
+        @*  <div class="tooltip-wrapper">
+
+                        <TextInput @bind-Value="option.Value" IsRowView="@IsRowView" 
+                        IsDynamic="true" TValue="object" DynamicType="@DynamicType"
+                        PropertyName="@option.DynamicProperty.Name"
+                        ViewProperty="@option.CurrentView"
+                        OnChangeControl="@(async (arg) => await ChangeControl2(arg,Model,true))"
+                        SelectFilter="@provalue"
+                        GroupName="@GroupName"
+                        OnlyHeader="@OnlyHeader">
+
+                        </TextInput>
+                        @if (!string.IsNullOrEmpty(option.CurrentView.ToolTipMessage))
+                        {
+                            <span class="tooltipspan">@option.CurrentView.ToolTipMessage</span>
+                        }
+                    </div> *@
+
+        @ControlAny(option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+                , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage)
+                ;
+
+
+                                        }
+                                        else if (IsOnChange && controlType == "radio")
+
+                                        {
+
+                                            if (string.IsNullOrEmpty(SelectValue) || SelectValue == "-1" || SelectValue != option.Value.ToString())
+                                            {
+                                                SelectValue = "-1";
+                                            }
+                                            else
+                                            {
+
+                                            }
+
+                                            //SelectedValue = "@option.Value.ToString()"
+                                            Reload = true;
+        @*  <div class="tooltip-wrapper">
+
+
+
+                        <TextInput @bind-Value="option.Value" IsRowView="@IsRowView" 
+                        IsDynamic="true" TValue="object" DynamicType="@DynamicType"
+                        PropertyName="@option.DynamicProperty.Name"
+                        ViewProperty="@option.CurrentView"
+                        OnChangeControl="@(async (arg) => await ChangeControl2(arg,Model,true))"
+                        RefreshGrid="@RefreshAllGrid"
+                        OnlyHeader="@OnlyHeader"
+                        GroupName="@GroupName"
+                        SelectFilter="@provalue"
+                        SelectedValue="@SelectValue">
+
+                        </TextInput>
+
+
+                        @if (!string.IsNullOrEmpty(option.CurrentView.ToolTipMessage))
+                        {
+                            <span class="tooltipspan">@option.CurrentView.ToolTipMessage</span>
+                        }
+                    </div> *@
+
+        @ControlRadio(option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+                , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage)
+                ;
+
+
+
+                                        }
+                                        else
+                                        {
+
+
+
+        @ControlAnyNoChange(option.Value, IsRowView, DynamicType, option.DynamicProperty.Name
+                , option.CurrentView, GroupName, provalue, OnlyHeader,option.CurrentView.ToolTipMessage)
+                ;
+
+                                        }
+
+
+                                    }
+
+
+                                </div>
+                            }
+
+
+                            @if (!string.IsNullOrEmpty(HideElement) && Component != null && Component.ConfigMode)
+                            {
+                                <div class="col-1" style="padding:0px;left:-40px">
+                                    <button class="d-sm-inline-block btn btn-sm btn-danger" type="button"
+                                            data-toggle="collapse" @onclick=@(async () => await CalibrationConfig(option.DynamicProperty))
+                                            @onclick:stopPropagation @onclick:preventDefault>
+                                        ...
+                                    </button>
+                                </div>
+                            }
+
+
+
+                        }
+
+
+
+
+                        @* </div>*@
+
+                        @BoundValue()
+
+                        <div class="row">
+
+                            <div class="col" style="min-height:5px">
+                                @Error
+                            </div>
+                        </div>
+
+                    }
+
+                </text>
+            }
+        };
+    }
+
+
+
+
+
+
+}

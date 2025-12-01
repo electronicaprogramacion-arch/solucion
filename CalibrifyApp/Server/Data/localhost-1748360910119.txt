@@ -1,0 +1,209 @@
+=============================== BEGIN LOADING LOGIN PAGE ===========================
+index.js:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()
+ChartJsBlazorInterop.js:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()
+navigation-debug.js:5 ================================================================================
+navigation-debug.js:6 [NAV DEBUG] ENHANCED Navigation debug script loaded at 10:26:51 AM
+navigation-debug.js:7 [NAV DEBUG] User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36
+navigation-debug.js:8 [NAV DEBUG] Page loaded from: direct navigation
+navigation-debug.js:12 [NAV DEBUG] Original URL: https://localhost:5001/Account/Login?ReturnUrl=%2F
+navigation-debug.js:13 [NAV DEBUG] Document ready state: loading
+navigation-debug.js:93 [NAV DEBUG] Blazor not yet available, will check again...
+navigation-debug.js:192 [NAV DEBUG] DOM mutation observer installed
+navigation-debug.js:210 [NAV DEBUG] All navigation tracking hooks installed
+navigation-debug.js:211 ================================================================================
+Login?ReturnUrl=%2F:2021 [LOGIN LAYOUT] Stable login layout loaded at 10:26:51 AM
+Login?ReturnUrl=%2F:2022 [LOGIN LAYOUT] This layout should NOT be removed by Blazor updates
+navigation-debug.js:100 [NAV DEBUG] Blazor detected after 1 checks
+Login?ReturnUrl=%2F:2037 Service Worker registration disabled - files not found
+offline-detector.js:106 Offline detector initialized
+offline-detector.js:107 Initial network status: online
+offline-detector.js:108 Is installed PWA: false
+offline-detector.js:109 Offline mode: disabled
+Login?ReturnUrl=%2F:2087 Global error handler caught error: undefined
+(anonymous) @ Login?ReturnUrl=%2F:2087
+Login?ReturnUrl=%2F:80 Theme from storage: default
+Login?ReturnUrl=%2F:87 Enabled theme: default
+navigation-debug.js:144 [NAV DEBUG] JavaScript Error: Error: Found malformed component comment at Blazor:{"type":"auto","prerenderId":"757fa3e73a004008b00b232c825141f2","key":{"locationHash":"DE0BC669EE0212F9B7EB2FA05A1CBB58EEF1A1DB58161319F24386A8C7326B32:33","formattedComponentKey":""},"sequence":1,"descriptor":"CfDJ8PkCujI96T1It29rWR\u002B91gnS2h2qMqBJvNVFIhmViL\u002Bta8NgCyK9v21hj59cyCCAno6uHD5zq4pjjy9sMF\u002Bmhua3IAhuc6/onzvfAfjpndlIyMe4580i26Qfiie/q/ENzBTDjDDIZ/V0dJDfXKKhfTHBLnP3ifAdXPBV42ZQPjyaPy5g\u002ByzEJnqwRBGx0XkBVmY\u002By3/Q/sKr0WI3JPq/iyM9RXntyWO7cK0K1hStxjYYzJGYZ5AXmqeYybGIn1WUOfqKD/zx0L2VG6NOC53iHQ8j1f9FIXYUdpkEB/fOGa8v7fuHDjxGeaoko9D43euOr67IWpiHVmkCXxnxQlXpnY88ryg7\u002B6aHwTH2fRghBNF93lDc1BPV\u002BVFnKJmYoH4CG3dFByLSR649eV8ggdRYI9dT1hLBgmn4A\u002B0R3uQ/gCO8i7eHM/CG1FWq\u002Bkbjzll0eUe\u002BdAtGy4U2nFj4nxh983J6NHZXpgIUCOwCmydorPCuGLMKYKmH6b2YcFrXxX8ccp4RP\u002B0tcGjoJ7Dct2jSowc/zc2Xu/HxxNiKciS6RQQ8vE8yG\u002Bd/SyPczRDMX/U/ATmE4gEw2B1eJmQq0JbmqfQ=","assembly":"CalibrationSaaS.Infraestructure.Blazor","typeName":"CalibrationSaaS.Infraestructure.Blazor.Routes","parameterDefinitions":"W10=","parameterValues":"W10="}
+    at Dt (blazor.web.js:1:41830)
+    at Rt (blazor.web.js:1:40410)
+    at Rt (blazor.web.js:1:40483)
+    at Rt (blazor.web.js:1:40483)
+    at blazor.web.js:1:39706
+    at St (blazor.web.js:1:39758)
+    at ii (blazor.web.js:1:171948)
+    at blazor.web.js:1:187335
+    at Hi (blazor.web.js:1:187390)
+(anonymous) @ navigation-debug.js:144
+navigation-debug.js:145 [NAV DEBUG] Error source: https://localhost:5001/_framework/blazor.web.js line: 1
+(anonymous) @ navigation-debug.js:145
+navigation-debug.js:146 [NAV DEBUG] Error message: Uncaught Error: Found malformed component comment at Blazor:{"type":"auto","prerenderId":"757fa3e73a004008b00b232c825141f2","key":{"locationHash":"DE0BC669EE0212F9B7EB2FA05A1CBB58EEF1A1DB58161319F24386A8C7326B32:33","formattedComponentKey":""},"sequence":1,"descriptor":"CfDJ8PkCujI96T1It29rWR\u002B91gnS2h2qMqBJvNVFIhmViL\u002Bta8NgCyK9v21hj59cyCCAno6uHD5zq4pjjy9sMF\u002Bmhua3IAhuc6/onzvfAfjpndlIyMe4580i26Qfiie/q/ENzBTDjDDIZ/V0dJDfXKKhfTHBLnP3ifAdXPBV42ZQPjyaPy5g\u002ByzEJnqwRBGx0XkBVmY\u002By3/Q/sKr0WI3JPq/iyM9RXntyWO7cK0K1hStxjYYzJGYZ5AXmqeYybGIn1WUOfqKD/zx0L2VG6NOC53iHQ8j1f9FIXYUdpkEB/fOGa8v7fuHDjxGeaoko9D43euOr67IWpiHVmkCXxnxQlXpnY88ryg7\u002B6aHwTH2fRghBNF93lDc1BPV\u002BVFnKJmYoH4CG3dFByLSR649eV8ggdRYI9dT1hLBgmn4A\u002B0R3uQ/gCO8i7eHM/CG1FWq\u002Bkbjzll0eUe\u002BdAtGy4U2nFj4nxh983J6NHZXpgIUCOwCmydorPCuGLMKYKmH6b2YcFrXxX8ccp4RP\u002B0tcGjoJ7Dct2jSowc/zc2Xu/HxxNiKciS6RQQ8vE8yG\u002Bd/SyPczRDMX/U/ATmE4gEw2B1eJmQq0JbmqfQ=","assembly":"CalibrationSaaS.Infraestructure.Blazor","typeName":"CalibrationSaaS.Infraestructure.Blazor.Routes","parameterDefinitions":"W10=","parameterValues":"W10="}
+(anonymous) @ navigation-debug.js:146
+Login?ReturnUrl=%2F:2087 Global error handler caught error: Error: Found malformed component comment at Blazor:{"type":"auto","prerenderId":"757fa3e73a004008b00b232c825141f2","key":{"locationHash":"DE0BC669EE0212F9B7EB2FA05A1CBB58EEF1A1DB58161319F24386A8C7326B32:33","formattedComponentKey":""},"sequence":1,"descriptor":"CfDJ8PkCujI96T1It29rWR\u002B91gnS2h2qMqBJvNVFIhmViL\u002Bta8NgCyK9v21hj59cyCCAno6uHD5zq4pjjy9sMF\u002Bmhua3IAhuc6/onzvfAfjpndlIyMe4580i26Qfiie/q/ENzBTDjDDIZ/V0dJDfXKKhfTHBLnP3ifAdXPBV42ZQPjyaPy5g\u002ByzEJnqwRBGx0XkBVmY\u002By3/Q/sKr0WI3JPq/iyM9RXntyWO7cK0K1hStxjYYzJGYZ5AXmqeYybGIn1WUOfqKD/zx0L2VG6NOC53iHQ8j1f9FIXYUdpkEB/fOGa8v7fuHDjxGeaoko9D43euOr67IWpiHVmkCXxnxQlXpnY88ryg7\u002B6aHwTH2fRghBNF93lDc1BPV\u002BVFnKJmYoH4CG3dFByLSR649eV8ggdRYI9dT1hLBgmn4A\u002B0R3uQ/gCO8i7eHM/CG1FWq\u002Bkbjzll0eUe\u002BdAtGy4U2nFj4nxh983J6NHZXpgIUCOwCmydorPCuGLMKYKmH6b2YcFrXxX8ccp4RP\u002B0tcGjoJ7Dct2jSowc/zc2Xu/HxxNiKciS6RQQ8vE8yG\u002Bd/SyPczRDMX/U/ATmE4gEw2B1eJmQq0JbmqfQ=","assembly":"CalibrationSaaS.Infraestructure.Blazor","typeName":"CalibrationSaaS.Infraestructure.Blazor.Routes","parameterDefinitions":"W10=","parameterValues":"W10="}
+    at Dt (blazor.web.js:1:41830)
+    at Rt (blazor.web.js:1:40410)
+    at Rt (blazor.web.js:1:40483)
+    at Rt (blazor.web.js:1:40483)
+    at blazor.web.js:1:39706
+    at St (blazor.web.js:1:39758)
+    at ii (blazor.web.js:1:171948)
+    at blazor.web.js:1:187335
+    at Hi (blazor.web.js:1:187390)
+(anonymous) @ Login?ReturnUrl=%2F:2087
+Login?ReturnUrl=%2F:2068 Initializing theme from DOMContentLoaded event
+theme.js:167 Initializing theme: humanistic
+theme.js:47 Applying theme: humanistic
+theme.js:59 Theme applied: humanistic
+theme.js:10 Cookie set: CalibrifyTheme=humanistic
+Login?ReturnUrl=%2F:2161 Patched DotNet.invokeMethodAsync to handle errors
+Login?ReturnUrl=%2F:2190 Patched Blazor._internal.getRequiredService to handle IStateFacade
+cache-warmer.js:20 Cache warmer: Starting cache warm-up
+cache-warmer.js:34 Cache warmer: Caching index.html
+navigation-debug.js:198 [NAV DEBUG] Fetch request: index.html
+:5001/index.html:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()
+navigation-debug.js:204 [NAV DEBUG] Fetch failed: 404 
+(anonymous) @ navigation-debug.js:204
+Promise.then
+window.fetch @ navigation-debug.js:199
+warmCache @ cache-warmer.js:35
+await in warmCache
+(anonymous) @ cache-warmer.js:65
+requestIdleCallback
+(anonymous) @ cache-warmer.js:64
+(anonymous) @ cache-warmer.js:73
+cache-warmer.js:34 Cache warmer: Caching _framework/blazor.web.js
+navigation-debug.js:198 [NAV DEBUG] Fetch request: _framework/blazor.web.js
+cache-warmer.js:34 Cache warmer: Caching _framework/dotnet.js
+navigation-debug.js:198 [NAV DEBUG] Fetch request: _framework/dotnet.js
+cache-warmer.js:34 Cache warmer: Caching css/sb-admin-2.css
+navigation-debug.js:198 [NAV DEBUG] Fetch request: css/sb-admin-2.css
+cache-warmer.js:34 Cache warmer: Caching css/site.css
+navigation-debug.js:198 [NAV DEBUG] Fetch request: css/site.css
+cache-warmer.js:34 Cache warmer: Caching js/offline-detector.js
+navigation-debug.js:198 [NAV DEBUG] Fetch request: js/offline-detector.js
+cache-warmer.js:34 Cache warmer: Caching lib/fontawesome-free/css/all.min.css
+navigation-debug.js:198 [NAV DEBUG] Fetch request: lib/fontawesome-free/css/all.min.css
+cache-warmer.js:34 Cache warmer: Caching img/logo/Transparent Logo.svg
+navigation-debug.js:198 [NAV DEBUG] Fetch request: img/logo/Transparent Logo.svg
+cache-warmer.js:34 Cache warmer: Caching img/logo/favicon.svg
+navigation-debug.js:198 [NAV DEBUG] Fetch request: img/logo/favicon.svg
+cache-warmer.js:44 Cache warmer: Cache warm-up complete
+navigation-debug.js:198 [NAV DEBUG] Fetch request: https://localhost:5001/Account/Login?ReturnUrl=%2F
+cache-warmer.js:52 Cache warmer: Cached current page: https://localhost:5001/Account/Login?ReturnUrl=%2F
+================================ LOGIN PAGE LOADED =================================
+================================= HOME PAGE LOADED - AUTHENTICATION SUCCESSFUL ========================
+
+Login?ReturnUrl=%2F:36 
+            
+            
+           GET https://localhost:5001/_content/Fluxor.Blazor.Web/scripts/index.js net::ERR_ABORTED 404 (Not Found)
+navigation-debug.js:5 ================================================================================
+navigation-debug.js:6 [NAV DEBUG] ENHANCED Navigation debug script loaded at 10:20:22 AM
+navigation-debug.js:7 [NAV DEBUG] User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36
+navigation-debug.js:8 [NAV DEBUG] Page loaded from: direct navigation
+navigation-debug.js:12 [NAV DEBUG] Original URL: https://localhost:5001/Account/Login?ReturnUrl=%2F
+navigation-debug.js:13 [NAV DEBUG] Document ready state: loading
+navigation-debug.js:93 [NAV DEBUG] Blazor not yet available, will check again...
+navigation-debug.js:192 [NAV DEBUG] DOM mutation observer installed
+navigation-debug.js:210 [NAV DEBUG] All navigation tracking hooks installed
+navigation-debug.js:211 ================================================================================
+Login?ReturnUrl=%2F:2021 [LOGIN LAYOUT] Stable login layout loaded at 10:20:22 AM
+Login?ReturnUrl=%2F:2022 [LOGIN LAYOUT] This layout should NOT be removed by Blazor updates
+Login?ReturnUrl=%2F:2037 Service Worker registration disabled - files not found
+offline-detector.js:106 Offline detector initialized
+offline-detector.js:107 Initial network status: online
+offline-detector.js:108 Is installed PWA: false
+offline-detector.js:109 Offline mode: disabled
+navigation-debug.js:100 [NAV DEBUG] Blazor detected after 1 checks
+Login:2242 
+            
+            
+           GET https://localhost:5001/_content/ChartJs.Blazor.Fork/ChartJsBlazorInterop.js net::ERR_ABORTED 404 (Not Found)
+cache-warmer.js:20 Cache warmer: Starting cache warm-up
+cache-warmer.js:34 Cache warmer: Caching index.html
+navigation-debug.js:198 [NAV DEBUG] Fetch request: index.html
+Login?ReturnUrl=%2F:2087 Global error handler caught error: undefined
+(anonymous) @ Login?ReturnUrl=%2F:2087
+navigation-debug.js:199 
+            
+            
+           GET https://localhost:5001/index.html net::ERR_ABORTED 404 (Not Found)
+window.fetch @ navigation-debug.js:199
+warmCache @ cache-warmer.js:35
+await in warmCache
+(anonymous) @ cache-warmer.js:65
+requestIdleCallback
+(anonymous) @ cache-warmer.js:64
+(anonymous) @ cache-warmer.js:73
+navigation-debug.js:204 [NAV DEBUG] Fetch failed: 404 
+(anonymous) @ navigation-debug.js:204
+Promise.then
+window.fetch @ navigation-debug.js:199
+warmCache @ cache-warmer.js:35
+await in warmCache
+(anonymous) @ cache-warmer.js:65
+requestIdleCallback
+(anonymous) @ cache-warmer.js:64
+(anonymous) @ cache-warmer.js:73
+cache-warmer.js:34 Cache warmer: Caching _framework/blazor.web.js
+navigation-debug.js:198 [NAV DEBUG] Fetch request: _framework/blazor.web.js
+cache-warmer.js:34 Cache warmer: Caching _framework/dotnet.js
+navigation-debug.js:198 [NAV DEBUG] Fetch request: _framework/dotnet.js
+cache-warmer.js:34 Cache warmer: Caching css/sb-admin-2.css
+navigation-debug.js:198 [NAV DEBUG] Fetch request: css/sb-admin-2.css
+cache-warmer.js:34 Cache warmer: Caching css/site.css
+navigation-debug.js:198 [NAV DEBUG] Fetch request: css/site.css
+Login?ReturnUrl=%2F:80 Theme from storage: humanistic
+Login?ReturnUrl=%2F:87 Enabled theme: humanistic
+navigation-debug.js:144 [NAV DEBUG] JavaScript Error: Error: Found malformed component comment at Blazor:{"type":"auto","prerenderId":"6e502bba09254837aad8636f8cd713c9","key":{"locationHash":"DE0BC669EE0212F9B7EB2FA05A1CBB58EEF1A1DB58161319F24386A8C7326B32:33","formattedComponentKey":""},"sequence":1,"descriptor":"CfDJ8PkCujI96T1It29rWR\u002B91gmOSyvBTXXQGIvcpC6VG5ufJWKJNoQ9RQRF02TzfMDw50AS7QcbcGSEeE\u002BAyxezeAnQLzEy9Q3faQ\u002B7POx8TZ8dpBQBaTKWMUmHUXml/yah/I8cEJ4y\u002BQO0ULZTRMOxt8HuyslN2Y/459Mz/Dvkrr7UiojDInW\u002BG6nrsLOWFTsUqHjkajx9l9VkQrMF5AiOyTWjJgIJEba/8nZRHulgSYCLJD7OvyXOzvMBYzzz\u002B1fA9mHgbdR/HCStVBoa1vDYzSe2YSJjOBHMDWHYSqWMfcJNKiN7d/kAXicMKpcoUdgw3xQ3sRTbDoktHb/xlJ/dh0K98dWvFSXz8\u002BENj6w\u002Blw\u002B3jUzYTsFdYjEeiis/sVIZzEx2Gu7m0zLrvMZVE4al0HQ0mpCe15Y0KVKcCuEdAQf6tNirWAdHCqP3KWOdMWAoiOTn4/3qbSR8Boa\u002BvV9T8BEJJy\u002BlkbPpjd1oSAJiL3y8q5W6WoanXIovbi0j8J6jOGgfkXuu3o7MJjbtfIEmqYrsU6DSLMo\u002BL9XXTrVgGx7DmYijKLe\u002BjysG/bYc1PhMowyxELemGYR7wprknMAuC70=","assembly":"CalibrationSaaS.Infraestructure.Blazor","typeName":"CalibrationSaaS.Infraestructure.Blazor.Routes","parameterDefinitions":"W10=","parameterValues":"W10="}
+    at Dt (blazor.web.js:1:41830)
+    at Rt (blazor.web.js:1:40410)
+    at Rt (blazor.web.js:1:40483)
+    at Rt (blazor.web.js:1:40483)
+    at blazor.web.js:1:39706
+    at St (blazor.web.js:1:39758)
+    at ii (blazor.web.js:1:171948)
+    at blazor.web.js:1:187335
+    at Hi (blazor.web.js:1:187390)
+(anonymous) @ navigation-debug.js:144
+navigation-debug.js:145 [NAV DEBUG] Error source: https://localhost:5001/_framework/blazor.web.js line: 1
+(anonymous) @ navigation-debug.js:145
+navigation-debug.js:146 [NAV DEBUG] Error message: Uncaught Error: Found malformed component comment at Blazor:{"type":"auto","prerenderId":"6e502bba09254837aad8636f8cd713c9","key":{"locationHash":"DE0BC669EE0212F9B7EB2FA05A1CBB58EEF1A1DB58161319F24386A8C7326B32:33","formattedComponentKey":""},"sequence":1,"descriptor":"CfDJ8PkCujI96T1It29rWR\u002B91gmOSyvBTXXQGIvcpC6VG5ufJWKJNoQ9RQRF02TzfMDw50AS7QcbcGSEeE\u002BAyxezeAnQLzEy9Q3faQ\u002B7POx8TZ8dpBQBaTKWMUmHUXml/yah/I8cEJ4y\u002BQO0ULZTRMOxt8HuyslN2Y/459Mz/Dvkrr7UiojDInW\u002BG6nrsLOWFTsUqHjkajx9l9VkQrMF5AiOyTWjJgIJEba/8nZRHulgSYCLJD7OvyXOzvMBYzzz\u002B1fA9mHgbdR/HCStVBoa1vDYzSe2YSJjOBHMDWHYSqWMfcJNKiN7d/kAXicMKpcoUdgw3xQ3sRTbDoktHb/xlJ/dh0K98dWvFSXz8\u002BENj6w\u002Blw\u002B3jUzYTsFdYjEeiis/sVIZzEx2Gu7m0zLrvMZVE4al0HQ0mpCe15Y0KVKcCuEdAQf6tNirWAdHCqP3KWOdMWAoiOTn4/3qbSR8Boa\u002BvV9T8BEJJy\u002BlkbPpjd1oSAJiL3y8q5W6WoanXIovbi0j8J6jOGgfkXuu3o7MJjbtfIEmqYrsU6DSLMo\u002BL9XXTrVgGx7DmYijKLe\u002BjysG/bYc1PhMowyxELemGYR7wprknMAuC70=","assembly":"CalibrationSaaS.Infraestructure.Blazor","typeName":"CalibrationSaaS.Infraestructure.Blazor.Routes","parameterDefinitions":"W10=","parameterValues":"W10="}
+(anonymous) @ navigation-debug.js:146
+Login?ReturnUrl=%2F:2087 Global error handler caught error: Error: Found malformed component comment at Blazor:{"type":"auto","prerenderId":"6e502bba09254837aad8636f8cd713c9","key":{"locationHash":"DE0BC669EE0212F9B7EB2FA05A1CBB58EEF1A1DB58161319F24386A8C7326B32:33","formattedComponentKey":""},"sequence":1,"descriptor":"CfDJ8PkCujI96T1It29rWR\u002B91gmOSyvBTXXQGIvcpC6VG5ufJWKJNoQ9RQRF02TzfMDw50AS7QcbcGSEeE\u002BAyxezeAnQLzEy9Q3faQ\u002B7POx8TZ8dpBQBaTKWMUmHUXml/yah/I8cEJ4y\u002BQO0ULZTRMOxt8HuyslN2Y/459Mz/Dvkrr7UiojDInW\u002BG6nrsLOWFTsUqHjkajx9l9VkQrMF5AiOyTWjJgIJEba/8nZRHulgSYCLJD7OvyXOzvMBYzzz\u002B1fA9mHgbdR/HCStVBoa1vDYzSe2YSJjOBHMDWHYSqWMfcJNKiN7d/kAXicMKpcoUdgw3xQ3sRTbDoktHb/xlJ/dh0K98dWvFSXz8\u002BENj6w\u002Blw\u002B3jUzYTsFdYjEeiis/sVIZzEx2Gu7m0zLrvMZVE4al0HQ0mpCe15Y0KVKcCuEdAQf6tNirWAdHCqP3KWOdMWAoiOTn4/3qbSR8Boa\u002BvV9T8BEJJy\u002BlkbPpjd1oSAJiL3y8q5W6WoanXIovbi0j8J6jOGgfkXuu3o7MJjbtfIEmqYrsU6DSLMo\u002BL9XXTrVgGx7DmYijKLe\u002BjysG/bYc1PhMowyxELemGYR7wprknMAuC70=","assembly":"CalibrationSaaS.Infraestructure.Blazor","typeName":"CalibrationSaaS.Infraestructure.Blazor.Routes","parameterDefinitions":"W10=","parameterValues":"W10="}
+    at Dt (blazor.web.js:1:41830)
+    at Rt (blazor.web.js:1:40410)
+    at Rt (blazor.web.js:1:40483)
+    at Rt (blazor.web.js:1:40483)
+    at blazor.web.js:1:39706
+    at St (blazor.web.js:1:39758)
+    at ii (blazor.web.js:1:171948)
+    at blazor.web.js:1:187335
+    at Hi (blazor.web.js:1:187390)
+(anonymous) @ Login?ReturnUrl=%2F:2087
+Login?ReturnUrl=%2F:2068 Initializing theme from DOMContentLoaded event
+theme.js:167 Initializing theme: humanistic
+theme.js:47 Applying theme: humanistic
+theme.js:59 Theme applied: humanistic
+theme.js:10 Cookie set: CalibrifyTheme=humanistic
+Login?ReturnUrl=%2F:2161 Patched DotNet.invokeMethodAsync to handle errors
+Login?ReturnUrl=%2F:2190 Patched Blazor._internal.getRequiredService to handle IStateFacade
+cache-warmer.js:34 Cache warmer: Caching js/offline-detector.js
+navigation-debug.js:198 [NAV DEBUG] Fetch request: js/offline-detector.js
+cache-warmer.js:34 Cache warmer: Caching lib/fontawesome-free/css/all.min.css
+navigation-debug.js:198 [NAV DEBUG] Fetch request: lib/fontawesome-free/css/all.min.css
+cache-warmer.js:34 Cache warmer: Caching img/logo/Transparent Logo.svg
+navigation-debug.js:198 [NAV DEBUG] Fetch request: img/logo/Transparent Logo.svg
+cache-warmer.js:34 Cache warmer: Caching img/logo/favicon.svg
+navigation-debug.js:198 [NAV DEBUG] Fetch request: img/logo/favicon.svg
+cache-warmer.js:44 Cache warmer: Cache warm-up complete
+navigation-debug.js:198 [NAV DEBUG] Fetch request: https://localhost:5001/Account/Login?ReturnUrl=%2F
+cache-warmer.js:52 Cache warmer: Cached current page: https://localhost:5001/Account/Login?ReturnUrl=%2F

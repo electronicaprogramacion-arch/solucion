@@ -1,0 +1,31 @@
+﻿@page "/RedirectToLogout"   
+@namespace  BlazorApp1.Client.Pages 
+@using CalibrationSaaS.Infraestructure.Blazor
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Http
+@inject NavigationManager NavigationManager
+@inherits FComponentBase
+@code {
+   
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await DeletePrincipal();
+
+        await SetIsOffline(false);
+
+        // NavigationManager.NavigateTo($"Account/Login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}", forceLoad: true);
+        //NavigationManager.NavigateTo($"api/Account/Logout", forceLoad: true);
+        //api/Account/Login
+
+        //NavigationManager.NavigateTo($"api/Account/Register?Email=xx&&Password=Pass", forceLoad: true);
+
+        NavigationManager.NavigateTo($"api/Account/Logout", forceLoad: true);
+        
+
+      
+    }
+}

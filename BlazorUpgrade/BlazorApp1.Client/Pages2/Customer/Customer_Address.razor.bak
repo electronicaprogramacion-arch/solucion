@@ -1,0 +1,43 @@
+﻿@page "/CreateCustomerAddress"
+
+@using BlazorApp1.Blazor.Blazor.Pages.Customer
+@namespace BlazorApp1.Blazor.Pages.Customer
+@inherits BlazorApp1.Blazor.Pages.Customer.Customer_Address_CreateBase
+@rendermode InteractiveServer
+<h3>Create Customer</h3>
+
+<div class="card mb-3">
+    <div class="row no-gutters">
+        <div class="col-md-4">
+            <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;" src="img/undraw_launch_day_4e04.svg" alt="">
+        </div>
+        <div class="col-md-8">
+            <EditForm Model="@customerAddress" style="margin:10px" OnValidSubmit="CreateCustomerAddress">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="form-row">
+                    <div class="col-md-12 mb-3">
+                        <label for="validationServer01">Customer Name</label>
+                        @*<input type="text" class="form-control" id="validationServer01" placeholder="Customer Name" value="" required>*@
+
+
+                        <InputText @bind-Value="customerAddress.Address1" placeholder="Address1" class="form-control" />
+                        <InputText @bind-Value="customerAddress.Address2" placeholder="Address2" class="form-control" />
+                        <InputText @bind-Value="customerAddress.City" placeholder="City" class="form-control" />
+                        <InputText @bind-Value="customerAddress.Country" placeholder="Country" class="form-control" />
+                        <InputText @bind-Value="customerAddress.State" placeholder="State" class="form-control" />
+                        <InputText @bind-Value="customerAddress.ZipCode" placeholder="Code" class="form-control" />
+                        <div class="valid-feedback">
+                            Looks good!
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" type="submit">Submit form</button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+<div id="dvModalCreateCustomer">
+  @*   <StandardModal @ref="child"></StandardModal> *@
+</div>

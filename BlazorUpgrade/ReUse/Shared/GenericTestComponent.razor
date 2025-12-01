@@ -1,0 +1,871 @@
+﻿@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+@using CalibrationSaaS.Infraestructure.Blazor.Helper
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@using CalibrationSaaS.Domain.Aggregates.Interfaces
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using System.Dynamic
+@namespace CalibrationSaaS.Infraestructure.Blazor.Shared
+@typeparam CalibrationItem
+@typeparam CalibrationItemResult
+@typeparam DomainEntity
+
+@*@inherits CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponentBase<CalibrationItem,CalibrationItemResult>*@
+@inherits CalibrationSaaS.Infraestructure.Blazor.GridResults2ComponentBase2<DomainEntity,CalibrationItem>
+<style>
+
+    .grid-row1.headerRow {
+        height: 55% !important;
+    }
+
+  
+
+    .noedit {
+    }
+
+    .btnWidth {
+        width: 75px
+    }
+
+
+    .secondGrid {
+        /*padding-left: 70px*/
+        /*left:-7%;*/
+    }
+
+    .linearityCol {
+        padding: 0px;
+    }
+
+    .linearityColHeader {
+        padding: 0px;
+    }
+
+    .AlingRight {
+        float:right
+    }
+
+     .AlingLeft {
+        float: left
+    }
+
+
+
+    @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+        /*  .editcolumn {
+        }
+
+        .container, .container-fluid {
+            padding-left: 0rem;
+            padding-right: 0rem;
+        }
+
+        .container-fluid {
+            width: 100%;
+            padding-right: 0rem;
+            padding-left: 0rem;
+            margin-right: auto;
+            margin-left: auto;
+        }*/
+    }
+</style>
+
+
+@if (WorkOrderItemCreate != null )
+{
+
+
+    <div style="display:none">
+        @*WeightSets :   @Description*@
+        @if (WeightSetList2 != null)
+        {
+            <div class="" style="max-height:300px;overflow:auto;width:100%">
+
+               
+            </div>
+        }
+    </div>
+
+    @if (CalSubType != null && !string.IsNullOrEmpty(HideElement) && CalSubType.SupportCSV.HasValue && CalSubType.SupportCSV.Value)
+    {
+        <div class="row AlingRight">
+            <div class="col-1">
+                <button class="d-sm-inline-block btn btn-sm btn-danger" type="button"
+                        data-toggle="collapse" @onclick=@(async () => await LoadCSV(CalSubType))
+                @onclick:stopPropagation @onclick:preventDefault>
+                    Load CSV
+                </button>
+            </div>
+        </div>
+
+    }
+
+    @if (Component != null && !string.IsNullOrEmpty(HideElement) && Component.ConfigMode)
+    {
+        <div class="row AlingRight">          
+             <div class="col-1">
+            <button class="d-sm-inline-block btn btn-sm btn-danger" type="button"
+            data-toggle="collapse" @onclick=@(async () => await CalibrationConfig(CalSubType))
+            @onclick:stopPropagation @onclick:preventDefault>...</button>
+        </div>
+      </div>
+       
+    }
+    @if (eq != null && CalibrationSubTypeView != null && tableList != null && IsCompresion > 0 && CalSubType != null && LIST != null && ShowGrid)
+        {
+
+        <div class="@CalibrationSubTypeView.CSSGrid">
+            @{
+            
+            var cst = CalSubType;//eq.CalibrationSubTypes.Where(x => x.CalibrationSubTypeId == IsCompresion).FirstOrDefault();
+            
+            var tem = LIST;
+            string sortField = "";
+            bool HasSelect = true;
+            bool HasNew = true;
+            bool HasEdit = true;
+            bool HasDuplicate = true;
+            bool EnabledDrag = true;
+            bool HasDelete = true;
+            int  PageSize2 = 20;
+            string ColButtonActionCSS = "btnWidth";
+            string ColActionCSS = "btnWidth";
+            string AlingActionCSS = "AlingLeft";
+            bool ActionBeginRow = false;
+            string KeyGrid = "SequenceID";
+           
+
+            bool? EnableSelect2 = false;
+
+            string SelectTitle = "";
+
+            string Select2Title = "";
+
+            string CSSSelect = "btnWidth buttonLin";
+
+            string NewButtonTitle = "New";
+
+            Tolerance tolerance = SetTolerance();
+
+            
+
+
+            //@Grid.GetPropertyName(() => PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.Name)
+            @if (CalibrationSubTypeView != null)
+            {
+                HasSelect = CalibrationSubTypeView.EnabledSelect;
+                HasNew = CalibrationSubTypeView.EnabledNew;
+                HasEdit = CalibrationSubTypeView.EnableEdit;
+                HasDuplicate = CalibrationSubTypeView.EnabledDuplicate;
+                EnabledDrag = CalibrationSubTypeView.EnabledDrag;
+                HasDelete = CalibrationSubTypeView.EnabledDelete;
+                PageSize2 = CalibrationSubTypeView.PageSize;
+
+                EnableSelect2 = CalibrationSubTypeView.EnableSelect2;
+
+                    if (EnableSelect2.HasValue && EnableSelect2.Value)
+                {
+                    CSSSelect = "mr-5 btnWidth buttonLin";
+                }
+
+
+                if (!string.IsNullOrEmpty(CalibrationSubTypeView.NewButtonTitle))
+                {
+
+                    NewButtonTitle = CalibrationSubTypeView.NewButtonTitle;
+
+                }
+
+
+                if (!string.IsNullOrEmpty(CalibrationSubTypeView.SelectTitle))
+                {
+                
+                    SelectTitle = CalibrationSubTypeView.SelectTitle;
+
+                }
+
+
+                if (!string.IsNullOrEmpty(CalibrationSubTypeView.Select2Title))
+                {
+                    Select2Title = CalibrationSubTypeView.Select2Title;
+
+                }
+
+
+                if (!string.IsNullOrEmpty(CalibrationSubTypeView.ColButtonActionCSS))
+                {
+                    ColButtonActionCSS = CalibrationSubTypeView.ColButtonActionCSS;
+                }
+                if (!string.IsNullOrEmpty(CalibrationSubTypeView.ColActionCSS))
+                {
+
+                    ColActionCSS = CalibrationSubTypeView.ColActionCSS;
+                
+                }
+
+                if (!string.IsNullOrEmpty(CalibrationSubTypeView.AlingActionCSS))
+                {
+
+                    AlingActionCSS = CalibrationSubTypeView.AlingActionCSS;
+
+                }
+
+                if (!string.IsNullOrEmpty(CalibrationSubTypeView.Key))
+                {
+
+                   
+                    KeyGrid = CalibrationSubTypeView.Key;
+
+                }
+                ///Use in form configuration
+                if (CalibrationSubTypeView.EnableButtonBar)
+                {
+                    ColButtonActionCSS = "col";
+                    ColActionCSS = "col-12";
+                    AlingActionCSS = "AlingRight";
+                    ActionBeginRow = true;
+                    CalibrationSubTypeView.CSSForm = "col-12";
+
+                }
+               
+
+            }
+
+            }
+
+        <ResponsiveTable ItemsDataSource="LIST"
+                         PageSize="@PageSize2"
+                         HasAction="true"
+                         HasSelect="@HasSelect"
+                         HasDelete="@HasDelete"
+                         HasDuplicate="@HasDuplicate"
+                         HasEdit="@HasEdit"
+                         HasNew="@HasNew"
+                         @ref="@RT"
+                         Context="ITEM"
+                         TableItem="CalibrationItemResult"
+                         ForceNEwButton="false"
+                         ClientPagination="true"
+                         DisabledRowHover="true"
+                         InLineEdit="false"
+                         ColActionHeaderCSS="col-sm-2"
+                         EnabledSearch="false"
+                         ClientDefaultSortField="@SortField"
+                         ClientDefaultSortDirection="asc"
+                         RowExecute="RowChange"
+                         Component="@Component"
+                         RowAfterRender="@RowAfterRender"
+                         AfterAction="@TaskAfterSave"
+                         ColActionCSS="@ColActionCSS"
+                         EnabledDrag="@EnabledDrag"
+                         LabelHeader="true"
+                         Key="@KeyGrid"
+                         ActionBeginRow="@ActionBeginRow"
+                         ColButtonActionCSS="@ColButtonActionCSS"
+                         AlingActionCSS="@AlingActionCSS"
+                         ColFormActionCSS="@CalibrationSubTypeView.ColFormActionCSS"
+                         ShowHeader="@CalibrationSubTypeView.ShowHeader"
+                         Enabled="@Enabled"
+                         CSSWidth="@CalibrationSubTypeView.CSSWidth"
+                         Scrollable="true">
+
+
+                <NewButton>
+                     <div class="row"id="cssDynamicHeader" style="width:100%">
+                   
+
+                 
+                    @*NewItem is row with position -1 and is configured*@
+                    @if (NewItem != null && cst != null && cst?.DynamicPropertiesSchema?.Where(x => x.GridLocation == "new").FirstOrDefault() != null)
+                    {
+                        <div class="col-12">
+
+                            <CascadingValue Value="@NewItem" Name="itemgrid">
+
+
+                                @if (eq != null && eq?.CalibrationTypeId >= 1)
+                                {
+                                    @*var cst = eq.CalibrationSubTypes.Where(x => x.CalibrationSubTypeId == IsCompresion).FirstOrDefault();*@
+
+                                        <EditForm Model="@NewItem" class="row" novalidate>
+
+                                        @if (cst != null && cst?.DynamicPropertiesSchema?.Where(x => x.GridLocation == "new").FirstOrDefault() != null)
+                                        {
+
+                                                var _context = WorkOrderItemCreate;
+
+                                                if (!cst.CalibrationSubTypeView.UseContext.HasValue
+                                                || cst.CalibrationSubTypeView.UseContext.HasValue && !cst.CalibrationSubTypeView.UseContext.Value)
+                                                {
+                                                    _context = null;
+                                                }
+
+
+                                                @* <div class="@cst.CalibrationSubTypeView.CSSRow">*@
+
+                                                @*Tolerance tolerance = SetTolerance();*@
+
+
+                                            @if (!string.IsNullOrEmpty(@cst.OnChangeClass))
+                                            {
+                                                    <Blazed.Controls.MultiComponent.MultipleComponent 
+                                                    Component="Component" 
+                                                    HideElement="@HideElement" 
+                                                    IsRowView="@cst.CalibrationSubTypeView.IsRowView" 
+                                                    Tolerance="@tolerance" UseResult="@cst.CalibrationSubTypeView.UseResult.Value" 
+                                                    DynamicProperties="@cst.DynamicPropertiesSchema.Where(x=>x.GridLocation=="new").ToList()"
+                                                                          ChangeEvent="ChangeMultipleControl" Refresh="@refresh"
+                                                                                                      RefreshGrid="@RefreshGrid"
+                                                                                                      SelectValue="@SelectValue"
+                                                                                                      cmcValues="cmcValues"
+                                                                                                      @ref="@MultipleComponent" 
+                                                    InvertModel="true" 
+                                                    Context="@_context"
+                                                    Enabled="@Enabled"
+                                                    Decimal="@cst.CalibrationSubTypeView.DefaultDecimalNumber">
+
+                                                </Blazed.Controls.MultiComponent.MultipleComponent>
+                                            }
+                                            else
+                                            {
+                                                    <Blazed.Controls.MultiComponent.MultipleComponent 
+                                                    Enabled="@Enabled"
+                                                    Component="Component" 
+                                                    HideElement="@HideElement" 
+                                                    IsRowView="@cst.CalibrationSubTypeView.IsRowView"  
+                                                    Tolerance="@tolerance" UseResult="@cst.CalibrationSubTypeView.UseResult.Value" 
+                                                    DynamicProperties="@cst.DynamicPropertiesSchema.Where(x=>x.GridLocation=="new").ToList()"
+                                                                          Refresh="@refresh"
+                                                                                                      RefreshGrid="@RefreshGrid"
+                                                                                                      SelectValue="@SelectValue"
+                                                                                                      @ref="@MultipleComponent"
+                                                                                                      cmcValues="cmcValues"
+                                                                                                      
+                                                    InvertModel="true" 
+                                                    Context="@_context"
+                                                    Decimal="@cst.CalibrationSubTypeView.DefaultDecimalNumber">
+
+                                                </Blazed.Controls.MultiComponent.MultipleComponent>
+                                            }
+
+
+
+
+                                            @*</div>*@
+
+
+
+
+
+                                        }
+                                        else
+                                        {
+                                            @*  <div class="row">
+                        <div class="col">
+                        Not configured properties
+                        </div>
+                        </div>*@
+                                        }
+
+                                    </EditForm>
+
+                                }
+
+
+
+                            </CascadingValue>
+
+                            </div>
+
+
+                        }
+                        else if (NewItem != null && cst != null && cst?.DynamicPropertiesSchema?.Where(x => x.GridLocation == "new").FirstOrDefault() == null)
+                        {
+                            <div class="row">
+                                <div class="col">
+                                    <div class="alert alert-primary" role="alert">
+                                       Header row exist but not configured
+                                    </div>
+
+                                </div>
+                            </div>
+                        }
+                        else if (NewItem == null && cst != null && HasNewItem)
+                        {
+                            <div class="row">
+                                <div class="col">
+                                    <div class="alert alert-primary" role="alert">
+                                        Header row configured  but not exists or not map in create class
+                                    </div>
+
+                                </div>
+                            </div>
+                        }
+
+                        @if (CalibrationSubTypeView.HasNewButton && Enabled)
+                        {
+
+                            <div class="col">
+                                <div class="input-group mb-3">
+                                    @*<input id="txtName" @bind-value="@TextNewValue" type="number" class="form-control" aria-label="Recipient's username" aria-describedby="basic-addon2">*@
+                                    <div class="input-group-append">
+                                        <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled="@(!Enabled)" @onclick=@(async() => await AddNewItem()) @onclick:stopPropagation @onclick:preventDefault
+                                                aria-expanded="false" aria-controls="collapseTwo">
+                                            @NewButtonTitle
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        }
+                    </div>
+                </NewButton>
+           
+           <GridHeader2>
+                @if (ITEM != null && ITEM != null )
+                {
+                   
+                            @if (eq.CalibrationTypeId >= 1)
+                            {
+                                var cst = eq.CalibrationSubTypes.Where(x => x.CalibrationSubTypeId == IsCompresion).FirstOrDefault();
+                            @if (cst != null && cst?.DynamicPropertiesSchema?.Where(x => x.GridLocation == "row").FirstOrDefault() != null && cst.CalibrationSubTypeView.ShowHeader)
+                                    {
+                                <EditForm Model="@ITEM" class="@cst.CalibrationSubTypeView.CSSRowHeader" novalidate>
+
+                                    <div class="@cst.CalibrationSubTypeView.CSSRow">
+
+
+                                        <Blazed.Controls.MultiComponent.MultipleComponent Component="Component" DynamicProperties="@cst.DynamicPropertiesSchema.Where(x=>x.GridLocation=="row").ToList()"
+                                                                      OnlyHeader="true"
+                                                                                          cmcValues="cmcValues"
+                                                                      IsRowView="@cst.CalibrationSubTypeView.IsCollection">
+
+                                    </Blazed.Controls.MultiComponent.MultipleComponent>
+                                   </div>
+                                </EditForm>
+                                   
+                                    }
+
+
+                            }
+                       
+                   
+                }
+            </GridHeader2>
+
+                <GridRow>
+                    @if ( ITEM != null && ITEM != null)
+                    {
+                        @*int DecimalNumber = ITEM.BasicCalibrationResult.DecimalNumber + 1;*@
+
+                        <CascadingValue Value="@ITEM" Name="itemgrid">                     
+
+
+                            @if (eq != null && eq?.CalibrationTypeId >= 1)
+                            {
+                                @*var cst = eq.CalibrationSubTypes.Where(x => x.CalibrationSubTypeId == IsCompresion).FirstOrDefault();*@
+
+                                <EditForm Model="@ITEM" class="@cst.CalibrationSubTypeView.CSSForm" novalidate>
+
+                                    @if(cst != null && cst?.DynamicPropertiesSchema?.Where(x=>x.GridLocation=="row").FirstOrDefault() != null)
+                                    {
+
+                                        var _context = WorkOrderItemCreate;
+
+                                        if (!cst.CalibrationSubTypeView.UseContext.HasValue 
+                                        || cst.CalibrationSubTypeView.UseContext.HasValue && !cst.CalibrationSubTypeView.UseContext.Value)
+                                        {
+                                            _context = null;
+                                        }
+                                       
+                                        <div class="@cst.CalibrationSubTypeView.CSSRow">
+
+
+                                            @if (!string.IsNullOrEmpty(@cst.OnChangeClass))
+                                            {
+                                                <Blazed.Controls.MultiComponent.MultipleComponent  
+                                                Enabled="@Enabled"
+                                                Component="@Component"
+                                                HideElement="@HideElement" 
+                                                IsRowView="@cst.CalibrationSubTypeView.IsRowView" 
+                                                UseResult="@cst.CalibrationSubTypeView.UseResult.Value" 
+                                                DynamicProperties="@cst.DynamicPropertiesSchema.Where(x=>x.GridLocation=="row").ToList()"
+                                                                          ChangeEvent="ChangeMultipleControl" 
+                                                                          Refresh="@refresh" 
+                                                                          RefreshGrid="@RefreshGrid"
+                                                                          SelectValue="@SelectValue"
+                                                @ref="@MultipleComponent"
+                                                cmcValues="cmcValues"
+                                                InvertModel="true" 
+                                                Tolerance="@tolerance" 
+                                                Context="@_context"
+                                                Decimal="@cst.CalibrationSubTypeView.DefaultDecimalNumber">
+
+                                                </Blazed.Controls.MultiComponent.MultipleComponent>
+                                            }
+                                            else
+                                            {
+                                                <Blazed.Controls.MultiComponent.MultipleComponent 
+                                                Enabled="@Enabled"
+                                                Component="@Component" 
+                                                HideElement="@HideElement" 
+                                                IsRowView="@cst.CalibrationSubTypeView.IsRowView" 
+                                                UseResult="@cst.CalibrationSubTypeView.UseResult.Value" 
+                                                DynamicProperties="@cst.DynamicPropertiesSchema.Where(x=>x.GridLocation=="row").ToList()"
+                                                                           Refresh="@refresh"
+                                                                                                  RefreshGrid="@RefreshGrid"
+                                                                                                  SelectValue="@SelectValue"
+                                                @ref="@MultipleComponent"
+                                                                                                  cmcValues="cmcValues"
+                                                InvertModel="true" 
+                                                Tolerance="@tolerance"
+                                                Context="@_context"
+                                                Decimal="@cst.CalibrationSubTypeView.DefaultDecimalNumber">
+
+                                                </Blazed.Controls.MultiComponent.MultipleComponent>
+                                            }
+
+
+
+
+                                        </div>
+
+                                        <div class="@("row " + CalibrationSubTypeView.CSSRowSeparator)" >
+                                        </div>
+
+
+                                    
+                                    }
+                                    else
+                                    {
+                                    <div class="row">
+                                        <div class="col">
+                                            Not configured properties
+                                        </div>
+                                    </div>
+                                    }
+
+                                </EditForm>
+
+                    }
+
+
+
+                       
+                        </CascadingValue>
+                    }
+                </GridRow>
+
+                <GridEdit>
+                    @if (cst.CalibrationSubTypeView.IsCollection &&   ITEM != null && ITEM != null)
+                    {
+                        @*int DecimalNumber = ITEM.BasicCalibrationResult.DecimalNumber + 1;*@
+
+                        <CascadingValue Value="@ITEM" Name="itemgrid">
+
+
+                            @if (eq.CalibrationTypeId >= 1)
+                            {
+
+
+                                <EditForm Model="@ITEM" class="@cst.CalibrationSubTypeView.CSSForm" novalidate>
+
+                                    @if (cst != null && cst?.DynamicPropertiesSchema?.Count > 0)
+                                    {
+
+                                        @*Tolerance tolerance = SetTolerance();*@
+
+
+
+
+
+                                        <div class="@cst.CalibrationSubTypeView.CSSRow">
+
+
+                                            @if (!string.IsNullOrEmpty(@cst.OnChangeClass))
+                                            {
+
+                                                <Blazed.Controls.MultiComponent.MultipleComponent Component="@Component" HideElement="@HideElement"  IsRowView="false" UseResult="@cst.CalibrationSubTypeView.UseResult.Value" DynamicProperties="cst.DynamicPropertiesSchema.ToList()"
+                                                                          ChangeEvent="ChangeMultipleControl" Refresh="@refresh"
+                                                                                                  @ref="@MultipleComponent" InvertModel="true" Tolerance="@tolerance" RefreshGrid="@RefreshGrid"
+                                                                                                  SelectValue="@SelectValue"
+                                                                                                  cmcValues="cmcValues"
+                                                                                                  @ref="@MultipleComponent">
+
+                                                </Blazed.Controls.MultiComponent.MultipleComponent>
+                                            }
+                                            else
+                                            {
+                                                <Blazed.Controls.MultiComponent.MultipleComponent Component="@Component" HideElement="@HideElement" IsRowView="false" UseResult="@cst.CalibrationSubTypeView.UseResult.Value" DynamicProperties="cst.DynamicPropertiesSchema.ToList()"
+                                                                          Refresh="@refresh"
+                                                                                                  @ref="@MultipleComponent" InvertModel="true" Tolerance="@tolerance" RefreshGrid="@RefreshGrid"
+                                                                                                  SelectValue="@SelectValue"
+                                                                                                  cmcValues="cmcValues"
+                                                                                                  @ref="@MultipleComponent">
+
+                                                </Blazed.Controls.MultiComponent.MultipleComponent>
+                                                }
+
+                                        </div>
+
+                                        <div class="@("row " + CalibrationSubTypeView.CSSRowSeparator)">
+                                        </div>
+
+
+
+                                    }
+                                    else
+                                    {
+                                        <div class="row">
+                                            <div class="col">
+                                                Not configured properties
+                                            </div>
+                                        </div>
+                                    }
+
+                                </EditForm>
+
+                            }
+
+                        </CascadingValue>
+                    }
+
+
+                </GridEdit>
+
+                <GridSelect2 Context="select">
+
+                    @{
+                        var a = new ResponsiveTable<CalibrationItemResult>.SelectRow();
+                        if (select != null)
+                        {
+                            a = select as ResponsiveTable<CalibrationItemResult>.SelectRow;
+                        }
+
+                        var color = "primary";
+
+                        var color2 = "";
+
+                        var en = true;
+
+                        if (a.Entity.GenericCalibration2 == null)
+                        {
+                            en = false;
+                        }
+
+                    }
+
+
+                    @if (en)
+                    {
+                        <div class="row" rt="TTT">
+
+
+                            @if ((a.Entity.GenericCalibration2.WeightSets != null && a.Entity.GenericCalibration2.WeightSets.Count > 0))
+                            {
+                                color = "success";
+                            }
+                            else
+                            @if (a?.Entity?.GenericCalibration2.Standards != null && (a?.Entity?.GenericCalibration2.Standards?.Count > 0))
+                            {
+                                color2 = "success";
+                            }
+                            else
+                            {
+                                color2 = "primary";
+                            }
+
+                        @if (!EnableSelect2.HasValue || !EnableSelect2.Value && !string.IsNullOrEmpty(color2))
+                            {
+                                color = color2;
+                            }
+
+
+                            @if (!Enabled || !EnableWeightSet)
+                            {
+
+                                <div class="@CSSSelect" style="margin-right:50px">
+                                    <button class="btn btn-sm btn-@color shadow-sm editButton"
+                            id="@("btnSelect_" + a.Position.ToString())" @onclick=@(async () => await SelectWeight(a.Entity.GenericCalibration2 as CalibrationItem,a.Position))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                        @SelectTitle
+                                    </button>
+                                </div>
+                            }
+                            else if (a != null && a.Entity != null && EnableWeightSet && Enabled
+                            || a != null && a.Entity != null && Enabled)
+                            {
+                                <div class="@CSSSelect">
+                                    <button class="btn btn-sm btn-@color shadow-sm editButton"
+                            id="@("btnSelect_" + a.Position.ToString())" @onclick=@(async () => await SelectWeight(a.Entity.GenericCalibration2 as CalibrationItem,a.Position))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                        @SelectTitle
+                                    </button>
+                                </div>
+                            }
+
+
+
+                            @if (EnableSelect2.HasValue && EnableSelect2.Value)
+                            {
+
+                                <div class="btnWidth buttonLin">
+                                    <button class="btn btn-sm btn-@color2 shadow-sm editButton"
+                            id="@("btnSelect2_" + a.Position.ToString())" @onclick=@(async () => await SelectWeight2(a.Entity.GenericCalibration2 as CalibrationItem,a.Position))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                        @Select2Title
+                                    </button>
+                                </div>
+                            }
+                          
+
+                        </div>
+
+                    }
+
+                    @if (cst != null && cst?.DynamicPropertiesSchema?.Where(x => x.GridLocation == "select").FirstOrDefault() != null)
+                    {
+                    
+                    
+                    
+                    }
+
+                </GridSelect2>
+        </ResponsiveTable>
+
+
+            @if (ShowEnviroment)
+            {
+                <CalibrationSaaS.Infraestructure.Blazor.LTI.Rockwell.EnviromentComponent @ref="EnviromentComponent" IsAsFound="true">
+
+
+                </CalibrationSaaS.Infraestructure.Blazor.LTI.Rockwell.EnviromentComponent>
+            }
+
+           @*<div class="row">
+               <div class="col">
+                   @NoDataMessage
+               </div>
+           </div>
+            <div class="row">
+                <div class="col">
+                    @ConfigMessage
+                </div>
+            </div>*@
+         </div>
+
+    }
+    else
+    {
+        @* <div>Loading... wait a moment please</div> *@
+        <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+            <div class="row" style="width:100%,display:flex;flex-dirección:columna;justify-content: center;">
+                <div class="col">
+                </div>
+                <div class="col">
+                    <p><em>Loading...</em></p>
+                    <FluentProgressRing></FluentProgressRing>
+
+                </div>
+                <div class="col">
+                </div>
+
+
+            </div>
+        </div>
+    }
+
+
+}
+
+
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-secondary" role="alert">
+                @ErrorMessage
+            </div>
+
+        </div>
+    </div>
+
+}
+
+@if (!string.IsNullOrEmpty(NoDataMessage))
+{
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-primary" role="alert">
+                @NoDataMessage
+            </div>
+
+        </div>
+    </div>
+    
+}
+@if (!string.IsNullOrEmpty(ConfigMessage))
+{
+    <div class="row">
+        <div class="col">
+            <div class="alert alert-primary" role="alert">
+                @ConfigMessage
+            </div>
+
+        </div>
+    </div>
+
+}
+
+
+@*else
+if (WorkOrderItemCreate.eq != null && LIST != null && LIST.Count == 0)
+{
+    <div class="row">
+    <div>
+
+        No Data configured
+</div>
+    </div>
+}*@
+
+
+@code {
+
+    async Task newitem(EventArgs obj)
+    {
+
+    }
+
+
+    //public string GetInvalidClass(double a,double b)
+    //{
+    //    var valid = 0d;
+    //    if (b != 0)
+    //    {
+    //        valid = (a % b);
+    //    }
+    //    else
+    //    {
+    //        return "";
+    //    }
+    //    var c = true;
+    //    if(Math.Abs(valid) > 0)
+    //    {
+    //        c=  Math.Abs(valid % 1) <= (Double.Epsilon * 100);
+    //    }
+
+    //    var cssinvalid = "";
+    //    if (valid != 0 && !c )
+    //    {
+    //        cssinvalid = "inputinvalid";
+    //    }
+    //    return cssinvalid;
+    //}
+
+
+}

@@ -1,0 +1,120 @@
+@page "/FullSearch"
+@using BlazorApp1.Blazor.Blazor.Pages
+@using CalibrationSaaS.Infraestructure.Blazor.Pages
+
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using Blazed.Controls
+@using Helpers.Controls
+@namespace BlazorApp1.Blazor.Blazor.Pages
+@inherits Full_SearchBase
+
+
+<ResponsiveTable ItemsDataSource="@_pieceOfEquipmentsDueDate"
+                 PageSize="paginaSize"
+                 HasAction="true"                 
+                 HasDelete="false"
+                 HasEdit="false"
+                 HasSelect="true"
+                 HasNew="false"
+                 Context="Entity"
+                 @ref="@Grid"
+                 GridID="gridPoe"
+                 InLineEdit="false"
+                 RowEditClass=""
+                 RowNewClass=""
+                 TableItem="KeyValueSearch"
+                 EnabledSearch="false"
+                 editContext="@CurrentEditContext"
+                 EnabledModal="false"
+                 SaveButtonSubmit="false"                
+                
+                 DeleteAction="@Delete"
+                 SelectOnly="true"
+                 Component="@Component">
+
+    <ChildContent>
+
+        <GridColumns>
+
+            <GridColumn TableItem="KeyValueSearch" Field="@Grid.GetPropertyName(() => eq.Type)" />
+
+           
+
+            <GridColumn TableItem="KeyValueSearch" Field="@Grid.GetPropertyName(() => eq.Fields)" Title="Information found" />
+
+            @*<GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Capacity)" />*@
+
+
+        </GridColumns>
+
+
+
+    </ChildContent>
+    <GridSelect>
+
+        <button class="btn btn-sm btn-primary" id="_btnselect"
+                @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+            Select
+        </button>
+
+    </GridSelect>
+
+    <GridRow>
+
+
+    </GridRow>
+
+    <NewButton>
+        <button class="btn btn-primary" @onclick=@(async () => await ReturnModal())>Select</button>
+    </NewButton>
+    @*<EditButton>
+            <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton" href="PieceOfEquipmentCreate/@Entity.PieceOfEquipmentID">Edit</a>
+
+        </EditButton>*@
+
+</ResponsiveTable>
+
+
+@code {
+    string classPieceOfEquipment;
+
+    //public async Task ReturnModal()
+    //{
+    //    await BlazoredModal.Close(ModalResult.Ok(_pieceOfEquipmentsFiltered));
+    //}
+
+
+    //public async Task addToListPoE(int ID)
+    //{
+    //    PieceOfEquipment _poe = new PieceOfEquipment();
+    //    if (_pieceOfEquipmentsDueDate != null)
+    //    {
+    //        var listPoe = _pieceOfEquipmentsDueDate.Where(x => x.PieceOfEquipmentID == ID).FirstOrDefault();
+
+    //        _poe = new PieceOfEquipment()
+    //        {
+    //            PieceOfEquipmentID = ID,
+    //            SerialNumber = listPoe.SerialNumber
+    //        };
+
+
+    //        _pieceOfEquipmentsFiltered.Add(_poe);
+    //    }
+    //    //await BlazoredModal.Close(ModalResult.Ok(searchComponent.Detail));
+
+    //}
+    async Task Select(object arg, KeyValueSearch entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+
+}

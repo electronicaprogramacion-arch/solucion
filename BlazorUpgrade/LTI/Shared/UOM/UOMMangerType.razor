@@ -1,0 +1,273 @@
+﻿@page "/UOMManagerType"
+@using Blazed.Controls
+
+
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@*<EditForm style="margin:10px" OnValidSubmit="Submit" Model="@eq" Context="CurrenEditContext">
+    <DataAnnotationsValidator />*@
+@namespace CalibrationSaaS.Infraestructure.Blazor.Shared
+@inherits UOMManagerType
+
+<div class="col-md">
+    <HeaderComponent Title="Unit of Measurement Type" ActionBar="false"></HeaderComponent>
+    <EditForm OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+        <DataAnnotationsValidator />
+      <SubmitComponent>
+
+      </SubmitComponent>
+        <ResponsiveTable ItemsDataSource="@List"
+                         PageSize="5"
+                         HasAction="true"
+                         Context="Entity"
+                         @ref="@Grid"
+                         GridID="gridUOM"
+                         InLineEdit="false"
+                         RowEditClass=""
+                         RowNewClass=""
+                         TableItem="UnitOfMeasureType"
+                         EnabledSearch="true"
+                         editContext="@CurrentEditContext"
+                         EnabledModal="false"
+                         OnChangeWindow="ClearList"
+                         SelectOnly="@SelectOnly"
+                         SaveButtonSubmit="false"
+                         OnSave="@Submitted"
+                         OnUpdate="@SubmittedUP">
+
+            <GridHeader>
+                <div class="col-sm-3 customcol"></div>
+                <div class="col-sm-3 customcol">Value</div>
+                <div class="col-sm-3 customcol">Name</div>
+                <div class="col-sm-3 customcol">Description</div>
+
+
+            </GridHeader>
+            <GridRow>
+                <div class="col-sm-3 customcol inv">Value</div>
+                <div class="col-sm-3 customcol">@Format(@Entity.Value)</div>
+                <div class="col-sm-3 customcol inv">Name</div>
+                <div class="col-sm-3 customcol">@Format(@Entity.Name)</div>
+                <div class="col-sm-3 customcol inv">Description</div>
+                <div class="col-sm-3 customcol">@Format(@Entity.Description)</div>
+
+
+
+            </GridRow>
+
+            <GridEdit>
+                <div class="row">
+
+                    <div class="col-md customcol">
+
+                        <TextInput @bind-Value="@Entity.Value" Label="Value" Validate="false" LabelDown="false" Type="@Types.ReadOnlyText">
+
+                        </TextInput>
+                        @Grid.GetErrorMessage(nameof(Entity.Value))
+
+
+                    </div>
+                    <div class="col-md customcol">
+                        <TextInput @bind-Value="@Entity.Name" Label="Name" Validate="false" ValidationFor="@(()=> Entity.Name)"
+                                   LabelDown="false">
+
+                        </TextInput>
+                        @Grid.GetErrorMessage(nameof(Entity.Name))
+
+                    </div>
+
+
+                   @*  <div class="col-md customcol">
+
+                        <TextInput @bind-Value="@Entity.CalibrationTypeID" Label="Description" Validate="false" LabelDown="false" Type="@Types.select">
+
+                            @foreach (var item in AppSecurity.EquipmentTypeWODList)
+                            {
+                                <option value="@item.CalibrationTypeID">@item.Name</option>
+                            }
+
+
+                        </TextInput>
+                        @Grid.GetErrorMessage(nameof(Entity.CalibrationTypeID))
+
+
+                    </div> *@
+
+
+
+                </div>
+                <div class="row">
+                    <div class="col-md customcol">
+
+                        <TextInput @bind-Value="@Entity.Description" Label="Description" Validate="false" LabelDown="false" Type="@Types.TextArea">
+
+                        </TextInput>
+                        @Grid.GetErrorMessage(nameof(Entity.Description))
+
+
+                    </div>
+                   
+                </div>
+
+
+            </GridEdit>
+
+            <GridSelect>
+
+                <button class="btn btn-sm btn-primary" id="_btnselect"
+                        @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                    select
+                </button>
+
+            </GridSelect>
+
+
+
+        </ResponsiveTable>
+    </EditForm>
+    @*}*@
+
+</div>
+
+    @code
+{
+        //[CascadingParameter] public BlazoredModalInstance BlazoredModal { get; set; }
+
+        //async Task CloseBase(UnitOfMeasureType current ,ChangeEventArgs arg)
+        //{
+
+        //    ModalResult r = (ModalResult)arg.Value;
+
+        //    if(r.Cancelled == false)
+        //    {
+        //        UnitOfMeasureType baseUOM = (UnitOfMeasureType)r.Data;
+
+        //        current.UnitOfMeasureTypeBase = baseUOM;
+
+
+        //    }
+
+
+        //}
+
+
+        async Task CloseUncertain(UnitOfMeasureType current, ChangeEventArgs arg)
+        {
+
+
+
+
+        }
+
+
+        async Task Select(object arg,UnitOfMeasureType entity)
+        {
+
+            await CloseModal(entity);
+
+
+
+        }
+
+        public bool IsEnabled { get; set; }
+
+        void SelectionChanged(ChangeEventArgs args, UnitOfMeasureType entity)
+        {
+
+            //if (entity.IsEnabled)
+            //{
+            //    entity.IsEnabled = false;
+            //}
+            //else
+            //{
+            //    entity.IsEnabled = true;
+            //}
+
+            //entity.IsEnabled = (bool)args.Value;
+
+            //var  selectedAnswer = args.Value.ToString();
+
+            //Console.WriteLine(selectedAnswer);
+
+            //if (selectedAnswer.Contains("Percentage"))
+            //{
+
+
+            //}
+            //else
+            //{
+
+            //}
+
+            StateHasChanged();
+        }
+
+
+        public UnitOfMeasure UnitOfMeasure = new UnitOfMeasure();
+
+        //public EditContext editContex { get; set; }
+
+
+        //protected override Task OnAfterRenderAsync(bool firstRender)
+        //{
+        //    //eq = Grid.currentEdit;
+        //    //CurrentEditContext = Grid.editContext;
+
+
+        //    return base.OnAfterRenderAsync(firstRender);
+        //}
+
+        //protected async override Task OnInitializedAsync()
+        //{
+
+        //    //editContex = new EditContext(UnitOfMeasure);
+
+        //    await base.OnInitializedAsync();
+
+
+        //}
+
+
+
+
+
+
+
+
+        public Task<IEnumerable<Rol>> SearchRol(string searchText)
+        {
+            var result = AppSecurity.RolesList
+                .Where(x => x.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+
+            return Task.FromResult<IEnumerable<Rol>>(result);
+        }
+
+
+
+
+        protected async Task Submit(EditContext editContext)
+        {
+
+        }
+
+
+        public string setContext(UnitOfMeasure Model)
+        {
+            UnitOfMeasure = Model;
+
+            //editContex = new EditContext(Model);
+            return "";
+        }
+
+        public void ClearList(EventArgs arg)
+        {
+           
+        }
+
+
+
+
+
+    }
+
+

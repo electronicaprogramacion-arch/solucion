@@ -1,0 +1,565 @@
+﻿@page "/Customer/{EntityID}"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+
+@inherits Customer_CreateBase
+@implements IDisposable
+@using System.Linq.Expressions
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+@inject ILogger<Customer_Create> Logger
+
+@*@{
+
+
+    SetEnabled();
+
+
+}*@
+
+
+<div class="col-med">
+
+    <HeaderComponent ActionBar="@Enabled" Enabled="@Enabled" Title="Customer"></HeaderComponent>
+    <div class="contenido">
+        <div id="accordion">
+            <div class="card">
+                <div class="card-header" id="headingOne">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseOne">
+                            Basic Information
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                    <div class="card-body">
+                        @if (eq != null)
+                        {
+                            <EditForm OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+                                <DataAnnotationsValidator />
+
+                                @*<button class="btn btn-sm btn-info shadow-sm" id="executebutton"
+                                            type="submit" onclick="$('#progressBar').show()" style="display:none" @onkeypress:preventDefault>
+                                        Save
+                                        <i class="fas fa-save fa-sm text-white-50"></i>
+                                    </button>*@
+                                <SubmitComponent>
+
+                                </SubmitComponent>
+                                <div class="form-row">
+                                    <div class="form-group col-2">
+
+                                        <TextInput @bind-Value="eq.CustomID"
+                                        IsDisabled="true"
+                                        Label="EBMS ID"
+                                        LabelDown="@LabelDown"
+                                        ValidationFor="(()=> eq.CustomID)">
+
+                                        </TextInput>
+                                    </div>
+                                    <div class="form-group col">
+                                        @*<label>Title</label>
+                                            <InputText @bind-Value="@eq.Name" class="form-control"></InputText>
+                                            <ValidationMessage For="@(() => eq.Name)"></ValidationMessage>
+                                            <div class="valid-feedback">
+                                                Looks good!
+                                            </div>*@
+                                        <TextInput @bind-Value="eq.Name"
+                                        IsDisabled="!Enabled"
+                                        Label="Customer Name"
+                                        LabelDown="@LabelDown"
+                                        ValidationFor="(()=> eq.Name)">
+
+                                        </TextInput>
+                                    </div>
+                                </div>
+                                <div class="form-row" style="display:none">
+                                    <div class="form-group col">
+                                        @*<label>Description</label>
+                                            <InputTextArea @bind-Value="@eq.Description" class="form-control"></InputTextArea>
+                                            <ValidationMessage For="@(() => eq.Description)"></ValidationMessage>
+                                            <div class="valid-feedback">
+                                                Looks good!
+                                            </div>*@
+                                        <TextInput @bind-Value="eq.Description"
+                                        IsDisabled="!Enabled"
+                                        Label="Description"
+                                        LabelDown="@LabelDown"
+                                        ValidationFor="(()=> eq.Description)"
+                                        Type="@Types.TextArea">
+
+                                        </TextInput>
+                                    </div>
+                                </div>
+                            </EditForm>
+                        }
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingTwo">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseTwo">
+                            Addresses
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                    <div class="card-body">
+                        @if (eq != null)
+                        {
+                            List<Address> addr = new List<Address>();
+                            if (eq != null && eq.Aggregates != null && eq.Aggregates.Count > 0)
+                            {
+                                foreach (var item in eq.Aggregates.Where(x => x.Addresses != null && x.Addresses.Count > 0))
+                                {
+                                    addr.AddRange(item.Addresses);
+                                }
+                                //addr = eq.Aggregates.ElementAtOrDefault(0).Addresses.ToList();
+                            }
+                                                 
+
+                            <Address_Create List="addr" 
+                            @ref="AddresComponent" Component="Component" Enabled="Enabled" >
+
+
+                            </Address_Create>
+                        }
+
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingThree">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" @onclick:stopPropagation @onclick:preventDefault
+                                aria-expanded="false" aria-controls="collapseThree">
+                            Contacts
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                    <div class="card-body">
+                        @if (eq != null )
+                        {
+
+
+                            List<Contact> addrc = new List<Contact>();
+                            if (eq != null && eq.Aggregates != null && eq.Aggregates.Count > 0 )
+                            {
+                                foreach (var item in eq.Aggregates.Where(x=>x.Contacts != null && x.Contacts.Count>0))
+                                {
+                                    addrc.AddRange(item.Contacts);
+                                }
+                            }
+
+                            <Contact_Create List="addrc" @ref="ContactComponent" Component="Component" Enabled="Enabled">
+
+                            </Contact_Create>
+                        }
+
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingFour">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseFour" @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseFour">
+                            Phone Numbers
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
+                    <div class="card-body">
+                        @if (eq != null )
+                        {
+
+                            List<PhoneNumber> addrp = new List<PhoneNumber>();
+                            if (eq != null && eq.Aggregates != null && eq.Aggregates.Count > 0 )
+                            {
+                                foreach (var item in eq.Aggregates.Where(x => x.PhoneNumbers != null && x.PhoneNumbers.Count > 0))
+                                {
+                                    addrp.AddRange(item.PhoneNumbers);
+                                }
+                            }
+
+                            <EditForm Context="content" EditContext="@phoneEditContext">
+                                <DataAnnotationsValidator />
+                                <ResponsiveTable ItemsDataSource="@addrp"
+                                                 PageSize="10" HasAction="true"
+                                                 Context="Entity"
+                                                 @ref="@PhoneNumbersComponent"
+                                                 GridID="gridPhoneNumbers"
+                                                 InLineEdit=true
+                                                 EnabledModal="true"
+                                                 TableItem="PhoneNumber"
+                                                 NewItemDefaultItem="newPhone"
+                                                 NewButtonText="Add New Phone Number"
+                                                 DeleteAction="DeletePhone"
+                                                 ClientPagination="true"
+                                                 Component="Component">
+
+
+                                  @*   <ChildContent>
+                                        <GridColumns>
+                                            <GridColumn TableItem="PhoneNumber" Field="@PhoneNumbersComponent.GetPropertyName(() => PhoneNumber.Number)" Title="Type" DefaultSort="true">
+
+                                                <ResponsiveTemplate>
+
+                                                    @{
+                                                        var a = context as PhoneNumber;
+                                                        var b = a.TypeID.GetTypePhone(AppState.PhoneNumberTypes);
+                                                    }
+                                                    @b
+
+
+                                                </ResponsiveTemplate>
+
+                                            </GridColumn>
+                                           
+                                            <GridColumn TableItem="PhoneNumber" Field="@PhoneNumbersComponent.GetPropertyName(()=> PhoneNumber.PhoneNumberID)" />
+                                            <GridColumn TableItem="PhoneNumber" Field="@PhoneNumbersComponent.GetPropertyName(() => PhoneNumber.Number)" />
+                                            <GridColumn TableItem="PhoneNumber" Field="@PhoneNumbersComponent.GetPropertyName(() => PhoneNumber.IsEnabled)">Enabled</GridColumn>
+                                        </GridColumns>
+
+                                    </ChildContent> *@
+
+
+                                 
+                                    <GridRow>
+                                      
+
+                                    </GridRow>
+                                  
+                                    <GridEdit>
+
+                                        <div class="col-sm-2 customcol">
+                                            <TextInput @bind-Value="Entity.TypeID"
+                                                       IsDisabled="!Enabled"
+                                                       Label="Type"
+                                                       LabelDown="false"
+                                                       Type="@Types.select">
+
+                                                @foreach (var item in AppState.PhoneNumberTypes)
+                                                    {
+                                                    <option value="@item.Key">@item.Value</option>
+                                                    }
+
+                                            </TextInput>
+                                            @PhoneNumbersComponent.GetErrorMessage(nameof(Entity.TypeID))
+                                        </div>
+                                        <div class="col-sm-2 customcol">
+                                            <TextInput @bind-Value="Entity.Number"
+                                                       IsDisabled="!Enabled"
+                                                       Label="Number"
+                                                       LabelDown="false"
+                                                       Type="@Types.text">
+
+                                            </TextInput>
+                                            @PhoneNumbersComponent.GetErrorMessage(nameof(Entity.Number))
+                                        </div>
+
+                                        <div class="col-sm-2 customcol">
+                                            <TextInput @bind-Value="Entity.IsEnabled"
+                                                       IsDisabled="!Enabled"
+                                                       Label="Enabled"
+                                                       LabelDown="false"
+                                                       Type="@Types.Switch">
+
+                                            </TextInput>
+                                            @PhoneNumbersComponent.GetErrorMessage(nameof(Entity.IsEnabled))
+                                        </div>
+
+                                    </GridEdit>
+                                </ResponsiveTable>
+                            </EditForm>
+                        }
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingFive">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseFive" @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseFour">
+                            Social
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordion">
+                    <div class="card-body">
+                        @if (eq != null)
+
+                        {
+
+                            List<Social> addrs = new List<Social>();
+                            if (eq != null && eq.Aggregates != null && eq.Aggregates.Count > 0 )
+                            {
+                                foreach (var item in eq.Aggregates.Where(x => x.Socials != null && x.Socials.Count > 0))
+                                {
+                                    addrs.AddRange(item.Socials);
+                                }
+                            }
+
+                            <EditForm Context="content" EditContext="@SocialEditContext">
+                                <DataAnnotationsValidator />
+                                <ResponsiveTable ItemsDataSource="@addrs"
+                                                 PageSize="5"
+                                                 HasAction="true"
+                                                 Context="eq"
+                                                 @ref="@SocialComponent"
+                                                 GridID="gridSocial"
+                                                 InLineEdit="true"
+                                                 TableItem="Social"
+                                                 DeleteAction="Delete"
+                                                 ClientPagination="true"
+                                                 Component="Component">
+
+                                    <ChildContent>
+
+                                        <GridColumns>
+
+                                            <GridColumn TableItem="Social" DefaultSort="true" Field="@SocialComponent.GetPropertyName(() => Social.SocialTypeID)">
+                                                <ResponsiveTemplate>
+
+                                                    @{
+                                                        var a = context as Social;
+
+                                                        var b = AppState.SocialTypes.Where(x => x.Key == a.SocialTypeID).FirstOrDefault();
+                                                    }
+                                                    @b.Value
+
+                                                </ResponsiveTemplate>
+
+                                            </GridColumn>
+                                            <GridColumn TableItem="Social" Field="@SocialComponent.GetPropertyName(() => Social.Link)" DefaultSort="true"></GridColumn>
+                                        </GridColumns>
+
+                                    </ChildContent>
+
+
+                                    @*<GridHeader>
+                                            <div class="col-sm-3 customcol">Type</div>
+                                            <div class="col-sm-3 customcol">Link</div>
+                                        </GridHeader>*@
+                                    <GridRow>
+                                        @*<div class="col-sm-3 customcol inv">Type</div>
+                                            <div class="col-sm-3 customcol">@eq.SocialType</div>
+                                            <div class="col-sm-3 customcol inv">Link</div>
+                                            <div class="col-sm-3 customcol">@eq.Link</div>*@
+
+                                    </GridRow>
+
+
+                                    <GridEdit>
+
+
+
+                                        <div class="col-sm-3">
+                                            @*<label>ZipCode</label>
+                                                <InputSelect @bind-Value="@eq.SocialTypeID" class="form-control">
+                                                    @foreach (var item in AppState.SocialTypes)
+                                                        {
+                                                        <option value="@item.Key">@item.Value</option>
+                                                        }
+                                                </InputSelect>*@
+                                            <TextInput @bind-Value="eq.SocialTypeID"
+                                                       IsDisabled="!Enabled"
+                                                       Label="Social Type"
+                                                       LabelDown="@LabelDown"
+                                                       ValidationFor="(()=> eq.SocialTypeID)"
+                                                       Type="@Types.select"
+                                                       Validate="false">
+                                                @foreach (var item in AppState.SocialTypes)
+                                                    {
+                                                    <option value="@item.Key">@item.Value</option>
+                                                    }
+
+                                            </TextInput>
+                                            @SocialComponent.GetErrorMessage(nameof(eq.SocialTypeID))
+
+                                        </div>
+                                        <div class="col-sm-6">
+                                            @*<label>Link</label>
+                                                <InputText @bind-Value="@eq.Link" class="form-control">
+
+                                                </InputText>*@
+                                            <TextInput @bind-Value="eq.Link"
+                                                       IsDisabled="!Enabled"
+                                                       Label="Link"
+                                                       LabelDown="@LabelDown"
+                                                       ValidationFor="(()=> eq.Link)"
+                                                       Type="@Types.text"
+                                                       Validate="false">
+
+                                            </TextInput>
+                                        </div>
+
+                                    </GridEdit>
+                                </ResponsiveTable>
+                            </EditForm>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingSix">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseSix" @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseSix">
+                            Pieces of Equipment
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseSix" class="collapse" aria-labelledby="headingSix" data-parent="#accordion">
+                    <div class="card-body">
+                        <div class="card-body">
+                            <POEByEqTemplate_Search @ref="@PieceOfEquipmentSearch" LIST1="_listPieceOfEquipment.ToList()" IsCustomer="true" IsModal="true" Component="Component">
+                            </POEByEqTemplate_Search>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header" id="headingSeven">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseSeven" @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseSeven">
+                            Merge Customer
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseSeven" class="collapse" aria-labelledby="headingSeven" data-parent="#accordion">
+                    <div class="card-body">
+                        <div class="card-body">
+                            <div class="col">
+                                <div class="form-group" style="margin-top:0px;margin-bottom:0rem">
+                                    <label class="form-control-label">Customer</label>
+                                    @if (Enabled)
+                                    {
+                                            <label class="custom-select text-nowrap" @onclick="@(()=> ShowModalCustomer())">
+                                            @_CustomerId - @_CustomerValue
+
+                                        </label>
+
+                                        
+                                    }
+                                    else
+                                    {
+                                            <label class="custom-select text-nowrap">
+                                            @_CustomerId - @_CustomerValue
+
+                                        </label>
+                                    }
+
+
+                                </div>
+                            </div>
+                            <div class="col-sm-2" style="display:none">
+                                <dl class="param param-feature">
+                                    <dt>CustomerId</dt>
+                                    <dd>
+
+                                       @*  <InputNumber @bind-Value="eq.CustomerId">
+                                            @_CustomerId
+                                        </InputNumber> *@
+
+                                        @{
+                                            _CustomerId = eq.CustomerID;
+                                        }
+
+
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="col">
+
+                                @if (_addressFiltered?.Addresses != null)
+                                {
+                                    <TextInput TValue="int" Validate="false" Label="Address"
+                                               @bind-Value="eq.AddressId"
+                                               ValidationFor="@(()=>eq.AddressId)" IsDisabled="!Enabled" ShowDefaultOption="false">
+
+                                        @foreach (Address item in _addressFiltered.Addresses)
+                                        {
+
+
+                                            if (@item.AddressId == AddressId && AddressId > 0)
+                                            {
+
+                                                <option value="@item.AddressId" selected="selected">@item.StreetAddress1</option>
+
+                                            }
+                                            else
+                                            {
+                                                <option value="@item.AddressId">@item.StreetAddress1</option>
+                                            }
+                                        }
+
+                                    </TextInput>
+                                    <button class="btn btn-primary" @onclick="ConfirmNext">Next</button>
+                                }
+                                else
+                                {
+                                    <p><em>No addresses in the selected customer</em></p>
+                                }
+                              
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*@if (@EntityID != "disabled")
+            {
+                <button class="btn btn-primary" type="submit">Submit form</button>
+                <button type="reset" class="btn btn-secondary">Reset</button>
+            }*@
+    </div>
+
+</div>
+@if (showConfirmation)
+{
+    <div class="confirmation-box">
+        <p>Would you like to merge the customer @eq.Name with @_CustomerValue? This action will transfer all Pieces of Equipment (PoEs) from @eq.Name to @_CustomerValue and mark @eq.Name as deleted. The equipment will be assigned to the selected address. If no address is selected, it will be moved to the first address listed for the destination customer. Please note that work orders will remain unchanged, and this update cannot be undone.</p>
+        <button class="btn btn-success" @onclick="ChangeCustomer">Yes</button>
+        <button class="btn btn-danger" @onclick="Cancel">No</button>
+    </div>
+}
+
+
+
+@*<div id="dvModalCreateCustomer">
+    <StandardModal @ref="child"></StandardModal>
+</div>*@
+
+@code {
+    private bool showConfirmation = false;
+
+    private void ConfirmNext()
+    {
+        showConfirmation = true;
+    }
+
+    private void ChangeCustomer()
+    {
+        showConfirmation = false;
+        // Llamar al método deseado
+        ReplaceCustomer();
+    }
+
+    private void Cancel()
+    {
+        showConfirmation = false;
+    }
+
+    
+}

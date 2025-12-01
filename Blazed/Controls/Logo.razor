@@ -1,0 +1,27 @@
+﻿@namespace Blazed.Controls
+@using Helpers
+@using Helpers.Controls 
+@inject CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity
+@if (!string.IsNullOrEmpty(TypeString) && !string.IsNullOrEmpty(AppSecurity.AssemblyName))
+{
+
+    <DynamicComponent Type="@Helpers.NumericExtensions.GetType(AppSecurity.AssemblyName + "." + TypeString,AppSecurity.AssemblyName)" />
+
+}
+
+
+@code {
+
+
+
+    [Parameter]
+    public string TypeString { get; set; } //Consecutive of the Calibration Result
+
+
+    private Type? dyncompType { get; set; }
+
+
+   
+
+
+}

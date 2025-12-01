@@ -1,0 +1,114 @@
+﻿using CalibrationSaaS.Application.Services;
+using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+using Grpc.Core;
+using Helpers.Controls.ValueObjects;
+using ProtoBuf.Grpc;
+using System;
+using System.Threading.Tasks;
+
+namespace CalibrationSaaS.Infraestructure.Blazor.Services
+{
+    public class CustomerGRPC : IDisposable, ICustomerService<CallContext>
+    {
+
+        private CallContext _context;
+
+#pragma warning disable CS0169 // El campo 'CustomerGRPC.customer' nunca se usa
+        private readonly ICustomerService<CallContext> customer;
+#pragma warning restore CS0169 // El campo 'CustomerGRPC.customer' nunca se usa
+
+        public CustomerGRPC(ICustomerService<CallContext> _customer)
+        {
+            _context = new CallOptions();
+            Client2 = _customer;
+        }
+
+        public ICustomerService<CallContext> Client2 { get; set; }
+
+        public async ValueTask<Customer> CreateCustomer(Customer customerDTO, CallContext context = default)
+        {
+            if (Client2 != null)
+            {
+                var result = await Client2.CreateCustomer(customerDTO, _context);
+                //var a = new Customer { Name = "custome", Description = "hhhhh" };
+
+                return result;
+
+            }
+            else
+            {
+
+                throw new Exception("Error");
+            }
+
+
+        }
+
+        public void Dispose()
+        {
+            //Client2 = null;
+        }
+
+        public ValueTask<ResultSet<Customer>> GetCustomers(Pagination<Customer> Pagination, CallContext context = default)
+        {
+            if (Client2 != null)
+            {
+
+                return Client2.GetCustomers(Pagination, _context);
+            }
+            else
+            {
+                return new ValueTask<ResultSet<Customer>>();
+
+            }
+        }
+
+        public async ValueTask<Customer> GetCustomersByID(Customer customerDTO, CallContext context = default)
+        {
+            var result = await Client2.GetCustomersByID(customerDTO, _context);
+            return result;
+        }
+
+#pragma warning disable CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
+        public async ValueTask<Customer> DeleteCustomer(Customer customerDTO, CallContext context)
+#pragma warning restore CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
+        {
+            var result = Client2.DeleteCustomer(customerDTO, _context);
+            return customerDTO;
+        }
+
+#pragma warning disable CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
+        public async ValueTask<Address> DeleteAddress(Address DTO, CallContext context)
+#pragma warning restore CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
+        {
+            var result = Client2.DeleteAddress(DTO, _context);
+            return DTO;
+        }
+
+#pragma warning disable CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
+        public async ValueTask<Contact> DeleteContact(Contact DTO, CallContext context)
+#pragma warning restore CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
+        {
+            var result = Client2.DeleteContact(DTO, _context);
+            return DTO;
+        }
+
+        public async ValueTask<PhoneNumber> DeletePhone(PhoneNumber DTO, CallContext context = default)
+        {
+            var result = await Client2.DeletePhone(DTO, _context);
+            return DTO;
+        }
+        public async ValueTask<Social> DeleteSocial(Social DTO, CallContext context = default)
+        {
+            var result = await Client2.DeleteSocial(DTO, _context);
+            return DTO;
+        }
+
+        public async ValueTask<Customer> UpdateCustomer(Customer customerDTO, CallContext context)
+        {
+            var result = await Client2.UpdateCustomer(customerDTO, _context);
+            return customerDTO;
+        }
+    }
+}

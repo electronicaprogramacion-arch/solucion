@@ -1,0 +1,37 @@
+﻿@model Reports.Domain.ReportViewModels.NoteScale
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html>
+<head>
+   
+</head>
+
+<body>
+
+
+    @if (@Model.NotesEqScaleList != null)
+            {
+                foreach (var item in Model.NotesEqScaleList)
+                {
+                    <p style="text-align:justify; line-height:100%">
+                           - @item.Text
+                    </p>
+                    
+                }
+                    }
+    @if (@Model.NoteWODScaleList != null)
+            {
+                foreach (var item1 in Model.NoteWODScaleList)
+                {
+                    <p style="text-align:justify; line-height:100%">
+                        - @item1.Text
+                    </p>
+
+                }
+            }
+
+</body>
+</html>

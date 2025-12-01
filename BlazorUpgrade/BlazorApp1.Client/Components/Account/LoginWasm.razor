@@ -1,0 +1,520 @@
+﻿@page "/Client/Account/LoginWasm"
+@namespace BlazorApp1.Client.Components.Account
+@inherits CalibrationSaaS.Infraestructure.Blazor.FComponentBase
+@layout BlazorApp1.Client.Account.Shared.LoginLayout
+
+@using System.ComponentModel.DataAnnotations
+@using BlazorApp1.Client.Components.Account.Shared
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using Helpers.Controls
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+
+@* @inject SignInManager<ApplicationUser> SignInManager *@
+@inject ILogger<LoginWasm> Logger
+@inject NavigationManager NavigationManager
+@* @inject IdentityRedirectManager RedirectManager *@
+
+@attribute [AllowAnonymous]
+
+@rendermode InteractiveWebAssembly
+
+
+<PageTitle>Log in</PageTitle>
+
+<!-- Enhanced Login Form with Modern Layout -->
+<div class="modern-login-container">
+
+    <!-- Main Login Section -->
+    <div class="login-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-user-circle me-2"></i>
+                Sign In to Your Account
+            </h2>
+            <p class="section-subtitle">Enter your credentials to access Calibrify</p>
+        </div>
+        <div class="text-muted">Render @(OperatingSystem.IsBrowser() ? "Wasm1" : "Server1")</div>
+        <StatusMessage Message="@errorMessage" />
+
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" class="login-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="validation-summary" role="alert" />
+
+            <!-- Email Field -->
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    <i class="fas fa-envelope me-2"></i>User Name
+                </label>
+                <div class="input-wrapper">
+                    <InputText @bind-Value="Input.Email"
+                              class="form-control modern-input"
+                              autocomplete="username"
+                              aria-required="true"
+                              placeholder="Enter your user name"
+                              id="email" />
+                    <ValidationMessage For="() => Input.Email" class="field-validation" />
+                </div>
+            </div>
+
+            <!-- Password Field -->
+          @*   <div class="form-group">
+                <label for="password" class="form-label">
+                    <i class="fas fa-lock me-2"></i>Password
+                </label>
+                <div class="input-wrapper">
+                    <InputText type="password"
+                              @bind-Value="Input.Password"
+                              class="form-control modern-input"
+                              autocomplete="current-password"
+                              aria-required="true"
+                              placeholder="Enter your password"
+                              id="password" />
+                    <ValidationMessage For="() => Input.Password" class="field-validation" />
+                </div>
+            </div> *@
+
+            <!-- Remember Me -->
+            <div class="form-group remember-me-group">
+                <label class="remember-me-label">
+                    <InputCheckbox @bind-Value="Input.RememberMe" class="remember-me-checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="remember-me-text">Keep me signed in</span>
+                </label>
+            </div>
+
+                @if (1 == 1)
+                {
+                <!-- Login Button -->
+                <div class="form-group" style="display:none">
+                    <button type="submit" class="btn-login">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Sign In
+                    </button>
+                </div>
+                }
+           
+
+            @if (!ToIdentity )
+            {
+                <div class="row">
+                    <div class="col">
+
+                       @*  <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" class="fas fa-sign-in-alt me-2"
+                                      Click="@(async() => await SigInMethod())" Text="Sign In Offline" /> *@
+
+                        <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                type="button"
+                                @onclick:stopPropagation @onclick:preventDefault @onclick="@(async() => await SigInMethod())">
+
+                            Sign In Offline
+                        </button>
+
+
+
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col">
+                        @* <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" class="fas fa-sign-in-alt me-2"
+                                      Click="@(async() => await SigOutMethod())" Text="SignOut Offline" /> *@
+
+
+                        <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                type="button"
+                                @onclick:stopPropagation @onclick:preventDefault @onclick="@(async () => await SigOutMethod())">
+
+                            Sign In Online
+                        </button>
+
+                    </div>
+
+                </div>
+               
+
+               
+            }
+           
+
+
+
+            @if (ToIdentity && !NOTGRPC)
+            {
+               @*  <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" class="fas fa-sign-in-alt me-2"
+                              Click="@(async() => await SigInMethodOnline())" Text="Sign In" /> *@
+
+
+                <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                        type="button"
+                        @onclick:stopPropagation @onclick:preventDefault @onclick="@(async () => await SigInMethodOnline())">
+
+                    Sign In
+                </button>
+
+            }
+
+
+
+
+            @* <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" class="fas fa-sign-in-alt me-2"
+                          Click="@(async() => await SigInMethod())" Text="Sign In" /> *@
+
+
+
+
+
+            <!-- Helper Links with JavaScript fallback -->
+           @*  <div class="helper-links">
+                <a href="Account/ForgotPassword" class="helper-link" onclick="window.location.href='Account/ForgotPassword'; return false;">
+                    <i class="fas fa-question-circle me-1"></i>Forgot your password?
+                </a>
+                <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="helper-link" onclick="window.location.href='@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))'; return false;">
+                    <i class="fas fa-user-plus me-1"></i>Create new account
+                </a>
+                <a href="Account/ResendEmailConfirmation" class="helper-link" onclick="window.location.href='Account/ResendEmailConfirmation'; return false;">
+                    <i class="fas fa-envelope-open me-1"></i>Resend email confirmation
+                </a>
+            </div> *@
+        </EditForm>
+    </div>
+
+    <!-- Divider -->
+    <div class="auth-divider">
+        <div class="divider-line"></div>
+        <span class="divider-text">OR</span>
+        <div class="divider-line"></div>
+    </div>
+
+    <!-- External Authentication Section -->
+    <div class="external-auth-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-globe me-2"></i>
+                Quick Sign In
+            </h3>
+            <p class="section-subtitle">Use your existing social media account</p>
+        </div>
+
+        <div class="external-auth-wrapper">
+            @* <ExternalLoginPicker /> *@
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? errorMessage;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    [Inject]
+    public AppSecurity appSecurity { get; set; }
+
+    private bool NOTGRPC { get; set; }
+
+    private bool ToIdentity { get; set; }
+
+    public BlazorApp1.Client.Security.CustomAuthenticationService CustomAuthenticationService { get; set; }
+
+    
+
+
+    [Inject]
+    IServiceProvider Services { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (Services.GetService<BlazorApp1.Client.Security.CustomAuthenticationService>() is { } db)
+        {
+            CustomAuthenticationService = db;
+        }
+
+
+        if(AppSecurity != null && AppSecurity.IsNotGrpc)
+        {
+            NOTGRPC = true;
+            errorMessage = "Not Server is Online please review with Sstem admin";
+            await ShowToast("Not Server is Online please review with Sstem admin.", Blazed.Controls.Toast.ToastLevel.Info);
+            return;
+        }   
+
+        CurrentUser= await GetPrincipal();
+
+        if (CurrentUser is null)
+        {
+            ToIdentity = true;
+            errorMessage = "Not Offline user in aplication.";
+            await ShowToast("You must be logged in to edit your profile.", Blazed.Controls.Toast.ToastLevel.Info);
+            return;
+        };
+
+
+        if (!string.IsNullOrEmpty(CurrentUser?.Name))
+        {
+
+            Input.Email = CurrentUser.Name;
+            // Input.Email = CurrentUser.Claims.FirstOrDefault(c => c.Key == ClaimTypes.Email)?.Value ?? string.Empty;
+            // Input.Password = CurrentUser.Claims.FirstOrDefault(c => c.Key == ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            // Input.RememberMe = true; // Set to true if you want to remember the user
+            Console.WriteLine($"[LOGIN PAGE] User Name: {CurrentUser.Name}");
+
+        }
+        else
+        {
+            Input.Email = CurrentUser.Claims.FirstOrDefault(c => c.Key == ClaimTypes.Name || c.Key=="name")?.Value ?? "offlineuser";
+
+        }
+
+
+        // if (HttpMethods.IsGet(HttpContext.Request.Method))
+        // {
+        //     // Clear the existing external cookie to ensure a clean login process
+        //     await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        //     Console.WriteLine($"[LOGIN PAGE] External cookie cleared");
+        // }
+
+        // Console.WriteLine($"[LOGIN PAGE] OnInitializedAsync completed at {DateTime.Now:HH:mm:ss.fff}");
+
+
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Console.WriteLine($"[LOGIN PAGE] First render completed at {DateTime.Now:HH:mm:ss.fff}");
+            if (JSRuntime != null)
+            {
+                await JSRuntime.InvokeVoidAsync("HideLoading");
+            }
+        }
+
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+
+
+    [Inject]
+    public CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity { get; set; }
+
+    public async Task SigInMethodOnline()
+    {
+
+        await DeletePrincipal();
+
+        await SetIsOffline(false);
+
+        NavigationManager.NavigateTo($"/RedirectToLogin", forceLoad: false);
+
+
+    }
+
+    public async Task SigOutMethod()
+    {
+        await DeletePrincipal();
+
+        await SetIsOffline(false);
+
+
+
+        NavigationManager.NavigateTo($"/RedirectToLogin", forceLoad: false);
+
+    }
+
+    public async Task SigInMethod()
+    {
+        // var a = await GetPrincipal();
+
+
+        if (CurrentUser == null)
+        {
+
+            CurrentUser = await GetPrincipal();
+        }
+
+
+        if(CurrentUser== null)
+        {
+
+            return;
+        };
+
+
+
+
+        var user = CurrentUser;//await GetPrincipal();
+
+        if (user != null)
+        {
+            List<Claim> claims = new List<Claim>();
+
+            foreach (var item in user.Claims)
+            {
+
+                claims.Add(new Claim(item.Key, item.Value));
+            }
+
+            if (string.IsNullOrEmpty(user?.Name))
+            {
+                var nameClaim = user.Claims.FirstOrDefault(c => c.Key == ClaimTypes.Name);
+
+                if (nameClaim != null)
+                {
+                    claims.Add(new Claim(ClaimTypes.Name, nameClaim.Value));
+                }
+                else
+                {
+                    claims.Add(new Claim(ClaimTypes.Name, "offlineuser"));
+                }
+            }
+            else
+            {
+                claims.Add(new Claim(ClaimTypes.Name, user.Name));
+            }
+
+            if (!string.IsNullOrEmpty(user?.Roles))
+            {
+                var roles = user.Roles.Split(",");
+                foreach (var rol in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, rol));
+                }
+
+            }
+
+            var identity = new ClaimsIdentity(
+                claims,
+                "WebAssembly");
+
+            var newUser = new ClaimsPrincipal(identity);
+
+            AppSecurity.Principal = newUser; 
+            if (CustomAuthenticationService == null)
+            {
+                if (Services.GetService<BlazorApp1.Client.Security.CustomAuthenticationService>() is { } db)
+                {
+                    CustomAuthenticationService = db;
+                }
+
+
+
+            }
+
+            if (CustomAuthenticationService == null)
+            {
+                NavigationManager.NavigateTo($"/", false);
+                errorMessage = "Authentication Error.";
+            }
+            else
+            {
+                CustomAuthenticationService.CurrentUser = newUser;
+            }
+
+           
+
+            }
+
+        await SetIsOffline(true);
+        NavigationManager.NavigateTo($"/",false);
+    }
+    public async Task LoginUser()
+    {
+        try
+        {
+
+
+            NavigationManager.NavigateTo($"/", forceLoad: false);
+
+            Console.WriteLine($"[LOGIN PAGE] Login attempt started at {DateTime.Now:HH:mm:ss.fff}");
+            Console.WriteLine($"[LOGIN PAGE] Email: {Input.Email}");
+            Console.WriteLine($"[LOGIN PAGE] Remember Me: {Input.RememberMe}");
+
+            // Clear any previous error messages
+            errorMessage = null;
+
+            // This doesn't count login failures towards account lockout
+            // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+            // var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+
+            // Console.WriteLine($"[LOGIN PAGE] SignIn result: Succeeded={result.Succeeded}, RequiresTwoFactor={result.RequiresTwoFactor}, IsLockedOut={result.IsLockedOut}");
+
+            // if (result.Succeeded)
+            // {
+            //     Logger.LogInformation("User logged in successfully.");
+            //     Console.WriteLine($"[LOGIN PAGE] Login successful at {DateTime.Now:HH:mm:ss.fff}");
+
+            //     // Add a small delay to ensure the authentication cookie is set
+            //     await Task.Delay(100);
+
+            //     // If ReturnUrl is null or empty, redirect to the home page
+            //     if (string.IsNullOrEmpty(ReturnUrl) || ReturnUrl == "/")
+            //     {
+            //         Console.WriteLine($"[LOGIN PAGE] Redirecting to home page");
+            //         NavigationManager.NavigateTo("/", forceLoad: true);
+            //     }
+            //     else
+            //     {
+            //         Console.WriteLine($"[LOGIN PAGE] Redirecting to return URL: {ReturnUrl}");
+            //         // Use the RedirectManager for other URLs
+            //         RedirectManager.RedirectTo(ReturnUrl);
+            //     }
+            // }
+            // else if (result.RequiresTwoFactor)
+            // {
+            //     Console.WriteLine($"[LOGIN PAGE] Two-factor authentication required");
+            //     RedirectManager.RedirectTo(
+            //         "Account/LoginWith2fa",
+            //         new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+            // }
+            // else if (result.IsLockedOut)
+            // {
+            //     Logger.LogWarning("User account locked out.");
+            //     Console.WriteLine($"[LOGIN PAGE] Account locked out");
+            //     RedirectManager.RedirectTo("Account/Lockout");
+            // }
+            // else
+            // {
+            //     errorMessage = "Error: Invalid email or password. Please try again.";
+            //     Console.WriteLine($"[LOGIN PAGE] Login failed: Invalid credentials");
+            //     Logger.LogWarning("Invalid login attempt for email: {Email}", Input.Email);
+            // }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred during login. Please try again.";
+            Console.WriteLine($"[LOGIN PAGE] Login error: {ex.Message}");
+            Logger.LogError(ex, "Error during login attempt for email: {Email}", Input.Email);
+        }
+    }
+
+    public CurrentUser CurrentUser { get; set; }
+
+    private sealed class InputModel
+    {
+       
+        
+        public string Email { get; set; } = "";
+
+      
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+    }
+}

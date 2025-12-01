@@ -1,0 +1,310 @@
+﻿
+
+/* Font Definitions */
+@font-face {
+    font-family: "Cambria Math";
+    panose-1: 2 4 5 3 5 4 6 3 2 4;
+    mso-font-charset: 1;
+    mso-generic-font-family: roman;
+    mso-font-pitch: variable;
+    mso-font-signature: 0 0 0 0 0 0;
+}
+
+@font-face {
+    font-family: Calibri;
+    panose-1: 2 15 5 2 2 2 4 3 2 4;
+    mso-font-charset: 0;
+    mso-generic-font-family: swiss;
+    mso-font-pitch: variable;
+    mso-font-signature: -469750017 -1073732485 9 0 511 0;
+}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal {
+    mso-style-unhide: no;
+    mso-style-qformat: yes;
+    mso-style-parent: "";
+    margin-top: 0cm;
+    margin-right: 0cm;
+    margin-bottom: .15pt;
+    margin-left: .5pt;
+    text-indent: -.5pt;
+    line-height: 107%;
+    mso-pagination: widow-orphan;
+    font-size: 6.0pt;
+    mso-bidi-font-size: 11.0pt;
+    font-family: "Arial",sans-serif;
+    mso-fareast-font-family: Arial;
+    color: black;
+}
+
+.MsoChpDefault {
+    mso-style-type: export-only;
+    mso-default-props: yes;
+    mso-ascii-font-family: Calibri;
+    mso-ascii-theme-font: minor-latin;
+    mso-fareast-font-family: "Times New Roman";
+    mso-fareast-theme-font: minor-fareast;
+    mso-hansi-font-family: Calibri;
+    mso-hansi-theme-font: minor-latin;
+    mso-bidi-font-family: "Times New Roman";
+    mso-bidi-theme-font: minor-bidi;
+}
+
+.MsoPapDefault {
+    mso-style-type: export-only;
+    margin-bottom: 8.0pt;
+    line-height: 107%;
+}
+
+@page WordSection1 {
+    size: 612.0pt 792.0pt;
+    margin: 29.25pt 60.7pt 32.8pt 25.55pt;
+    mso-header-margin: 36.0pt;
+    mso-footer-margin: 36.0pt;
+    mso-paper-source: 0;
+}
+
+div.WordSection1 {
+    page: WordSection1;
+}
+/* List Definitions */
+@list l0 {
+    mso-list-id: 640310794;
+    mso-list-type: hybrid;
+    mso-list-template-ids: -212180336 -1021675108 -1291954220 -1082654154 1359875964 1134073186 1969633148 -580362504 -552988894 -212180964;
+}
+
+@list l0:level1 {
+    mso-level-number-format: bullet;
+    mso-level-text: *;
+    mso-level-tab-stop: none;
+    mso-level-number-position: left;
+    margin-left: 4.0pt;
+    text-indent: 0cm;
+    mso-ansi-font-size: 6.0pt;
+    mso-bidi-font-size: 6.0pt;
+    mso-ascii-font-family: Arial;
+    mso-fareast-font-family: Arial;
+    mso-hansi-font-family: Arial;
+    mso-bidi-font-family: Arial;
+    color: black;
+    border: none;
+    mso-ansi-font-weight: normal;
+    mso-ansi-font-style: normal;
+    text-underline: black;
+    text-decoration: none;
+    text-underline: none;
+    text-decoration: none;
+    text-line-through: none;
+    vertical-align: baseline;
+}
+
+@list l0:level2 {
+    mso-level-number-format: bullet;
+    mso-level-text: o;
+    mso-level-tab-stop: none;
+    mso-level-number-position: left;
+    margin-left: 54.0pt;
+    text-indent: 0cm;
+    mso-ansi-font-size: 6.0pt;
+    mso-bidi-font-size: 6.0pt;
+    mso-ascii-font-family: Arial;
+    mso-fareast-font-family: Arial;
+    mso-hansi-font-family: Arial;
+    mso-bidi-font-family: Arial;
+    color: black;
+    border: none;
+    mso-ansi-font-weight: normal;
+    mso-ansi-font-style: normal;
+    text-underline: black;
+    text-decoration: none;
+    text-underline: none;
+    text-decoration: none;
+    text-line-through: none;
+    vertical-align: baseline;
+}
+
+@list l0:level3 {
+    mso-level-number-format: bullet;
+    mso-level-text: \25AA;
+    mso-level-tab-stop: none;
+    mso-level-number-position: left;
+    margin-left: 90.0pt;
+    text-indent: 0cm;
+    mso-ansi-font-size: 6.0pt;
+    mso-bidi-font-size: 6.0pt;
+    mso-ascii-font-family: Arial;
+    mso-fareast-font-family: Arial;
+    mso-hansi-font-family: Arial;
+    mso-bidi-font-family: Arial;
+    color: black;
+    border: none;
+    mso-ansi-font-weight: normal;
+    mso-ansi-font-style: normal;
+    text-underline: black;
+    text-decoration: none;
+    text-underline: none;
+    text-decoration: none;
+    text-line-through: none;
+    vertical-align: baseline;
+}
+
+@list l0:level4 {
+    mso-level-number-format: bullet;
+    mso-level-text: •;
+    mso-level-tab-stop: none;
+    mso-level-number-position: left;
+    margin-left: 126.0pt;
+    text-indent: 0cm;
+    mso-ansi-font-size: 6.0pt;
+    mso-bidi-font-size: 6.0pt;
+    mso-ascii-font-family: Arial;
+    mso-fareast-font-family: Arial;
+    mso-hansi-font-family: Arial;
+    mso-bidi-font-family: Arial;
+    color: black;
+    border: none;
+    mso-ansi-font-weight: normal;
+    mso-ansi-font-style: normal;
+    text-underline: black;
+    text-decoration: none;
+    text-underline: none;
+    text-decoration: none;
+    text-line-through: none;
+    vertical-align: baseline;
+}
+
+@list l0:level5 {
+    mso-level-number-format: bullet;
+    mso-level-text: o;
+    mso-level-tab-stop: none;
+    mso-level-number-position: left;
+    margin-left: 162.0pt;
+    text-indent: 0cm;
+    mso-ansi-font-size: 6.0pt;
+    mso-bidi-font-size: 6.0pt;
+    mso-ascii-font-family: Arial;
+    mso-fareast-font-family: Arial;
+    mso-hansi-font-family: Arial;
+    mso-bidi-font-family: Arial;
+    color: black;
+    border: none;
+    mso-ansi-font-weight: normal;
+    mso-ansi-font-style: normal;
+    text-underline: black;
+    text-decoration: none;
+    text-underline: none;
+    text-decoration: none;
+    text-line-through: none;
+    vertical-align: baseline;
+}
+
+@list l0:level6 {
+    mso-level-number-format: bullet;
+    mso-level-text: \25AA;
+    mso-level-tab-stop: none;
+    mso-level-number-position: left;
+    margin-left: 198.0pt;
+    text-indent: 0cm;
+    mso-ansi-font-size: 6.0pt;
+    mso-bidi-font-size: 6.0pt;
+    mso-ascii-font-family: Arial;
+    mso-fareast-font-family: Arial;
+    mso-hansi-font-family: Arial;
+    mso-bidi-font-family: Arial;
+    color: black;
+    border: none;
+    mso-ansi-font-weight: normal;
+    mso-ansi-font-style: normal;
+    text-underline: black;
+    text-decoration: none;
+    text-underline: none;
+    text-decoration: none;
+    text-line-through: none;
+    vertical-align: baseline;
+}
+
+@list l0:level7 {
+    mso-level-number-format: bullet;
+    mso-level-text: •;
+    mso-level-tab-stop: none;
+    mso-level-number-position: left;
+    margin-left: 234.0pt;
+    text-indent: 0cm;
+    mso-ansi-font-size: 6.0pt;
+    mso-bidi-font-size: 6.0pt;
+    mso-ascii-font-family: Arial;
+    mso-fareast-font-family: Arial;
+    mso-hansi-font-family: Arial;
+    mso-bidi-font-family: Arial;
+    color: black;
+    border: none;
+    mso-ansi-font-weight: normal;
+    mso-ansi-font-style: normal;
+    text-underline: black;
+    text-decoration: none;
+    text-underline: none;
+    text-decoration: none;
+    text-line-through: none;
+    vertical-align: baseline;
+}
+
+@list l0:level8 {
+    mso-level-number-format: bullet;
+    mso-level-text: o;
+    mso-level-tab-stop: none;
+    mso-level-number-position: left;
+    margin-left: 270.0pt;
+    text-indent: 0cm;
+    mso-ansi-font-size: 6.0pt;
+    mso-bidi-font-size: 6.0pt;
+    mso-ascii-font-family: Arial;
+    mso-fareast-font-family: Arial;
+    mso-hansi-font-family: Arial;
+    mso-bidi-font-family: Arial;
+    color: black;
+    border: none;
+    mso-ansi-font-weight: normal;
+    mso-ansi-font-style: normal;
+    text-underline: black;
+    text-decoration: none;
+    text-underline: none;
+    text-decoration: none;
+    text-line-through: none;
+    vertical-align: baseline;
+}
+
+@list l0:level9 {
+    mso-level-number-format: bullet;
+    mso-level-text: \25AA;
+    mso-level-tab-stop: none;
+    mso-level-number-position: left;
+    margin-left: 306.0pt;
+    text-indent: 0cm;
+    mso-ansi-font-size: 6.0pt;
+    mso-bidi-font-size: 6.0pt;
+    mso-ascii-font-family: Arial;
+    mso-fareast-font-family: Arial;
+    mso-hansi-font-family: Arial;
+    mso-bidi-font-family: Arial;
+    color: black;
+    border: none;
+    mso-ansi-font-weight: normal;
+    mso-ansi-font-style: normal;
+    text-underline: black;
+    text-decoration: none;
+    text-underline: none;
+    text-decoration: none;
+    text-line-through: none;
+    vertical-align: baseline;
+}
+
+ol {
+    margin-bottom: 0cm;
+}
+
+ul {
+    margin-bottom: 0cm;
+}
+
+

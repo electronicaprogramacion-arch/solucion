@@ -1,0 +1,1130 @@
+﻿
+using Blazored.Modal;
+using Blazored.Modal.Services;
+using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+using Fluxor;
+using Grpc.Core;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.JSInterop;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+
+using Helpers.Controls;
+using Helpers.Controls.ValueObjects;
+using Blazed.Controls.Toast;
+using Blazed.Controls;
+using CalibrationSaaS.Domain.Aggregates.Interfaces;
+using System.Security.Policy;
+using System.Timers;
+using ProtoBuf.Grpc;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+
+
+namespace CalibrationSaaS.Infraestructure.Blazor
+{
+   public enum JavaMessageOptions
+    {
+        Alert,
+        Confirm,
+        Promp
+    }
+    public class JavaMessage<T>
+    {
+
+        public string Message { get; set; }
+
+        public T Source { get; set; }
+
+        public dynamic Other { get; set; }
+
+        public JavaMessageOptions Type { get; set; }
+
+       public bool IsShowed { get; set; }
+
+        public bool Result { get; set; }
+
+        public dynamic ResultObject { get; set; }
+
+    }
+
+    public abstract class FComponentBase : ComponentBase
+    {
+
+        public string ErrorMessage { get; set; }
+
+        public User User { get; set; }
+
+
+        [Parameter]
+        public bool SelectOnly { get; set; }
+
+        [Parameter]
+        public bool IsModal { get; set; }
+
+
+        [Inject]
+        public NavigationManager NavigationManager { get; set; }
+
+        [Parameter]
+        public string Policy { get; set; } = "HasAccess";
+        public CallOptions Header { get; set; }
+
+        [Inject]
+        public IAccessTokenProvider TokenProvider { get; set; }
+
+        //[Inject]
+        //public IState<TodosState<T>> _ResultState { get; set; }
+
+
+
+        //[Inject]
+        //public StateFacade Facade { get; set; }
+
+
+        //        [Inject]
+        //public GrpcBearerTokenProvider TokenProvider { get; set; }
+
+        public async Task<CallContext> CallOptions(string Component = "")
+        {
+
+            return new CallOptions(await GetHeaderAsync(Component));
+
+        }
+
+
+
+
+        public async Task<Metadata> GetHeaderAsync(string Component="")
+
+        {
+            var headers = new Metadata();
+            //var accessTokenResult = await TokenProvider.GetTokenAsync();
+            //headers.Add("Authorization", $"Bearer {accessTokenResult}");
+            //var accessTokenResult = await TokenProvider.RequestAccessToken();
+
+
+            // try
+            // {
+            //     accessTokenResult = await this.TokenProvider.RequestAccessToken(
+            //new AccessTokenRequestOptions()
+            // {
+            //     Scopes = new[] { "GRPC" }
+            // });
+
+
+            // }
+            // catch(Exception ex)
+            // {
+            //     Console.WriteLine("Security error");
+            //     throw new Exception("Security error");
+            // }
+
+            // if (accessTokenResult == null)
+            // {
+            //     Console.WriteLine("Security error");
+            // }
+
+            var AccessToken = string.Empty;
+            //AccessTokenRequestOptions op= new AccessTokenRequestOptions();  
+
+            //op.
+
+            var accessToken = await TokenProvider.RequestAccessToken();
+            if (accessToken.TryGetToken(out var token))
+            {
+                AccessToken = token.Value;
+                headers.Add("Authorization", $"Bearer {AccessToken}");
+
+                headers.Add("Component", Component);
+
+
+                
+            }
+
+            // var accessToken =  await TokenProvider.RequestAccessToken();
+            //if (accessToken.TryGetToken(out var token))
+            //{
+            //    var _token = token.Value;
+
+            //    var credentials = CallCredentials.FromInterceptor((context, metadata) =>
+            //    {
+            //        if (!string.IsNullOrEmpty(_token))
+            //        {
+            //            headers.Add("Authorization", $"Bearer {_token}");
+            //        }
+            //        return Task.CompletedTask;
+            //    });
+            //}
+
+            //headers.Add("Authorization", $"Bearer {accessToken}");
+
+            return headers;
+        }
+
+        [Inject]
+        public CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity { get; set; }
+
+        [Inject]
+        public IAuthorizationService AuthorizationService { get; set; }
+
+        [Parameter]
+        public Component Component { get; set; } = new Component();
+
+        public bool Saving { get; set; }
+
+        public bool Loading { get; set; }
+
+
+        public bool LoadingWait { get; set; } 
+
+
+        [Inject] public IJSRuntime JSRuntime { get; set; }
+        [Inject] public IToastService Toast { get; set; }
+        public bool IsClosed { get; set; }
+        [CascadingParameter] public BlazoredModalInstance BlazoredModal { get; set; }
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                await JSRuntime.InvokeVoidAsync("removeValidClass");
+            }
+        }
+
+
+        public virtual async Task CloseModal(object result = null)
+        {
+            IsClosed = true;
+
+            await CloseProgress();
+
+            if (BlazoredModal == null)
+            {
+
+                return;
+            }
+
+            if (result == null)
+            {
+                await BlazoredModal.CloseAsync(ModalResult.Cancel());
+            }
+            else
+            {
+                await BlazoredModal.CloseAsync(ModalResult.Ok(result));
+            }
+        }
+
+        string MessageTmp = "";
+
+        public async Task ExceptionManager(RpcException rpcException, string Additionalinformation = "")
+        {
+            Console.WriteLine("ExceptionManager");
+            Console.WriteLine(Additionalinformation);
+            Console.WriteLine(rpcException.Message);
+            
+            if(rpcException.InnerException != null)
+            {
+                Console.WriteLine(rpcException.InnerException.Message);
+            }
+
+
+            if (rpcException.StackTrace != null)
+            {
+                Console.WriteLine(rpcException.StackTrace);
+            }
+            Console.WriteLine("ExceptionManager");
+
+            string Error = "";
+
+            //|| rpcException.StatusCode == StatusCode.Unauthenticated
+            //   || rpcException.StatusCode == StatusCode.Cancelled
+            //   || rpcException.StatusCode == StatusCode.AlreadyExists
+
+
+            if(rpcException.StatusCode == StatusCode.DeadlineExceeded)
+            {
+                 await ShowError("Timeout exception");
+
+                return;
+            }
+
+
+            if (rpcException.StatusCode > 0)
+            {
+                Error = rpcException.Message;
+            }
+            else
+            {
+                Error = rpcException.Status.Detail;
+            };
+
+
+            if (rpcException.StatusCode == StatusCode.FailedPrecondition)
+            {
+
+                var arr = Error.Split(Environment.NewLine);
+
+                foreach (var it in arr)
+                {
+                    await ShowError(it);
+                }
+
+                return;
+            }
+
+
+            //if (MessageTmp == Error)
+            //{
+            //    return;
+            //}
+            MessageTmp = Error;
+
+            if (!string.IsNullOrEmpty(Error) && Error.Contains("|"))
+            {
+                var a = Error.Split("|");
+
+                foreach (var it in a)
+                {
+                    await ShowError(it);
+                }
+
+            }
+            else
+
+                if (!string.IsNullOrEmpty(Error))
+            {
+                //Logger.LogError(Error);
+                await ShowError(Additionalinformation + " " + Error);
+            }
+            else
+            {
+                await ShowError("Error in operation");
+            }
+            Saving = false;
+            Loading = false;
+            await CloseProgress();
+        }
+
+
+        public async Task ExceptionManager(Exception rpcException,string Additionalinformation="")
+        {
+
+            Console.WriteLine("ExceptionManager");
+            Console.WriteLine(Additionalinformation);
+
+
+            Console.WriteLine(rpcException.Message);
+
+            if (rpcException.InnerException != null)
+            {
+                Console.WriteLine(rpcException.InnerException.Message);
+            }
+
+
+            if (rpcException.StackTrace != null)
+            {
+                Console.WriteLine(rpcException.StackTrace);
+            }
+            Console.WriteLine("ExceptionManager");
+
+
+
+
+            string Error = "";
+
+            Error = rpcException.Message;
+
+            //if (MessageTmp == Error)
+            //{
+            //    return;
+            //}
+            Console.WriteLine(Error);
+            MessageTmp = Error;
+
+            if (!string.IsNullOrEmpty(Error) && Error.Contains("|"))
+            {
+                var a = Error.Split("|");
+
+                foreach (var it in a)
+                {
+                    await ShowError(it);
+                }
+
+            }
+            else
+
+           if (!string.IsNullOrEmpty(Error))
+            {
+
+                await ShowError(Additionalinformation + " " + Error);
+                //Logger.LogError(Error);
+                //Toast.ShowError(Error);
+            }
+            Saving = false;
+            Loading = false;
+            await CloseProgress();
+        }
+
+        public async Task CloseProgress(bool excecuteScript=true)
+        {
+            try
+            {
+                 Console.WriteLine("close");
+            if (JSRuntime != null && excecuteScript)
+            {
+                await JSRuntime.InvokeVoidAsync("hideProgress", "progressBar");
+               
+            }
+            Saving = false;
+            Loading = false;
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+           
+
+        }
+
+
+         public async Task ScrollPosition()
+        {
+           
+            if (JSRuntime != null)
+            {
+               
+                await JSRuntime.InvokeVoidAsync("Nav_ScrollIntoView", "page-top");
+            }
+           
+
+        }
+
+        public async Task ShowError(string Message)
+        {
+            await ShowToast(Message, ToastLevel.Error);
+
+
+
+            await CloseProgress();
+
+        }
+
+        string messtemp = "";
+#pragma warning disable CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
+        public async Task ShowToast(string message, ToastLevel level,bool always=true)
+#pragma warning restore CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
+        {
+
+            if (messtemp == message && always==false)
+            {
+                return;
+            }
+            else
+            {
+                messtemp = message;
+            }
+
+
+
+            if (level == ToastLevel.Success)
+            {
+
+                Toast.ShowSuccess(message);
+            }
+            if (level == ToastLevel.Error)
+            {
+                Toast.ShowError(message);
+            }
+            if (level == ToastLevel.Info)
+            {
+                Toast.ShowInfo(message);
+            }
+            if (level == ToastLevel.Warning)
+            {
+                Toast.ShowWarning(message);
+            }
+
+        }
+
+
+
+
+        public async Task ShowProgress(bool focus=true,bool ExecuteScript=true)
+        {
+            messtemp = "";
+            if (JSRuntime != null && ExecuteScript)
+            {
+                await JSRuntime.InvokeVoidAsync("showProgressBar", "progressBar",focus);
+            }
+            Saving = true;
+            Loading = true;
+        }
+
+        [CascadingParameter]
+        public Task<AuthenticationState> stateTask { get; set; }
+        public async Task<ClaimsPrincipal> GetUser()
+        {
+            var user = (await stateTask).User;
+
+            return user;
+        }
+
+        public async Task<bool> IsInPolicy(Policies policy)
+        {
+            var user = (await stateTask).User;
+
+            //if (user.HasClaim(c => c.Type == "tech"))
+            //{
+
+            //}
+
+
+
+            Component.Permission = policy;
+
+
+            return await IsInPolicy(policy, Component);
+            //var ed = await AuthorizationService.AuthorizeAsync(user, Component, Policy);
+
+            //if (ed.Failure != null && ed.Failure.FailCalled)
+            //{
+            //    throw new Exception("You not have access to see this resource");
+            //}
+
+            //if (ed.Succeeded)
+            //{
+            //    return true;
+            //}
+            //return false;
+
+        }
+
+
+        //public async Task<ClaimsPrincipal> CreatePrincipal(ClaimsPrincipal principal)
+        //{
+        //    var clone = principal.Clone();
+        //    var newIdentity = (ClaimsIdentity)clone.Identity;
+
+        //    // Support AD and local accounts
+        //    var nameId = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier ||
+        //                                                      c.Type == ClaimTypes.Name);
+        //    if (nameId == null)
+        //    {
+        //        return principal;
+        //    }
+
+
+
+        //    // Get user from database
+        //    var user = await _userService.GetByUserName(nameId.Value);
+        //    if (user == null)
+        //    {
+        //        return principal;
+        //    }
+
+        //    // Add role claims to cloned identity
+        //    foreach (var role in user.Roles)
+        //    {
+        //        var claim = new Claim(newIdentity.RoleClaimType, role.Name);
+        //        newIdentity.AddClaim(claim);
+        //    }
+
+        //    return clone;
+        //}
+        public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
+        {
+            // Clone current identity
+            var clone = principal.Clone();
+            var newIdentity = (ClaimsIdentity)clone.Identity;
+
+            // Support AD and local accounts
+            var nameId = principal.Claims.Where(c => c.Type == "name" || c.Type == ClaimTypes.NameIdentifier ||
+                                                              c.Type == ClaimTypes.Name ).FirstOrDefault();
+            if (nameId == null || User == null)
+            {
+                return principal;
+            }
+
+            
+           
+            // Get user from database
+            //var user = await _userService.GetByUserName(nameId.Value);
+            var url = "";//config["Kestrel:Endpoints:Http3:Url"];
+
+            var user = User;//await Program.GetUserById(nameId.Value, url);
+            if (user == null)
+            {
+                return principal;
+            }
+
+            //Add role claims to cloned identity
+            foreach (var role in user.RolesList2)
+            {
+                //var claim = new Claim(role., role.Name);
+                var ad = newIdentity.Claims.Where(x =>  x.Value == role.Name).FirstOrDefault();
+                if (ad == null)
+                {
+                    Claim c = new Claim("role", role.Name);
+
+                    newIdentity.AddClaim(c);
+                }
+
+            }
+
+            foreach (var role in newIdentity.Claims)
+            {
+                //var claim = new Claim(role., role.Name);
+                var ad = user.RolesList2.Where(x =>  x.Name == role.Value).FirstOrDefault();
+                if (ad == null && role.Type=="role")
+                {
+                    newIdentity.RemoveClaim(role);
+                }
+
+            }
+
+            return clone;
+        }
+
+      
+
+      
+
+        public async Task<bool> IsInPolicy(Policies policy, Component component,bool showMessage=true)
+        {
+            var user = (await stateTask).User;
+
+            //if (user.HasClaim(c => c.Type == "tech"))
+            //{
+
+            //}
+            //var a = await GetHeaderAsync();
+
+            //var token = await HttpContext.GetTokenAsync("access_token");
+            //User userDTO = new User();
+
+            //if(user.Identity != null)
+            //{
+            //    userDTO.Name = user.Identity.Name;
+
+            //    var a = await BasicsServices.GetUserById(userDTO);                
+
+
+            //}
+
+            var aa = await TransformAsync(user);
+
+            if (component != null)
+            {
+                component.Permission = policy;
+            }
+
+            var ed = await AuthorizationService.AuthorizeAsync(aa, component, Policy);
+
+            if (ed.Failure != null && ed.Failure.FailCalled && showMessage)
+            {
+                if(ed.Failure.FailureReasons != null)
+                {
+                    foreach (var item in ed.Failure.FailureReasons)
+                    {
+                        await ShowError(item.Message);
+                    }
+                    return false;
+                }
+
+                await ShowError("You not have access to see this resource");
+                return false;
+                //throw new Exception("You not have access to see this resource");
+            }
+            else if(ed.Failure != null && ed.Failure.FailCalled && !showMessage)
+            {
+                return false;
+            }
+
+            if (ed.Succeeded)
+            {
+                return true;
+            }
+            return false;
+
+        }
+
+
+       
+
+        [Inject] Microsoft.Extensions.Configuration.IConfiguration Configuration { get; set; }
+
+
+        public string TypeString { get; set; }
+        protected override async Task OnInitializedAsync()
+        {
+            var AccessToken = string.Empty;
+            var accessToken = await TokenProvider.RequestAccessToken();
+            if (accessToken.TryGetToken(out var token))
+            {
+                AppSecurity.Token = token.Value;
+                //headers.Add("Authorization", $"Bearer {AccessToken}");
+            }
+            else
+            {
+                AppSecurity.Token = "";
+            }
+
+            //     if (string.IsNullOrEmpty(TypeString))
+            //{
+            //    TypeString = Configuration["VersionApp:Assembly"] + "";
+            //    Console.WriteLine(TypeString);
+            //}
+
+            TypeString = AppSecurity.AssemblyName;
+
+        }
+
+        public async Task<string> Prompt(string message = "Enter a value")
+    {
+        string valor = "";
+
+        if (JSRuntime != null)
+        {
+            valor = await JSRuntime.InvokeAsync<string>("prompt", message);
+        }
+
+        return valor;
+
+
+    }
+
+    public async Task<bool> ConfirmAsync(string message = "Are you sure?")
+    {
+        bool valor =false;
+
+        if (JSRuntime != null)
+        {
+            valor = await JSRuntime.InvokeAsync<bool>("confirm", message);
+        }
+
+        return valor;
+    }
+
+    public bool Confirm(string message = "Are you sure?")
+    {
+        bool valor =false;
+
+        if (JSRuntime != null)
+        {
+            valor =  JSRuntime.InvokeAsync<bool>("confirm", message).ConfigureAwait(true).GetAwaiter().GetResult();
+        }
+
+        return valor;
+    }
+
+
+
+    }
+
+
+
+    //public abstract class KavokuComponentBaseNoCache<T> : FComponentBase
+    //{ 
+
+
+    //}
+
+    public abstract class GridResultsComponentBase2<T, R> : FComponentBase where T : class, IGenericCalibrationSubType<R>, new() where R : IResult2
+    {
+        public Func<WorkOrderDetail, int, bool> ValidateGrid { get; set; }
+
+        public Func<WorkOrderDetail, int, List<T>> CreateListGrid { get; set; }
+
+        public Func<WorkOrderDetail, int, List<T>> GetListGrid { get; set; }
+
+        public T RowAfterRender(T lin)
+        {
+            return default(T);
+        }
+
+        public T RowChange(T lin)
+        {
+            return default(T);
+        }
+
+        public T DefaultNew()
+        {
+            return default(T);
+        }
+
+        public async Task ExecuteFormula()
+        {
+
+        }
+        public static System.Timers.Timer aTimer;
+
+
+        public void OnUserFinish(Object source, ElapsedEventArgs e)
+        {
+
+
+
+            aTimer.Stop();
+
+
+
+
+            InvokeAsync(async () =>
+            {
+
+                await ExecuteFormula();
+
+            });
+
+        }
+
+
+        [Parameter]
+        public bool Enabled { get; set; } = false;
+
+
+        [Parameter]
+        public Blazed.Controls.ResponsiveTable<T> RT { get; set; } = new Blazed.Controls.ResponsiveTable<T>();
+
+
+        public bool FirstRender { get; set; }
+
+
+        public bool EnableWeightSet { get; set; } = true;
+
+        [Parameter]
+        public List<WeightSet> WeightSetList2 { get; set; } = new List<WeightSet>();
+
+
+        public dynamic WeightSetComponent { get; set; } //= new WeightSetComponent();
+
+
+        public List<T> LIST { get; set; } = new List<T>();
+
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+
+
+
+            await base.OnAfterRenderAsync(firstRender);
+
+
+            var a = Enabled;
+
+            try
+            {
+                if (firstRender && RT != null)
+                {
+                    RT.ShowControl = true;
+                    RT.ShowLabel = false;
+                }
+
+
+                if (WeightSetComponent == null || WeightSetComponent?.lstWeightSet == null || WeightSetComponent?.lstWeightSet?.Count == 0)
+                {
+
+                    EnableWeightSet = false;
+
+                }
+                else
+                {
+                    EnableWeightSet = true;
+                }
+
+
+
+                FirstRender = firstRender;
+
+                if (WeightSetList2 == null)
+                {
+                    WeightSetList2 = new List<WeightSet>();
+                }
+
+
+
+
+
+
+            }
+#pragma warning disable CS0168 // La variable 'ex' se ha declarado pero nunca se usa
+            catch (Exception ex)
+#pragma warning restore CS0168 // La variable 'ex' se ha declarado pero nunca se usa
+            {
+
+            }
+            finally
+            {
+
+            }
+
+
+        }
+    }
+
+    public abstract class GridResults2ComponentBase2<T,R> : KavokuComponentBase<T> where R : class, new() //where T : IGenericCalibrationCollection<IResult2>
+    {
+
+        [CascadingParameter(Name = "CascadeParam3")]
+        public T WorkOrderItemCreate { get; set; }
+
+
+        //[Parameter]
+        //public CalibrationSaaS.Infraestructure.Blazor.Pages.Base.Interfaces.ICreateItems<T,R> _strCreate { get; set; }
+
+        public dynamic _strCreate { get; set; }
+
+        //[Parameter]
+        public CalibrationSaaS.Infraestructure.Blazor.Pages.Base.Interfaces.IGetItems<T,R> _strGet { get; set; }
+
+
+        //[Parameter]
+        public CalibrationSaaS.Infraestructure.Blazor.Pages.Base.Interfaces.ISelectItems<T> SelectStandards { get; set; }
+
+
+        //[Parameter]
+        public CalibrationSaaS.Infraestructure.Blazor.Pages.Base.Interfaces.ISelectItems<T> Select2Standards { get; set; }
+
+        //[Parameter]
+        public CalibrationSaaS.Infraestructure.Blazor.Pages.Base.Interfaces.INewItem<T, R> _strNew { get; set; }
+
+
+    }
+
+    public abstract class GridResultsComponentBase<T> : KavokuComponentBase<T>
+    {
+
+
+
+        public Func<WorkOrderDetail, int, bool> ValidateGrid { get; set; }
+
+        public Func<WorkOrderDetail, int, List<T>> CreateListGrid { get; set; }
+
+        public Func<WorkOrderDetail, int, List<T>> GetListGrid { get; set; }
+
+        //public  T RowAfterRender(T lin)
+        //{
+        //    return default(T);
+        //}
+
+        //public T RowChange(T lin)
+        //{
+        //    return default(T);
+        //}
+
+        //public T DefaultNew()
+        //{
+        //    return default(T);
+        //}
+
+    }
+
+    public abstract class KavokuComponentBase<T> : FComponentBase
+    {
+
+
+       
+
+        public ModalParameters ModalParameters { get; set; } = new ModalParameters();
+
+         public object GetPageState(string route, List<TodosStateDic> aa)
+        {
+
+            if (aa != null && aa.Count > 0)
+            {
+                //foreach (KeyValuePair<string, TodosState> item in aa)
+                //{
+                //    Logger.LogInformation("keyxxxx " + item.Key);
+                //    Logger.LogInformation("key route " + route);
+
+
+                //        dynamic ent = item.Value.CurrentPagination;
+                //        string dd = ent.Component.Route;
+                //        Logger.LogInformation("value from component " + dd + " routr " + route);
+                //    if (route == dd)
+                //    {
+                //        return item.Value;
+
+
+                //    }
+                //}
+
+                var a = aa.Where(x => x.Key == route).FirstOrDefault();
+                if (a != null)
+                {
+                    return a.Value;
+                }
+                else
+                {
+                    return null;
+                }
+
+
+            }
+
+            return null;
+        }
+
+
+
+        [Inject]
+        public IState<TodosState> _ResultState { get; set; }
+
+
+        [Inject]
+        public IStateFacade Facade { get; set; }
+
+         [Inject]
+        public IDispatcher _dispatcher { get; set; }
+
+        public async Task<ResultSet<T>> ExecuteServiceWithBlock(Func<Pagination<T>, Task<ResultSet<T>>> Method, Pagination<T> Parameter, Component component)
+        {
+
+            try
+            {
+                 await ShowProgress();
+            Console.WriteLine("ExecuteServiceWithBlock show");
+
+               
+            var result = await ExecuteService(Method, Parameter, component);
+           
+            
+            return result;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("ExecuteServiceWithBlock close");
+                await ShowError(ex.Message);
+                return new ResultSet<T>();
+            }
+            finally
+            {
+                 await CloseProgress();
+            }
+
+
+        }
+
+        public async Task<ResultSet<T>> ExecuteService(Func<Pagination<T>, Task<ResultSet<T>>> Method, Pagination<T> Parameter, Component component)
+        {
+            Console.WriteLine(component.Route);   
+            Console.WriteLine(component.IsModal);   
+
+            if (component.IsModal || (Parameter != null && !Parameter.SaveCache) || string.IsNullOrEmpty(component.Route))
+            {
+                 if(Method ==null || Parameter==null || component == null)
+                {
+                    return new ResultSet<T>();
+                }
+
+
+                var resultitems2 = await Method(Parameter);
+
+                return resultitems2;
+
+            }
+            else
+            if (_ResultState != null && _ResultState.Value != null && _ResultState.Value.Url != component.Route
+                && _ResultState.Value._dicState != null && _ResultState.Value._dicState.Count > 0)
+            {
+                
+
+                var aa = _ResultState.Value._dicState;
+
+                //if (aa.ContainsKey(component.Route))
+                //{
+                //Logger.LogInformation("ContainsKey " + component.Route);
+
+                //TodosState r;
+
+                var r = GetPageState(component.Route, aa);
+
+                if (r != null)
+                {
+
+                    dynamic entity = r;
+                    Component comp = entity.Component;
+                    if (entity != null && comp.Route == component.Route)
+                    {
+                      
+
+
+                        int page = entity.Page;
+                        
+
+
+                        string filter = entity.Filter;
+
+                        //if (!string.IsNullOrEmpty(filter))
+                           
+
+
+
+                        dynamic fo = entity.Object;
+                       
+
+
+                        Parameter = entity;
+
+                        
+
+                    }
+
+
+
+
+                }
+                else
+                {
+                    
+                }
+
+
+                //parr = (Pagination<T>)r.CurrentPagination;
+
+                //}
+
+
+            }
+            else
+            {
+                Console.WriteLine("no if ");
+                IPaginationBase par = Parameter;
+            }
+
+            Console.WriteLine("methodo execute ");
+
+            Parameter.Component = component;
+            
+             Console.WriteLine("methodo execute 2");
+             if(Method ==null || Parameter==null || component == null)
+                {
+                    return new ResultSet<T>();
+                }
+            var resultitems = await Method(Parameter);
+
+            Console.WriteLine("methodo execute 3");
+            //IPaginationBase par = Parameter;
+            Facade.LoadTodos2<T>(resultitems, Parameter, component.Route);
+
+
+            return resultitems;
+
+
+        }
+
+        // [Parameter]
+        //public T eq { get; set; } = new T();
+
+    }
+}

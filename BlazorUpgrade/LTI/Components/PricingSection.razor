@@ -1,0 +1,79 @@
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Application.Services
+@using Microsoft.Extensions.Configuration
+@inherits PricingSectionBase
+
+@if (ShowPricingSection)
+{
+    <div class="row">
+        <div class="col-12">
+            <h5 class="mb-3">Pricing Configuration</h5>
+            @if (PriceTypes != null && PriceTypes.Any())
+            {
+                <div class="row">
+                    @foreach (var priceType in PriceTypes.OrderBy(pt => pt.SortOrder))
+                    {
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="form-group">
+                                <label for="price_@priceType.PriceTypeId" class="form-label">
+                                    @priceType.Name
+                                    @if (priceType.RequiresTravel)
+                                    {
+                                        <span class="badge badge-info ms-1">Travel</span>
+                                    }
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" 
+                                           id="price_@priceType.PriceTypeId"
+                                           class="form-control" 
+                                           step="0.01" 
+                                           min="0"
+                                           placeholder="0.00"
+                                           disabled="@(!Enabled)"
+                                           value="@GetPriceValue(priceType.PriceTypeId)"
+                                           @onchange="@(async (e) => await UpdatePrice(priceType.PriceTypeId, e.Value?.ToString()))" />
+                                </div>
+                                @if (!string.IsNullOrEmpty(priceType.Description))
+                                {
+                                    <small class="form-text text-muted">@priceType.Description</small>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                @if (EntityType == EntityType.PieceOfEquipment && TemplateId.HasValue)
+                {
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Pricing Hierarchy:</strong> Prices entered here override Equipment Template prices. 
+                            Leave blank to use template pricing.
+                        </small>
+                    </div>
+                }
+            }
+            else if (IsLoading)
+            {
+                <div class="text-center">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="sr-only">Loading price types...</span>
+                    </div>
+                    <span class="ms-2">Loading price types...</span>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    No price types configured. Please configure price types in the system settings.
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    // Parameters are defined in PricingSectionBase - no need to redeclare them here
+}

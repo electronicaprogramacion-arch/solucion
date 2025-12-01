@@ -1,0 +1,438 @@
+﻿@page "/DynamicReport/{EntityID}"
+@using Blazed.Controls
+@namespace CalibrationSaaS.Infraestructure.Blazor
+@inherits DynamicReportBase
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@* @layout ReportLayout *@
+
+@*<EditForm style="margin:10px" OnValidSubmit="Submit" Model="@eq" Context="CurrenEditContext">
+    <DataAnnotationsValidator />*@
+@if (1==1)
+{
+    @if (EntityID == 1.ToString())
+    {
+        <div class="row">
+            @* <div class="col" id="paginationTotal">
+
+    </div> *@
+            <div class="col">
+            </div>
+            <div class="col" >
+                <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                        type="button"
+                @onclick:stopPropagation @onclick:preventDefault @onclick="@(()=> ShowModalReport())">
+
+                    PDF View
+                </button>
+                <button id="download-button" style="display:none">Download as PDF</button>
+                <script>
+                    const button = document.getElementById('download-button');
+
+                    function generatePDF() {
+                        // Choose the element that your content will be rendered to.
+                        const element = document.getElementById('gridDynamicReport');
+                        // Choose the element and save the PDF for your user.
+                        //html2pdf().from(element).save();
+
+                        // html2pdf()
+                        //     .set({ html2canvas: { scale: 4 } })
+                        //     .from(element)
+                        //     .save();
+
+                        var opt = {
+                            margin: 1,
+                            filename: 'report.pdf',
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: { scale: 2 },
+                            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                        };
+
+                        // New Promise-based usage:
+                        html2pdf().set(opt).from(element).save();
+
+                    }
+
+                    button.addEventListener('click', generatePDF);
+                </script>
+
+
+            </div>
+        </div>
+    }
+
+
+
+
+    @*  <EditForm style="margin:10px" OnSubmit="Submit" EditContext="@CurrentEditContext">
+        <DataAnnotationsValidator /> *@
+
+     <ResponsiveTable ModalFilter="false"
+                         PageSize="@PageSize"
+                         HasAction="true"                         
+                         @ref="@Grid"
+                         GridID="gridDynamicReport"
+                         RowEditClass=""
+                         RowNewClass=""
+                         InLineEdit=false
+                         Context="ITEM"
+                         TableItem="WorkOrderDetail"
+                         EnabledSearch="true"
+
+                         OnChangeWindow="ClearList"
+                         HasEdit="false"
+                         HasDelete="false"
+                         Component="@Component"
+                         HasNew="true"                        
+                         PaginationFunction1="LoadData"
+                         ReportView="true"
+                         AutoGenerateColumn="true"
+                         Report="report"
+                         PaginationView="@PaginationView">
+ 
+
+
+  
+                         
+             <NewButton>
+                <div class="row">
+                    <div class="col border border-dark">
+                        Total
+                    </div>
+                    <div class="col border border-dark">
+                        Late
+                    </div>
+                    <div class="col border border-dark">
+                        Due Today
+                    </div>
+                    <div class="col border border-dark">
+                        Next day
+                    </div>
+                    <div class="col border border-dark">
+                        2 days
+                    </div>
+                    <div class="col border border-dark">
+                        3 days
+                    </div>
+                    <div class="col border border-dark">
+                        4 days
+                    </div>
+
+                </div>
+                 <div class="row">
+                    <div class="col border border-dark">
+                         @Total
+                     </div>
+                    <div class="col border border-dark bg-danger text-white">
+                        @Late
+                     </div>
+                    <div class="col border border-dark bg-warning">
+                          @DueToday
+                     </div>
+                    <div class="col border border-dark bg-success">
+                        @NextDay
+                     </div>
+                    <div class="col border border-dark">
+                        @TwoDay
+                     </div>
+                      <div class="col border border-dark">
+                        @ThreeDay
+                     </div>
+                    <div class="col border border-dark">
+                        @FourDay
+                    </div>
+
+                 </div>
+
+
+             </NewButton>
+
+            <ChildContent>
+
+                <div class="col">
+
+                <GridColumn TableItem="WorkOrderDetail"  ControlType="navlink" Value="@(@"/WorkOrderCreate/")" Field="@Grid.GetPropertyName(() => eq.WorkOder.WorkOrderId)" Title="WO ID" />
+
+                <GridColumn TableItem="WorkOrderDetail"  ControlType="navlink" Value="@(@"/WorkOrderItem/")" Key="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailUserID)" Title="ID" />
+
+                <GridColumn TableItem="WorkOrderDetail"   Format="{0:MM/dd/yy}" CustomColumn="Div" Field="@Grid.GetPropertyName(() => eq.WorkOder.ScheduledDate)" Title="Due Date" DefaultSort="true" SortDescending="true" />
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.TestCode.Code)" Title="TestCode" />
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.EquipmentTemplate.EquipmentTypeGroup.Name)" Title="Equipment Type" />
+
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.CalibrationTypeID)" Title="CalibrationType">
+                    <ResponsiveTemplate Context="_context">
+
+                            @{
+
+                                var d1 = _context as WorkOrderDetail;
+                                EquipmentType cert = null;
+                                if (d1 != null && AppSecurity?.EquipmentTypeWODList?.Count > 0)
+                                {
+                                    AppSecurity.EquipmentTypeWODList.Where(x => x.CalibrationTypeID == d1.CalibrationTypeID).FirstOrDefault();
+                                }                            
+
+
+                        }
+                        @if (cert != null)
+                        {
+                            @cert.Name
+                        }
+
+                    </ResponsiveTemplate>
+
+                </GridColumn>
+
+                </div>
+
+                    <div class="col">
+                 
+
+                <GridColumn TableItem="WorkOrderDetail" ControlType="navlink" Value="@(@"/PieceOfEquipmentCreate/")" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.PieceOfEquipmentID)" Title="POE ID" />
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.EquipmentTemplate.Model)" Title="Model" />
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.SerialNumber)" Title="Serial" />
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOder.PurchaseOrder)" Title="PurchaseOrder" />
+
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOder.WorkOrderDate)" Format="{0:MM/dd/yy}" Title="Wo Date">
+
+
+
+                </GridColumn>
+
+
+
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.CurrentStatus.Name)" Title="Status"></GridColumn>
+
+                </div>
+
+                <div class="col">
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.Customer.Name)" Title="Customer"></GridColumn>
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.Technician.Name)" Title="Technician"></GridColumn>
+
+                </div>
+
+              
+
+
+            </ChildContent>
+
+
+
+
+            <GridRow>
+
+            
+
+            </GridRow>
+
+
+            <EditButton>
+                <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton"
+                   type="button" data-dismiss="modal" href="WorkOrderItem/@ITEM?.WorkOrderDetailID.ToString()">
+                    <span aria-hidden="true">View Detail</span>
+                </a>
+            </EditButton>
+
+            <GridFilter Context="filter">
+                @{
+
+
+                    var a = filter as FilterObject<WorkOrderDetail>;
+                    if (a != null && eq != null)
+                    {
+                        a.EntityFilter = eq;
+                    }
+
+
+                }
+
+               @*  <Blazed.Controls.MultiComponent.MultipleComponent Enabled="@Enabled"
+                                                                  Component="@Component"
+                                                                  HideElement="@HideElement"
+                                                                  IsRowView="@IsRowView"
+                                                                  UseResult="@UseResult.Value"
+                                                                  DynamicProperties="@DynamicPropertiesSchema.Where(x=>x.GridLocation=="row").ToList()"
+                                                                  ChangeEvent="ChangeMultipleControl"
+                                                                  Refresh="@refresh"
+                                                                  RefreshGrid="@RefreshGrid"
+                                                                  SelectValue="@SelectValue"
+                                                                  @ref="@MultipleComponent"
+                                                                  cmcValues="cmcValues"
+                                                                  InvertModel="true"
+                                                                  Tolerance="@tolerance"
+                                                                  Context="@_context"
+                                                                  Decimal="@DefaultDecimalNumber">
+                </Blazed.Controls.MultiComponent.MultipleComponent> *@
+              
+            </GridFilter>
+
+        </ResponsiveTable>
+
+    
+   @*  </EditForm> *@
+   
+   
+
+}
+
+@*</EditForm>*@
+
+@code
+{
+
+
+    RenderFragment Div(GridColumn<WorkOrderDetail> wod,object value,object Key)
+    {
+        //.bg - primary, .bg - success, .bg - info, .bg - warning, .bg - danger, .bg - secondary, .bg - dark and.bg - light
+
+        if (value != null)
+        {
+            string color = "";
+
+            if (((DateTime)value).Date < DateTime.Now.Date)
+            {
+                color = " bg-danger text-white";
+            }
+            if (((DateTime)value).Date == DateTime.Now.Date)
+            {
+                color = " bg-warning";
+            }
+            if (((DateTime)value).Date == DateTime.Now.AddDays(1).Date)
+            {
+                color = " bg-success";
+            }
+            
+            
+            var cssclass = wod.CSScol + color;
+
+            return @<div class="@cssclass">@(string.IsNullOrEmpty(wod.Format) ? value.ToString() : string.Format(wod.Format, value))</div>;
+        }
+
+        return@<div class="@wod.CSScol"></div>;
+    }
+
+    RenderFragment linkWO(GridColumn<WorkOrderDetail> wod, object PropertyValue)
+    {
+        //.bg - primary, .bg - success, .bg - info, .bg - warning, .bg - danger, .bg - secondary, .bg - dark and.bg - light
+
+        //return @<NavLink class="nav-link" href="BackLog/0"><span>@(string.IsNullOrEmpty(wod.Format) ? wod.PropertyValue : string.Format(wod.Format, wod.PropertyValue))</span></NavLink>
+        if (PropertyValue == null)
+        {
+            return@<div></div>;
+        }
+
+        wod.CSScol= "nav-link";
+        return @<NavLink href=@("WorkOrderCreate/" + PropertyValue) class="@wod.CSScol">@(PropertyValue.ToString())</NavLink>;
+    }
+
+    RenderFragment linkWOD(GridColumn<WorkOrderDetail> wod)
+    {
+        //.bg - primary, .bg - success, .bg - info, .bg - warning, .bg - danger, .bg - secondary, .bg - dark and.bg - light
+
+        //return @<NavLink class="nav-link" href="BackLog/0"><span>@(string.IsNullOrEmpty(wod.Format) ? wod.PropertyValue : string.Format(wod.Format, wod.PropertyValue))</span></NavLink>
+        if (wod.PropertyValue == null)
+        {
+            return@<div></div>;
+        }
+        
+        wod.CSScol = "nav-link";
+        return @<NavLink href=@("WorkOrderItem/" + wod.PropertyValue) class="@wod.CSScol">@(wod.PropertyValue.ToString())</NavLink>;
+    }
+
+
+
+    public List<WorkOrderDetail> _listWorkOrderDetail { get; set; } = new List<WorkOrderDetail>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //eq = Grid.currentEdit;
+        //CurrentEditContext = Grid.editContext;&& _listWorkOrderDetail.Count != WorkOrder_Create._listWorkOrderDetail.Count
+        //if (WorkOrder_Create != null )
+        //{
+
+        //    _listWorkOrderDetail = WorkOrder_Create._listWorkOrderDetail.ToList();
+        //    //foreach (var item in _listWorkOrderDetail)
+        //    //{
+        //    //    Grid.SaveNewItem(item); //Add(item);
+        //    //}
+        //    Grid.ItemsDataSource = _listWorkOrderDetail;
+        //}
+
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        //editContex = new EditContext(user);
+
+        await base.OnInitializedAsync();
+        
+
+
+    }
+
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        return base.OnParametersSetAsync();
+    }
+
+
+
+    public string _strroles { get; set; }
+
+    //IList<Rol> result= GetRoles(_strroles)
+
+
+
+    protected async Task Submit(EditContext editContext)
+    {
+
+    }
+
+
+    public void ClearList(EventArgs arg)
+    {
+        List.Clear();
+
+    }
+
+    public async void Show(List<WorkOrderDetail> group)
+    {
+        if (Grid != null && group != null)
+        {
+            _listWorkOrderDetail = group;
+
+
+            //gger.LogDebug(group.Count().ToString());
+
+            //foreach (var item in group)
+            //{
+            //    await Grid.SaveNewItem(item); //Add(item);
+            //}
+
+            //Grid.Items = group;
+            StateHasChanged();
+            //Logger.LogDebug(RT.ItemsDataSource.Count());
+        }
+
+
+    }
+
+
+
+}

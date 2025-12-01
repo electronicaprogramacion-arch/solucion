@@ -1,0 +1,78 @@
+﻿@namespace Blazed.Controls
+
+
+
+ 
+
+    <RadzenStack Orientation="@orientation" Gap="@gap" Reverse="@reverse" JustifyContent="@justifyContent" AlignItems="@alignItems" Wrap="@wrap">
+        <RadzenCard class="rz-p-1 rz-background-color-info rz-color-on-info rz-text-align-center">
+
+
+            <div class="row">
+
+
+                <div class="col">
+                    @if (ActionBar)
+                    {
+                        <nav class="navbar  rz-background-color-info rz-color-on-info" id="toolbarmodal" style="min-height:50px !important;width:100%;z-index:0 !important">
+                            @if (Enabled)
+                            {
+                                <button class="btn btn-sm btn-info shadow-sm"
+                                        type="submit" onclick="$('#executebutton').click();">
+                                    Save
+                                    <i class="fas fa-save fa-sm text-white-50"></i>
+                                </button>
+                            }
+                        </nav>
+                    }
+                </div>
+                <div class="col">
+                    @Title
+                </div>
+                <div class="col">
+                </div>
+            </div>
+
+        </RadzenCard>
+
+
+    </RadzenStack>
+    <div class="row">
+
+        <div class="progress" style="display:none" id="progressBar">
+            <div class="row" style="width:100%">
+                <div class="col">
+                    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+   
+
+@* <div class="text-muted">Render @(OperatingSystem.IsBrowser() ? "Wasm" : "Server")</div> *@
+@code {
+
+    [Parameter]
+    public bool ActionBar { get; set; } = true;
+
+    [Parameter]
+    public bool Enabled { get; set; }
+
+    [Parameter]
+    public string  Title { get; set; }
+
+    Orientation orientation = Orientation.Vertical;
+    AlignItems alignItems = AlignItems.Normal;
+    JustifyContent justifyContent = JustifyContent.Normal;
+    FlexWrap wrap = FlexWrap.NoWrap;
+    string gap = "10px";
+    bool reverse;
+
+}

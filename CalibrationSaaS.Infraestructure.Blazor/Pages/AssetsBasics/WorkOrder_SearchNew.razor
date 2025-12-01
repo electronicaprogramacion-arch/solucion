@@ -1,0 +1,197 @@
+@page "/WorkOrderSearchNew"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base
+@using Blazed.Controls
+@inherits WorkOrder_SearchNewBase
+
+
+
+<div id="WorkOrderContainer2">
+    <HeaderComponent Title="Work Order List" ActionBar="false"></HeaderComponent>
+
+    <ResponsiveTable ItemsDataSource="@List"
+                     PageSize="paginaSize"
+                     HasAction="true"
+                     Context="Entity"
+                     @ref="@Grid"
+                     GridID="gridWorkOrderSearch"
+                     InLineEdit="false"
+                     RowEditClass=""
+                     RowNewClass=""
+                     TableItem="WorkOrder"
+                     EnabledSearch="true"
+                     editContext="@CurrentEditContext"
+                     EnabledModal="false"
+                     OnChangeWindow="ClearList"
+                     SelectOnly="@SelectOnly"
+                     SaveButtonSubmit="false"
+                     PaginationFunction1="LoadData"                     
+                     DeleteAction="Delete"
+                     Component="@Component">
+
+        <ChildContent>
+
+            <GridColumns>
+
+                <GridColumn TableItem="WorkOrder"  Field="@Grid.GetPropertyName(() => eq.WorkOrderId)" Title="ID" CSScol="col-sm-1 customcol" />
+               @if(showEbms == true)
+               {
+                <GridColumn TableItem="WorkOrder" Field="@Grid.GetPropertyName(() => eq.Invoice)" Title="EBMS ID" CSScol="col-sm-2 customcol" />
+               }
+                @*<GridColumn TableItem="WorkOrder" Field="@Grid.GetPropertyName(() => eq.ControlNumber)" />*@
+                @* <GridColumn TableItem="WorkOrder" Field="@Grid.GetPropertyName(() => eq.CustomerId)" /> *@
+
+                <GridColumn TableItem="WorkOrder" Field="@Grid.GetPropertyName(() => eq.Customer.Name)" />
+
+
+                       <GridColumn TableItem="WorkOrder" Field="@Grid.GetPropertyName(() => eq.StatusID)" Title="Status">
+
+                        <ResponsiveTemplate Context="_context">
+
+                            @{
+                                WOStatus d;
+                                string h = "";
+                                var c = _context as WorkOrder;
+                                if (c.StatusID.HasValue)
+                                {
+                                   
+
+
+                                    d = AppSecurity.WOStatusList.Where(x=>x.WOStatusId==c.StatusID).FirstOrDefault();
+                                    if (d != null )
+                                    {
+                                        h = d.Name;
+                                    }
+
+                                }
+                            }
+                            @h
+
+
+                        </ResponsiveTemplate>
+
+                    </GridColumn>
+
+
+                <GridColumn TableItem="WorkOrder" Field="@Grid.GetPropertyName(() => eq.WorkOrderDate)" DefaultSort="true" />
+
+
+                   
+
+
+
+            </GridColumns>
+
+
+
+        </ChildContent>
+
+        @*<GridHeader>
+                <div class="col-sm customcol"></div>
+                <div class="col-sm customcol">Serial Number</div>
+                <div class="col-sm customcol">Model</div>
+                <div class="col-sm customcol">Customer</div>
+                <div class="col-sm customcol">Capacity</div>
+                <div class="col-sm customcol">Status</div>
+                <div class="col-sm customcol">Due Date</div>
+            </GridHeader>*@
+
+        <GridRow>
+
+
+
+            @*<div class="col-sm customcol inv">SerialNumber</div>
+                <div class="col-sm customcol">@Format(@Entity.SerialNumber)</div>
+                <div class="col-sm customcol inv">EquipmentTemplate</div>
+                <div class="col-sm customcol">@Format(@Entity.EquipmentTemplate.Model)</div>
+                <div class="col-sm customcol inv">Customer</div>
+                <div class="col-sm customcol">@Format(@Entity.Customer.Name)</div>
+                <div class="col-sm customcol inv">Capacity</div>
+                <div class="col-sm customcol">@Format(@Entity.Capacity)</div>
+                <div class="col-sm customcol inv">Status</div>
+                <div class="col-sm customcol">@Format(@Entity.Status)</div>
+                <div class="col-sm customcol inv">DueDate</div>
+                <div class="col-sm customcol">@Format(@Entity.DueDate)</div>*@
+
+
+
+        </GridRow>
+
+
+
+        @*<GridEdit>
+                <div class="row">
+                    <div class="col-md customcol">
+                        <TextInput @bind-Value="@Entity.SerialNumber" Label="Name" Validate="false" ValidationFor="@(()=> Entity.SerialNumber)"
+                                   LabelDown="false">
+
+                        </TextInput>
+                        @Grid.GetErrorMessage(nameof(Entity.SerialNumber))
+
+                    </div>
+
+                </div>
+
+
+            </GridEdit>*@
+
+        @*<GridSelect>
+
+                <button class="btn btn-sm btn-primary" id="_btnselect"
+                        @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                    select
+                </button>
+
+            </GridSelect>*@
+        <NewButton>
+            @if (ConnectionStatusService.GetCurrentStatus())
+            {
+                <a class="btn btn-primary btn-sm" href="WorkOrderCreate/0">
+                    <span>
+                        new @*<i class="fas fa-plus fa-sm"></i>*@
+                    </span>
+                </a>
+            }
+
+        </NewButton>
+        <EditButton>
+
+
+
+            <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                <a class="d-sm-inline-block btn btn-sm btn-primary shadow-sm editButton" href="WorkOrderCreate/@Entity.WorkOrderId">
+
+                    <span>edit <i class="fas fa-pen fa-sm"></i></span>
+                </a>
+            </div>
+        </EditButton>
+
+    </ResponsiveTable>
+
+</div>
+   
+
+
+
+@code {
+
+    RenderFragment Div(GridColumn<WorkOrder> wod)
+    {
+        //.bg - primary, .bg - success, .bg - info, .bg - warning, .bg - danger, .bg - secondary, .bg - dark and.bg - light
+
+        if (wod.PropertyValue != null)
+        {
+            
+        }
+
+       wod.CSScol = wod.CSScol + " bg-danger ";
+
+
+        return @<div class="@wod.CSScol">@(string.IsNullOrEmpty(wod.Format) ? wod.PropertyValue : string.Format(wod.Format, wod.PropertyValue))</div>;
+    }
+
+    }

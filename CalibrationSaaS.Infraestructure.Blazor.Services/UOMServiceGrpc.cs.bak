@@ -1,0 +1,125 @@
+﻿using Blazor.IndexedDB.Framework;
+using CalibrationSaaS.Application.Services;
+using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+using Grpc.Core;
+using Helpers.Controls.ValueObjects;
+using ProtoBuf.Grpc;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace CalibrationSaaS.Infraestructure.Blazor.Services
+{
+    public class UOMServiceGRPC : IDisposable, IUOMService<CallContext>
+    {
+
+        private CallContext context;
+
+
+        private readonly IIndexedDbFactory DbFactory;
+
+
+        private readonly IUOMService<CallContext> service;
+
+
+        public UOMServiceGRPC(Func<IIndexedDbFactory, Application.Services.IUOMService<CallContext>> _service, IIndexedDbFactory _DbFactory)
+        {
+            DbFactory = _DbFactory;
+            service = _service(DbFactory);
+            context = new CallOptions();
+        }
+
+        public UOMServiceGRPC(IUOMService<CallContext> _service)
+        {
+            service = _service;
+            context = new CallOptions();
+        }
+
+        public UOMServiceGRPC(IUOMService<CallContext> _service, CallContext _context)
+        {
+            service = _service;
+            context = _context;
+        }
+
+        public void Dispose()
+        {
+
+        }
+
+        public async ValueTask<UOMResultSet> GetAll(CallContext context = default)
+        {
+
+            if (service != null)
+            {
+                return await service.GetAll(context);
+            }
+            else
+            {
+                return new UOMResultSet();
+
+            }
+
+        }
+
+        public ValueTask<UnitOfMeasure> Create(UnitOfMeasure DTO, CallContext _context = default)
+        {
+            return service.Create(DTO, context);
+        }
+
+        public ValueTask<UnitOfMeasure> Delete(UnitOfMeasure DTO, CallContext _context = default)
+        {
+            return service.Delete(DTO, context);
+        }
+
+        public ValueTask<UnitOfMeasure> GetByID(UnitOfMeasure DTO, CallContext _context = default)
+        {
+            return service.GetByID(DTO, context);
+        }
+
+        public ValueTask<UOMResultSet> GetByType(UnitOfMeasureType Type, CallContext _context = default)
+        {
+            return service.GetByType(Type, context);
+        }
+
+        //public async ValueTask<UnitOfMeasure> Conversion(UnitOfMeasure _Source, 
+        //    UnitOfMeasure _Target, UnitOfMeasure _Base, UnitOfMeasure uncertain, CallContext _context = default)
+        //{
+        //    return _Source;
+        //}
+
+        public async ValueTask<ICollection<UnitOfMeasureType>> GetTypes(CallContext _context = default)
+        {
+            return await service.GetTypes(context);
+        }
+
+        public async ValueTask<UnitOfMeasure> Update(UnitOfMeasure DTO, CallContext _context = default)
+        {
+            return await service.Update(DTO, context);
+        }
+
+        public async ValueTask<UnitOfMeasureType> UpdateType(UnitOfMeasureType DTO, CallContext _context = default)
+        {
+            return await service.UpdateType(DTO, context);
+        }
+
+        public async ValueTask<UnitOfMeasureType> CreateType(UnitOfMeasureType DTO, CallContext _context = default)
+        {
+            return await service.CreateType(DTO, context);
+        }
+
+        public async ValueTask<UOMResultSet> GetAllEnabled(CallContext context)
+        {
+            return await service.GetAllEnabled(context);
+        }
+
+        public async ValueTask<ResultSet<UnitOfMeasure>> GetAllPag(Pagination<UnitOfMeasure> Pagination, CallContext _context = default)
+        {
+
+            return await service.GetAllPag(Pagination, context);
+
+
+
+        }
+    }
+}

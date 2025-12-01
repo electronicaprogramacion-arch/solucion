@@ -1,0 +1,155 @@
+﻿@page "/CMCValuesCreate/{EntityId}"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using Blazed.Controls
+@inherits CMCValues_CreateBase
+@implements IDisposable
+@using System.Linq.Expressions
+
+@{
+    // CascadeParamET
+    SetEnabled();
+}
+
+<div class="col-md-12">
+    <HeaderComponent Title="CMC Values" ActionBar="true" Enabled="true"></HeaderComponent>
+
+    <EditForm Model="@eq" style="margin:10px" OnSubmit="FormSubmitted" Context="CurrentEditContext">
+        <DataAnnotationsValidator />
+        <SubmitComponent>
+
+        </SubmitComponent>
+        <div class="row">
+            <div class="col-sm-12">
+                <ResponsiveTable ItemsDataSource="@LIST1" PageSize="5" HasAction="true"
+                                 TableItem="CalibrationSaaS.Domain.Aggregates.Entities.CMCValues"
+                                 @ref="@RT"
+                                 InLineEdit="@true"
+                                 EnabledModal="@false"
+                                 Context="context"
+                                 NewButtonText="Add CMC"
+                                 NewItemDefaultItem="@NewCMCValue"
+                                 HasDelete="@true"
+                                 Component="@Component"
+                                 ColActionCSS="col-sm-2"
+                                 RowExecute="RowChange"
+                                 EnabledDrag="true"
+                                 ClientDefaultSortField="CMCValueId"
+                                 ClientDefaultSortDirection="asc"
+                                 Key="CMCValueId">
+
+
+
+                    <ChildContent>
+
+                        <GridColumns>
+
+                            @* <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.CMCValues" Field="@RT.GetPropertyName(() => CMCValueRef.CMCValueId)" DefaultSort="true" Title="ID" IsVisble="true" /> *@
+
+                            <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.CMCValues" Field="@RT.GetPropertyName(() => CMCValueRef.IncludeEqualsMin)" Title="Include Equals" IsVisble="true" />
+
+                            <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.CMCValues" Field="@RT.GetPropertyName(() => CMCValueRef.MinRange)" Title="Min Range" />
+
+                            <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.CMCValues" Field="@RT.GetPropertyName(() => CMCValueRef.MaxRange)" Title="Max Range" />
+
+                            <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.CMCValues" Field="@RT.GetPropertyName(() => CMCValueRef.IncludeEqualsMax)" Title="Include Equals" IsVisble="true" />
+
+                            <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.CMCValues" Field="@RT.GetPropertyName(() => CMCValueRef.UnitofMeasureid)" Title="UoM" IsVisble="true" />
+
+                            <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.CMCValues" Field="@RT.GetPropertyName(() => CMCValueRef.CMC)" Title="CMC" IsVisble="true" />
+
+
+
+                        </GridColumns>
+
+
+                    </ChildContent>
+
+
+                    <GridRow>
+
+                    </GridRow>
+
+                    <GridEdit>
+                        <div class="row" style="width:100%">
+                          
+                            <div class="col-sm-2">
+
+                                <TextInput @bind-Value="@context.IncludeEqualsMin" Label="Include Equals Min" Validate="false"
+                                           LabelDown="@LabelDown" IsDisabled="false"
+                                           ValidationFor="@(() => context.IncludeEqualsMin)"
+                                           Type="@Types.Switch">
+                                </TextInput>
+                            </div>
+                            <div class="col-sm">
+
+                                <TextInput Label="Min Range" @bind-Value="context.MinRange"
+                                           Validate="true" ValidationFor="@(() => context.MinRange)" IsDisabled="false">
+
+
+                                </TextInput>
+                            </div>
+                            <div class="col-sm">
+
+                                <TextInput Label="Max Range" @bind-Value="context.MaxRange"
+                                           Validate="true" ValidationFor="@(() => context.MaxRange)" IsDisabled="false">
+
+
+                                </TextInput>
+                            </div>
+                            <div class="col-sm-2">
+
+                                <TextInput @bind-Value="@context.IncludeEqualsMax" Label="Include Equals Max" Validate="false"
+                                           LabelDown="@LabelDown" IsDisabled="false"
+                                           ValidationFor="@(() => context.IncludeEqualsMax)"
+                                           Type="@Types.Switch">
+                                </TextInput>
+                            </div>
+
+                            <div class="col-sm-3">
+
+                                <TextInput @bind-Value="@context.UnitofMeasureid" Label="UoM" TValue="int"
+                                           LabelDown="@LabelDown" IsDisabled="false" ValidationFor="(()=>context.UnitofMeasureid)">
+                                    @if (AppState.UnitofMeasureList != null)
+                                    {
+                                        @foreach (var item in AppState.UnitofMeasureList)
+                                        {
+                                            //string name = item.Name + " " + @item.LastName;
+
+                                            <option value="@item.UnitOfMeasureID">@item.Name</option>
+
+                                        }
+
+                                    }
+                                </TextInput>
+                            </div>
+
+                            <div class="col-sm">
+
+                                <TextInput Label="CMC" @bind-Value="context.CMC"
+                                           Validate="true" ValidationFor="@(() => context.CMC)" IsDisabled="false">
+
+
+                                </TextInput>
+                            </div>
+
+
+
+                        </div>
+
+                    </GridEdit>
+                </ResponsiveTable>
+               
+
+
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+
+@code{
+
+
+
+
+}

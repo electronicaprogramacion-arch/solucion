@@ -1,0 +1,3595 @@
+using CalibrationSaaS.Data.EntityFramework;
+using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+using CalibrationSaaS.Domain.Repositories;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using CalibrationSaaS.Infraestructure.EntityFramework.Helpers;
+using Microsoft.AspNetCore.Mvc;
+using System.Linq.Expressions;
+using CalibrationSaaS.Domain.Aggregates.Querys;
+using Helpers.Controls.ValueObjects;
+using Helpers;
+using System.ComponentModel;
+using LinqKit;
+using Microsoft.VisualBasic;
+using CalibrationSaaS.Domain.Aggregates.Interfaces;
+
+using Helpers.Models;
+using Bogus;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore.Metadata;
+using System.ComponentModel.DataAnnotations;
+using Azure;
+
+using System.Runtime.Intrinsics.Arm;
+using CalibrationSaaS.Domain.BusinessExceptions;
+using Helpers.Controls;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using Microsoft.Extensions.Configuration;
+using System.IO.Pipelines;
+
+namespace CalibrationSaaS.Infraestructure.EntityFramework.DataAccess
+{
+    public class PieceOfEquipmentRepositoryEF<TContext> : RepositoryEF<TContext>, IPieceOfEquipmentRepository, IDisposable where TContext : DbContext, ICalibrationSaaSDBContextBase
+    {
+
+        private readonly IDbContextFactory<TContext> DbFactory;
+
+        //private CalibrationSaaSDBContext context;
+        public PieceOfEquipmentRepositoryEF()
+        {
+
+
+        }
+
+        private IConfiguration _configuration;
+
+        public PieceOfEquipmentRepositoryEF(IDbContextFactory<TContext> dbFactory, IConfiguration configuration = null)
+        {
+            //this.context = context;
+            DbFactory = dbFactory;
+
+            _configuration = configuration;
+        }
+
+
+        //private CalibrationSaaSDBContext context;
+
+        //public PieceOfEquipmentRepositoryEF(CalibrationSaaSDBContext context)
+        //{
+        //    this.context = context;
+        //}
+
+        public async Task<PieceOfEquipment> DeletePieceOfEquipment(PieceOfEquipment poe)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            context.Entry(poe).State = EntityState.Deleted;
+          
+            await context.SaveChangesAsync();
+            return poe;
+        }
+
+
+        public async Task<PieceOfEquipment> GetPieceOfEquipmentByIDHeader(string poe)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            try
+            {
+                var res = await context.PieceOfEquipment.AsNoTracking().Where(x => x.PieceOfEquipmentID == poe).FirstOrDefaultAsync();
+                if (res != null)
+                {
+                    var etemp = await context.EquipmentTemplate.AsNoTracking().Include(x=>x.Manufacturer1).AsNoTracking().Where(x => res != null && x.EquipmentTemplateID == res.EquipmentTemplateId).FirstOrDefaultAsync();
+                    
+                    var uo = await context.UnitOfMeasure.AsNoTracking().Where(x => x.UnitOfMeasureID == res.UnitOfMeasureID).FirstOrDefaultAsync();
+
+                    if (etemp?.EquipmentTypeGroupID.HasValue == true)
+                    {
+                        var equip = await context.EquipmentTypeGroup.AsNoTracking().Where(x => x.EquipmentTypeGroupID == etemp.EquipmentTypeGroupID).FirstOrDefaultAsync();
+                        if (equip != null) 
+                        {
+                            etemp.EquipmentTypeGroup = equip;
+                        }
+                    }
+                    
+                    res.EquipmentTemplate = etemp;
+                    res.UnitOfMeasure = uo;
+                }
+                return res;
+            }
+            catch (Exception ex)
+            {
+                string message = ex.Message;
+                return null;
+            }
+        }
+
+        public async Task<PieceOfEquipment> GetPieceOfEquipmentByIDWhithouDynamic(string poe, bool LoadDynamic = true)
+        {
+
+            return await GetPieceOfEquipmentByID(poe, "", "PieceOfEquipmentCreate", false, LoadDynamic);
+
+
+        }
+
+
+            public async Task<PieceOfEquipment> GetPieceOfEquipmentByID(string poe, string user = "", string Component = "PieceOfEquipmentCreate", bool IsIndicator = false, bool LoadDynamic = true)
+        {
+
+           
+            
+
+            await using var context = await DbFactory.CreateDbContextAsync();
+            //var res = await context.PieceOfEquipment.AsNoTracking()
+
+            ////.Include(poe => poe.Indicator).AsNoTracking()
+            //.Include(bb => bb.EquipmentTemplate).ThenInclude(x => x.Manufacturer1).AsNoTracking()
+            ////.Include(bb => bb.EquipmentTemplate)
+            //.Include(c => c.WeightSets).AsNoTracking()
+            //.Include(e => e.UnitOfMeasure).AsNoTracking()
+            //.Include(a => a.Customer).ThenInclude(c => c.Aggregates).ThenInclude(e => e.Addresses).AsNoTracking()
+
+            //.Where(x => x.PieceOfEquipmentID == poe).FirstOrDefaultAsync();
+
+            PieceOfEquipment res = await context.PieceOfEquipment.AsNoTracking()
+
+                //.Include(poe => poe.Indicator)
+                //.Include(bb => bb.EquipmentTemplate).ThenInclude(x => x.Manufacturer1).AsNoTracking()
+               //.Include(bb => bb.EquipmentTemplate)
+               //.ThenInclude(x => x.EquipmentTypeObject).AsNoTracking()
+               //.Include(vb => vb.EquipmentTemplate).ThenInclude(x => x.Manufacturer1).AsNoTracking()
+               .Where(x => x.PieceOfEquipmentID == poe).FirstOrDefaultAsync();
+
+
+
+            if(res.SerialNumber== "testtruckscale")
+            {
+                var c1234 = 1;
+            }
+
+            var eqtp = await context.EquipmentTemplate.Include(x => x.Manufacturer1).AsNoTracking().Where(x => res != null && x.EquipmentTemplateID == res.EquipmentTemplateId).FirstOrDefaultAsync();
+            ////////
+            ///
+            if (eqtp== null )
+            {
+                throw new Exception("ET not configured");
+            }
+
+            res.EquipmentTemplate = eqtp;
+
+            if (res != null)
+            {
+                //var ws = await context.WeightSet.AsNoTracking().Where(x => x.PieceOfEquipmentID == poe || x.Serial == res.SerialNumber).ToListAsync();
+
+                var ws = await context.WeightSet.AsNoTracking().Where(x => x.PieceOfEquipmentID == poe && x.IsDelete==false).ToListAsync();
+
+               
+                res.WeightSets = ws;
+               
+             
+            }
+
+            if (res?.CustomerId > 0)
+            {
+                var result = await context.Customer.AsNoTracking()
+           .Include(x => x.Aggregates)
+           .ThenInclude(d => d.Addresses).AsSplitQuery()
+           .AsNoTracking().Include(x => x.Aggregates)
+           .ThenInclude(d => d.Contacts).AsSplitQuery()
+           .AsNoTracking().Include(x => x.Aggregates)
+           .Where(x => x.CustomerID == res.CustomerId).AsSplitQuery().AsNoTracking().FirstOrDefaultAsync();
+
+                res.Customer = result;
+            }
+
+
+            ////////
+
+            if (res != null && res.Customer != null && res.Customer.Aggregates != null)
+            {
+                foreach (var item in res.Customer.Aggregates)
+                {
+                    await context.Entry(item).Collection(p => p.Addresses).LoadAsync();
+                }
+            }
+
+
+            var u = await context.POE_User.AsNoTracking().Include(x => x.User).Where(x => x.PieceOfEquipmentID == poe).ToListAsync();
+
+            //yp var etp = await context.EquipmentType.Where(x => x.EquipmentTypeID == res.EquipmentTemplate.EquipmentTypeID).AsNoTracking().FirstOrDefaultAsync();
+
+            EquipmentTypeGroup etp1 = null;
+            if (res != null)
+            {
+                var indica = await context.PieceOfEquipment.AsNoTracking().Where(x => x.PieceOfEquipmentID == res.IndicatorPieceOfEquipmentID).FirstOrDefaultAsync();
+
+                res.Indicator = indica;
+
+               // etp1 = await context.EquipmentTypeGroup.AsNoTracking().Where(x => x.EquipmentTypeGroupID == res.EquipmentTemplate.EquipmentTypeGroupID).AsNoTracking().FirstOrDefaultAsync();
+            }
+
+
+            EquipmentTemplate resET = new EquipmentTemplate();
+            //yp get EquipmentTypes with equipmentTypeGroupId 
+            var etplist = new List<EquipmentType>();
+
+            if (res?.EquipmentTemplate?.EquipmentTypeGroupID.HasValue == true)
+            {
+                etplist = await context.EquipmentType.AsNoTracking()
+                .Where(x => x.EquipmentTypeGroupID.HasValue && x.EquipmentTypeGroupID == res.EquipmentTemplate.EquipmentTypeGroupID).AsNoTracking().ToListAsync();
+
+            }
+
+            var certificatePoes = context.CertificatePoE.Where(x => x.PieceOfEquipmentID == poe).AsNoTracking();
+
+            if (certificatePoes != null && certificatePoes.Count() > 0)
+            {
+                res.CertificatePoEs = certificatePoes.ToList();
+            }
+                ///YP
+                ///
+                if (LoadDynamic && (etplist!=null && etplist.Count() > 0))
+                {
+                    foreach (var etp in etplist)
+                    {
+                        if (etp != null && (etp.DynamicConfiguration || etp.DynamicConfiguration2) && !IsIndicator)
+                        {
+                            //var ctc = await GetDynamicConfiguration(etp.CalibrationTypeID, Component);
+
+                            //etp.CalibrationType = ctc;
+
+                            if (etp.DynamicConfiguration2)
+                            {
+                                res.TestPointResult = await context.GenericCalibrationResult2.Where(x => x.ComponentID == poe && (x.Component == Component || string.IsNullOrEmpty(Component))).AsNoTracking().ToListAsync();
+
+                     
+
+                        }
+                    }
+                        
+                        if (etp1 != null)
+                        {
+
+                            res.EquipmentTemplate.EquipmentTypeGroup = etp1;
+                    }
+
+                    }
+
+                if (etplist.Count > 0)
+                {
+                    resET.AditionalEquipmentTypes = etplist;
+                }
+
+            }
+
+
+            ///////
+            ///
+            /// 
+            /// YP
+            /// 
+            /// This the same above
+            //EquipmentTemplate resET = new EquipmentTemplate();
+            //if (res.EquipmentTemplate != null && res.EquipmentTemplate.EquipmentTypeGroupID.HasValue)
+            //{
+            //    var etg = await context.EquipmentType.AsNoTracking()
+            //        .Where(x => x.EquipmentTypeGroupID.Value == res.EquipmentTemplate.EquipmentTypeGroupID.Value).ToListAsync();
+
+            //    if (etg.Count > 0)
+            //    {
+            //        resET.AditionalEquipmentTypes = etg;
+            //    }
+
+            //}
+            ///when use the field equipmttype and no group
+
+            if (res != null && res.EquipmentTemplate != null && res.EquipmentTemplate.EquipmentTypeGroupID.HasValue == false && res.EquipmentTemplate.EquipmentTypeObject != null && !string.IsNullOrEmpty(res.EquipmentTemplate.EquipmentType)
+                    && res.EquipmentTemplate.EquipmentTypeObject?.ETCalculatedAlgorithm != "Parent")
+                {
+                    var arr = res.EquipmentTemplate.EquipmentType.Split(',');
+
+
+                    if (arr?.Length > 1)
+                    {
+                        var AditionalEquipmentTypes = new List<EquipmentType>();
+
+                        foreach (var item in arr)
+                        {
+                            var it = Convert.ToInt32(item);
+
+                            var et2 = await context.EquipmentType.AsNoTracking().Where(x => x.EquipmentTypeID == it && x.ETCalculatedAlgorithm != "Parent").FirstOrDefaultAsync();
+
+                            if (et2 != null)
+                            {
+                                AditionalEquipmentTypes.Add(et2);
+                            }
+                        }
+                        resET.AditionalEquipmentTypes = AditionalEquipmentTypes;
+                    }
+                }
+
+
+
+                if (LoadDynamic && resET?.AditionalEquipmentTypes?.Count > 0)
+                {
+
+                    var PieceOfEquipmentRepository = new PieceOfEquipmentRepositoryEF<TContext>(DbFactory);
+
+                    foreach (var itemux in resET.AditionalEquipmentTypes)
+                    {
+                        if (itemux != null && (itemux.DynamicConfiguration || itemux.DynamicConfiguration2))
+                        {
+
+                           if(itemux?.CalibrationType == null || itemux?.CalibrationType?.CalibrationSubTypes?.Count == 0)
+                            {
+                            //var ctc = await PieceOfEquipmentRepository.GetDynamicConfiguration(itemux.CalibrationTypeID,Component);
+
+                            //itemux.CalibrationType = ctc;
+                            
+                            }
+
+                            
+
+                            if (resET.EquipmentTypeObject != null && resET.EquipmentTypeObject.DynamicConfiguration2)
+                            {
+                                var dynamicprop = await context.GenericCalibrationResult2.AsNoTracking().Where(x => x.ComponentID == resET.EquipmentTemplateID.ToString() && (x.Component == "EquipmentTemplate")).AsNoTracking().ToListAsync();
+                                if (!dynamicprop.Any() && dynamicprop.Count() > 0)
+                                    resET.TestPointResult.AddRange(dynamicprop);
+                            }
+                        }
+                        else
+                        {
+                           
+                            itemux.CalibrationType = await context.CalibrationType.AsNoTracking().Include(b=>b.CalibrationSubTypes).ThenInclude(a=>a.CalibrationSubTypeView).Where(x => x.CalibrationTypeId == itemux.CalibrationTypeID).FirstOrDefaultAsync();
+                            if (itemux.CalibrationType != null && itemux.CalibrationType.CalibrationSubTypes != null && itemux.CalibrationType.CalibrationSubTypes.Count > 0)
+                            {
+                                foreach (var item in itemux.CalibrationType.CalibrationSubTypes)
+                                {
+                                    if (item.CalibrationSubTypeView != null)
+                                    {
+                                        item.CalibrationSubTypeView.CalibrationSubType = null;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    res.EquipmentTemplate.AditionalEquipmentTypes = resET.AditionalEquipmentTypes;
+                    res.EquipmentTemplate.AditionalEquipmentTypesJSON = Newtonsoft.Json.JsonConvert.SerializeObject(resET.AditionalEquipmentTypes);
+                }
+
+                               
+
+                /// res.EquipmentTemplate.AditionalEquipmentTypesJSON = Newtonsoft.Json.JsonConvert.SerializeObject(resET.AditionalEquipmentTypes); //resET.AditionalEquipmentTypesJSON;
+                ////////////
+
+
+                //
+
+                if (u != null && u?.Count > 0)
+                {
+                    res.Users = new List<User>();
+                    foreach (var item in u)
+                    {
+                        res.Users.Add(item.User);
+                    }
+                }
+
+            
+
+                var d = await context.POE_POE.AsNoTracking().Where(x => x.PieceOfEquipmentID == poe).AsNoTracking().AsNoTracking().FirstOrDefaultAsync();
+
+                if (d != null)
+               
+                {
+
+                    res.Peripherals = new List<PieceOfEquipment>();
+
+
+                    var f = await context.PieceOfEquipment.AsNoTracking().Include(x => x.POE_POE).Include(x => x.EquipmentTemplate).AsNoTracking().
+                        Where(x => context.POE_POE.AsNoTracking().Any(c => c.PieceOfEquipmentID == poe && x.PieceOfEquipmentID == c.PieceOfEquipmentID2)).ToListAsync();
+
+                    foreach (var item in f)
+                    {
+                        item.EquipmentTemplate.PieceOfEquipments = null;
+
+                        item.POE_POE = null;
+                        item.WorOrderDetails = null;
+                        res.Peripherals.Add(item);
+                    }
+
+                }
+
+                if (res != null && res.EquipmentTemplate != null && !IsIndicator)
+                {
+                    var tg = await context.TestPointGroup
+                        .AsNoTracking()
+                        .Include(x => x.TestPoints).AsNoTracking()
+                        .Where(x => x.EquipmentTemplateID == res.EquipmentTemplate.EquipmentTemplateID && x.TypeID.ToLower() == "linearity").ToListAsync();
+
+                    if (tg?.Count > 0)
+                    {
+                        res.EquipmentTemplate.TestGroups = tg;
+
+                    }
+
+                }
+                if (res != null && (res.IsToleranceImport || res.IsTestPointImport))
+                {
+                    var tgPOE = await context.TestPointGroup
+                        .AsNoTracking()
+                        .Include(x => x.TestPoints).Where(x => x.PieceOfEquipmentID == poe && x.TypeID.ToLower() == "poe").ToListAsync();
+
+                    if (tgPOE?.Count > 0)
+                    {
+                        res.TestGroups = tgPOE;
+
+                    }
+                }
+
+
+            if (res.Indicator != null &&  res.Indicator.PieceOfEquipmentID != null && !IsIndicator && res.PieceOfEquipmentID != res.Indicator.PieceOfEquipmentID)
+            {
+                PieceOfEquipment poe2 = await GetPieceOfEquipmentByID(res.Indicator.PieceOfEquipmentID, user, Component, true);
+
+                res.Indicator = poe2;
+            }
+
+            var rr = await context.RangeTolerance.Where(x => x.PieceOfEquipmentID == res.PieceOfEquipmentID).ToListAsync();
+
+                res.Ranges = rr;
+
+
+                var wod = await context.WorkOrderDetail.AsNoTracking().Where(x => x.PieceOfEquipmentId == poe && x.CurrentStatusID == 4 && (!string.IsNullOrEmpty(x.TechnicianComment) || !string.IsNullOrEmpty(x.CertificateComment))).ToListAsync();
+
+                string wodNotes = "";
+                if(wod.Count > 0)
+
+                {
+                   
+
+                    foreach (var item in wod)
+                    {
+
+                        var Technician = await context.User.AsNoTracking().Where(x => x.UserID == item.TechnicianID.Value).FirstOrDefaultAsync();
+
+                        var techname = Technician.Name + " " + Technician.LastName;
+
+
+                        var tc = DateTime.Now.ToShortDateString().Replace("/", "-") + " " + techname + " - ";
+
+                        if (!string.IsNullOrEmpty(item.TechnicianComment))
+                        {
+                            wodNotes = wodNotes + tc + item.TechnicianComment + Environment.NewLine ; 
+                        }
+
+                         if (!string.IsNullOrEmpty(item.CertificateComment))
+                        {
+                            wodNotes = wodNotes  + "Certificate Comment: "  + item.CertificateComment + Environment.NewLine;
+                        }
+
+                        wodNotes = wodNotes + " ____________________________ ";
+                    }
+
+                    res.JobComments = wodNotes;
+                }
+
+                var um = await context.UnitOfMeasure.AsNoTracking().FirstOrDefaultAsync(x=>x.UnitOfMeasureID == res.UnitOfMeasureID);
+
+                if (um != null)
+                {
+                    res.UnitOfMeasure = um;
+                }
+
+                BasicsRepositoryEF<TContext> basicsRepositoryEF = new BasicsRepositoryEF<TContext>(DbFactory);
+
+                res.EquipmentTemplate =await  basicsRepositoryEF.GetEquipmentByID(res.EquipmentTemplate);
+                //var uncert= await context.Uncertainty.AsNoTracking().Where(x => x.PieceOfEquipmentID == res.PieceOfEquipmentID).ToListAsync();
+
+            //res.Uncertainty = uncert;   
+
+
+            //res.EquipmentTemplate.Uncertainty= await context.Uncertainty.AsNoTracking().Where(x => x.EquipmentTemplateID == res.EquipmentTemplate.EquipmentTemplateID).ToListAsync();
+
+                return res;
+
+            
+        }
+
+
+        public async Task<CalibrationType> GetDynamicConfiguration2(int CalibrationTypeID)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+            //var CalibrationType = await context.CalibrationType.AsNoTracking().IgnoreAutoIncludes()
+            //        .Include(x => x.CalibrationSubTypes).ThenInclude(x => x.CalibrationSubTypeView)
+            //        .Where(x => x.CalibrationTypeId == CalibrationTypeID).FirstOrDefaultAsync();
+
+            var CalibrationType = await context.CalibrationType.Where(x => x.CalibrationTypeId == CalibrationTypeID).FirstOrDefaultAsync();
+
+            await context.Entry<CalibrationType>(CalibrationType).Collection<CalibrationSubType>(p => p.CalibrationSubTypes)
+                  .LoadAsync();
+
+
+
+            if (CalibrationType != null && CalibrationType.CalibrationSubTypes != null)
+
+
+                foreach (var item3 in CalibrationType.CalibrationSubTypes.OrderBy(x => x.Position))
+                {
+                    await context.Entry<CalibrationSubType>(item3).Reference<CalibrationSubTypeView>(x => x.CalibrationSubTypeView).LoadAsync();
+
+                    List<DynamicProperty> properties = await context.DynamicProperty.AsNoTracking().Where(x => x.CalibrationSubtype == item3.CalibrationSubTypeId).ToListAsync();
+
+                    foreach (var vp in properties)
+                    {
+                        vp.ViewPropertyBase = await context.ViewPropertyBase.AsNoTracking().Where(x => x.ViewPropertyID == vp.ViewPropertyBaseID).FirstOrDefaultAsync();
+                    }
+
+
+
+                    item3.DynamicPropertiesSchema = properties; //estaba
+
+
+
+                }
+
+
+            foreach (var item3 in CalibrationType.CalibrationSubTypes.OrderBy(x => x.Position))
+            {
+
+                foreach (var item4 in item3.DynamicPropertiesSchema)
+                {
+                    item4.ViewPropertyBase.DynamicProperty = null;
+                }
+
+                if (item3?.CalibrationSubTypeView?.CalibrationSubType != null)
+                {
+                    item3.CalibrationSubTypeView.CalibrationSubType = null;
+                }
+                //else if(item3 == null || item3.CalibrationSubTypeView== null  )
+                //{
+                //    if(item3 != null)
+                //    {
+                //        throw new Exception("Error in configuration in " + item3.Name + "  " + item3.CalibrationSubTypeId);
+                //    }
+                //    else
+                //    {
+                //        throw new Exception("Error in configuration Emty calibration" );
+                //    }
+                //}
+
+            }
+
+
+
+            return CalibrationType;
+
+        }
+
+
+        public async Task<CalibrationType> GetDynamicConfiguration(int CalibrationTypeID,string Component="")
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+            //var CalibrationType = await context.CalibrationType.AsNoTracking().IgnoreAutoIncludes()
+            //        .Include(x => x.CalibrationSubTypes).ThenInclude(x => x.CalibrationSubTypeView)
+            //        .Where(x => x.CalibrationTypeId == CalibrationTypeID).FirstOrDefaultAsync();
+
+            var CalibrationType = await context.CalibrationType.Where(x => x.CalibrationTypeId == CalibrationTypeID)
+                                 .Include(x => x.CalibrationSubTypes).ThenInclude(x => x.CalibrationSubTypeView)
+                                  .Where(x => x.CalibrationTypeId == CalibrationTypeID).FirstOrDefaultAsync();
+
+                                 
+
+
+
+
+
+            if (!string.IsNullOrEmpty(Component) && CalibrationType?.CalibrationSubTypes?.Any(x => x.CalibrationSubTypeView != null) == true)
+            {
+                //  await context.Entry<CalibrationType>(CalibrationType).Collection<CalibrationSubType>(p => p.CalibrationSubTypes.Where(x=>x.CalibrationSubTypeView.Component== Component))
+                //.LoadAsync();
+
+
+                CalibrationType.CalibrationSubTypes = CalibrationType.CalibrationSubTypes.Where(x => x.CalibrationTypeId == CalibrationType.CalibrationTypeId && x.CalibrationSubTypeView != null && x.CalibrationSubTypeView.Component == Component).ToList(); //await context.CalibrationSubType.AsNoTracking().Where(x =>x.CalibrationTypeId== CalibrationType.CalibrationTypeId && x.CalibrationSubTypeView.Component == Component).ToListAsync();
+
+
+            }
+            else
+            {
+                //  await context.Entry<CalibrationType>(CalibrationType).Collection<CalibrationSubType>(p => p.CalibrationSubTypes)
+                //.LoadAsync();
+
+
+
+                CalibrationType.CalibrationSubTypes = await context.CalibrationSubType.AsNoTracking().Where(x => x.CalibrationTypeId == CalibrationType.CalibrationTypeId).ToListAsync();
+
+
+            }
+
+
+
+
+            if (CalibrationType != null && CalibrationType.CalibrationSubTypes != null)
+                
+                
+                foreach (var item3 in CalibrationType.CalibrationSubTypes.OrderBy(x=>x.Position))
+                {
+                    await context.Entry<CalibrationSubType>(item3).Reference<CalibrationSubTypeView>(x => x.CalibrationSubTypeView).LoadAsync();
+
+                   List<DynamicProperty> properties = await context.DynamicProperty.AsNoTracking().Where(x => x.CalibrationSubtype == item3.CalibrationSubTypeId).ToListAsync();
+                   
+                    foreach (var vp in properties)
+                    {
+                        vp.ViewPropertyBase = await context.ViewPropertyBase.AsNoTracking().Where(x => x.ViewPropertyID == vp.ViewPropertyBaseID).FirstOrDefaultAsync();
+                    }
+
+
+
+                    item3.DynamicPropertiesSchema = properties; //estaba
+               
+                    
+
+                }
+
+
+                foreach (var item3 in CalibrationType.CalibrationSubTypes.OrderBy(x => x.Position))
+                {
+
+                    foreach (var item4 in item3.DynamicPropertiesSchema)
+                    {
+                        item4.ViewPropertyBase.DynamicProperty = null;
+                    }
+
+                if (item3?.CalibrationSubTypeView?.CalibrationSubType != null)
+                {
+                    item3.CalibrationSubTypeView.CalibrationSubType = null;
+                }
+                //else if(item3 == null || item3.CalibrationSubTypeView== null  )
+                //{
+                //    if(item3 != null)
+                //    {
+                //        throw new Exception("Error in configuration in " + item3.Name + "  " + item3.CalibrationSubTypeId);
+                //    }
+                //    else
+                //    {
+                //        throw new Exception("Error in configuration Emty calibration" );
+                //    }
+                //}
+                    
+            }
+
+     
+
+                return CalibrationType;
+
+        }
+
+
+
+
+        public async Task<ResultSet<PieceOfEquipment>> GetAllWeightSetsPag(Pagination<PieceOfEquipment> pagination,
+            bool includeDuedate=false,bool includeAcred=false,bool includeiclude=true)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+            var DTO = pagination.Entity;
+
+            var DTO1 = pagination.EntityType;
+
+            var filterQuery = Querys.FilterWeightSets(pagination);
+
+            int ct = 0;
+
+            if(pagination?.Entity?.EquipmentTemplate != null){
+
+                if (pagination?.Entity?.EquipmentTemplate?.EquipmentTypeObject?.CalibrationTypeID == 8)
+                {
+                    ct = 1;
+                }                    
+                else if(pagination?.Entity?.EquipmentTemplate?.EquipmentTypeObject?.CalibrationTypeID != 8)
+                {
+                    ct = pagination.Entity.EquipmentTemplate.EquipmentTypeObject.CalibrationTypeID;
+                }
+                else if(ct==0)
+                {  ////code for bitteman
+                    ct = 1;
+                }
+            }
+
+            ////code for bitteman
+            if (ct == 0)
+            {
+                ct = 1;
+            }
+
+            //int EquipmentTypeId = 0;
+
+            //if (DTO.EquipmentTemplate.EquipmentTypeObject.EquipmentTypeID > 0)
+            //{
+            //    EquipmentTypeId = DTO.EquipmentTemplate.EquipmentTypeObject.EquipmentTypeID;
+            //}
+
+            List<int> EquipmentTypeId = new List<int>();
+
+            if (!string.IsNullOrEmpty(DTO1))
+            {
+
+                if (DTO1.Contains(","))
+                {
+                    EquipmentTypeId = Newtonsoft.Json.JsonConvert.DeserializeObject<List<int>>(DTO1);
+                }
+                else if(NumericExtensions.IsNumeric(DTO1))
+                {
+                    EquipmentTypeId.Add(Convert.ToInt32(DTO1));
+                }    
+            }
+
+            IQueryable<PieceOfEquipment> queriable = null;
+
+            //if (EquipmentTypeId == 0)
+                if (EquipmentTypeId.Count==0)
+                {
+                queriable = context.PieceOfEquipment.AsNoTracking()
+             .Include(x => x.EquipmentTemplate)
+             //.ThenInclude(a => a.EquipmentTypeGroup)
+            //.Include(x => x.UnitOfMeasure).AsNoTracking()
+            .Join(
+                    context.EquipmentType,
+                    pieceOfEquipment => pieceOfEquipment.EquipmentTemplate.EquipmentTypeGroupID,
+                    equipmentTypeObject => equipmentTypeObject.EquipmentTypeGroupID,
+                    (pieceOfEquipment, equipmentTypeObject) => new { pieceOfEquipment, equipmentTypeObject }
+                )
+            .Where(result =>
+                        (result.pieceOfEquipment.DueDate >= DateTime.Today || includeDuedate)
+                        && (result.pieceOfEquipment.IsForAccreditedCal == DTO.IsForAccreditedCal
+                            || (DTO.IsForAccreditedCal == false && result.pieceOfEquipment.IsForAccreditedCal == true)
+                            || includeAcred)
+                        && result.equipmentTypeObject.CalibrationTypeID == ct
+                        && (result.equipmentTypeObject.HasStandard
+                            || result.equipmentTypeObject.HasStandardRange
+                            || result.equipmentTypeObject.HasStandardConfiguration)
+                    )
+                    .OrderBy(result => result.pieceOfEquipment.DueDate)
+                    .Select(result => result.pieceOfEquipment)
+                    .AsQueryable();
+
+              
+              
+
+            }
+            else if(EquipmentTypeId.Count > 0)
+            {
+                queriable = context.PieceOfEquipment.AsNoTracking()
+            .Include(x => x.EquipmentTemplate)
+           //.ThenInclude(a => a.EquipmentTypeGroup)
+           //.Include(x => x.UnitOfMeasure).AsNoTracking()
+           .Join(
+                   context.EquipmentType,
+                   pieceOfEquipment => pieceOfEquipment.EquipmentTemplate.EquipmentTypeGroupID,
+                   equipmentTypeObject => equipmentTypeObject.EquipmentTypeGroupID,
+                   (pieceOfEquipment, equipmentTypeObject) => new { pieceOfEquipment, equipmentTypeObject }
+               )
+           .Where(result =>
+                       (result.pieceOfEquipment.DueDate >= DateTime.Today || includeDuedate)
+                       && (result.pieceOfEquipment.IsForAccreditedCal == DTO.IsForAccreditedCal
+                           || (DTO.IsForAccreditedCal == false && result.pieceOfEquipment.IsForAccreditedCal == true)
+                           || includeAcred)
+                       && EquipmentTypeId.Contains(result.equipmentTypeObject.EquipmentTypeID)//result.equipmentTypeObject.EquipmentTypeID == EquipmentTypeId
+                       && (result.equipmentTypeObject.HasStandard
+                           || result.equipmentTypeObject.HasStandardRange
+                           || result.equipmentTypeObject.HasStandardConfiguration)
+                   )
+                   .OrderBy(result => result.pieceOfEquipment.DueDate)
+                   .Select(result => result.pieceOfEquipment)
+                   .AsQueryable();
+
+            
+
+
+
+
+
+
+                //     queriable = context.PieceOfEquipment.AsNoTracking()
+                // .Include(x => x.EquipmentTemplate)
+
+
+                //.Include(x => x.UnitOfMeasure).AsNoTracking()
+                //.Where(x => ((x.DueDate >= DateTime.Today || includeDuedate)
+
+                //   //&& (x.EquipmentTemplate.EquipmentTypeObject.CalibrationTypeID == ct && x.EquipmentTemplate.EquipmentTypeID == EquipmentTypeId) 
+                //   && (x.EquipmentTemplate.EquipmentTypeID == EquipmentTypeId)
+                //   && (x.EquipmentTemplate.EquipmentTypeObject.HasStandard || x.EquipmentTemplate.EquipmentTypeObject.HasStandardRange
+                //   || x.EquipmentTemplate.EquipmentTypeObject.HasStandardConfiguration))
+                //      && (
+                //      (x.IsForAccreditedCal == DTO.IsForAccreditedCal) || (DTO.IsForAccreditedCal == false && x.IsForAccreditedCal == true) || includeAcred               
+
+                //      )
+                //      ).OrderBy(c => c.DueDate).AsQueryable();
+            }
+
+            //queriable = queriable.Distinct() ;
+            var simplequery = queriable;
+            var result = await queriable.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery, filterQuery);
+
+            if (result?.List?.Count > 0)
+            {
+                result.List = result.List.DistinctBy(x => x.PieceOfEquipmentID).ToList();
+            }
+            if ((result.List == null || result.List.Count == 0) && includeiclude)
+            {
+
+                var restemp = await GetAllWeightSetsPag(pagination, true, false,false);
+
+                if (restemp.List.Count > 0)
+                {
+                    result.Message = "Standards found but  Standards are expired;";
+
+                    return result;
+                }
+
+
+                restemp = await GetAllWeightSetsPag(pagination, false, true,false);
+                
+                if (restemp.List.Count > 0)
+                {
+                       result.Message = "Standards found but Standards Not acredited";
+
+                        return result;
+                    
+
+                  
+
+                }
+
+
+
+                result.Message = "Standards Not Found, review Equipment Type configuration";
+
+
+                return result;
+            }
+
+
+                if (result.List != null && result.List.Count > 0)
+            {
+
+
+
+                foreach (var item in result.List)
+                {
+                    //var weig = await context.WeightSet.AsNoTracking().Include(x => x.UnitOfMeasure).Where(x=>x.PieceOfEquipmentID==item.PieceOfEquipmentID || x.Serial == item.SerialNumber).ToListAsync();
+
+                    var weig = await context.WeightSet.AsNoTracking().Include(x => x.UnitOfMeasure).Where(x => x.PieceOfEquipmentID == item.PieceOfEquipmentID).ToListAsync();
+
+
+                    item.WeightSets = weig;
+
+                    if(ct > 1)
+                    {
+                        item.TestPointResult = await context.GenericCalibrationResult2.AsNoTracking().Where(x => x.ComponentID == item.PieceOfEquipmentID && x.Component == "PieceOfEquipmentCreate"). ToListAsync();
+
+                        
+                    }
+
+
+                    if (item?.EquipmentTemplate?.EquipmentTypeGroupID.HasValue == true)
+                    {
+                        var etgo = await context.EquipmentTypeGroup.AsNoTracking().Where(x => x.EquipmentTypeGroupID == item.EquipmentTemplate.EquipmentTypeGroupID).FirstOrDefaultAsync();
+
+                        item.EquipmentTemplate.EquipmentTypeGroup = etgo;
+                    }
+                 
+
+
+                    //if (item.EquipmentTemplate == null)
+                    //{
+                    //    var et = await context.EquipmentTemplate.Include(x => x.EquipmentTypeObject).AsNoTracking().Where(x => x.EquipmentTemplateID == item.EquipmentTemplateId).FirstOrDefaultAsync();
+
+                    //    item.EquipmentTemplate = et;
+                    //}
+
+
+                }
+            }
+
+            result.Count = result.List.Count;
+
+            if (pagination.Min.HasValue  && pagination.Max.HasValue )
+            {
+
+                int min = pagination.Min.Value;
+                int max = pagination.Max.Value;
+
+                if(max > result.List.Count)
+                {
+                    max = result.List.Count;
+                }
+                result.List = result.List[min .. max].ToList();
+                
+                return result;
+            }
+            
+            
+
+            return result;
+
+        }
+
+
+        
+
+
+        public async Task<ResultSet<PieceOfEquipment>> GetAllPeripheralsPag(Pagination<PieceOfEquipment> pagination)
+        {
+
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+            var DTO = pagination.Entity;
+
+            var filterQuery = Querys.POEWOFilter(pagination.Filter);
+
+            var queriable = context.PieceOfEquipment.AsNoTracking().Include(x => x.EquipmentTemplate).AsNoTracking().Include(x => x.WeightSets).ThenInclude(x => x.UnitOfMeasure).AsNoTracking()
+                .Include(x => x.UnitOfMeasure).AsNoTracking()
+                .Where(x => x.EquipmentTemplate != null
+                //&& x.EquipmentTemplate.EquipmentTypeID == 4 
+                && x.EquipmentTemplate.EquipmentTypeGroupID == 133
+                && x.CustomerId == DTO.Customer.CustomerID)
+                .AsQueryable();
+
+            var simplequery = queriable;
+             var result = await queriable.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery, filterQuery);
+
+            return result;
+
+        }
+
+
+        public async Task<IEnumerable<PieceOfEquipment>> GetAllWeightSets(PieceOfEquipment DTO)
+        {
+
+            await using var context = await DbFactory.CreateDbContextAsync();
+            try
+            {
+                List<PieceOfEquipment> a = null;
+            Pagination<PieceOfEquipment> pag = new Pagination<PieceOfEquipment>();
+            pag.Entity = DTO;
+
+            var filter = Querys.FilterWeightSets(pag);
+            if (filter != null)
+            {
+                 a = await context.PieceOfEquipment.AsNoTracking()
+                //Include(x => x.WeightSets)
+                //.ThenInclude(x => x.UnitOfMeasure)
+                //.Include(x => x.UnitOfMeasure)
+                .Where(filter).OrderBy(c => c.DueDate).ToListAsync();
+
+                
+            }
+            else
+            {
+                a = await context.PieceOfEquipment.AsNoTracking()
+                //Include(x => x.WeightSets)
+                //.ThenInclude(x => x.UnitOfMeasure)
+                //.Include(x => x.UnitOfMeasure)
+                .OrderBy(c => c.DueDate).ToListAsync();
+
+                
+            }
+
+                if(a?.Count > 0)
+                {
+                    var uoms = await context.UnitOfMeasure.AsNoTracking().Where(x => x.IsEnabled == true).ToListAsync();
+
+                    var result = await context.PieceOfEquipment
+                    .AsNoTracking()
+                    .Where(e => a.Select(x => x.PieceOfEquipmentID).Contains(e.PieceOfEquipmentID)) 
+                    .Select(e => new
+                    {
+                        PieceOfEquipment = e,
+                        WeightSets = context.WeightSet
+                            .AsNoTracking()
+                            .Where(w => w.PieceOfEquipmentID == e.PieceOfEquipmentID)
+                            .ToList()
+                    })
+                    .ToListAsync();
+
+                    foreach (var entry in result)
+                    {
+                        
+                        foreach (var wer in entry.WeightSets)
+                        {
+                            wer.UnitOfMeasure = wer.UnitOfMeasureID.GetUoM(uoms);
+                        }
+
+                        
+                        entry.PieceOfEquipment.UnitOfMeasure = entry.PieceOfEquipment.UnitOfMeasureID.GetUoM(uoms);
+
+                       
+                        entry.PieceOfEquipment.WeightSets = entry.WeightSets;
+                    }
+
+
+                    //    foreach (var itemm in a)
+                    //    {
+                    //        var wei = await context.WeightSet.AsNoTracking().Where(x => x.PieceOfEquipmentID == itemm.PieceOfEquipmentID).ToListAsync();
+
+
+
+                    //        foreach (var wer in wei)
+                    //        {
+                    //            wer.UnitOfMeasure = wer.UnitOfMeasureID.GetUoM(uoms);
+                    //        }
+
+                    //        itemm.UnitOfMeasure = itemm.UnitOfMeasureID.GetUoM(uoms);
+
+                    //        itemm.WeightSets = wei;
+                    //    }
+                    }
+
+                    return a;
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception();
+            }
+        }
+
+
+        public async Task<ResultSet<PieceOfEquipment>> GetPieceOfEquipment(Pagination<PieceOfEquipment> pagination)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            Expression<Func<PieceOfEquipment, bool>> filterQuery = Querys.POEFilterNew(pagination);
+
+            //YP var queriable = context.PieceOfEquipment.Include(x => x.EquipmentTemplate).ThenInclude(x => x.EquipmentTypeObject).Include(d => d.Customer).AsQueryable();
+
+
+
+
+            var queriable = context.PieceOfEquipment.AsNoTracking()
+                .Include(x => x.EquipmentTemplate)
+
+                .Include(d => d.Customer)
+
+                .AsNoTracking().AsQueryable(); //.Where(x=>x.PieceOfEquipmentID.ToLower()=="testQAStandBalance - 01".ToLower());
+
+            var simplequery = context.PieceOfEquipment.AsNoTracking().AsQueryable();//.Where(x => x.PieceOfEquipmentID.ToLower() == "testQAStandBalance - 01".ToLower());
+     
+            var result = await queriable.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery, filterQuery);
+
+
+           // var res = await queriable.FirstOrDefaultAsync();
+
+
+
+            //var queriable2 = context.PieceOfEquipment.AsNoTracking().AsQueryable();
+            ////.Include(x => x.EquipmentTemplate)
+
+            ////.Include(d => d.Customer).AsNoTracking().AsQueryable();
+
+            //var simplequery2 = context.PieceOfEquipment.AsNoTracking().AsQueryable();
+
+            //var result2 = await queriable2.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery2, filterQuery);
+            //if (!string.IsNullOrEmpty(pagination.Filter))
+            //{
+            //    var res = await context.PieceOfEquipment.AsNoTracking().Where(x => x.PieceOfEquipmentID == pagination.Filter).FirstOrDefaultAsync();
+            //}
+
+
+            return result;
+
+        }
+
+
+        public async Task<ResultSet<PieceOfEquipment>> GetPieceOfEquipmentChildren(Pagination<PieceOfEquipment> pagination)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+            var parent = pagination.Entity.ParentID;
+
+            var filterQuery = Querys.POEFilterNew(pagination);
+
+            //YP var queriable = context.PieceOfEquipment.Include(x => x.EquipmentTemplate).ThenInclude(x => x.EquipmentTypeObject).Include(d => d.Customer).AsQueryable();
+            var queriable = context.PieceOfEquipment.AsNoTracking().Where(x=>x.ParentID== parent)
+                .Include(x => x.EquipmentTemplate)
+
+                .Include(d => d.Customer).AsNoTracking().AsQueryable();
+
+            var simplequery = context.PieceOfEquipment.AsNoTracking().Where(x => x.ParentID == parent).AsQueryable();
+
+            var result = await queriable.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery, filterQuery);
+
+            //var queriable2 = context.PieceOfEquipment.AsNoTracking().AsQueryable();
+            ////.Include(x => x.EquipmentTemplate)
+
+            ////.Include(d => d.Customer).AsNoTracking().AsQueryable();
+
+            //var simplequery2 = context.PieceOfEquipment.AsNoTracking().AsQueryable();
+
+            //var result2 = await queriable2.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery2, filterQuery);
+            //if (!string.IsNullOrEmpty(pagination.Filter))
+            //{
+            //    var res = await context.PieceOfEquipment.AsNoTracking().Where(x => x.PieceOfEquipmentID == pagination.Filter).FirstOrDefaultAsync();
+            //}
+
+
+            return result;
+
+        }
+
+        public async Task<ResultSet<PieceOfEquipment>> GetPieceOfEquipmentIndicator(Pagination<PieceOfEquipment> pagination)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var poe = pagination.Entity.CustomerId;
+
+            var a = (context.PieceOfEquipment.AsNoTracking().Include(x => x.EquipmentTemplate)
+                .ThenInclude(x => x.Manufacturer1).AsNoTracking().Include(d => d.Customer).AsNoTracking()
+                .Where(x => x.CustomerId == poe 
+                && x.EquipmentTemplate.EquipmentTypeGroupID == 97 && string.IsNullOrEmpty(x.IndicatorPieceOfEquipmentID)
+                ).AsNoTracking());
+
+
+            var filterQuery = Querys.POEIndicator(pagination);
+
+            var queriable = a; 
+
+            var simplequery = a;
+            var result = await queriable.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery, filterQuery);
+
+            return result;
+
+
+
+        }
+
+        public async Task<ResultSet<PieceOfEquipment>> GetPieceOfEquipmentBalanceByPer(Pagination<PieceOfEquipment> pagination)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            //var a = context.PieceOfEquipment.AsNoTracking().Include(x => x.EquipmentTemplate).AsNoTracking()
+            //  .Include(d => d.Customer).AsNoTracking()
+            //  .Join(context.POE_POE, c1 => c1.PieceOfEquipmentID, c2 => c2.PieceOfEquipmentID,
+            //  (c1, c2) => new { c1, c2 }).Where(x => x.c2.PieceOfEquipmentID2 == pagination.Entity.PieceOfEquipmentID)
+            //  .Select(x => x.c1);
+
+            var a = context.PieceOfEquipment.AsNoTracking()
+            .Include(x => x.EquipmentTemplate).AsNoTracking()
+            .Include(d => d.Customer)
+            .AsNoTracking() // Aplicar AsNoTracking() después de las inclusiones
+            .Join(
+                context.POE_POE.AsNoTracking(), // Aplicar AsNoTracking() a POE_POE
+                c1 => c1.PieceOfEquipmentID,
+                c2 => c2.PieceOfEquipmentID,
+                (c1, c2) => new { c1, c2 }
+            )
+            .Where(x => x.c2.PieceOfEquipmentID2 == pagination.Entity.PieceOfEquipmentID)
+            .Select(x => x.c1);
+
+            var filterQuery = Querys.POEBalanceByPer(pagination.Entity.IndicatorPieceOfEquipmentID);
+
+            var queriable = a;
+
+            var simplequery = a;
+            var result = await queriable.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery, filterQuery);
+
+            return result;
+
+
+
+        }
+        public async Task<ResultSet<PieceOfEquipment>> GetPieceOfEquipmentBalanceByIndicator(Pagination<PieceOfEquipment> pagination)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+
+            var a = (context.PieceOfEquipment.AsNoTracking().Include(x => x.EquipmentTemplate).AsNoTracking().Include(d => d.Customer).AsNoTracking());
+
+
+            var filterQuery = Querys.POEBalanceByIndicator(pagination.Entity.IndicatorPieceOfEquipmentID);
+
+            var queriable = a;
+
+            var simplequery = a;
+            var result = await queriable.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery, filterQuery);
+
+            return result;
+
+
+
+        }
+
+        public async Task<IEnumerable<WorkOrderDetail>> GetPieceOfEquipmentHistory(string id)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+            var res = await context.WorkOrderDetail.AsNoTracking().Include(x => x.CurrentStatus)
+                .Where(x => x.PieceOfEquipmentId == id).ToListAsync();
+
+            return res;
+
+
+        }
+        public async Task<bool> Save()
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+            try
+            {
+                bool res = (await context.SaveChangesAsync()) > 0;
+                return res;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+        }
+
+        public async Task<PieceOfEquipment> GetPieceOfEquipmentBySerial(string serial, int EquipmentTemplateID)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            return await context.PieceOfEquipment.AsNoTracking().FirstOrDefaultAsync(c => c.SerialNumber.Equals(serial) && c.EquipmentTemplateId == EquipmentTemplateID);
+        }
+
+        public async Task<PieceOfEquipment> GetPieceOfEquipmentBySerial1(string serial)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            return await context.PieceOfEquipment.AsNoTracking().FirstOrDefaultAsync(c => c.SerialNumber.Equals(serial));
+        }
+        public async Task<int>   RemoveScales(PieceOfEquipment DTO)
+        {
+
+            await using var context = await DbFactory.CreateDbContextAsync();
+            if (DTO.POE_Scale== null)
+            {
+                return 0;
+            }
+
+            var ScaleActual = await context.POE_Scale.AsNoTracking().Where(x => x.PieceOfEquipmentID == DTO.PieceOfEquipmentID).ToListAsync();
+
+            var resultlines = ScaleActual.Where(p => !DTO.POE_Scale.Any(p2 => p2.Scale.ToLower() == p.Scale.ToLower()   
+            && p2.PieceOfEquipmentID == p.PieceOfEquipmentID ));
+
+            int cont = 0;
+            foreach (var item in resultlines)
+            {
+
+                context.POE_Scale.Remove(item);
+
+                await context.SaveChangesAsync();
+
+                cont++;
+
+            }
+
+            return cont;
+        }
+
+
+
+        public async Task<int> InsertScales(PieceOfEquipment DTO)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            try
+            {
+                if (DTO.POE_Scale == null)
+                {
+                    return 0;
+                }
+
+                int cont = 0;
+                
+                foreach (var item1 in DTO.POE_Scale)
+                {
+
+                    
+                    var iy = await context.POE_Scale.AsNoTracking().Where(x => x.PieceOfEquipmentID == DTO.PieceOfEquipmentID && x.Scale.ToLower() == item1.Scale.ToLower()).FirstOrDefaultAsync();
+                    if (iy == null)
+                        {
+                       
+                            context.POE_Scale.Add(item1);
+                        }
+                        else
+                        {
+                            context.POE_Scale.Update(item1);
+                        }
+
+
+                        await context.SaveChangesAsync();
+
+                        cont++;
+                    
+                }
+
+                return cont;
+            }
+            catch (Exception ex)
+            {
+//                Console.WriteLine(ex);
+                return 0;
+            }
+        }
+
+        public async Task<PieceOfEquipment> UpdateChildPieceOfEquipment(PieceOfEquipment pieceOfEquipmentDTO)
+        {
+
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+
+            var a = await context.PieceOfEquipment.AsNoTracking().Where(x => x.PieceOfEquipmentID == pieceOfEquipmentDTO.PieceOfEquipmentID).FirstOrDefaultAsync();
+
+
+            a.ParentID = pieceOfEquipmentDTO.ParentID;
+
+            context.Update(a);
+
+            await context.SaveChangesAsync();
+
+
+            return pieceOfEquipmentDTO;
+
+
+        }
+
+
+
+
+        public async Task<PieceOfEquipment> InsertPieceOfEquipment(PieceOfEquipment pieceOfEquipmentDTO
+         , string Component = "", bool ReturnQuery = true, bool Validate = false)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var upd = await this.GetPieceOfEquipmentByIDHeader(pieceOfEquipmentDTO.PieceOfEquipmentID);
+
+            PieceOfEquipment doesPieceOfEquipmentExist = null;// await this.GetPieceOfEquipmentBySerial(pieceOfEquipmentDTO.SerialNumber, pieceOfEquipmentDTO.EquipmentTemplateId);
+
+            var valid = true;
+
+
+            ////ypp If button "Affects Due Date" in Certificate component is checked then max due date is used in Poe Due Date field
+            ///
+            if (pieceOfEquipmentDTO.CertificatePoEs != null && pieceOfEquipmentDTO.CertificatePoEs.Count > 0) 
+            {
+                List<CertificatePoE> certPoeList = new List<CertificatePoE>();
+
+                foreach (var item in pieceOfEquipmentDTO.CertificatePoEs)
+                {
+                    var cert = await context.CertificatePoE.AsNoTracking().Where(x => x.CertificateNumber == item.CertificateNumber && x.PieceOfEquipmentID == item.PieceOfEquipmentID)?.FirstOrDefaultAsync();
+                    if(cert == null)
+                    certPoeList.Add(item);
+                }
+
+
+                var affectDueDate = certPoeList.Where(x => x.AffectDueDate).ToList();
+                if (affectDueDate.Count > 0)
+                {
+                    var maxDueDate = affectDueDate.Max(x => x.DueDate);
+                    pieceOfEquipmentDTO.DueDate = maxDueDate;
+
+                }
+
+
+
+            }
+
+            if ((pieceOfEquipmentDTO.IsNew && upd != null) || (pieceOfEquipmentDTO.IsNew && doesPieceOfEquipmentExist != null))
+            {
+                throw new ExistingException("This Piece of Equipment error save, review ID or serial", null);
+            }
+
+            /*if (pieceOfEquipmentDTO?.EquipmentTemplate?.EquipmentTypeID == 3 && string.IsNullOrEmpty(pieceOfEquipmentDTO.InstallLocation))
+            {
+                throw new CalibrationSaaS.Domain.Aggregates.Querys.InvalidCalSaaSModel("InstallLocation required");
+            }*/
+
+
+            if (valid && !string.IsNullOrEmpty(pieceOfEquipmentDTO.PieceOfEquipmentID) && upd != null && pieceOfEquipmentDTO.PieceOfEquipmentID==upd.PieceOfEquipmentID)
+            {
+
+                pieceOfEquipmentDTO = await this.UpdatePieceOfEquipment(pieceOfEquipmentDTO, Component, ReturnQuery);
+
+               
+
+            }
+            else if (valid && doesPieceOfEquipmentExist == null && upd == null)
+            {
+
+                pieceOfEquipmentDTO = await this.InsertPieceOfEquipment2(pieceOfEquipmentDTO, Component, ReturnQuery,Validate);
+
+               
+            }
+            else
+            {
+                throw new ExistingException("This Piece of Equipment error save, review ID or serial", null);
+            }
+
+
+            if (pieceOfEquipmentDTO?.Customer?.PieceOfEquipment != null)
+            {
+                pieceOfEquipmentDTO.Customer.PieceOfEquipment = null;
+            }
+
+            if (pieceOfEquipmentDTO?.Indicator?.Customer?.PieceOfEquipment != null)
+            {
+                pieceOfEquipmentDTO.Indicator.Customer.PieceOfEquipment = null;
+            }
+
+            if (pieceOfEquipmentDTO?.Indicator?.Peripherals != null)
+            {
+                pieceOfEquipmentDTO.Indicator.Peripherals = null;
+            }
+
+
+            return pieceOfEquipmentDTO;
+
+        }
+
+        public async Task<PieceOfEquipment> InsertPieceOfEquipment2(PieceOfEquipment newPieceOfEquipment
+            ,string Component="", bool ReturnQuery = true,bool Validate=false)
+        {
+
+
+            int line = 0;
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+
+
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            bool config = false;
+            if (_configuration != null)
+            {
+                config = _configuration.GetSection("Reports:Customer").Exists();
+            }
+
+
+
+            int maxwodint = 0;
+            CustomSequence maxwodint2=null;
+            if (config)
+            {
+                var name = _configuration.GetSection("Reports:Customer")?.Value;
+                               
+
+                if (name == "LTI")
+                {
+                    string RangeMinS = "0";
+
+                    int RangeMin = 1;                    
+
+
+                    RangeMin = Convert.ToInt32(RangeMinS);
+
+                    string maxwod = "0";
+
+                    var ifex = await context.PieceOfEquipment.AsNoTracking().FirstOrDefaultAsync();
+
+                    if (ifex != null)
+                    {
+                        maxwodint2 =  context.CustomSequence.AsNoTracking().Where(x => x.Tenant==name && x.Component==Component).FirstOrDefault();
+
+                      
+
+                        //maxwodint = (maxwodint2.SequenceID + RangeMin);
+                        //maxwod = maxwodint.ToString();
+                    }
+                }
+             
+            }
+
+           
+
+
+
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+           
+            try
+            {
+                if ( string.IsNullOrEmpty(Component))
+                {
+                    Component = "PieceOfEquipmentCreate";
+                }
+//                Console.WriteLine("-----insertpoe:" + newPieceOfEquipment.PieceOfEquipmentID);
+                if (Validate)
+                {
+                    var resd = await context.PieceOfEquipment.AsNoTracking()
+                        .Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID).FirstOrDefaultAsync();
+
+
+                    if(resd != null)
+                    {
+//                        Console.WriteLine("-----already exits:" + newPieceOfEquipment.PieceOfEquipmentID);
+                        return resd;
+                    }
+                }
+
+                 line = 1;
+
+                if (newPieceOfEquipment?.Indicator != null)
+                {
+                    newPieceOfEquipment.IndicatorPieceOfEquipmentID = newPieceOfEquipment.Indicator.PieceOfEquipmentID;
+                    newPieceOfEquipment.Indicator = null;
+
+
+                }
+
+                line = 2;
+                PieceOfEquipment newPieceOfEquipment2 = newPieceOfEquipment;
+
+                line = 3;
+                var poepoe = newPieceOfEquipment.POE_POE;
+
+                newPieceOfEquipment.POE_POE = null;
+
+                newPieceOfEquipment.Customer = null;
+
+                var te = newPieceOfEquipment.Users;
+
+                newPieceOfEquipment.Users = null;
+
+                newPieceOfEquipment.EquipmentTemplate = null;
+
+                var tesgroups = newPieceOfEquipment.TestGroups;
+
+                var ranges = newPieceOfEquipment.Ranges;
+
+                ICollection<WeightSet> weigts = null;
+
+                if (newPieceOfEquipment?.WeightSets != null)
+                {
+                    weigts = newPieceOfEquipment?.WeightSets;
+                }
+                 
+
+                ICollection<CertificatePoE> Certificates= null;
+                    if(newPieceOfEquipment.CertificatePoEs != null)
+                {
+                    Certificates = newPieceOfEquipment.CertificatePoEs;
+                }
+                   
+                
+                line = 4;
+
+                newPieceOfEquipment.TestGroups = null;
+
+                newPieceOfEquipment.CertificatePoEs = null;
+
+                var POE_Scale = newPieceOfEquipment.POE_Scale;
+
+
+                newPieceOfEquipment.POE_Scale = null;
+                newPieceOfEquipment.Peripherals = null;
+                newPieceOfEquipment.UnitOfMeasure = null;
+                newPieceOfEquipment.WeightSets = null;
+
+                line = 5;
+
+                if (newPieceOfEquipment.PieceOfEquipmentID == newPieceOfEquipment.IndicatorPieceOfEquipmentID)
+                {
+                    throw new Exception("Indicator cannot be equal to the part");
+                }
+
+                if (maxwodint2 != null)
+                {
+                    newPieceOfEquipment.PieceOfEquipmentID = (maxwodint2.SequenceID).ToString();
+
+                }
+                else
+                {
+                    //newPieceOfEquipment.PieceOfEquipmentID = NumericExtensions.GetUniqueID(newPieceOfEquipment.PieceOfEquipmentID);
+                }
+
+                    context.PieceOfEquipment.Add(newPieceOfEquipment);
+                var ress = await context.SaveChangesAsync();
+                if(maxwodint2  != null)
+                {
+                    maxwodint2.SequenceID = maxwodint2.SequenceID + 1 ;
+                    context.CustomSequence.Update(maxwodint2);
+                    context.SaveChanges();
+                }
+               
+
+                if (ress > 0)
+                {
+                    line = 7;
+                    newPieceOfEquipment2.PieceOfEquipmentID = newPieceOfEquipment.PieceOfEquipmentID;
+
+                    newPieceOfEquipment2.POE_POE = poepoe;
+
+                    newPieceOfEquipment2.Users = te;
+
+                    newPieceOfEquipment2.TestGroups = tesgroups;
+
+                    newPieceOfEquipment2.Ranges = ranges;
+
+                    newPieceOfEquipment2.CertificatePoEs = Certificates;
+
+                    newPieceOfEquipment2.POE_Scale= POE_Scale;
+
+                    newPieceOfEquipment2.TestPointResult = newPieceOfEquipment.TestPointResult;
+
+                    newPieceOfEquipment2.WeightSets = weigts;
+
+                    line = 8;
+                    
+                    var poert=await UpdatePieceOfEquipment(newPieceOfEquipment2, Component, ReturnQuery);
+                    
+//                    Console.WriteLine("-----insertedpoe:" + newPieceOfEquipment.PieceOfEquipmentID);
+                    return poert;
+
+
+                }
+                else
+                {
+                    throw new Exception("Can not insert POE, review all values");
+                }
+
+                return newPieceOfEquipment2;
+
+               
+
+            }
+            catch (Exception ex)
+            {
+//                Console.WriteLine(ex.Message);
+
+//                Console.WriteLine(ex?.InnerException?.Message);
+
+//                Console.WriteLine(ex?.StackTrace);
+
+                throw ex;
+            }
+        }
+
+
+
+
+
+        public async Task<PieceOfEquipment> UpdatePieceOfEquipment(PieceOfEquipment newPieceOfEquipment, string Component = "", bool returnQuery = true)
+        {
+            int iderror = 0;
+
+            
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var w = newPieceOfEquipment.WeightSets;
+
+            newPieceOfEquipment.Uncertainty = null;
+
+           
+
+            if (newPieceOfEquipment?.EquipmentTemplate?.Uncertainty != null)
+            {
+                newPieceOfEquipment.EquipmentTemplate.Uncertainty = null;
+            }
+
+            if (newPieceOfEquipment?.Indicator != null)
+            {
+                newPieceOfEquipment.IndicatorPieceOfEquipmentID = newPieceOfEquipment.Indicator.PieceOfEquipmentID;
+                newPieceOfEquipment.Indicator = null;
+            }
+
+            if (newPieceOfEquipment.PieceOfEquipmentID == newPieceOfEquipment.IndicatorPieceOfEquipmentID)
+            {
+                throw new Exception("Indicator cannot be equal to the part");
+            }
+            //var a = await context.WeightSet.AsNoTracking().Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID || x.Serial == newPieceOfEquipment.SerialNumber ).ToListAsync();
+
+
+            var a = await context.WeightSet.AsNoTracking().Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID).ToListAsync();
+
+
+            //if (a?.Count > 0)
+            //{
+            //    foreach (var item4 in a)
+            //    {
+            //        //if (w != null && w.Count > 0)
+            //        //{
+            //        //    var cw = w.Where(x => x.WeightSetID == item4.WeightSetID).FirstOrDefault();
+            //        //    if (cw != null)
+            //        //    {
+            //                context.WeightSet.Remove(item4);
+            //        //    }
+            //        //}
+            //        //else
+            //        //{
+            //        //    context.WeightSet.Remove(item4);
+            //        //}
+            //    }
+            //    await context.SaveChangesAsync();
+            //}
+
+            if (w != null && w?.Count > 0)
+            {
+                foreach (var item5 in w)
+                {
+                    var c = a.Where(x => x.WeightSetID == item5.WeightSetID).FirstOrDefault();
+
+                    item5.UnitOfMeasure = null;
+                    item5.PieceOfEquipmentID = newPieceOfEquipment.PieceOfEquipmentID;
+                    item5.Serial = newPieceOfEquipment.SerialNumber;
+                    //if (c == null || (c != null))
+                        if (c == null )
+                        {
+                        item5.CalibrationSubType_Weights = null;
+                        
+                        item5.WOD_Weights = null;
+
+                        item5.UncertaintyUnitOfMeasure = null;
+
+                        item5.WeightSetID = NumericExtensions.GetUniqueID(item5.WeightSetID);
+
+                        if (item5.WeightSetID==171)
+                        {
+//                            Console.WriteLine("ID ERROR: " + item5.WeightSetID);
+                        }
+
+//                        Console.WriteLine("ID ERROR: " +  item5.WeightSetID);
+                        context.WeightSet.Add(item5);
+
+                        await context.SaveChangesAsync();
+
+                        await Task.Delay(100);
+                    }
+                    else
+                    {
+                        context.WeightSet.Update(item5);
+
+                        await context.SaveChangesAsync();
+
+                        await Task.Delay(100);
+                    }
+
+
+
+                }
+               
+            }
+
+
+            foreach (var ityu in a)
+            {
+                var c = w.Where(x => x.WeightSetID == ityu.WeightSetID).FirstOrDefault();
+
+                if (c == null)
+                {
+                    var del = await context.WeightSet.AsNoTracking().Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID && x.WeightSetID == ityu.WeightSetID).FirstOrDefaultAsync();
+
+                    context.WeightSet.Remove(del);
+                    await context.SaveChangesAsync();
+                }
+
+            }
+
+            await RemoveScales(newPieceOfEquipment);
+            await InsertScales(newPieceOfEquipment);
+
+            if (newPieceOfEquipment?.POE_POE != null)
+            {
+                var existingPOE_POE = await context.POE_POE.AsNoTracking()
+                    .Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID)
+                    .ToListAsync();
+
+                if (existingPOE_POE?.Count > newPieceOfEquipment?.POE_POE?.Count)
+                {
+                    context.POE_POE.RemoveRange(existingPOE_POE);
+                    await context.SaveChangesAsync();
+                }
+
+
+                if(newPieceOfEquipment?.POE_POE?.Count > 0)
+                {
+                    foreach (var item in newPieceOfEquipment.POE_POE)
+                    {
+                        var existingItem = await context.POE_POE
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(x => x.PieceOfEquipmentID == item.PieceOfEquipmentID && x.PieceOfEquipmentID2 == item.PieceOfEquipmentID2);
+
+                        if (existingItem == null)
+                        {
+                            item.POE = null;
+                            context.POE_POE.Add(item);
+                        }
+                        else
+                        {
+                            context.Entry(existingItem).State = EntityState.Detached;
+                            context.POE_POE.Update(item);
+                        }
+                    }
+                    await context.SaveChangesAsync();
+                }
+
+            }
+            else
+            {
+                var c = context.POE_POE.AsNoTracking().Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID).ToList();
+
+                if (c != null && c.Count > 0)
+                {
+                    context.POE_POE.RemoveRange(c);
+                    await context.SaveChangesAsync();
+                }
+
+            }
+
+            newPieceOfEquipment.POE_POE = null;
+
+            var ab = await context.POE_User.AsNoTracking().Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID).ToListAsync();
+
+            if (ab?.Count > 0 & newPieceOfEquipment?.IsWeigthSet==true)
+            {
+                foreach (var item3 in ab)
+                {
+                    context.POE_User.Remove(item3);
+                }
+                await context.SaveChangesAsync();
+            }
+
+            if (newPieceOfEquipment?.Users != null )
+            {
+                foreach (var item in newPieceOfEquipment.Users)
+                {
+                    POE_User p = new POE_User();
+                    p.PieceOfEquipmentID = newPieceOfEquipment.PieceOfEquipmentID;
+                    p.UserID = item.UserID;
+                    context.POE_User.Add(p);
+                }
+                await context.SaveChangesAsync();
+            }
+            newPieceOfEquipment.Users = null;
+            newPieceOfEquipment.EquipmentTemplate = null;
+
+            var tesgroups = newPieceOfEquipment.TestGroups;
+            newPieceOfEquipment.TestGroups = null;
+
+            var Certificates = newPieceOfEquipment.CertificatePoEs;
+            newPieceOfEquipment.CertificatePoEs = null;
+            var rrr = await context.RangeTolerance.AsNoTracking()
+                .Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID).ToListAsync();
+
+            if (newPieceOfEquipment?.Ranges != null && rrr?.Count > 0)
+            {
+                var result = rrr.Where(p => newPieceOfEquipment.Ranges.All(p2 => p2.RangeToleranceID != p.RangeToleranceID));
+                foreach (var td in result)
+                {
+                    context.Remove(td);
+                }
+                await context.SaveChangesAsync();
+            }
+            else if (rrr.Count > 0)
+            {
+                foreach (var td in rrr)
+                {
+                    context.Remove(td);
+                }
+                await context.SaveChangesAsync();
+            }
+
+            if (newPieceOfEquipment?.Ranges != null && newPieceOfEquipment?.Ranges?.Count > 0)
+            {
+                foreach (var t in newPieceOfEquipment.Ranges)
+                {
+                    t.PieceOfEquipmentID = newPieceOfEquipment.PieceOfEquipmentID;
+                    var rr = await context.RangeTolerance.AsNoTracking()
+                        .Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID && x.RangeToleranceID == t.RangeToleranceID).FirstOrDefaultAsync();
+
+                    if (rr != null)
+                    {
+                        context.Update(t);
+                    }
+                    else
+                    {
+                        context.Add(t);
+                    }
+                    await context.SaveChangesAsync();
+                }
+            }
+
+            newPieceOfEquipment.Ranges = null;
+            newPieceOfEquipment.Peripherals = null;
+            if (string.IsNullOrEmpty(Component))
+            {
+                Component = "PieceOfEquipmentCreate";
+            }    
+            var local = context.PieceOfEquipment.AsNoTracking().FirstOrDefault(entry => entry.PieceOfEquipmentID.Equals(newPieceOfEquipment.PieceOfEquipmentID));
+
+            if (newPieceOfEquipment?.TestPointResult != null && newPieceOfEquipment?.TestPointResult?.Count > 0)
+            {
+                var workOrderDetailRepository = new WODRepositoryEF<TContext>(DbFactory);
+                await workOrderDetailRepository.SaveCalibrationTypes2<GenericCalibration2, GenericCalibrationResult2>(Component, newPieceOfEquipment.PieceOfEquipmentID,
+                    newPieceOfEquipment.TestPointResult, workOrderDetailRepository.FormatGenericCalibration2);
+            }
+
+            newPieceOfEquipment.TestPointResult = null;
+
+            // Handle EquipmentTemplate
+            if (newPieceOfEquipment?.EquipmentTemplateId != 0 && newPieceOfEquipment.EquipmentTemplate == null)
+            {
+                // Load the EquipmentTemplate if it is not already loaded
+                newPieceOfEquipment.EquipmentTemplate = await context.EquipmentTemplate
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(e => e.EquipmentTemplateID == newPieceOfEquipment.EquipmentTemplateId);
+            }
+
+            // Detach existing EquipmentTemplate if it is being tracked
+            if (newPieceOfEquipment?.EquipmentTemplate != null)
+            {
+                var existingTemplate = context.EquipmentTemplate.Local.FirstOrDefault(e => e.EquipmentTemplateID == newPieceOfEquipment.EquipmentTemplate.EquipmentTemplateID);
+                if (existingTemplate != null)
+                {
+                    context.Entry(existingTemplate).State = EntityState.Detached;
+                }
+            }
+
+            if (newPieceOfEquipment?.Customer != null)
+            {
+                newPieceOfEquipment.Customer = null;
+            }
+
+            newPieceOfEquipment.UnitOfMeasure = null;
+            newPieceOfEquipment.WeightSets = null; 
+            context.PieceOfEquipment.Update(newPieceOfEquipment);
+            await context.SaveChangesAsync();
+
+
+            if (newPieceOfEquipment?.IsTestPointImport == false && tesgroups != null)
+            {
+                foreach (var tp in tesgroups)
+                {
+                    var listg = await context.TestPointGroup.AsNoTracking().Where(x => x.TestPoitGroupID == tp.TestPoitGroupID).FirstOrDefaultAsync();
+
+                    if (listg == null)
+                    {
+                        context.Add(tp);
+                    }
+                    else
+                    {
+                        context.Update(tp);
+                    }
+                    await context.SaveChangesAsync();
+                    var listpo = await context.TestPoint.AsNoTracking().Where(x => x.TestPointGroupTestPoitGroupID == tp.TestPoitGroupID).ToListAsync();
+
+                    foreach (var del in listpo)
+                    {
+                        try
+                        {
+                            if (del?.UnitOfMeasurement != null)
+                            {
+                                del.UnitOfMeasurement = null;
+                            }
+
+                            if (del?.UnitOfMeasurementOut != null)
+                            {
+                                del.UnitOfMeasurementOut = null;
+                            }
+                            if (del?.WOD_TestPoints != null)
+                            {
+                                del.WOD_TestPoints = null;
+                            }
+                            if (del?.TestPointGroup != null)
+                            {
+                                del.TestPointGroup = null;
+                            }
+
+                            context.TestPoint.Remove(del);
+                            await context.SaveChangesAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            // Handle exception
+                        }
+                    }
+                }
+            }
+
+
+         
+            if (newPieceOfEquipment.IsTestPointImport == true && tesgroups != null && tesgroups?.Count > 0 && tesgroups?.ElementAtOrDefault(0)?.TestPoints != null)
+            {
+
+                var tepin = await context.TestPointGroup.AsNoTracking()
+                    .Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID).ToListAsync();
+
+                var trr = tesgroups;
+
+                var testpoints = tesgroups;//new List<TestPointGroup>();
+
+
+                for (int ii = 0; ii < trr.Count; ii++)
+                {
+
+                    if (trr.ElementAtOrDefault(ii)?.TestPoints != null)
+                    {
+                        //testpoints.Add(tgr);
+
+                        var r = trr.ElementAtOrDefault(ii);
+
+                        TestPointGroup t1 = new TestPointGroup();
+
+                        t1.CopyPropertiesFrom(r);
+
+                        t1.TypeID = "POE";
+
+                        t1.TestPoints = null;
+
+                        t1.UnitOfMeasurementOut = null;
+
+                        if (tepin.Where(x => x.TestPoitGroupID == r.TestPoitGroupID).FirstOrDefault() == null)
+                        {
+                            context.TestPointGroup.Add(t1);
+                        }
+                        else
+                        {
+                            context.TestPointGroup.Update(t1);
+                        }
+
+                        await context.SaveChangesAsync();
+
+                        r.TestPoitGroupID = t1.TestPoitGroupID;
+                    }
+
+                }
+
+
+                foreach (var tp in testpoints)
+                {
+                    //if (tp?.TestPoints != null)
+                    //{
+                    var listpo = await context.TestPoint.AsNoTracking().Where(x => x.TestPointGroupTestPoitGroupID == tp.TestPoitGroupID).ToListAsync();
+
+                    foreach (var del in listpo)
+                    {
+                        try
+                        {
+                            if (del?.UnitOfMeasurement != null)
+                            {
+                                del.UnitOfMeasurement = null;
+                            }
+
+                            if (del.UnitOfMeasurementOut != null)
+                            {
+                                del.UnitOfMeasurementOut = null;
+                            }
+                            if (del.WOD_TestPoints != null)
+                            {
+                                del.WOD_TestPoints = null;
+                            }
+
+                            del.TestPointGroup = null;
+
+
+                            var tpex = tp.TestPoints.Where(x => x.TestPointID == del.TestPointID).FirstOrDefault();
+                            if (tpex == null)
+                            {
+
+                                context.TestPoint.Remove(del);
+                                await context.SaveChangesAsync();
+                            }
+
+
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    }
+
+
+
+                    foreach (var tpo in tp.TestPoints)
+                    {
+                        if (tpo.UnitOfMeasurement != null)
+                        {
+                            tpo.UnitOfMeasurement = null;
+                        }
+                        if (tpo.UnitOfMeasurementOut != null)
+                        {
+                            tpo.UnitOfMeasurementOut = null;
+                        }
+
+                        tpo.TestPointGroupTestPoitGroupID = tp.TestPoitGroupID;
+                        //var tpoi = await context.TestPoint.Where(x => x.TestPointID == tpo.TestPointID).FirstOrDefaultAsync();
+                        tpo.TestPointGroup = null;
+                        tpo.WOD_TestPoints = null;
+                        //tpo.TestPointID = 0;
+                        //if(tpoi == null)
+                        //{
+
+                        var tpo1 = await context.TestPoint.AsNoTracking().Where(x => x.TestPointID == tpo.TestPointID).FirstOrDefaultAsync();
+
+                        if (tpo1 == null)
+                        {
+                            tpo.TestPointID = NumericExtensions.GetUniqueID(tpo.TestPointID);
+
+                            context.TestPoint.Add(tpo);
+                        }
+                        else
+                        {
+                            context.TestPoint.Update(tpo);
+                        }
+
+
+
+                    }
+
+                    await context.SaveChangesAsync();
+
+                }
+
+                
+            }
+            if (newPieceOfEquipment.IsTestPointImport == false && tesgroups == null)
+            {
+                var tepin = await context.TestPointGroup.AsNoTracking().Include(x => x.TestPoints)
+                    .Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID).ToListAsync();
+
+                if (tepin.Count > 0)
+                {
+                    foreach (var item2 in tepin)
+                    {
+                        if (item2.TestPoints != null)
+                        {
+                            foreach (var del in item2.TestPoints)
+                            {
+                                try
+                                {
+                                    if (del?.UnitOfMeasurement != null)
+                                    {
+                                        del.UnitOfMeasurement = null;
+                                    }
+
+                                    if (del?.UnitOfMeasurementOut != null)
+                                    {
+                                        del.UnitOfMeasurementOut = null;
+                                    }
+                                    if (del?.WOD_TestPoints != null)
+                                    {
+                                        del.WOD_TestPoints = null;
+                                    }
+                                    if (del?.TestPointGroup != null)
+                                    {
+                                        del.TestPointGroup = null;
+                                    }
+
+                                    context.TestPoint.Remove(del);
+                                }
+                                catch (Exception ex)
+                                {
+                                    // Handle exception
+                                }
+                            }
+                        }
+                        try
+                        {
+                            item2.TestPoints = null;
+                            context.TestPointGroup.Remove(item2);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Handle exception
+                        }
+                    }
+                }
+            }
+
+           
+
+            await CreateCertificatePoe(Certificates, newPieceOfEquipment);
+
+            await SaveOffline(DbFactory);
+
+            if (returnQuery)
+            {
+                var resulta = await GetPieceOfEquipmentByID(newPieceOfEquipment.PieceOfEquipmentID);
+
+                return resulta;
+            }
+
+            return newPieceOfEquipment;
+
+
+        }
+
+        public async Task CreateCertificatePoe(ICollection<CertificatePoE> Certificates, PieceOfEquipment newPieceOfEquipment)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var c = await context.CertificatePoE.AsNoTracking().Where(x => x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID).ToListAsync();
+
+
+            if (c?.Count > 0)
+            {
+                
+
+                foreach (var item4 in c)
+                {
+                    if (Certificates != null && Certificates.Count > 0)
+                    {
+                        var cert = Certificates.Where(x => x.CertificateNumber == item4.CertificateNumber).FirstOrDefault();
+
+                        if (c != null)
+                        {
+                            context.CertificatePoE.Remove(item4);
+                            await context.SaveChangesAsync();
+                        }
+                    }
+                    else
+                    {
+                        context.CertificatePoE.Remove(item4);
+                        await context.SaveChangesAsync();
+                    }
+
+                }
+
+            }
+
+            newPieceOfEquipment.CertificatePoEs = null;
+
+
+            try
+            {
+                if (Certificates != null && Certificates.Count > 0)
+                {
+                    foreach (var cert in Certificates)
+                    {
+                        var cert1 = await context.CertificatePoE.Where(x => x.CertificateNumber == cert.CertificateNumber && x.PieceOfEquipmentID == newPieceOfEquipment.PieceOfEquipmentID).FirstOrDefaultAsync();
+
+                        if (cert1 == null)
+                        {
+                            cert.PieceOfEquipmentID = newPieceOfEquipment.PieceOfEquipmentID;
+                            context.CertificatePoE.Add(cert);
+                        }
+                        else
+                        {
+                            cert.PieceOfEquipmentID = newPieceOfEquipment.PieceOfEquipmentID;
+                            context.CertificatePoE.Update(cert);
+                        }
+
+
+                        await context.SaveChangesAsync();
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+//                Console.WriteLine(ex);
+                throw ex;
+            }
+        }
+
+
+
+
+        public async Task<ResultSet<PieceOfEquipment>> GetPieceOfEquipmentByCustomer(Pagination<PieceOfEquipment> pagination)
+        {
+            //yp
+
+            //var aa1 = pagination.Entity.EquipmentTemplate.EquipmentTypeObject.CalibrationTypeID;
+
+            //var _calibType = await context.EquipmentType.AsNoTracking().Where(x => x.HasWorkOrderDetail == true && x.CalibrationTypeID == aa1).FirstOrDefaultAsync();
+
+            //var item = _calibType.EquipmentTypeID;
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+            //var a = (from POE in context.PieceOfEquipment.AsNoTracking().Include(x => x.EquipmentTemplate).ThenInclude(x => x.EquipmentTypeObject).AsNoTracking().Include(d => d.Customer).AsNoTracking()
+            //         join ET in context.EquipmentTemplate on POE.EquipmentTemplateId equals ET.EquipmentTemplateID
+            //         join CU in context.Customer on POE.CustomerId equals CU.CustomerID
+            //         join E in context.EquipmentType on ET.EquipmentTypeID equals E.EquipmentTypeID
+
+            //         where POE.CustomerId == pagination.Entity.Customer.CustomerID
+            //        //yp && E.EquipmentTypeID == item
+            //         select POE).AsNoTracking();
+
+            var a = context.PieceOfEquipment.AsNoTracking().Where(x => x.CustomerId == pagination.Entity.Customer.CustomerID);
+
+            var filterQuery = Querys.POEWOFilter(pagination.Filter);
+
+            var queriable = a;
+
+            var simplequery = a;
+
+
+            var result = await queriable.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery, filterQuery);
+
+            List<PieceOfEquipment> lstpoe = new List<PieceOfEquipment>();
+            foreach (var item in result.List)
+            {
+                if (pagination.LoadDynamic.HasValue)
+                {
+                    var nitem = await GetPieceOfEquipmentByIDWhithouDynamic(item.PieceOfEquipmentID, pagination.LoadDynamic.Value);
+
+                    lstpoe.Add(nitem);
+                }
+                else
+                {
+                    var nitem = await GetPieceOfEquipmentByIDWhithouDynamic(item.PieceOfEquipmentID, true);
+
+                    lstpoe.Add(nitem);
+                }
+
+               
+            }
+
+            result.List = lstpoe;
+
+            return result;
+
+
+
+        }
+
+        public async Task<PieceOfEquipment> GetPieceOfEquipmentByFilter(string pagination)
+        {
+            return null;
+
+        }
+
+        public async Task<IEnumerable<PieceOfEquipment>> GetPieceOfEquipmentByET(int id)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var res = await context.PieceOfEquipment.AsNoTracking().Include(x => x.Customer).AsNoTracking().Include(x => x.EquipmentTemplate).ThenInclude(x => x.EquipmentTypeObject).AsNoTracking()
+                .Include(x => x.EquipmentTemplate).ThenInclude(x => x.Manufacturer1).AsNoTracking()
+                .Where(x => x.EquipmentTemplateId == id)
+                .ToListAsync();
+
+            return res;
+
+
+        }
+
+        public async Task<IEnumerable<PieceOfEquipment>> GetPieceOfEquipmentByCustomer(int id)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var res = await context.PieceOfEquipment.AsNoTracking().Include(x => x.EquipmentTemplate)
+                //.ThenInclude(x => x.EquipmentTypeObject).AsNoTracking()
+                //.Include(x => x.EquipmentTemplate)
+                .ThenInclude(x => x.Manufacturer1).AsNoTracking()
+                .Where(x => x.CustomerId == id).ToListAsync();
+
+            return res;
+
+
+        }
+
+        public async Task<PieceOfEquipment> UpdateIndicator(PieceOfEquipment poe)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            poe.IndicatorPieceOfEquipmentID = null;
+            poe.Indicator = null;
+            context.PieceOfEquipment.Update(poe);
+            return poe;
+        }
+        #region Dispose
+        private bool disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!this.disposed)
+            {
+                if (disposing)
+                {
+                    //context.Dispose();
+                }
+            }
+            this.disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public async Task<ResultSet<WeightSet>> SaveWeights(ICollection<WeightSet> W)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            List<string> lst = new List<string>();
+            List<WeightSet> lstW = new List<WeightSet>();
+            foreach (var item in W)
+            {
+                try
+                {
+                    var c = await context.PieceOfEquipment.AsNoTracking().Include(x => x.WeightSets).Where(x => context.WeightSet.Any(c => c.Reference == item.Reference && x.SerialNumber == item.Serial)).ToListAsync();
+
+                    var poe = await context.PieceOfEquipment.AsNoTracking().Where(x => x.SerialNumber == item.Serial).FirstOrDefaultAsync()
+;
+                    if (poe == null)
+                    {
+                        throw new Exception("Piece of Equipment not exits");
+                    }
+                    if (c.Count == 0 || (item.WeightSetID == 0))
+                    {
+                        item.PieceOfEquipmentID = poe.PieceOfEquipmentID;
+                        item.WeightSetID = NumericExtensions.GetUniqueID(item.WeightSetID);
+                        context.WeightSet.Add(item);
+
+                        await context.SaveChangesAsync();
+
+                        lstW.Add(item);
+
+                    }
+                    else
+                    {
+                        foreach (var item2 in c)
+                        {
+                            context.WeightSet.Update(item);
+
+                            await context.SaveChangesAsync();
+
+                            lstW.Add(item);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lst.Add(ex.Message);
+                }
+            }
+
+            ResultSet<WeightSet> res = new ResultSet<WeightSet>();
+
+            if (lst.Count > 0)
+            {
+                string combindedString = string.Join("|", lst.ToArray());
+
+                res.Message = combindedString;
+              
+            }
+
+
+
+            res.List = lstW;
+
+            return res;
+
+        }
+
+        #endregion
+
+
+        public async Task<Uncertainty> CreateUncertainty(TableChanges<Uncertainty> ListUncertainty)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            IQueryable<Uncertainty> c = null; 
+
+
+            var addb = false;
+
+            if (ListUncertainty?.AddList?.Count > 0 && ListUncertainty?.AddList?.FirstOrDefault() != null && ListUncertainty?.AddList?.FirstOrDefault().EquipmentTemplateID.HasValue == false)
+            {
+                c = context.Uncertainty.AsNoTracking().Where(x => !string.IsNullOrEmpty(x.PieceOfEquipmentID) && x.PieceOfEquipmentID == ListUncertainty.AddList.FirstOrDefault().PieceOfEquipmentID);
+
+            }
+            else if (ListUncertainty?.AddList?.Count > 0 && ListUncertainty?.AddList?.FirstOrDefault().EquipmentTemplateID.HasValue == true)
+            {
+                c = context.Uncertainty.AsNoTracking().Where(x => ListUncertainty.AddList.FirstOrDefault().EquipmentTemplateID.HasValue && x.EquipmentTemplateID.HasValue && x.EquipmentTemplateID == ListUncertainty.AddList.FirstOrDefault().EquipmentTemplateID);
+
+            }
+
+
+            if (ListUncertainty?.DeleteList?.Count > 0 && ListUncertainty?.DeleteList?.FirstOrDefault() != null && ListUncertainty?.DeleteList.FirstOrDefault().EquipmentTemplateID.HasValue == false)
+            {
+                c = context.Uncertainty.AsNoTracking().Where(x => !string.IsNullOrEmpty(x.PieceOfEquipmentID) && x.PieceOfEquipmentID == ListUncertainty.DeleteList.FirstOrDefault().PieceOfEquipmentID);
+
+            }
+            else if (ListUncertainty?.DeleteList?.Count > 0 && ListUncertainty?.DeleteList?.FirstOrDefault().EquipmentTemplateID.HasValue == true)
+            {
+                c = context.Uncertainty.AsNoTracking().Where(x => ListUncertainty.DeleteList.FirstOrDefault().EquipmentTemplateID.HasValue && x.EquipmentTemplateID.HasValue && x.EquipmentTemplateID == ListUncertainty.DeleteList.FirstOrDefault().EquipmentTemplateID);
+
+            }
+
+
+            if (c == null && ListUncertainty?.DeleteList?.Count > 0 || c == null && ListUncertainty?.AddList?.Count > 0)
+            {
+                throw new Exception("No Uncertainty present");
+            }
+
+            var total = await c.AsNoTracking().ToListAsync();
+
+            foreach (var item in ListUncertainty.DeleteList)
+            {
+                var r = total.Where(x => x.UncertaintyID == item.UncertaintyID).FirstOrDefault();
+
+                if (r != null)
+                {
+                    context.Uncertainty.Remove(r);
+                    await context.SaveChangesAsync();
+                }
+
+
+            }
+
+            if (ListUncertainty != null && ListUncertainty?.AddList?.Count > 0)
+            {
+                foreach (var Uncertainty in ListUncertainty.AddList)
+                {
+
+                    var cc = total.Where(x => x.UncertaintyID == Uncertainty.UncertaintyID).FirstOrDefault();
+
+
+
+                    if (cc == null)
+                    {
+                        context.Uncertainty.Add(Uncertainty);
+                    }
+                    else
+                    {
+                        context.Uncertainty.Update(Uncertainty);
+                    }
+
+                    await context.SaveChangesAsync();
+
+                }
+            }
+
+            return new Uncertainty();
+
+        }
+
+
+
+        public async Task<ResultSet<Uncertainty>> GetUncertainty(Pagination<Uncertainty> Uncertainty)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            IQueryable<Uncertainty> c;
+
+            if (Uncertainty.Entity != null && !string.IsNullOrEmpty(Uncertainty.Entity.PieceOfEquipmentID))
+            {
+                c = context.Uncertainty.AsNoTracking().Where(x => !string.IsNullOrEmpty(x.PieceOfEquipmentID) && x.PieceOfEquipmentID == Uncertainty.Entity.PieceOfEquipmentID);
+
+            }
+            else
+            {
+                c = context.Uncertainty.AsNoTracking().Where(x => Uncertainty.Entity.EquipmentTemplateID.HasValue && x.EquipmentTemplateID.HasValue && x.EquipmentTemplateID == Uncertainty.Entity.EquipmentTemplateID);
+
+            }
+
+
+
+            var filterQuery = Querys.UncertaintyFilter(Uncertainty.Filter);
+
+            var queriable = c;
+
+            var simplequery = c;
+
+
+            var result = await queriable.PaginationAndFilterQuery<Uncertainty>(Uncertainty, simplequery, filterQuery);
+
+            return result;
+
+        }
+
+        public async Task InsertCalibrationResultContributor(CalibrationResultContributor calibrationContributor)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            context.CalibrationResultContributor.Add(calibrationContributor);
+        }
+
+        public Task<CalibrationResultContributor> DeletetCalibrationResultContributor(string idCalibrationResult)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<Uncertainty>> GetUncertaintyByPoe(string id)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var res = await context.Uncertainty.AsNoTracking().Where(x => !string.IsNullOrEmpty(x.PieceOfEquipmentID) && x.PieceOfEquipmentID == id).ToListAsync();
+             return res;
+        }
+
+        public async Task<IEnumerable<Uncertainty>> GetUncertaintyByEt(int id)
+        {
+
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var result = await context.Uncertainty.AsNoTracking().Where(x => x.EquipmentTemplateID.HasValue && x.EquipmentTemplateID == id).ToListAsync();
+
+            return result;
+
+        }
+
+        public async Task<IEnumerable<CalibrationSubType_Weight>> GetCalibrationByWod(int wodId, int calibrationSubtypeId)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var result = await context.CalibrationSubType_Weight.AsNoTracking().Where(x => x.WorkOrderDetailID == wodId && calibrationSubtypeId == calibrationSubtypeId).ToListAsync();
+            return result;
+        }
+
+        public async Task<WeightSet> GetWeigthSetById(int weightId)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            try
+            {
+                var result = await context.WeightSet.AsNoTracking().Where(x => x.WeightSetID == weightId).FirstOrDefaultAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception();
+            }
+        }
+        public async Task<IEnumerable<WeightSet>> GetWeigthSets()
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            try
+            {
+                var result = await context.WeightSet.AsNoTracking().ToListAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception();
+            }
+        }
+
+
+        public async Task<IEnumerable<PieceOfEquipment>> GetTemperatureStandard()
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var res = await context.PieceOfEquipment.AsNoTracking().Include(x => x.Customer).AsNoTracking()
+                .Include(x => x.EquipmentTemplate).AsNoTracking()
+               //.ThenInclude(x => x.EquipmentTypeObject)
+               .Include(x => x.EquipmentTemplate)
+               .ThenInclude(x => x.Manufacturer1).AsNoTracking()
+               //.Where(x => x.EquipmentTemplate.EquipmentTypeID == 8)
+               .Where(x => x.EquipmentTemplate.EquipmentTypeGroupID == 134)
+               .ToListAsync();
+
+            return res;
+        }
+
+
+        public async Task<IEnumerable<PieceOfEquipment>> GetPoeOff()
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+
+            var res = await context.PieceOfEquipment.AsNoTracking().Where(x => x.IsOffline == true).ToListAsync();
+
+            List<PieceOfEquipment> lst = new List<PieceOfEquipment>();
+
+            foreach (var item in res)
+            {
+
+                var r = await GetPieceOfEquipmentByID(item.PieceOfEquipmentID);
+
+                lst.Add(r);
+
+            }
+
+
+            return lst;
+
+        }
+
+
+
+        public async Task<ResultSet<PieceOfEquipment>> GetPOEByTestCodePag(Pagination<PieceOfEquipment> pagination)
+        {
+
+
+
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var test = pagination.Other;
+
+            var testcode = await context.TestCode.AsNoTracking().Where(x => x.TestCodeID == test).FirstOrDefaultAsync();
+
+
+          //  var aa1 = pagination.Entity.EquipmentTemplate.EquipmentTypeObject.CalibrationTypeID;
+
+            EquipmentType _calibType = null;
+
+
+            //    if (!testcode.EquipmentTypeID.HasValue || testcode.EquipmentTypeID.Value == 0)
+            //{
+            //    _calibType = await context.EquipmentType.AsNoTracking()
+            //        .Where(x => x.HasWorkOrderDetail == true && x.CalibrationTypeID == testcode.CalibrationTypeID
+            //        ).FirstOrDefaultAsync();
+
+
+            //}
+
+            //else {
+
+            //    _calibType= await context.EquipmentType.AsNoTracking()
+            //        .Where(x => x.HasWorkOrderDetail == true && x.CalibrationTypeID == testcode.CalibrationTypeID
+            //        && x.EquipmentTypeID == testcode.EquipmentTypeID).FirstOrDefaultAsync();
+
+            //} 
+
+
+
+            if (testcode?.EquipmentTypeGroupID.HasValue==true && testcode?.EquipmentTypeGroupID.Value > 0)
+            {
+
+
+                _calibType = await context.EquipmentType.AsNoTracking().Where(x => x.EquipmentTypeGroupID == testcode.EquipmentTypeGroupID.Value && x.HasWorkOrderDetail==true).FirstOrDefaultAsync();
+
+
+                //_calibType =await  (from WOD in context.EquipmentType
+                //         join U in context.EquipmentTypeGroup on WOD.EquipmentTypeGroupID equals U.EquipmentTypeGroupID
+                //         where WOD.HasWorkOrderDetail == true
+                //         select WOD).FirstOrDefaultAsync();
+
+
+
+
+            }
+
+
+            if (testcode != null && testcode.EquipmentTypeID.HasValue && testcode.EquipmentTypeID.Value  > 0)
+            {
+                _calibType = await context.EquipmentType.AsNoTracking()
+                    .Where(x => x.HasWorkOrderDetail == true && x.EquipmentTypeID == testcode.EquipmentTypeID
+                    ).FirstOrDefaultAsync();
+
+
+            }
+
+
+
+
+            //if (_calibType == null)
+            //{
+            //    throw new Exception("Test Code Not configured");
+            //}
+
+            int? item = 0;
+            if (_calibType != null)
+            {
+              item=  _calibType.EquipmentTypeGroupID;
+            }
+            
+
+
+                IQueryable<PieceOfEquipment> a;
+            IQueryable<PieceOfEquipment> a1;
+
+            if (testcode == null)
+            {
+
+                a = (from POE in context.PieceOfEquipment.AsNoTracking().Include(x => x.EquipmentTemplate)
+                     //.ThenInclude(x => x.EquipmentTypeGroup)
+                     .AsNoTracking().Include(d => d.Customer).AsNoTracking()
+                     join ET in context.EquipmentTemplate on POE.EquipmentTemplateId equals ET.EquipmentTemplateID
+                     join CU in context.Customer on POE.CustomerId equals CU.CustomerID
+                     //join E in context.EquipmentTypeGroup on ET.EquipmentTypeID equals E.EquipmentTypeGroupID
+
+                     where POE.CustomerId == pagination.Entity.Customer.CustomerID && string.IsNullOrEmpty(POE.ParentID)
+                     && (item.HasValue && ET.EquipmentTypeGroupID == item || 1==1)
+                     select POE).AsNoTracking();
+
+            }
+            else
+            {
+                
+                    a = (from POE in context.PieceOfEquipment.AsNoTracking().Include(x => x.EquipmentTemplate)
+                         //.ThenInclude(x => x.EquipmentTypeGroup)
+                         .AsNoTracking().Include(d => d.Customer).AsNoTracking()
+                         join ET in context.EquipmentTemplate on POE.EquipmentTemplateId equals ET.EquipmentTemplateID
+                         join CU in context.Customer on POE.CustomerId equals CU.CustomerID
+                         //join E in context.EquipmentTypeGroup on ET.EquipmentTypeGroupID equals E.EquipmentTypeGroupID
+                         where POE.CustomerId == pagination.Entity.Customer.CustomerID && string.IsNullOrEmpty(POE.ParentID)
+                         && (item.HasValue && ET.EquipmentTypeGroupID == item || 1 == 1)
+
+
+                         select POE).AsNoTracking();
+
+                if (a == null || a.Count() == 0)
+                {
+                    a = (from POE in context.PieceOfEquipment.Include(x => x.EquipmentTemplate)
+                         //.ThenInclude(x => x.EquipmentTypeGroup)
+                         .Include(d => d.Customer)
+                         join ET in context.EquipmentTemplate on POE.EquipmentTemplateId equals ET.EquipmentTemplateID
+                         join CU in context.Customer on POE.CustomerId equals CU.CustomerID
+                         //join E in context.EquipmentTypeGroup on ET.EquipmentTypeGroupID equals E.EquipmentTypeGroupID
+                         where POE.CustomerId == pagination.Entity.Customer.CustomerID && string.IsNullOrEmpty(POE.ParentID)
+
+                        && (item.HasValue && ET.EquipmentTypeGroupID == item || 1 == 1)
+                         // && POE.Capacity >= testcode.RangeMIn && POE.Capacity <= testcode.RangeMax
+                         select POE).AsNoTracking();
+                }
+
+                if (a != null && a.Count() != 0)
+                {
+
+                    if (!(testcode.CalibrationTypeID >= 502 && testcode.CalibrationTypeID <= 512))
+                    {
+                        a = a.Where(x => x.Capacity >= testcode.RangeMIn && x.Capacity <= testcode.RangeMax);
+                    }
+
+                    
+                }
+
+
+            }
+
+            var filterQuery = Querys.POEWOFilter(pagination.Filter);
+
+           var queriable = a; 
+           var simplequery = a;
+           var result = await queriable.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery, filterQuery);
+
+            return result;
+
+
+
+
+        }
+       public async Task<ResultSet<POE_Scale>> GetPOEScale(Pagination<POE_Scale> pagination)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var filterQuery =  Querys.POENullfilter<POE_Scale>(pagination.Filter);
+
+            var a =  context.POE_Scale.Where(x=>x.PieceOfEquipmentID== pagination.Entity.PieceOfEquipmentID).AsNoTracking().AsQueryable();
+
+            var queriable = a; 
+            var simplequery = a;
+
+              var result = await queriable.PaginationAndFilterQuery<POE_Scale>(pagination, simplequery, filterQuery);
+
+            return result;
+
+
+
+        }
+
+        public async Task<IEnumerable<PieceOfEquipment>> GetPieceOfEquipmentByScale(string id)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var res = await context.PieceOfEquipment.AsNoTracking().Include(x => x.Customer).Include(x => x.EquipmentTemplate)
+               // .ThenInclude(x => x.EquipmentTypeGroup).AsNoTracking()
+                .Include(x => x.EquipmentTemplate).ThenInclude(x => x.Manufacturer1).AsNoTracking()
+                .Where(x => x.Scale == id && x.DueDate >= DateTime.Today)
+
+                .ToListAsync();
+
+            return res;
+
+
+        }
+
+
+        public async Task<IEnumerable<PieceOfEquipment>> GetResolutionByMass(IEnumerable<PieceOfEquipment> DTO)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            //var res = await context.PieceOfEquipment.AsNoTracking().Include(x => x.Customer).Include(x => x.EquipmentTemplate).ThenInclude(x => x.EquipmentTypeObject)
+            //    .Include(x => x.EquipmentTemplate).ThenInclude(x => x.Manufacturer1)
+            //    .Where(x => x.Scale == id && x.DueDate >= DateTime.Today)
+
+            //    .ToListAsync();
+
+            foreach (var item in DTO)
+            {
+                int cap =(int) item.Capacity;
+
+                var res = await context.Mass.AsNoTracking().Where(x => x.Metric == cap && x.UnitOfMeasure==item.UnitOfMeasureID).FirstOrDefaultAsync();
+
+                //Mass m = new Mass();
+
+                //m.cl
+                var tol= res.GetPropValue("Class" + item.Class);
+
+                var tolUoM = res.GetPropValue("Class" + item.Class + "UoM");
+
+                if (tol == null)
+                {
+                    item.Tolerance.ToleranceValue = 0;
+                }
+                else
+                {
+                    item.Tolerance.ToleranceValue =(double) tol;
+                }
+                if(tolUoM == null)
+                {
+                    item.ToleranceUoM = 0;
+                }
+                else
+                {
+                    item.ToleranceUoM =(int) tolUoM;
+                }  
+            }
+            return DTO;
+        }
+
+
+        public async Task<IEnumerable<PieceOfEquipment>> GetResolutionByLenght(IEnumerable<PieceOfEquipment> DTO)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            //var res = await context.PieceOfEquipment.AsNoTracking().Include(x => x.Customer).Include(x => x.EquipmentTemplate).ThenInclude(x => x.EquipmentTypeObject)
+            //    .Include(x => x.EquipmentTemplate).ThenInclude(x => x.Manufacturer1)
+            //    .Where(x => x.Scale == id && x.DueDate >= DateTime.Today)
+
+            //    .ToListAsync();
+
+            foreach (var item in DTO)
+            {
+                int cap = (int)item.Capacity;
+
+                foreach (var piece in item.TestPointResult)
+                {
+
+
+                    var poedyn = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(piece.Object);
+
+
+                    var from = (double)poedyn.NominalSize;
+
+                    var UoM = (int)poedyn.UoM;
+
+                    var certi = (int)poedyn.CertificationID;
+
+
+                    var res = await context.Lenght.AsNoTracking().Where(x => x.From <= from &&  x.To >= from && x.UnitOfMeasure == UoM && x.CertificationID== certi).FirstOrDefaultAsync();
+
+                    //Mass m = new Mass();
+
+                    //m.cl
+                    //double tol = 0;//res.GetPropValue("Class" + item.Class);
+
+                    //var tolUoM = res.GetPropValue("Class" + item.Class + "UoM");
+
+
+                    //if(res != null)
+                    //{
+                    //  tol= res.Tolerance;
+                    //}
+
+                    if (res == null)
+                    {
+                        item.Tolerance.ToleranceValue = 0;
+                    }
+                    else
+                    {
+                        var tol = res.Tolerance;
+                        item.Tolerance.ToleranceValue = (double)tol;
+                    }
+                    //if (tolUoM == null)
+                    //{
+                    //    item.ToleranceUoM = 0;
+                    //}
+                    //else
+                    //{
+                    //    item.ToleranceUoM = (int)tolUoM;
+                    //}
+                }
+
+                
+            }
+            return DTO;
+        }
+
+
+        public async Task<CalibrationSubType> CreateFieldsFromValidator(CalibrationType DTO)
+        {
+
+            return null;
+        
+        }
+
+
+        public async Task<CalibrationType> CreateNormalConfiguration(CalibrationType DTO)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+
+            var calts1 = DTO.CalibrationSubTypes;
+
+            int CountHasCopy = 0;
+            if (calts1 != null)
+            {
+                CountHasCopy= calts1.Count();
+            }
+
+            else
+            {
+                return null;
+            }
+                
+            
+            foreach (var item in DTO?.CalibrationSubTypes)
+                {
+                    List<CalibrationSubType> lst = new List<CalibrationSubType>();
+                    lst.Add(item);
+                    var lst2 = (CalibrationSubType)item.CloneObject();
+                    var cst = await SaveCalibrationSubType(lst2, DTO.CalibrationSubTypes.Count, CountHasCopy, item.Name, item.CalibrationTypeId, item.CalibrationSubTypeId);
+
+                    foreach (var item32 in item?.DynamicPropertiesSchema)
+                    {
+                        if (item32.ViewPropertyBase == null)
+                        {
+                            throw new Exception("ViewPropertyBase Not exists");
+                        }
+
+
+                        var csv = item32.ViewPropertyBase; // await context.ViewPropertyBase.AsNoTracking().Where(x => x.DynamicPropertyID == item32.DynamicPropertyID).FirstOrDefaultAsync();
+
+
+                        var ID = item32.DynamicPropertyID;//NumericExtensions.GetUniqueID();
+
+
+                        item32.CalibrationSubtype = item.CalibrationSubTypeId;
+
+                        csv.ViewPropertyID = ID;
+
+                        csv.DynamicPropertyID = ID;
+
+                        csv.ID = ID.ToString();
+                        context.ViewPropertyBase.Add(csv);
+
+                        //await context.SaveChangesAsync();
+
+                        item32.ViewPropertyBase = null;
+
+                        item32.DynamicPropertyID = ID;
+                        item32.ViewPropertyBaseID = ID;
+
+
+                        //item32.ColPosition = item32.ColPosition + dp2.DynamicPropertiesSchema.Count;
+
+
+                        context.DynamicProperty.Add(item32);
+                    }
+
+
+                    await context.SaveChangesAsync();
+
+
+
+                }
+
+
+
+
+
+
+
+            return null;
+
+
+
+
+
+        }
+
+
+
+
+            public async Task<CalibrationType> CreateConfiguration(CalibrationType DTO)
+        {
+
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var currentconfiguration= await GetDynamicConfiguration(DTO.CalibrationTypeId);
+
+            var currentconfiguration2 = await GetDynamicConfiguration(DTO.CalibrationTypeId);
+
+
+            var calt = await context.CalibrationType.AsNoTracking().Include(x => x.CalibrationSubTypes).ThenInclude(x=>x.CalibrationSubTypeView).Where(x=>x.CalibrationTypeId==DTO.CalibrationTypeId).FirstOrDefaultAsync();//GetDynamicConfiguration(DTO.CalibrationTypeId);
+
+
+            bool conainscalsubtypesconfig = false;
+
+            if (calt.CalibrationSubTypes!=null && DTO?.CalibrationSubTypes?.Count > 0)
+            {
+
+                foreach (var item1 in calt.CalibrationSubTypes)
+                {
+                    if(DTO.CalibrationSubTypes.Where(x=>x.CalibrationSubTypeId == item1.CalibrationSubTypeId).FirstOrDefault()==null)
+                    {
+                        item1.Mandatory = false;
+                    }
+                    else
+                    {
+                        conainscalsubtypesconfig = true;
+                        item1.Mandatory = true;
+                    }
+                }
+            }
+
+           
+           
+
+
+
+            var calts1 = calt.CalibrationSubTypes.Where(x => x.Mandatory == true);
+
+            var CountHasCopy= calts1.Count();
+
+
+            foreach (var item in calts1.OrderBy(x=>x.Position))
+            {
+                var dp = currentconfiguration.CalibrationSubTypes.Where(x => x.CalibrationSubTypeId == item.CalibrationSubTypeId).FirstOrDefault();//await context.DynamicProperty.AsNoTracking().Where(x=>x.CalibrationSubtype==item.CalibrationSubTypeId).ToListAsync();
+
+                var name = "";
+                var calibrationtypeid = 0;
+                if (conainscalsubtypesconfig)
+                {
+                    var itemconf= DTO.CalibrationSubTypes.Where(x => x.CalibrationSubTypeId == item.CalibrationSubTypeId).FirstOrDefault();
+                    if (!string.IsNullOrEmpty(itemconf.Name))
+                    {
+                        name = itemconf.Name;
+                        calibrationtypeid = itemconf.CalibrationTypeId;
+                    }
+                }
+                else
+                {
+
+                    calibrationtypeid = item.CalibrationTypeId;
+
+                }
+
+
+
+                var dp2 = currentconfiguration2.CalibrationSubTypes.Where(x => x.CalibrationSubTypeId == item.CalibrationSubTypeId).FirstOrDefault();//await context.DynamicProperty.AsNoTracking().Where(x=>x.CalibrationSubtype==item.CalibrationSubTypeId).ToListAsync();
+                
+                
+
+                ///create from csvvalidator
+                if((dp2!= null && dp2.DynamicPropertiesSchema== null || dp2.DynamicPropertiesSchema.Count() == 0) && !string.IsNullOrEmpty(dp2.CalibrationSubTypeView.CSVValidator))
+                {
+
+                   var validator = CsvValidation.FromJson(dp2.CalibrationSubTypeView.CSVValidator);
+
+
+                    var cvbf = validator.Columns.Where(x => x.Value.Name.ToLower() == "resolution").FirstOrDefault();
+
+                    
+
+                    int colpos = 0;
+                   foreach(var coli in validator.Columns)
+                    {
+                        var item32 = new DynamicProperty();
+
+                        var csv = new ViewPropertyBase();
+
+                        var ID = NumericExtensions.GetUniqueID();
+
+
+                        item32.CalibrationSubtype = dp2.CalibrationSubTypeId;
+
+                        csv.ViewPropertyID = ID;
+
+                        csv.DynamicPropertyID = ID;
+
+                        csv.Display = coli.Value.Name;
+
+                        csv.CSSCol = "col-3";
+
+                        var Texto = Regex.Replace(coli.Value.Name.Replace(" ", ""), "[^0-9A-Za-z]", "", RegexOptions.None);
+
+                        item32.Name = Texto;
+
+                        item32.DefaultValue = coli.Value.DefaultValue;
+
+                        if (coli.Value.IsNumeric.HasValue && coli.Value.Unique.HasValue && coli.Value.IsNumeric.Value && coli.Value.Unique.Value)
+                        {
+                            item32.DataType = "System.Int32";
+                            csv.ControlType = "number";
+
+                            if (string.IsNullOrEmpty(item32.DefaultValue))
+                            {
+                                item32.DefaultValue = "0";
+                            }
+                            
+                        }
+                        else
+                        if (coli.Value.IsNumeric.HasValue  && coli.Value.IsNumeric.Value )
+                        {
+                            item32.DataType = "System.Double";
+                            csv.ControlType = "numberdecimal";
+                            csv.EnableToastMessage = true;
+                            csv.DecimalRoundType = 0;
+                            if (cvbf.Equals(default(KeyValuePair<string, Column>)))
+                            {
+                                csv.StepResol = "0.0001";
+                            }
+                            
+                            csv.ToastMessage = "in " + dp2.NameToShow + "  the typed value {0} was rounded to {1}";
+                            if (string.IsNullOrEmpty(item32.DefaultValue))
+                            {
+                                item32.DefaultValue = "0";
+                            }
+
+                        }
+                        else if(coli.Value.IsBoolean.HasValue && coli.Value.IsBoolean.Value)
+                        {
+                            item32.DataType = "System.Boolean";
+                            csv.ControlType = "switch";
+                            csv.CSSCol = "col-2";
+                            item32.DefaultValue = "false";
+                        }
+                        else
+                        {
+                            item32.DataType = "System.String";
+                            csv.ControlType = "text";
+                        }
+
+
+
+                        csv.IsHide = false;
+                        csv.IsVisible = true;
+
+                        if(coli.Value.IsOnlyRead.HasValue && coli.Value.IsOnlyRead.Value)
+                        {
+                            csv.IsDisabled = true ;
+                        }
+                        else
+                        {
+                            csv.IsDisabled = false;
+                        }                     
+
+
+
+                        csv.OnChange = true;
+                        csv.ShowControl= true;  
+                        csv.HasHeader= true;
+                        csv.ExtendedObject = true;
+                        csv.DecimalNumbers = 4;
+                        csv.ReGenerate = true;
+                        
+                        csv.SelectOptions=coli.Value.SelectOptions;
+
+                        item32.Enable = true;
+                        item32.ColPosition = colpos;
+                        item32.GridLocation = "row";
+
+                        if (coli.Value.IsHeader.HasValue && coli.Value.IsHeader.Value)
+                        {
+                            item32.GridLocation = "new";
+                        }
+
+                        item32.unique=coli.Value.Unique;    
+                        item32.isRequired = coli.Value.IsRequired;  
+                        item32.Pattern = coli.Value.Pattern; 
+                        item32.Formula = coli.Value.Formula;
+                        item32.FormulaClass = coli.Value.Formula;
+
+                        //item32.DefaultValue
+
+                        context.ViewPropertyBase.Add(csv);
+
+                        //await context.SaveChangesAsync();
+
+                        item32.ViewPropertyBase = null;
+
+                        item32.DynamicPropertyID = ID;
+                        item32.ViewPropertyBaseID = ID;
+
+
+                        //item32.ColPosition = item32.ColPosition + dp2.DynamicPropertiesSchema.Count;
+
+
+                        context.DynamicProperty.Add(item32);
+
+
+                        colpos++;
+                    }
+
+                    await context.SaveChangesAsync();
+
+
+                }
+                else {
+
+                    var cst = await SaveCalibrationSubType(dp, calt.CalibrationSubTypes.Count, CountHasCopy, name, calibrationtypeid);
+
+                    foreach (var item32 in dp2.DynamicPropertiesSchema)
+                    {
+                        var csv = await context.ViewPropertyBase.AsNoTracking().Where(x => x.DynamicPropertyID == item32.DynamicPropertyID).FirstOrDefaultAsync();
+
+
+                        var ID = NumericExtensions.GetUniqueID();
+
+
+                        item32.CalibrationSubtype = cst.CalibrationSubTypeId;
+
+                        csv.ViewPropertyID = ID;
+
+                        csv.DynamicPropertyID = ID;
+
+                        context.ViewPropertyBase.Add(csv);
+
+                        //await context.SaveChangesAsync();
+
+                        item32.ViewPropertyBase = null;
+
+                        item32.DynamicPropertyID = ID;
+                        item32.ViewPropertyBaseID = ID;
+
+
+                        //item32.ColPosition = item32.ColPosition + dp2.DynamicPropertiesSchema.Count;
+
+
+                        context.DynamicProperty.Add(item32);
+                    }
+
+
+                    await context.SaveChangesAsync();
+
+
+
+                }
+
+               
+
+            }
+
+
+
+            var currentconfiguration3 = await GetDynamicConfiguration(DTO.CalibrationTypeId);
+
+           return currentconfiguration3;
+        }
+
+
+        public async Task<CalibrationSubType> SaveCalibrationSubType(CalibrationSubType  item2, int count,int groupcount,string name,int calibrationTypeId=0,int calibrationsubtypeid=0)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var ID = NumericExtensions.GetUniqueID(calibrationsubtypeid);
+
+            var item = item2;
+
+            item.DynamicProperties = null;
+
+            item.DynamicPropertiesSchema = null;
+
+            var cs = item.CalibrationSubTypeView;
+
+            cs.CalibrationSubTypeViewID = ID;
+
+            cs.CalibrationSubTypeId= ID;    
+
+            cs.CalibrationSubType = null;
+
+            var cv = await context.CalibrationSubTypeView.AsNoTracking().Where(x => x.CalibrationSubTypeId == ID).FirstOrDefaultAsync();
+
+            if (cv == null)
+            {
+                var a = context.CalibrationSubTypeView.Add(cs);
+
+                var b = await context.SaveChangesAsync();
+
+            }
+              
+
+            item.CalibrationSubTypeViewID = ID; //item.CalibrationSubTypeView.CalibrationSubTypeId;
+
+            item.CalibrationSubTypeId = ID;
+
+            item.CalibrationSubTypeView = null;
+
+            //item.CalibrationSubTypeViewID = cs.CalibrationSubTypeViewID;
+            item.Mandatory = false;
+
+            item.Position = item.Position + count;
+
+            if (string.IsNullOrEmpty(name))
+            {
+                item.Name = item.Name + ((count / groupcount) + 1).ToString();
+
+                item.NameToShow = item.NameToShow + " - " + ((count / groupcount) + 1).ToString();
+
+            }
+            else
+            {
+                item.Name = name;
+
+                item.NameToShow = name;
+
+            }
+
+            if(calibrationTypeId != 0) 
+            {
+                item.CalibrationTypeId = calibrationTypeId;
+            }
+
+            var c1 = await context.CalibrationSubType.AsNoTracking().Where(x => x.CalibrationSubTypeId == ID).FirstOrDefaultAsync();
+
+            if (c1 == null)
+            {
+                var c = context.CalibrationSubType.Add(item);
+
+                var d = await context.SaveChangesAsync();
+            }
+      
+
+            //if (d == 0)
+            //{
+            //    throw new Exception("error save entity framework");
+            //}
+
+            //cs.CalibrationSubTypeId = item.CalibrationSubTypeId;
+
+            //var c1 = context.CalibrationSubTypeView.Update(cs);
+
+            //var d1 = await context.SaveChangesAsync();
+
+            return item;
+
+        }
+
+
+        public async Task<CalibrationSubType> DeleteConfiguration(CalibrationSubType DTO)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var cal = await context.CalibrationSubType.AsNoTracking().Where(x => x.CalibrationSubTypeId == DTO.CalibrationSubTypeId).FirstOrDefaultAsync();
+
+
+            cal.Enabled = false;
+
+            context.CalibrationSubType.Update(cal);
+
+            await context.SaveChangesAsync();
+
+            if (cal != null && cal.Mandatory == true)
+            {
+                throw new Exception("can't delete this calibration");
+
+            }
+
+            var dynpro = await context.DynamicProperty.AsNoTracking().Where(x => x.CalibrationSubtype == DTO.CalibrationSubTypeId).ToListAsync();
+
+
+
+
+            foreach (var item in dynpro)
+            {
+                item.Enable= false;
+                
+                context.DynamicProperty.Update(item);
+
+                await context.SaveChangesAsync();   
+
+            }
+
+           
+
+         
+
+            return cal;
+
+        }
+        public async Task<List<Force>> CalculateUncertainty(List<Force> forces, int iso)
+        {
+            return forces;
+        }
+
+        public async Task<CalibrationSubType> EnableConfiguration(CalibrationSubType DTO)
+        {
+
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var cal = await context.CalibrationSubType.AsNoTracking().Where(x => x.CalibrationSubTypeId == DTO.CalibrationSubTypeId).FirstOrDefaultAsync();
+
+
+            cal.Enabled = true;
+
+            context.CalibrationSubType.Update(cal);
+
+            await context.SaveChangesAsync();
+
+            if (cal != null && cal.Mandatory == true)
+            {
+                throw new Exception("can't delete this calibration");
+
+            }
+
+            var dynpro = await context.DynamicProperty.AsNoTracking().Where(x => x.CalibrationSubtype == DTO.CalibrationSubTypeId).ToListAsync();
+
+
+
+
+            foreach (var item in dynpro)
+            {
+                item.Enable = true;
+
+                context.DynamicProperty.Update(item);
+
+
+
+                await context.SaveChangesAsync();
+
+            }
+            return cal;
+        }
+
+        public List<KeyValueOption> GetJSONConfigurationArray(EquipmentType eto)
+        {
+
+
+            if (!string.IsNullOrEmpty(eto.JSONConfiguration))
+            {
+
+                var nvc = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValueOption>>(eto.JSONConfiguration);
+                return nvc;
+
+            }
+
+            return new List<KeyValueOption>();
+        }
+
+
+        public async Task<ResultSet<PieceOfEquipment>> GetSelectPOEChildren(Pagination<PieceOfEquipment> pagination)
+        {
+
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+
+            var json = pagination.Object.EntityFilter.EquipmentTemplate.EquipmentTypeGroup.Children;
+
+            var listids=  Newtonsoft.Json.JsonConvert.DeserializeObject<List<int>>(json);
+
+
+
+            //var a = context.PieceOfEquipment.AsNoTracking().Where(x => x.CustomerId == pagination.Entity.Customer.CustomerID);
+
+            var filterQuery = Querys.POEWOFilter(pagination.Filter);
+
+            var c =  context.PieceOfEquipment.AsNoTracking()
+               .Include(c => c.EquipmentTemplate).ThenInclude(d => d.Manufacturer1)             
+             .Where(x => x.CustomerId== pagination.Entity.Customer.CustomerID && string.IsNullOrEmpty(x.ParentID) && x.EquipmentTemplate.EquipmentTypeGroupID.HasValue 
+             && listids.Contains(x.EquipmentTemplate.EquipmentTypeGroupID.Value));
+
+
+            var queriable = c;
+
+            var simplequery = c;
+
+
+            var result = await queriable.PaginationAndFilterQuery<PieceOfEquipment>(pagination, simplequery, filterQuery);
+
+            return result;
+
+        }
+
+        public async Task<IEnumerable<PieceOfEquipment>> GetPieceOfEquipmentChildrenAll(PieceOfEquipment poe)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+             var res = await ( from poes in context.PieceOfEquipment 
+                                    join et in context.EquipmentTemplate on poes.EquipmentTemplateId equals et.EquipmentTemplateID
+                                    join etg in context.EquipmentTypeGroup on et.EquipmentTypeGroupID equals etg.EquipmentTypeGroupID
+                                    join ety in context.EquipmentType on etg.EquipmentTypeGroupID equals ety.EquipmentTypeGroupID
+                                    join man in context.Manufacturer on et.ManufacturerID equals man.ManufacturerID
+                               where poes.ParentID == poe.PieceOfEquipmentID
+                                    select new PieceOfEquipment()
+                                    {
+                                        PieceOfEquipmentID = poes.PieceOfEquipmentID,
+                                        SerialNumber = poes.SerialNumber,
+                                        EquipmentTemplate = new EquipmentTemplate
+                                        {
+                                            EquipmentTemplateID = et.EquipmentTemplateID,
+                                            EquipmentTypeID = et.EquipmentTypeID,
+                                            EquipmentTypeGroupID = et.EquipmentTypeGroupID,
+                                            Model = et.Model,
+                                            EquipmentTypeGroup = new EquipmentTypeGroup
+                                            {
+                                                EquipmentTypeGroupID = etg.EquipmentTypeGroupID
+                                            },
+                                            Manufacturer1 = new Manufacturer
+                                            {
+                                                ManufacturerID = et.ManufacturerID,
+                                                Name = man.Name
+                                            },
+                                            EquipmentTypeObject = new EquipmentType
+                                            {
+                                                EquipmentTypeID = ety.EquipmentTypeID,
+                                                EquipmentTypeGroupID = ety.EquipmentTypeGroupID,
+                                                HasIndicator = ety.HasIndicator,
+
+                                            }
+
+                                        }
+                                    }
+                                ).ToListAsync();
+
+            List<PieceOfEquipment> a = res;
+            return a;
+        }
+
+    }
+}

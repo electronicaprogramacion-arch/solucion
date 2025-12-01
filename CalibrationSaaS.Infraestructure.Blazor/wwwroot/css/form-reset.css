@@ -1,0 +1,82 @@
+/* Reset form styles to behave like div */
+form {
+    /* Remove default margins and padding */
+    margin: 0;
+    padding: 0;
+    
+    /* Reset display behavior */
+    display: block;
+    
+    /* Remove any default borders */
+    border: none;
+    
+    /* Reset box model */
+    box-sizing: border-box;
+    
+    /* Ensure full width like div */
+    width: 100%;
+    
+    /* Remove any default background */
+    background: none;
+    
+    /* Reset font inheritance */
+    font: inherit;
+    
+    /* Remove outline */
+    outline: none;
+    
+    /* Reset line height */
+    line-height: normal;
+    
+    /* Remove any default min-height */
+    min-height: auto;
+}
+
+/* Alternative: More specific reset for forms in your application */
+.form-as-div {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* For forms that need flex behavior like divs */
+.form-flex {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    display: flex !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* For forms that need grid behavior like divs */
+.form-grid {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    display: grid !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Reset for form elements inside */
+.form-as-div input,
+.form-as-div textarea,
+.form-as-div select,
+.form-as-div button {
+    box-sizing: border-box;
+}
+
+/* Ensure form doesn't interfere with Bootstrap or other frameworks */
+.form-reset {
+    all: unset;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}

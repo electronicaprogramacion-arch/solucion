@@ -1,0 +1,265 @@
+﻿@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using CalibrationSaaS.Domain.Aggregates.Querys;
+
+
+@namespace BlazorApp1.Blazor.Pages.Order
+
+@*@if (WorkOrderItemCreate.eq.EquipmentCondition != null)
+{
+    Col = 2;
+    Rows = 2;
+}*@
+
+
+@if (editContext != null  && WorkOrderItemCreate.eq != null && Total >0)
+{ 
+<EditForm Model="@WorkOrderItemCreate.eq.EquipmentCondition" Context="context">
+    <DataAnnotationsValidator />
+
+    @if (1 == 1)
+    {
+        cont = 0;
+        cont2 = 0;
+
+        if (Rows > Col)
+        {
+            Divisor = Col;
+        }
+        else
+        {
+            Divisor = Rows;
+        }
+        Console.WriteLine("111111111111111111111111111111111111111111111111111111111111111111111111");
+    }
+
+    <div class="row">
+
+        @*<div class="col-sm-2">
+
+            </div>*@
+        @for (int y = 0; y < Titles.Count; y++)
+        {
+            <div class="col-sm-2 condition">
+                @Titles[y]
+            </div>
+        }
+
+
+    </div>
+
+    
+    @for (int e = 0; e < Total; e++)
+    {
+        Console.WriteLine("zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+        if ((cont % Divisor) == 0)
+        {
+            Console.WriteLine("zzzxx");
+           <div class="row">
+            @if (1 == 1)
+             {
+              Console.WriteLine("zzzxx");
+              Console.WriteLine(cont2);
+             }
+
+            @for (int i = cont2; i < cont2 + Col; i++)
+            {
+               if (i < WorkOrderItemCreate.eq.EquipmentCondition.Count)
+                {
+
+                    @if (i == cont2)
+                     {
+                       <di class="col-sm-2 condition">
+
+                         @WorkOrderItemCreate.eq.EquipmentCondition.ElementAt(i).Name
+                       </di v>
+                     }
+                    <div class="col-sm-2 condition">
+                        @render(@WorkOrderItemCreate.eq.EquipmentCondition.ElementAt(i), i)
+                    </div>
+
+
+
+                }
+                else
+                {
+                  break;
+                }  
+            }
+
+
+           </div>
+            cont2 = cont2 + Col;
+        }
+
+        cont = cont + 1;
+    }
+
+</EditForm>
+}
+
+
+
+@code {
+
+
+    [CascadingParameter(Name = "CascadeParam1")]
+    public Blazor.Pages.Order.IWorkOrderItemCreate WorkOrderItemCreate { get; set; }
+
+    //[Parameter]
+    //public bool Enabled { get; set; }
+
+    public int cont2 { get; set; } = 0;
+    public int cont { get; set; }
+
+    public int Total { get; set; }
+
+    public List<string> Titles { get; set; } = new List<string>();
+
+
+    public int Divisor { get; set; }
+
+    public int Col { get; set; } = 2;
+
+    public int Rows { get; set; } = 2;
+
+    public bool FirstRender { get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        FirstRender = firstRender;
+
+        //WorkOrderItemCreate.eq.EquipmentCondition = WorkOrderItemCreate.eq.EquipmentCondition.OrderBy(x => x.Name).ToList();
+
+        if (firstRender
+            && (WorkOrderItemCreate != null && WorkOrderItemCreate.eq != null && WorkOrderItemCreate.eq?.EquipmentCondition == null)
+            || firstRender && WorkOrderItemCreate.eq?.EquipmentCondition?.Count == 0)
+        {
+            WorkOrderItemCreate.eq.EquipmentCondition = Querys.DefaultEquipmentConditionForBalance().ToList();
+
+
+        }
+
+        if (firstRender && WorkOrderItemCreate.eq.EquipmentCondition != null)
+        {
+
+            editContext = new EditContext(WorkOrderItemCreate.eq.EquipmentCondition);
+        }
+        else
+        {
+            editContext = new EditContext(new EquipmentCondition());
+        }
+        if (firstRender)
+        {
+            Titles.Add("_");
+            Titles.Add("Received Condition");
+            Titles.Add("Returned Condition");
+        }
+        Total = WorkOrderItemCreate.eq.EquipmentCondition.OrderBy(x => x.Name).Count();
+
+        Console.WriteLine("esto esssssssssssssssssssssssssssssssssssssssssssssss");
+        Console.WriteLine(Total);
+
+
+
+
+
+        await  base.OnAfterRenderAsync(firstRender);
+    }
+
+
+    //[Parameter]
+    //public Status CurrentStatus { get; set; } = new Status();
+
+    public EditContext editContext { get; set; }
+
+    //[Parameter]
+    //public WorkOrderDetail WorkOrderItemCreate.eq { get; set; } = new WorkOrderDetail();
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+
+        await base.OnParametersSetAsync();
+
+
+    }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+         if ( (WorkOrderItemCreate != null && WorkOrderItemCreate.eq != null && WorkOrderItemCreate.eq?.EquipmentCondition == null)
+            || WorkOrderItemCreate.eq?.EquipmentCondition?.Count == 0)
+        {
+            WorkOrderItemCreate.eq.EquipmentCondition = Querys.DefaultEquipmentConditionForBalance().ToList();
+
+
+        }
+
+        if (WorkOrderItemCreate.eq.EquipmentCondition != null)
+        {
+
+            editContext = new EditContext(WorkOrderItemCreate.eq.EquipmentCondition);
+        }
+        else
+        {
+            editContext = new EditContext(new EquipmentCondition());
+        }
+        
+            //Titles.Add("_");
+            //Titles.Add("As Found");
+            //Titles.Add("As Left");
+        
+        Total = WorkOrderItemCreate.eq.EquipmentCondition.OrderBy(x => x.Name).Count();
+
+        Console.WriteLine("esto esssssssssssssssssssssssssssssssssssssssssssssss");
+        Console.WriteLine(Total);
+
+
+
+
+
+    }
+
+    public int MyProperty { get; set; }
+
+
+    public RenderFragment render(EquipmentCondition Wod, int i)
+    {
+        if (WorkOrderItemCreate.eq.SelectSingle(Querys.WODRules.RuleReadyForCalibrationStatus()) && WorkOrderItemCreate.Enabled)
+        {
+            return@<TextInput Label="@Wod.Label"
+                              TValue="bool"
+                              Validate="false"
+                              @bind-Value="@Wod.Value" Type="@Types.Switch" Model="Wod" OnChangeObjectControl="Change">
+    </TextInput>;
+    }
+        else
+        {
+
+            return@<TextInput Label="@Wod.Label"
+                              TValue="bool"
+                              Validate="false"
+                              @bind-Value="@Wod.Value" Type="@Types.Switch" Model="Wod" OnChangeObjectControl="Change" IsDisabled="true">
+    </TextInput>;
+    }
+
+
+
+    }
+
+
+    public void Change(ChangeEventArgs arg)
+    {
+
+    }
+
+
+
+
+}

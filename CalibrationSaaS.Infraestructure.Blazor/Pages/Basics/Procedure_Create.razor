@@ -1,0 +1,102 @@
+﻿@page "/Procedure/{EntityId}"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@inherits Procedure_CreateBase
+@implements IDisposable
+@using System.Linq.Expressions
+@using Blazed.Controls
+
+
+@{
+
+
+    SetEnabled();
+
+
+}
+<HeaderComponent Title="Procedure" ActionBar="@Enabled" Enabled="@Enabled"></HeaderComponent>
+<div class="col-md-12">
+
+
+    <EditForm style="margin:10px" OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        @*<h4>@LastSubmitResult</h4>*@
+        <SubmitComponent>
+
+        </SubmitComponent>
+        <div class="form-row">
+            <div class="col-md-12">
+                
+             @*   <div class="form-row p-3">
+                    <div class="col-md">
+                        <label for="abbreviation">Abbreviation</label>
+                        <InputText @bind-Value="eq.Abbreviation" placeholder="abbreviation" class="form-control"
+                                   @attributes="@EnabledFunction()" />
+                    </div>
+
+                </div>*@
+
+                <div class="form-row p-3">
+                    <div class="col-md">
+                      
+
+                        <TextInput Label="Procedure Name" @bind-Value="eq.Name"
+                                 
+                                   IsDisabled="!Enabled">
+
+
+                        </TextInput>
+                   
+                    </div>
+
+                </div>
+                <div class="form-row p-3">
+                    <div class="col-md">
+
+
+                        <TextInput Label="Document Url" @bind-Value="eq.DocumentUrl"
+                                   IsDisabled="!Enabled"
+                                   ValidationFor="@(() => eq.DocumentUrl)"
+                                   Validate="true"
+                                   RegularExpression="^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$"
+                                   ValidateValueMessage="The URL entered is invalid">
+                        </TextInput>
+
+                    </div>
+
+                </div>
+                <div class="valid-feedback">
+                    Looks good!
+                </div>
+            </div>
+        </div>
+
+       @if (Enabled)
+       {
+           <div class="col-sm-4">
+                                            <div class="custom-control custom-switch">
+                                                @*<input type="file" id="fileUpload" @onchange="UploadFile">
+                                                    <label class="custom-file-label" for="inputGroupFile01">Choose file</label>*@
+                    <BlazorInputFile.InputFile OnChange="HandleFileSelected" title="Only select pdf files" style="color:transparent;" />
+
+                    @if (!string.IsNullOrEmpty(@fileName))
+                    {
+                        <label> File Name: @fileName</label>
+
+                    }
+                                            </div>
+
+                                        </div>
+       }
+
+
+    </EditForm>
+</div>
+
+
+@code{
+
+
+
+
+}

@@ -1,0 +1,286 @@
+﻿
+
+@inject IServiceProvider Services
+@inject ThemeService ThemeService
+@namespace BlazorApp1.Blazor.Pages.Layout
+
+<div class="settings-sidebar" style="z-index: 1040; grid-area: rz-sidebar-settings;">
+    <div class="settings-content">
+        <RadzenStack AlignItems="Radzen.AlignItems.Center" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding); border-bottom: var(--rz-panel-menu-item-border);">
+            <div class="settings-header">
+                <RadzenText Text="Settings" TextStyle="Radzen.Blazor.TextStyle.Subtitle1" class="rz-mb-0" style="color: var(--rz-sidebar-color);" />
+               @*  <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Click="@(() => OnClick())" /> *@
+            </div>
+        </RadzenStack>
+        <RadzenStack Gap="1rem" class="rz-p-4">
+            <!-- Theme Selection -->
+            @if(OperatingSystem.IsBrowser())            
+            {
+                <RadzenStack>
+                    <RadzenText TextStyle="TextStyle.Subtitle2">Theme</RadzenText>
+                    <ThemePicker />
+                </RadzenStack>
+            }
+            <!-- Language Selection -->
+            <RadzenStack>
+                <RadzenText TextStyle="TextStyle.Subtitle2">@L["Language"]</RadzenText>
+                <CulturePicker />
+            </RadzenStack>
+
+            <!-- Font Size -->
+            <RadzenStack>
+                <RadzenText TextStyle="TextStyle.Subtitle2">Font Size</RadzenText>
+                <RadzenSlider Min="80" Max="120" Step="10" @bind-Value="@fontSize" />
+                <RadzenText TextStyle="TextStyle.Caption">@fontSize%</RadzenText>
+            </RadzenStack>
+
+            <!-- Notifications -->
+            <RadzenStack>
+                <RadzenText TextStyle="TextStyle.Subtitle2">Notifications</RadzenText>
+                <RadzenSwitch @bind-Value="@enableNotifications" Change="@OnNotificationsChange" />
+                <RadzenText TextStyle="TextStyle.Caption">@(enableNotifications ? "Enabled" : "Disabled")</RadzenText>
+            </RadzenStack>
+        </RadzenStack>
+    </div>
+</div>
+
+<RadzenStack class="rz-p-0 rz-p-md-6 rz-p-lg-12">
+    <RadzenCard Variant="Variant.Outlined">
+        <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" class="rz-p-sm-2">
+                <RadzenLabel Text="Change the current theme" />
+              @*   <RadzenDropDown Name="ThemeDropDown" TValue="string" Value="@ThemeService.Theme" ValueChanged="@ChangeTheme" Data="@Themes.All" TextProperty=@nameof(Theme.Text) ValueProperty=@nameof(Theme.Value)>
+                </RadzenDropDown> *@
+                <RadzenDropDown TValue="string"
+                                Data="@themes"
+                                TextProperty="Value"
+                                ValueProperty="Key"
+                                Value="@selectedTheme"                                
+                                ValueChanged="@ChangeTheme"
+                                Icon="palette"
+                                AllowClear="false"
+                                AllowFiltering="false" />
+
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" class="rz-p-sm-2">
+                <RadzenLabel Text="Right-to-left" />
+                <RadzenSwitch Value=@(ThemeService.RightToLeft == true) ValueChanged=@ChangeRightToLeft />
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" class="rz-p-sm-2">
+                <RadzenLabel Text="WCAG compliant colors" />
+                <RadzenSwitch Value="@(ThemeService.Wcag == true)" Name="WCAG" ValueChanged=@ChangeWcag />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+    
+</RadzenStack>
+
+
+<RadzenButton Size="ButtonSize.ExtraSmall" Text="Save" Click="@(_ => OnClick2())" />
+@* <RadzenButton Size="ButtonSize.ExtraSmall" Text="Open Side Dialog" Click="@OnClick" /> *@
+
+@code {
+
+    public Microsoft.Extensions.Localization.IStringLocalizer<BlazorApp1.Blazor.Pages.Layout.MainLayout> L { get; set; }
+
+
+    private int fontSize = 100;
+    private bool enableNotifications = true;
+
+    [Inject] DialogService Service { get; set; }
+
+    public List<object> Result { get; set; } = new List<object>();
+
+    async Task OnClick()
+    {
+        Result.Add(enableNotifications);
+        Result.Add(fontSize);
+
+        await Service.CloseSideAsync(Result);
+        // await Service.OpenSideAsync<DialogSideContent>("Side Dialog");
+    }
+
+
+    async Task OnClick2()
+    {
+        Result.Add(enableNotifications);
+        Result.Add(fontSize);
+
+        await Service.CloseSideAsync(Result);
+        // await Service.OpenSideAsync<DialogSideContent>("Side Dialog");
+    }
+
+    private void OnNotificationsChange(bool value)
+    {
+        // Update notification settings
+        enableNotifications = value;
+        // Additional notification update logic can be implemented here
+    }
+    private string selectedTheme = "humanistic";
+    private string selectedThemeName = "TrueTune"; // Default theme name
+    private Dictionary<string, string> themes = new Dictionary<string, string>
+    {
+        { "default", "Precision Pro" },
+        { "dark", "CalibraSphere" },
+        { "software", "Exactitude" },
+        { "software-dark", "Exactitude Dark" },
+        { "humanistic-dark", "TrueTune Dark" },
+        { "humanistic", "TrueTune" },
+        { "standard", "Alignify" },
+        { "standard-dark", "Alignify Dark" },
+        { "material", "AxisPoint" },
+        { "material-dark", "AxisPoint Dark" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+
+
+
+        if (Services.GetService<Microsoft.Extensions.Localization.IStringLocalizer<MainLayout>>() is { } env)
+        {
+            L = env;
+        }
+
+        await  base.OnInitializedAsync();   
+    }
+    void ChangeTheme(string value)
+    {
+        // ThemeService.SetTheme(value);
+        try
+        {
+            // Prevent loops by checking if we're already processing a theme change
+            if (_processingThemeChange || _isChangingTheme)
+                return;
+
+            if (string.IsNullOrEmpty(value))
+                return;
+
+            var theme = value.ToString();
+
+            if (string.IsNullOrEmpty(theme))
+                return;
+
+            // Don't do anything if the theme hasn't changed
+            if (selectedTheme == theme)
+                return;
+
+            Console.WriteLine($"ThemePicker.OnThemeChange: Changing theme to {theme}");
+
+            _isChangingTheme = true;
+            _processingThemeChange = true;
+
+            try
+            {
+                // Update the selected theme
+                selectedTheme = theme;
+                if (themes.ContainsKey(theme))
+                {
+                    selectedThemeName = themes[theme];
+                }
+
+                // Update our theme service (this will trigger the ThemeChanged event)
+                 ThemeService.SetTheme(theme);
+
+                // Update the UI
+                StateHasChanged();
+            }
+            finally
+            {
+                _isChangingTheme = false;
+                _processingThemeChange = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _isChangingTheme = false;
+            _processingThemeChange = false;
+            Console.WriteLine($"Error changing theme: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+        }
+    }
+
+    void ChangeRightToLeft(bool value)
+    {
+        ThemeService.SetRightToLeft(value);
+    }
+
+    void ChangeWcag(bool value)
+    {
+        ThemeService.SetWcag(value);
+    }
+
+    // Debounce mechanism for theme changes
+    private string? _pendingThemeChange = null;
+    private bool _isChangingTheme = false;
+
+    // Track if we're currently processing a theme change to prevent loops
+    private bool _processingThemeChange = false;
+
+    // protected override void OnInitialized()
+    // {
+    //     ThemeService.ThemeChanged += OnThemeChanged;
+    // }
+
+    // public void Dispose()
+    // {
+    //     ThemeService.ThemeChanged -= OnThemeChanged;
+    // }
+
+    // private void OnThemeChanged()
+    // {
+    //     try
+    //     {
+    //         // Prevent loops by checking if we're already processing a theme change
+    //         if (_processingThemeChange || _isChangingTheme)
+    //             return;
+
+    //         if (value == null)
+    //             return;
+
+    //         var theme = value.ToString();
+
+    //         if (string.IsNullOrEmpty(theme))
+    //             return;
+
+    //         // Don't do anything if the theme hasn't changed
+    //         if (selectedTheme == theme)
+    //             return;
+
+    //         Console.WriteLine($"ThemePicker.OnThemeChange: Changing theme to {theme}");
+
+    //         _isChangingTheme = true;
+    //         _processingThemeChange = true;
+
+    //         try
+    //         {
+    //             // Update the selected theme
+    //             selectedTheme = theme;
+    //             if (themes.ContainsKey(theme))
+    //             {
+    //                 selectedThemeName = themes[theme];
+    //             }
+
+    //             // Update our theme service (this will trigger the ThemeChanged event)
+    //             await ThemeService.SetTheme(theme);
+
+    //             // Update the UI
+    //             StateHasChanged();
+    //         }
+    //         finally
+    //         {
+    //             _isChangingTheme = false;
+    //             _processingThemeChange = false;
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _isChangingTheme = false;
+    //         _processingThemeChange = false;
+    //         Console.WriteLine($"Error changing theme: {ex.Message}");
+    //         Console.WriteLine(ex.StackTrace);
+    //     }
+    // }
+}

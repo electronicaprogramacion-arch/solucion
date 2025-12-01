@@ -1,0 +1,439 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.Extensions.Options
+@using System.Diagnostics.CodeAnalysis
+@using System.Threading.Tasks
+@using System.Security.Cryptography
+@using System.Text
+@using Microsoft.JSInterop
+@using System.Web
+@inject NavigationManager Navigation
+@inject IRemoteAuthenticationService<CustomRemoteAuthenticationState> AuthenticationService
+@inject IOptions<RemoteAuthenticationApplicationPathsOptions> PathsOptions
+@inject IJSRuntime JSRuntime
+ 
+
+@if (Action == RemoteAuthenticationActions.LogIn)
+{
+    <text>Redirecting to login...</text>
+    @if (Redirecting != null)
+    {
+        @Redirecting
+    }
+    else
+    {
+        <div class="alert alert-info">Redirecting to login...</div>
+    }
+}
+else if (Action == RemoteAuthenticationActions.LogInCallback)
+{
+    <text>Processing login callback...</text>
+    @if (CompletingLoggingIn != null)
+    {
+        @CompletingLoggingIn
+    }
+    else
+    {
+        <div class="alert alert-info">Processing login callback...</div>
+    }
+}
+else if (Action == RemoteAuthenticationActions.LogInFailed)
+{
+    @if (LogInFailed != null)
+    {
+        @LogInFailed
+    }
+    else
+    {
+        <div class="alert alert-danger">Login failed. Please try again.</div>
+    }
+}
+else if (Action == RemoteAuthenticationActions.Register)
+{
+    @if (Registering != null)
+    {
+        @Registering
+    }
+    else
+    {
+        <div class="alert alert-info">Registering...</div>
+    }
+}
+else if (Action == RemoteAuthenticationActions.Profile)
+{
+    <text>Redirecting to profile...</text>
+    @if (RedirectToProfile != null)
+    {
+        @RedirectToProfile
+    }
+    else
+    {
+        <div class="alert alert-info">Redirecting to profile...</div>
+    }
+}
+else if (Action == RemoteAuthenticationActions.LogOut)
+{
+    <text>Redirecting to logout...</text>
+    @if (Redirecting != null)
+    {
+        @Redirecting
+    }
+    else
+    {
+        <div class="alert alert-info">Redirecting to logout...</div>
+    }
+}
+else if (Action == RemoteAuthenticationActions.LogOutCallback)
+{
+    <text>Processing logout callback...</text>
+    @if (CompletingLogOut != null)
+    {
+        @CompletingLogOut
+    }
+    else
+    {
+        <div class="alert alert-info">Processing logout callback...</div>
+    }
+}
+else if (Action == RemoteAuthenticationActions.LogOutFailed)
+{
+    @if (LogOutFailed != null)
+    {
+        @LogOutFailed
+    }
+    else
+    {
+        <div class="alert alert-danger">Logout failed. Please try again.</div>
+    }
+}
+else if (Action == RemoteAuthenticationActions.LogOutSucceeded)
+{
+    @if (LogOutSucceeded != null)
+    {
+        @LogOutSucceeded
+    }
+    else
+    {
+        <div class="alert alert-success">You have been logged out successfully.</div>
+    }
+}
+
+@code {
+    [Parameter] public string Action { get; set; }
+
+    [Parameter] public EventCallback<RemoteAuthenticationStatus> OnLogInSucceeded { get; set; }
+    [Parameter] public EventCallback<RemoteAuthenticationStatus> OnLogOutSucceeded { get; set; }
+
+    [Parameter] public RenderFragment LogInFailed { get; set; }
+    [Parameter] public RenderFragment LogOutFailed { get; set; }
+    [Parameter] public RenderFragment LogOutSucceeded { get; set; }
+    [Parameter] public RenderFragment CompletingLoggingIn { get; set; }
+    [Parameter] public RenderFragment CompletingLogOut { get; set; }
+    [Parameter] public RenderFragment Registering { get; set; }
+    [Parameter] public RenderFragment Redirecting { get; set; }
+    [Parameter] public RenderFragment RedirectToProfile { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // We'll handle the authentication flow in the OnAfterRenderAsync method
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var paths = PathsOptions.Value;
+
+            try
+            {
+                if (RemoteAuthenticationActions.IsAction(Action, RemoteAuthenticationActions.LogIn))
+                {
+                    // Handle login
+                    await ProcessLogin();
+                }
+                else if (RemoteAuthenticationActions.IsAction(Action, RemoteAuthenticationActions.LogInCallback))
+                {
+                    // Handle login callback
+                    await ProcessLoginCallback();
+                }
+                else if (RemoteAuthenticationActions.IsAction(Action, RemoteAuthenticationActions.LogOut))
+                {
+                    // Handle logout
+                    await ProcessLogout();
+                }
+                else if (RemoteAuthenticationActions.IsAction(Action, RemoteAuthenticationActions.LogOutCallback))
+                {
+                    // Handle logout callback
+                    await ProcessLogoutCallback();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in OnAfterRenderAsync: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+        }
+    }
+
+    private async Task ProcessLogin()
+    {
+        try
+        {
+            Console.WriteLine("ProcessLogin called");
+
+            // Use the IRemoteAuthenticationService to handle the login
+            var result = await AuthenticationService.SignInAsync(new RemoteAuthenticationContext<CustomRemoteAuthenticationState>
+            {
+                InteractiveRequest = new InteractiveRequestOptions
+                {
+                    Interaction = InteractionType.SignIn,
+                    ReturnUrl = Navigation.Uri
+                }
+            });
+
+            switch (result.Status)
+            {
+                case RemoteAuthenticationStatus.Redirect:
+                    // The service returns the URL to redirect to in the ErrorMessage property
+                    var redirectUrl = result.ErrorMessage;
+                    Console.WriteLine($"Redirecting to: {redirectUrl}");
+
+                    // Use JSRuntime to navigate to the identity server
+                    await JSRuntime.InvokeVoidAsync("window.location.href", redirectUrl);
+                    break;
+
+                case RemoteAuthenticationStatus.Success:
+                    await OnLogInSucceeded.InvokeAsync(result.Status);
+                    break;
+
+                case RemoteAuthenticationStatus.Failure:
+                    Console.WriteLine($"Login failed: {result.ErrorMessage}");
+                    Navigation.NavigateTo($"{PathsOptions.Value.LogInFailedPath}?message={Uri.EscapeDataString(result.ErrorMessage)}");
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Invalid authentication result status: {result.Status}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in ProcessLogin: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
+    }
+
+    private string GenerateCodeVerifier()
+    {
+        var bytes = new byte[32];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(bytes);
+        }
+        return Convert.ToBase64String(bytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
+    }
+
+    private string GenerateCodeChallenge(string codeVerifier)
+    {
+        using (var sha256 = SHA256.Create())
+        {
+            var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
+            return Convert.ToBase64String(challengeBytes)
+                .TrimEnd('=')
+                .Replace('+', '-')
+                .Replace('/', '_');
+        }
+    }
+
+    private async Task ProcessLoginCallback()
+    {
+        try
+        {
+            Console.WriteLine("ProcessLoginCallback called");
+
+            // For server-side Blazor, we need to use a different approach
+            // Instead of using the RemoteAuthenticationService, we'll handle the callback directly
+
+            // Get the query string parameters
+            var uri = new Uri(Navigation.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+            // Get the code and state from the query string
+            var code = query["code"];
+            var state = query["state"];
+
+            Console.WriteLine($"Code: {code}");
+            Console.WriteLine($"State: {state}");
+
+            // Get the stored state and code verifier from session storage
+            var storedState = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "state");
+            var codeVerifier = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "codeVerifier");
+
+            // Validate the state
+            if (state != storedState)
+            {
+                throw new InvalidOperationException("Invalid state parameter");
+            }
+
+            // Exchange the code for tokens
+            // In a real application, you would make a token request to the identity server
+            // For now, we'll just simulate a successful login
+
+            // Create a mock user with admin role for testing
+            var identity = new System.Security.Claims.ClaimsIdentity(new[]
+            {
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "TestUser"),
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "admin"),
+            }, "mock");
+
+            var user = new System.Security.Claims.ClaimsPrincipal(identity);
+
+            // Set the user in the injected CustomAuthenticationService
+            //AuthService.CurrentUser = user;
+
+            Console.WriteLine("Authentication successful");
+
+            // Clear the session storage
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "state");
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "codeVerifier");
+
+            // Redirect to the home page
+            Navigation.NavigateTo("/", forceLoad: true);
+
+            // Invoke the callback
+            await OnLogInSucceeded.InvokeAsync(RemoteAuthenticationStatus.Success);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in ProcessLoginCallback: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+
+            // Redirect to the login failed page
+            Navigation.NavigateTo(PathsOptions.Value.LogInFailedPath, forceLoad: true);
+        }
+    }
+
+    private async Task ProcessLogout()
+    {
+        try
+        {
+            Console.WriteLine("ProcessLogout called");
+
+            // Use the IRemoteAuthenticationService to handle the logout
+            var result = await AuthenticationService.SignOutAsync(new RemoteAuthenticationContext<CustomRemoteAuthenticationState>
+            {
+                InteractiveRequest = new InteractiveRequestOptions
+                {
+                    Interaction = InteractionType.SignOut,
+                    ReturnUrl = Navigation.Uri
+                }
+            });
+
+            switch (result.Status)
+            {
+                case RemoteAuthenticationStatus.Redirect:
+                    // The service returns the URL to redirect to in the ErrorMessage property
+                    var redirectUrl = result.ErrorMessage;
+                    Console.WriteLine($"Redirecting to: {redirectUrl}");
+
+                    // Clear the user in the injected CustomAuthenticationService
+                    //AuthService.CurrentUser = null;
+
+                    // Use JSRuntime to navigate to the identity server
+                    await JSRuntime.InvokeVoidAsync("window.location.href", redirectUrl);
+                    break;
+
+                case RemoteAuthenticationStatus.Success:
+                    await OnLogOutSucceeded.InvokeAsync(result.Status);
+                    break;
+
+                case RemoteAuthenticationStatus.Failure:
+                    Console.WriteLine($"Logout failed: {result.ErrorMessage}");
+                    Navigation.NavigateTo($"{PathsOptions.Value.LogOutFailedPath}?message={Uri.EscapeDataString(result.ErrorMessage)}");
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Invalid authentication result status: {result.Status}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in ProcessLogout: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+
+            // Redirect to the logout failed page
+            Navigation.NavigateTo(PathsOptions.Value.LogOutFailedPath, forceLoad: true);
+        }
+    }
+
+    private async Task ProcessLogoutCallback()
+    {
+        try
+        {
+            Console.WriteLine("ProcessLogoutCallback called");
+
+            // For server-side Blazor, we need to use a different approach
+            // Instead of using the RemoteAuthenticationService, we'll handle the callback directly
+
+            // Get the query string parameters
+            var uri = new Uri(Navigation.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+            // Get the state from the query string
+            var state = query["state"];
+
+            Console.WriteLine($"State: {state}");
+
+            // Get the stored state from session storage
+            var storedState = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "logoutState");
+
+            // Validate the state
+            if (state != storedState)
+            {
+                throw new InvalidOperationException("Invalid state parameter");
+            }
+
+            // Clear the user in the injected CustomAuthenticationService
+            //AuthService.CurrentUser = null;
+
+            Console.WriteLine("Logout successful");
+
+            // Clear the session storage
+            await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "logoutState");
+
+            // Redirect to the logout succeeded page
+            Navigation.NavigateTo(PathsOptions.Value.LogOutSucceededPath, forceLoad: true);
+
+            // Invoke the callback
+            await OnLogOutSucceeded.InvokeAsync(RemoteAuthenticationStatus.Success);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in ProcessLogoutCallback: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+
+            // Redirect to the logout failed page
+            Navigation.NavigateTo(PathsOptions.Value.LogOutFailedPath, forceLoad: true);
+        }
+    }
+
+    private static class RemoteAuthenticationActions
+    {
+        public const string LogIn = "login";
+        public const string LogInCallback = "login-callback";
+        public const string LogInFailed = "login-failed";
+        public const string Register = "register";
+        public const string Profile = "profile";
+        public const string LogOut = "logout";
+        public const string LogOutCallback = "logout-callback";
+        public const string LogOutFailed = "logout-failed";
+        public const string LogOutSucceeded = "logout-succeeded";
+
+        public static bool IsAction(string action, string targetAction)
+        {
+            return string.Equals(action, targetAction, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+}

@@ -1,0 +1,445 @@
+﻿@* @page "/"
+
+<PageTitle>Home</PageTitle>
+<h1 class="text-muted">Render @(OperatingSystem.IsBrowser() ? "Wasm" : "Server")</h1>
+<h1>Hello, world!</h1>
+
+Welcome to your new app. *@
+
+
+
+@using BlazorApp1.Blazor
+@using CalibrationSaaS.Application.Services
+
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@using CalibrationSaaS.Infraestructure.Blazor.Services.Offline.Sqlite
+@using CalibrationSaaS.Infraestructure.Blazor.Shared
+@using System.Drawing
+
+@using Helpers.Controls
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.Extensions.Configuration
+
+@using Microsoft.JSInterop
+@using ProtoBuf.Grpc
+@using Grpc.Core
+@using Blazed.Controls
+@using System.Timers
+@using System.Globalization
+@using Radzen
+@using Radzen.Blazor
+@* @inherits CalibrationSaaS.Infraestructure.Blazor.FComponentBase *@
+
+
+
+@using SqliteWasmHelper
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+
+
+
+@if (this.Loading)
+{
+    <div class="loading-container">
+        <p><em>Loading...</em></p>
+        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </div>
+}
+        else
+        {
+            <div class="text-muted">Render @(OperatingSystem.IsBrowser() ? "WasmHome" : "Server")</div>
+
+
+            <BlazorApp1.Blazor.LoadConfiguration>
+
+            </BlazorApp1.Blazor.LoadConfiguration>
+           
+        }
+
+
+@code{
+    [Inject]
+    public IConfiguration Configuration { get; set; }
+    public string Customer { get; set; }
+
+    // Properties from KavokuComponentBase2
+    public bool Loading { get; set; }
+
+    [Inject]
+    public CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity { get; set; }
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+
+
+
+
+
+    // Add CascadingParameter for MainLayout
+    [CascadingParameter]
+    private BlazorApp1.Blazor.Pages.Layout.MainLayout MainLayoutReference { get; set; }
+
+    private static System.Timers.Timer aTimer;
+
+    // Define RenderFragment for buttons to pass to SubMenu using RadzenButtons
+    private RenderFragment DashboardButtons => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "dashboard-buttons");
+
+        // New Customer button
+        builder.OpenComponent<RadzenButton>(2);
+        builder.AddAttribute(3, "Text", "New Customer");
+        builder.AddAttribute(4, "Icon", "person_add");
+        builder.AddAttribute(5, "ButtonStyle", ButtonStyle.Primary);
+        builder.AddAttribute(6, "Click", EventCallback.Factory.Create<MouseEventArgs>(this, NavigateCustomer));
+        builder.AddAttribute(7, "class", "rz-mr-2 action-button");
+        builder.CloseComponent();
+
+        // New Asset button
+        builder.OpenComponent<RadzenButton>(8);
+        builder.AddAttribute(9, "Text", "New Asset");
+        builder.AddAttribute(10, "Icon", "inventory");
+        builder.AddAttribute(11, "ButtonStyle", ButtonStyle.Primary);
+        builder.AddAttribute(12, "Click", EventCallback.Factory.Create<MouseEventArgs>(this, NavigateAsset));
+        builder.AddAttribute(13, "class", "rz-mr-2 action-button");
+        builder.CloseComponent();
+
+        // New Order button
+        builder.OpenComponent<RadzenButton>(14);
+        builder.AddAttribute(15, "Text", "New Order");
+        builder.AddAttribute(16, "Icon", "shopping_cart");
+        builder.AddAttribute(17, "ButtonStyle", ButtonStyle.Primary);
+        builder.AddAttribute(18, "Click", EventCallback.Factory.Create<MouseEventArgs>(this, NavigateOrder));
+        builder.AddAttribute(19, "class", "action-button");
+        builder.CloseComponent();
+
+        builder.CloseElement(); // close div
+    };
+
+    // Event handlers for dropdown menu actions
+    void OnActionChange(object value)
+    {
+        Console.WriteLine($"Selected: {value}");
+    }
+
+    void OnMenuButtonClick(MouseEventArgs args)
+    {
+        // Button click handler (if needed)
+    }
+
+    // Radzen chart color scheme
+    IEnumerable<ColorScheme> colorSchemes = Enum.GetValues(typeof(ColorScheme)).Cast<ColorScheme>();
+    ColorScheme colorScheme = ColorScheme.Palette;
+
+    // Data models for Radzen charts
+    class ChartDataItem
+    {
+        public DateTime Date { get; set; }
+        public int Count { get; set; }
+    }
+
+    
+
+   
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Set the buttons in the SubMenu when the Index component is first rendered
+            // if (MainLayoutReference != null)
+            // {
+            //     MainLayoutReference.SetSubMenuContent(DashboardButtons);
+            // }
+
+
+            // @if(!OperatingSystem.IsBrowser())
+            // {
+            //     // Initialize offline database and set user
+
+
+            //     await SetIsOffline(false);
+
+            //     var getprincipal = await GetPrincipal();
+            // }
+          
+            
+
+
+
+
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private string userIdentifier = string.Empty;
+
+    private void OnUserFinish(Object source, ElapsedEventArgs e)
+    {
+        aTimer.Stop();
+        //SignIn2().ConfigureAwait(false).GetAwaiter().GetResult();
+    }
+
+    [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.AppStateCompany AppState { get; set; }
+
+
+
+    public ISqliteWasmDbContextFactory<CalibrationSaaSDBContextOff2> DbFactory { get; set; }
+
+    [Inject]
+    public Func<dynamic, ISampleService2<CallContext>> OffLineClient { get; set; }
+
+    public bool busy { get; set; }
+
+    private async Task RefreshUiAsync()
+    {
+        busy = true;
+        try
+        {
+            // Initialize the offline database
+            await OffLineClient(DbFactory).InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing database: {ex.Message}");
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+    // Modified the return type from Task to void for Click handlers
+    public void NavigateCustomer()
+    {
+        NavigationManager.NavigateTo("Customer/0");
+    }
+
+    public void NavigateAsset()
+    {
+        NavigationManager.NavigateTo("PieceOfEquipmentCreate/0");
+    }
+
+    public void NavigateOrder()
+    {
+        NavigationManager.NavigateTo("WorkOrderCreate/0");
+    }
+
+    public static string RolesC { get; set; }
+
+   
+
+    [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.Basic.AppState AppStateBasics { get; set; }
+
+    [Inject]
+    Func<dynamic, IWorkOrderDetailServices<CallContext>> Service2 { get; set; }
+
+    [Inject] public Func<dynamic, CalibrationSaaS.Application.Services.IUOMService<CallContext>> UOM { get; set; }
+    [Inject] public Func<dynamic, CalibrationSaaS.Application.Services.IBasicsServices<CallContext>> Basics { get; set; }
+    [Inject] public Func<dynamic, CalibrationSaaS.Application.Services.IAssetsServices<CallContext>> Assets { get; set; }
+
+    private Task<Metadata> GetHeaderAsync()
+    {
+        var headers = new Metadata();
+        return Task.FromResult(headers);
+    }
+
+    public async Task<CurrentUser> GetTechOffline()
+    {
+        CurrentUser uss1 = await OffLineClient(DbFactory).GetUser(new CallOptions());
+        BasicsServiceGRPC basics = new BasicsServiceGRPC(Basics, DbFactory);
+        var users = await basics.GetUsers();
+
+        if (uss1?.Claims?.Count > 5)
+        {
+            var user = uss1.Claims.Where(x => x.Key == "name").FirstOrDefault();
+
+            if (user != null)
+            {
+                var uss = users.Users.Where(x => x.UserName == user.Value).FirstOrDefault();
+                if (uss != null)
+                {
+                    uss1.Name = uss.Name;
+                    uss1.TechID = uss.UserID;
+                    uss1.Roles = uss.Roles;
+                    return uss1;
+                }
+            }
+        }
+        return null;
+    }
+    [Inject]
+    IServiceProvider Services { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("OnInitializedAsync Home *******************************************************");
+
+        if (Services.GetService<ISqliteWasmDbContextFactory<CalibrationSaaSDBContextOff2>>() is { } db)
+        {
+            DbFactory = db;
+        }
+
+        //await RefreshUiAsync();
+
+        this.Loading = true;
+
+        if (AppStateBasics == null)
+        {
+            return;
+        }
+
+        try
+        {
+            
+            // Always run in offline mode
+            WorkOrderDetailGrpc client = new WorkOrderDetailGrpc(Service2, DbFactory);
+
+            var s = await client.GetStatus(new CallOptions());
+            if (s != null)
+            {
+                AppStateBasics.WODStatus = s.ToList();
+            }
+
+            
+
+           
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+            // Continue even if there's an error loading data
+        }
+
+        aTimer = new System.Timers.Timer(100);
+        aTimer.AutoReset = false;
+        aTimer.Elapsed += OnUserFinish;
+        aTimer.Stop();
+        aTimer.Start();
+
+        Customer = Configuration.GetSection("Reports")["Customer"];
+        this.Loading = false;
+    }
+
+   
+
+    public async Task<CurrentUser> GetTechOfflineEnhanced()
+    {
+        try
+        {
+            if (OffLineClient == null || DbFactory == null)
+            {
+                Console.WriteLine("OffLineClient or DbFactory is null");
+                return null;
+            }
+
+            // Get user from offline storage
+            CurrentUser storedUser = await OffLineClient(DbFactory).GetUser(new CallOptions());
+            if (storedUser?.Claims == null || storedUser.Claims.Count <= 5)
+            {
+                Console.WriteLine("No valid user found in offline storage or insufficient claims");
+                return null;
+            }
+
+            // Get user details from basics service
+            BasicsServiceGRPC basics = new BasicsServiceGRPC(Basics, DbFactory);
+            var users = await basics.GetUsers();
+            if (users?.Users == null)
+            {
+                Console.WriteLine("Failed to retrieve users from basics service");
+                return storedUser; // Return stored user even if we can't enrich it
+            }
+
+            // Find matching user by name claim
+            var nameClaim = storedUser.Claims.FirstOrDefault(x => x.Key == "name");
+            if (nameClaim == null)
+            {
+                Console.WriteLine("No name claim found in stored user");
+                return storedUser;
+            }
+
+            var matchingUser = users.Users.FirstOrDefault(x => x.UserName == nameClaim.Value);
+            if (matchingUser != null)
+            {
+                // Enrich stored user with additional details
+                storedUser.Name = matchingUser.Name;
+                storedUser.TechID = matchingUser.UserID;
+                storedUser.Roles = matchingUser.Roles;
+
+                Console.WriteLine($"Successfully retrieved offline user: {storedUser.Name} (ID: {storedUser.TechID})");
+            }
+            else
+            {
+                Console.WriteLine($"No matching user found for username: {nameClaim.Value}");
+            }
+
+            return storedUser;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error retrieving offline user: {ex.Message}");
+            return null;
+        }
+    }
+
+  
+
+
+
+    private async Task SignIn()
+    {
+        //var currentUser = AuthService.CurrentUser;
+        var user = await GetTechOffline();
+
+        if (user != null)
+        {
+            List<Claim> claims = new List<Claim>();
+
+            foreach (var item in user.Claims)
+            {
+                claims.Add(new Claim(item.Key, item.Value));
+            }
+            claims.Add(new Claim(ClaimTypes.Name, user.Name));
+
+            if (!string.IsNullOrEmpty(user.Roles))
+            {
+                var roles = user.Roles.Split(",");
+                foreach (var rol in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, rol));
+                }
+
+            }
+
+            var identity = new ClaimsIdentity(
+                claims,
+                "WebAssembly");
+
+            var newUser = new ClaimsPrincipal(identity);
+
+            // AuthService.CurrentUser = newUser;
+        }
+
+
+        // var identity = new ClaimsIdentity(
+        //     new[]
+        //     {
+        //         new Claim(ClaimTypes.Name, userIdentifier),
+        //         new Claim(ClaimTypes.Role, "tech"),
+        //         },
+        //     "Custom Authentication");
+
+        // var newUser = new ClaimsPrincipal(identity);
+
+        // AuthService.CurrentUser = newUser;
+    }
+
+
+
+
+
+}

@@ -1,0 +1,156 @@
+@using CalibrationSaaS.CustomerPortal.Models.Equipment
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+    @if (ShowIcon)
+    {
+        <RadzenIcon Icon="@GetStatusIcon()" Style="@($"color: {GetStatusColor()}; font-size: {IconSize};")" />
+    }
+    
+    @if (ShowBadge)
+    {
+        <RadzenBadge Text="@GetStatusText()" BadgeStyle="@GetBadgeStyle()" />
+    }
+    else if (ShowText)
+    {
+        <RadzenText TextStyle="@TextStyle" Style="@($"color: {GetStatusColor()};")" Class="@TextClass">
+            @GetStatusText()
+        </RadzenText>
+    }
+    
+    @if (ShowProgressBar && Equipment != null)
+    {
+        <RadzenProgressBar Value="@GetProgressValue()" Max="100" 
+                          Style="@($"width: {ProgressBarWidth}; --rz-progressbar-color: {GetStatusColor()};")" 
+                          ShowValue="@ShowProgressValue" Unit="@(ShowProgressValue ? "%" : "")" />
+    }
+    
+    @if (ShowDaysInfo && Equipment != null)
+    {
+        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+            @GetDaysInfoText()
+        </RadzenText>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter] public EquipmentDueDateDto? Equipment { get; set; }
+    [Parameter] public DueDateStatus? Status { get; set; }
+    [Parameter] public bool ShowIcon { get; set; } = true;
+    [Parameter] public bool ShowText { get; set; } = true;
+    [Parameter] public bool ShowBadge { get; set; } = false;
+    [Parameter] public bool ShowProgressBar { get; set; } = false;
+    [Parameter] public bool ShowProgressValue { get; set; } = false;
+    [Parameter] public bool ShowDaysInfo { get; set; } = false;
+    [Parameter] public string IconSize { get; set; } = "1.2rem";
+    [Parameter] public string ProgressBarWidth { get; set; } = "100px";
+    [Parameter] public TextStyle TextStyle { get; set; } = TextStyle.Body2;
+    [Parameter] public string? TextClass { get; set; }
+    [Parameter] public string? CustomText { get; set; }
+    [Parameter] public string? CustomColor { get; set; }
+    [Parameter] public string? CustomIcon { get; set; }
+
+    private DueDateStatus GetEffectiveStatus()
+    {
+        return Status ?? Equipment?.DueStatus ?? DueDateStatus.Unknown;
+    }
+
+    private string GetStatusIcon()
+    {
+        if (!string.IsNullOrEmpty(CustomIcon))
+            return CustomIcon;
+
+        return GetEffectiveStatus() switch
+        {
+            DueDateStatus.Current => "check_circle",
+            DueDateStatus.ExpiringSoon => "warning",
+            DueDateStatus.Overdue => "error",
+            DueDateStatus.Unknown => "help",
+            _ => "help"
+        };
+    }
+
+    private string GetStatusColor()
+    {
+        if (!string.IsNullOrEmpty(CustomColor))
+            return CustomColor;
+
+        return GetEffectiveStatus() switch
+        {
+            DueDateStatus.Current => "var(--rz-success)",
+            DueDateStatus.ExpiringSoon => "var(--rz-warning)",
+            DueDateStatus.Overdue => "var(--rz-danger)",
+            DueDateStatus.Unknown => "var(--rz-secondary)",
+            _ => "var(--rz-secondary)"
+        };
+    }
+
+    private string GetStatusText()
+    {
+        if (!string.IsNullOrEmpty(CustomText))
+            return CustomText;
+
+        return GetEffectiveStatus() switch
+        {
+            DueDateStatus.Current => "Current",
+            DueDateStatus.ExpiringSoon => "Expiring Soon",
+            DueDateStatus.Overdue => "Overdue",
+            DueDateStatus.Unknown => "Unknown",
+            _ => "Unknown"
+        };
+    }
+
+    private BadgeStyle GetBadgeStyle()
+    {
+        return GetEffectiveStatus() switch
+        {
+            DueDateStatus.Current => BadgeStyle.Success,
+            DueDateStatus.ExpiringSoon => BadgeStyle.Warning,
+            DueDateStatus.Overdue => BadgeStyle.Danger,
+            DueDateStatus.Unknown => BadgeStyle.Secondary,
+            _ => BadgeStyle.Secondary
+        };
+    }
+
+    private double GetProgressValue()
+    {
+        if (Equipment?.NextCalibrationDate == null)
+            return 0;
+
+        var status = GetEffectiveStatus();
+        if (status == DueDateStatus.Overdue)
+            return 100; // Full red for overdue
+
+        if (status == DueDateStatus.Current)
+            return 25; // Low value for current (green)
+
+        if (status == DueDateStatus.ExpiringSoon)
+        {
+            // Calculate percentage based on how close to due date
+            var daysUntilDue = Equipment.DaysUntilDue;
+            if (daysUntilDue <= 0)
+                return 100;
+            if (daysUntilDue >= 30)
+                return 25;
+            
+            // Scale from 25% to 100% as we get closer to due date
+            return 25 + (75 * (30 - daysUntilDue) / 30);
+        }
+
+        return 0;
+    }
+
+    private string GetDaysInfoText()
+    {
+        if (Equipment == null)
+            return "";
+
+        var status = GetEffectiveStatus();
+        return status switch
+        {
+            DueDateStatus.Overdue => $"{Equipment.DaysOverdue} day{(Equipment.DaysOverdue == 1 ? "" : "s")} overdue",
+            DueDateStatus.ExpiringSoon => $"{Equipment.DaysUntilDue} day{(Equipment.DaysUntilDue == 1 ? "" : "s")} remaining",
+            DueDateStatus.Current => Equipment.NextCalibrationDate?.ToString("MMM dd, yyyy") ?? "",
+            _ => ""
+        };
+    }
+}

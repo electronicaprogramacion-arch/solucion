@@ -1,0 +1,44 @@
+﻿@inject NavigationManager Navigation
+@inject CacheStorage.Utils.CacheStorageAccessor CacheStorageAccessor
+@inject HttpClient HttpClient
+<button class="nav-link btn btn-link" @onclick="BeginSignOut" style="color: #808080; font-size: 80%; font-weight: 400;">Log out</button>
+
+@code{
+    private void BeginSignOut(MouseEventArgs args)
+    {
+        // No authentication to sign out from - just navigate to home
+        Navigation.NavigateTo("/");
+    }
+
+
+    public string StoredValue { get; set; } = "";
+
+    public async Task SetValueAsync()
+    {
+        var message = CreateMessage();
+        var response = await HttpClient.SendAsync(message);
+        await CacheStorageAccessor.StoreAsync(message, response);
+    }
+
+    public async Task GetValueAsync()
+    {
+        StoredValue = await CacheStorageAccessor.GetAsync(CreateMessage());
+    }
+
+    public async Task RemoveAsync()
+    {
+        await CacheStorageAccessor.RemoveAsync(CreateMessage());
+    }
+
+    public async Task ClearAllAsync()
+    {
+        await CacheStorageAccessor.RemoveAllAsync();
+    }
+
+    public async Task RemoveByUrlAsync()
+    {
+        await CacheStorageAccessor.RemoveByUrlAsync("/sample-data/books.json");
+    }
+
+    public HttpRequestMessage CreateMessage() => new HttpRequestMessage(HttpMethod.Get, "/sample-data/books.json");
+}

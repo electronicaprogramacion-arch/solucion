@@ -1,0 +1,84 @@
+@namespace CalibrifyApp.Server.Components
+@using System.Reflection
+
+@using Blazed.Controls.Route.Services
+@using Blazored.Modal
+@using Microsoft.AspNetCore.Components.Authorization
+
+@*
+DISABLED: This Routes component was causing conflicts with the main CalibrationSaaS.Infraestructure.Blazor.Routes component.
+The main Routes component in CalibrationSaaS.Infraestructure.Blazor handles all routing including authentication.
+This component was causing "Page Not Found" errors because it only looks in the CalibrifyApp.Server assembly
+and cannot find the Account/Login pages which are in different assemblies.
+
+The App.razor correctly uses: <CalibrationSaaS.Infraestructure.Blazor.Routes @rendermode="@InteractiveAuto" />
+*@
+
+<script src="_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.lib.module.js" type="module" async></script>
+
+<Fluxor.Blazor.Web.StoreInitializer />
+<CascadingBlazoredModal>
+    @* DISABLED ROUTER - Using CalibrationSaaS.Infraestructure.Blazor.Routes instead
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(CalibrationSaaS.Infraestructure.Blazor.Shared.MainLayout)" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(CalibrationSaaS.Infraestructure.Blazor.Shared.MainLayout)">
+                <div class="container mt-5">
+                    <div class="row">
+                        <div class="col-md-6 offset-md-3">
+                            <div class="card shadow">
+                                <div class="card-body text-center">
+                                    <h2 class="text-danger mb-4">Page Not Found</h2>
+                                    <p class="lead">The page you are looking for does not exist or has been moved.</p>
+                                    <hr />
+                                    <a href="/" class="btn btn-primary">Go to Home Page</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+    *@
+</CascadingBlazoredModal>
+
+@* DISABLED CODE SECTION - No longer needed since router is disabled
+@code
+{
+    [Inject]
+    public RouterSessionService RouterSessionService { get; set; }
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+    [Inject]
+    public CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity { get; set; }
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // Initialize renderer error handling
+                await JSRuntime.InvokeVoidAsync("appInterop.handleRendererError");
+
+                // Log successful initialization
+                Console.WriteLine("CalibrifyApp.Server Routes component initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error initializing CalibrifyApp.Server Routes component: {ex.Message}");
+            }
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}
+*@

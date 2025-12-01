@@ -1,0 +1,245 @@
+﻿@page "/Account/Login"
+@rendermode InteractiveServer
+@layout CalibrifyApp.Server.Components.Account.Shared.LoginLayout
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+@attribute [AllowAnonymous]
+
+<PageTitle>Log in</PageTitle>
+
+<!-- Enhanced Login Form with Modern Layout -->
+<div class="modern-login-container">
+
+    <!-- Main Login Section -->
+    <div class="login-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-user-circle me-2"></i>
+                Sign In to Your Account
+            </h2>
+            <p class="section-subtitle">Enter your credentials to access Calibrify</p>
+        </div>
+
+        <StatusMessage Message="@errorMessage" />
+
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" class="login-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="validation-summary" role="alert" />
+
+            <!-- Email Field -->
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    <i class="fas fa-envelope me-2"></i>Email Address
+                </label>
+                <div class="input-wrapper">
+                    <InputText @bind-Value="Input.Email"
+                              class="form-control modern-input"
+                              autocomplete="username"
+                              aria-required="true"
+                              placeholder="Enter your email address"
+                              id="email" />
+                    <ValidationMessage For="() => Input.Email" class="field-validation" />
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group">
+                <label for="password" class="form-label">
+                    <i class="fas fa-lock me-2"></i>Password
+                </label>
+                <div class="input-wrapper">
+                    <InputText type="password"
+                              @bind-Value="Input.Password"
+                              class="form-control modern-input"
+                              autocomplete="current-password"
+                              aria-required="true"
+                              placeholder="Enter your password"
+                              id="password" />
+                    <ValidationMessage For="() => Input.Password" class="field-validation" />
+                </div>
+            </div>
+
+            <!-- Remember Me -->
+            <div class="form-group remember-me-group">
+                <label class="remember-me-label">
+                    <InputCheckbox @bind-Value="Input.RememberMe" class="remember-me-checkbox" />
+                    <span class="checkmark"></span>
+                    <span class="remember-me-text">Keep me signed in</span>
+                </label>
+            </div>
+
+            <!-- Login Button -->
+            <div class="form-group">
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Sign In
+                </button>
+            </div>
+
+            <!-- Helper Links with JavaScript fallback -->
+            <div class="helper-links">
+                <a href="Account/ForgotPassword" class="helper-link" onclick="window.location.href='Account/ForgotPassword'; return false;">
+                    <i class="fas fa-question-circle me-1"></i>Forgot your password?
+                </a>
+                <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="helper-link" onclick="window.location.href='@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))'; return false;">
+                    <i class="fas fa-user-plus me-1"></i>Create new account
+                </a>
+                <a href="Account/ResendEmailConfirmation" class="helper-link" onclick="window.location.href='Account/ResendEmailConfirmation'; return false;">
+                    <i class="fas fa-envelope-open me-1"></i>Resend email confirmation
+                </a>
+            </div>
+        </EditForm>
+    </div>
+
+    <!-- Divider -->
+    <div class="auth-divider">
+        <div class="divider-line"></div>
+        <span class="divider-text">OR</span>
+        <div class="divider-line"></div>
+    </div>
+
+    <!-- External Authentication Section -->
+    <div class="external-auth-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-globe me-2"></i>
+                Quick Sign In
+            </h3>
+            <p class="section-subtitle">Use your existing social media account</p>
+        </div>
+
+        <div class="external-auth-wrapper">
+            <ExternalLoginPicker />
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? errorMessage;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"[LOGIN PAGE] OnInitializedAsync called at {DateTime.Now:HH:mm:ss.fff}");
+        Console.WriteLine($"[LOGIN PAGE] Current URL: {NavigationManager.Uri}");
+        Console.WriteLine($"[LOGIN PAGE] ReturnUrl: {ReturnUrl}");
+        Console.WriteLine($"[LOGIN PAGE] HTTP Method: {HttpContext.Request.Method}");
+
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+            Console.WriteLine($"[LOGIN PAGE] External cookie cleared");
+        }
+
+        Console.WriteLine($"[LOGIN PAGE] OnInitializedAsync completed at {DateTime.Now:HH:mm:ss.fff}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Console.WriteLine($"[LOGIN PAGE] First render completed at {DateTime.Now:HH:mm:ss.fff}");
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public async Task LoginUser()
+    {
+        try
+        {
+            Console.WriteLine($"[LOGIN PAGE] Login attempt started at {DateTime.Now:HH:mm:ss.fff}");
+            Console.WriteLine($"[LOGIN PAGE] Email: {Input.Email}");
+            Console.WriteLine($"[LOGIN PAGE] Remember Me: {Input.RememberMe}");
+
+            // Clear any previous error messages
+            errorMessage = null;
+
+            // This doesn't count login failures towards account lockout
+            // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+            var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+
+            Console.WriteLine($"[LOGIN PAGE] SignIn result: Succeeded={result.Succeeded}, RequiresTwoFactor={result.RequiresTwoFactor}, IsLockedOut={result.IsLockedOut}");
+
+            if (result.Succeeded)
+            {
+                Logger.LogInformation("User logged in successfully.");
+                Console.WriteLine($"[LOGIN PAGE] Login successful at {DateTime.Now:HH:mm:ss.fff}");
+
+                // Add a small delay to ensure the authentication cookie is set
+                await Task.Delay(100);
+
+                // If ReturnUrl is null or empty, redirect to the home page
+                if (string.IsNullOrEmpty(ReturnUrl) || ReturnUrl == "/")
+                {
+                    Console.WriteLine($"[LOGIN PAGE] Redirecting to home page");
+                    NavigationManager.NavigateTo("/", forceLoad: true);
+                }
+                else
+                {
+                    Console.WriteLine($"[LOGIN PAGE] Redirecting to return URL: {ReturnUrl}");
+                    // Use the RedirectManager for other URLs
+                    RedirectManager.RedirectTo(ReturnUrl);
+                }
+            }
+            else if (result.RequiresTwoFactor)
+            {
+                Console.WriteLine($"[LOGIN PAGE] Two-factor authentication required");
+                RedirectManager.RedirectTo(
+                    "Account/LoginWith2fa",
+                    new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+            }
+            else if (result.IsLockedOut)
+            {
+                Logger.LogWarning("User account locked out.");
+                Console.WriteLine($"[LOGIN PAGE] Account locked out");
+                RedirectManager.RedirectTo("Account/Lockout");
+            }
+            else
+            {
+                errorMessage = "Error: Invalid email or password. Please try again.";
+                Console.WriteLine($"[LOGIN PAGE] Login failed: Invalid credentials");
+                Logger.LogWarning("Invalid login attempt for email: {Email}", Input.Email);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred during login. Please try again.";
+            Console.WriteLine($"[LOGIN PAGE] Login error: {ex.Message}");
+            Logger.LogError(ex, "Error during login attempt for email: {Email}", Input.Email);
+        }
+    }
+
+
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+    }
+}

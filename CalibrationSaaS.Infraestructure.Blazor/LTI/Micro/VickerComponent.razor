@@ -1,0 +1,19 @@
+﻿@using CalibrationSaaS.Infraestructure.Blazor.Pages.Order;
+<h3>VickerComponent</h3>
+
+@code {
+
+ /// <summary>
+ /// Get the <see cref="EditForm.EditContext"/> instance. This instance will be used to fill out the values inputted by the user
+ /// </summary>
+[CascadingParameter] EditContext CascadedEditContext { get; set; }
+
+ [CascadingParameter(Name = "CascadeParam1")]
+ public IWorkOrderItemCreate WorkOrderItemCreate { get; set; }
+
+[Parameter]
+public int MyProperty { get; set; }
+
+
+
+}

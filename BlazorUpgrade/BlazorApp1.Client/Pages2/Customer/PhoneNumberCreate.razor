@@ -1,0 +1,247 @@
+﻿@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@namespace BlazorApp1.Blazor.Blazor.Pages.Customer
+@rendermode InteractiveServer
+@inherits BlazorApp1.Blazor.Pages.Customer.PhoneNumbers_CreateBase
+
+@*<EditForm style="margin:10px" OnValidSubmit="Submit" Model="@eq" Context="CurrenEditContext">
+    <DataAnnotationsValidator />*@
+
+<EditForm  OnSubmit="Submit" EditContext="@CurrentEditContext">
+    <DataAnnotationsValidator />
+
+    <ResponsiveTable ItemsDataSource="@List"
+                     PageSize="5"
+                     HasAction="true"
+                     Context="Entity"
+                     @ref="@Grid"
+                     GridID="gridContact"
+                     RowEditClass=""
+                     RowNewClass=""
+                     InLineEdit=false
+                     TableItem="PhoneNumber"
+                     EnabledSearch="true"
+                     editContext="@CurrentEditContext"
+                     OnChangeWindow="ClearList"
+                     NewButtonText="Add New Phone Number"
+                     Component="@Component">
+
+        <ChildContent>
+            <GridColumns>
+                
+                <GridColumn TableItem="PhoneNumber" Field="@Grid.GetPropertyName(() => eq.Number)"  DefaultSort="true" />
+                <GridColumn TableItem="PhoneNumber" Field="@Grid.GetPropertyName(() => eq.TypeID)" Title="Type" DefaultSort="true" />
+
+            </GridColumns>
+            </ChildContent>
+
+
+                @*<GridHeader>
+                    <div class="col-sm-3 customcol"></div>
+                    <div class="col-sm-3 customcol">Name</div>
+                    <div class="col-sm-3 customcol">LastName</div>
+                    <div class="col-sm-2 customcol">UserName</div>
+                    <div class="col-sm-2 customcol">Rol</div>
+
+                </GridHeader>*@
+                <GridRow>
+                    @*<div class="col-sm-3 customcol inv">Name</div>
+                    <div class="col-sm-3 customcol">@Entity.Name</div>
+                    <div class="col-sm-3 customcol inv">LastName</div>
+                    <div class="col-sm-3 customcol">@Entity.CountryID</div>
+                    <div class="col-sm-2 customcol inv">UserName</div>
+                    <div class="col-sm-2 customcol">@Entity.Number</div>
+                    <div class="col-sm-2 customcol inv">Rol</div>
+                    <div class="col-sm-2 customcol">@Entity.Type</div>*@
+
+                </GridRow>
+
+                <GridEdit>
+
+                    @*@setContext(Entity)*@
+                    @*<EditForm style="margin:10px" OnValidSubmit="Submit"   EditContext="@CurrentEditContext">*@
+
+                    <div class="row">
+                        <div class="col-md-12 mx-auto">
+                            <form>
+                                <div class="form-group row">
+                                    <div class="col-sm-6">
+                                        <label>Name</label>
+                                        <InputText @bind-Value="@Entity.Number" class="form-control">
+                                        </InputText>
+                                        @*<ValidationMessage For="@(() => Entity.Name)"></ValidationMessage>*@
+                                        @Grid.GetErrorMessage(nameof(Entity.Number))
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label>Last Name</label>
+                                        <InputText @bind-Value="@Entity.CountryID" class="form-control">
+
+                                        </InputText>
+                                        @Grid.GetErrorMessage(nameof(Entity.CountryID))
+                                        @*<ValidationMessage For="@(() => Entity.LastName)"></ValidationMessage>
+
+                                        Grid.GetErrorMessage(nameof(Entity.LastName))*@
+                                        @*<CalibrationSaaS.Infraestructure.Blazor.CustomValidation For="@(() => Entity.LastName)" EditContext="Grid.editContext">
+
+                                        </CalibrationSaaS.Infraestructure.Blazor.CustomValidation>*@
+
+                                    </div>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                    @*<button class="btn btn-primary" type="submit">Submit form</button>*@
+
+
+                </GridEdit>
+    </ResponsiveTable>
+</EditForm>
+@*</EditForm>*@
+
+@code
+{
+
+
+    
+
+    public User user = new User();
+
+
+    //public EditContext editContex { get; set; }
+
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        //eq = Grid.currentEdit;
+        //CurrentEditContext = Grid.editContext;
+
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        //editContex = new EditContext(user);
+
+        await base.OnInitializedAsync();
+
+
+    }
+
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        return base.OnParametersSetAsync();
+    }
+
+
+    IList<Rol> lista;
+
+    public string GetRoles(string roles)
+
+    {
+
+        //if (string.IsNullOrEmpty(roles))
+        //{
+        //    if(lista != null) {
+        //        //lista.Clear();
+        //    }
+        //    return "";
+        //}
+
+        //List<Roles> lis = new List<Roles>();
+        //var a = roles.Split(',');
+        //foreach(var item in a)
+        //{
+        //    Logger.LogDebug(item);
+        //    var array =  AppState.RolesList.Where(x => x.Name.Trim() == item.Trim()).ToList();
+
+        //    lis = lis.Concat(array).ToList();
+        //}
+
+        //lista = lis;
+        //var s = 1;
+
+        return "";
+    }
+
+    public IList<Rol> _Roles;
+
+
+    public IList<Rol> TempRole
+    {
+        get
+        {
+
+            return lista;
+        }
+
+        set
+        {
+            _Roles = value;
+
+            lista = _Roles;
+
+        }
+
+    }
+
+    public string _strroles { get; set; }
+
+    //IList<Rol> result= GetRoles(_strroles)
+
+
+    public Task<IEnumerable<PhoneNumber>> SearchRol(string searchText)
+    {
+        //var result = AppState.RolesList
+        //    .Where(x => x.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+        //    .ToList();
+
+        return Task.FromResult<IEnumerable<PhoneNumber>>(null);
+    }
+
+    public string BoundValues(User model)
+    {
+        if (model == null || model.RolesList == null || model.RolesList.Count == 0)
+        {
+            model.Roles = string.Empty;
+            return String.Empty;
+        }
+
+        string roles = "";
+        foreach (var item in model.RolesList)
+        {
+            roles += item.Name + " ,";
+        }
+
+
+        model.Roles = roles;
+        return "";
+    }
+
+
+    protected async Task Submit(EditContext editContext)
+    {
+
+    }
+
+
+    public string setContext(User Model)
+    {
+        user = Model;
+
+        //editContex = new EditContext(Model);
+        return "";
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+        lista.Clear();
+        _Roles.Clear();
+    }
+
+
+}

@@ -1,0 +1,124 @@
+﻿@page "/ReportView/{EntityID}"
+@inject IJSRuntime JSRuntime
+@using Grpc.Core;
+@using ProtoBuf.Grpc;
+@using Blazed.Controls
+@using Microsoft.Extensions.Configuration
+@inherits KavokuComponentBase<WorkOrderDetail>
+@namespace CalibrationSaaS.Infraestructure.Blazor.Shared
+@using Blazed.Controls
+<HeaderComponent Title="Report" ActionBar="false"></HeaderComponent>
+
+<div class="container" id="my_pdf_viewer" style="padding:5px">
+    <div class="row">
+        <div class="col-sm-3">
+            <button class="d-sm-inline-block btn btn-sm btn-info shadow-sm btn-icon-split" onclick="print_canvas()"><i class="fa fa-download"></i> Print</button>
+        </div>
+        <div class="col-sm-3">
+            <button class="d-sm-inline-block btn btn-sm btn-info shadow-sm btn-icon-split" onclick="download_image()"><i class="fa fa-download"></i> Download</button>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-sm" id="canvas_container">
+            <canvas id="pdf_renderer"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm" id="navigation_controls">
+            <button id="go_previous">Previous</button>
+            <input id="current_page" value="1" type="number" />
+            <button id="go_next">Next</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm" id="zoom_controls">
+            <button id="zoom_in">+</button>
+            <button id="zoom_out">-</button>
+        </div>
+    </div>
+</div>
+
+
+@code{
+
+
+    [Parameter]
+    public WorkOrderDetail WOD { get; set; }
+
+
+    [Parameter]
+    public bool Enabled { get; set; }
+
+   
+
+    [Inject] IConfiguration Configuration { get; set; }
+
+    [Inject] System.Net.Http.HttpClient Http { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await base.OnInitializedAsync();
+
+
+
+
+
+        //await JSRuntime.InvokeVoidAsync("SetReport", b64);
+
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        try
+        {
+            await ShowProgress();
+
+            await base.OnAfterRenderAsync(firstRender);
+            if (firstRender && WOD != null && WOD.Certificate != null && !string.IsNullOrEmpty(WOD.Certificate.Description))
+            {
+                ////Kestrel:Endpoints:Http3:Url
+                var url = Configuration["Kestrel:Endpoints:Http2:Url"];
+                Console.WriteLine(url);
+                url = url + WOD.Certificate.Description;
+
+                //using (WebClient webClient = new WebClient())
+                //{
+                //    byte[] data = webClient.DownloadData(url);
+
+                //}
+                //var pdf = await Http.GetAsync(url);
+
+                //var contentReponse = await pdf.Content.ReadAsStringAsync();
+
+                ////Logger.LogDebug("contentReponse " + contentReponse);
+
+                //var psdInBase64 = JsonConvert.DeserializeObject(contentReponse).ToString();
+                //b64 = psdInBase64;
+                await JSRuntime.InvokeVoidAsync("PrintPDFURL", url);
+            }
+        }
+
+        catch (RpcException ex)
+        {
+            await ExceptionManager(ex);
+        }
+
+
+        catch (Exception ex)
+        {
+            await ExceptionManager(ex);
+        }
+        finally
+        {
+            await CloseProgress();
+        }
+
+
+
+    }
+
+}

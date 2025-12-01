@@ -1,0 +1,118 @@
+﻿@using Radzen
+@using Radzen.Blazor
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="search-container">
+    <RadzenTextBox Placeholder="Search..." @bind-Value="@SearchText"
+                   Change="@OnSearchChange"
+                   @onkeydown="@HandleKeyDown"
+                   class="search-input" />
+    <div class="search-icon" @onclick="PerformSearch">
+        <RadzenIcon Icon="search" />
+    </div>
+    @if (!string.IsNullOrEmpty(SearchText))
+    {
+        <div class="clear-icon" @onclick="ClearSearch">
+            <RadzenIcon Icon="close" />
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string SearchText { get; set; } = "";
+    [Parameter] public EventCallback<string> SearchTextChanged { get; set; }
+    [Parameter] public EventCallback<string> OnSearch { get; set; }
+
+    private async Task OnSearchChange(string value)
+    {
+        SearchText = value;
+        await SearchTextChanged.InvokeAsync(value);
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await PerformSearch();
+        }
+    }
+
+    private async Task PerformSearch()
+    {
+        await OnSearch.InvokeAsync(SearchText);
+    }
+
+    private async Task ClearSearch()
+    {
+        SearchText = "";
+        await SearchTextChanged.InvokeAsync(SearchText);
+        await OnSearch.InvokeAsync(SearchText);
+    }
+}
+
+<style>
+    .search-container {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-input {
+        width: 100%;
+        border-radius: 20px;
+        padding-left: 40px;
+        padding-right: 40px;
+        height: 40px;
+        background-color: var(--rz-base-100);
+        border: 1px solid var(--rz-border-color);
+        transition: all 0.2s ease;
+    }
+
+        .search-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(var(--rz-primary-rgb), 0.25);
+            border-color: var(--rz-primary);
+        }
+
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        color: var(--rz-text-color-secondary);
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .clear-icon {
+        position: absolute;
+        right: 12px;
+        color: var(--rz-text-color-secondary);
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+        .search-icon:hover, .clear-icon:hover {
+            color: var(--rz-primary);
+        }
+
+    /* Responsive styles */
+    @@media (max-width: 480px) {
+        .search-input
+
+    {
+        height: 36px;
+        padding-left: 36px;
+        padding-right: 36px;
+        font-size: 14px;
+    }
+
+    .search-icon {
+        left: 10px;
+    }
+
+    .clear-icon {
+        right: 10px;
+    }
+
+    }
+</style>

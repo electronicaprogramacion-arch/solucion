@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Dashboard - Calibration Co.</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#1183d4',
+              'background-light': '#f6f7f8',
+              'background-dark': '#101a22',
+            },
+            fontFamily: {
+              display: ['Inter'],
+            },
+            borderRadius: { DEFAULT: '0.25rem', lg: '0.5rem', xl: '0.75rem', full: '9999px' },
+          },
+        },
+      };
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .nav-item.active .material-symbols-outlined {
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200">
+<div class="flex min-h-screen">
+<aside class="w-64 flex-shrink-0 bg-white dark:bg-background-dark/50 border-r border-slate-200 dark:border-slate-800 flex flex-col p-4">
+<div class="flex items-center gap-3 p-2 mb-6">
+<div class="bg-primary/20 p-2 rounded-lg">
+<svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 6V3m0 18v-3" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M7.86 7.86a10 10 0 1014.28 0M7.86 16.14a10 10 0 10-5.72-8.28" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="font-bold text-lg text-slate-900 dark:text-white">Calibration Co.</span>
+</div>
+<nav class="flex flex-col gap-2 flex-grow">
+<a class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary text-white font-semibold" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-600 dark:text-slate-300 font-medium" href="#">
+<span class="material-symbols-outlined">description</span>
+<span>Certificates</span>
+</a>
+<a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-600 dark:text-slate-300 font-medium" href="#">
+<span class="material-symbols-outlined">event_upcoming</span>
+<span>Due Dates</span>
+</a>
+<a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-600 dark:text-slate-300 font-medium" href="#">
+<span class="material-symbols-outlined">confirmation_number</span>
+<span>Service Requests</span>
+</a>
+<a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-600 dark:text-slate-300 font-medium" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-600 dark:text-slate-300 font-medium" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Help &amp; Support</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-600 dark:text-slate-300 font-medium" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<main class="flex-1 p-8 overflow-y-auto">
+<header class="mb-8">
+<h1 class="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Welcome back, Alex! Here's a quick overview of your account.</p>
+</header>
+<section class="mb-8">
+<h2 class="text-xl font-semibold mb-4 text-slate-800 dark:text-slate-200">Quick Actions</h2>
+<div class="flex flex-wrap gap-4">
+<button class="flex items-center justify-center gap-2 h-11 px-6 rounded-lg bg-primary text-white font-semibold shadow-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">download</span>
+<span>Download Certificates</span>
+</button>
+<button class="flex items-center justify-center gap-2 h-11 px-6 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+<span>View Due Dates</span>
+</button>
+</div>
+</section>
+<section>
+<h2 class="text-xl font-semibold mb-4 text-slate-800 dark:text-slate-200">Account Overview</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-background-dark/50 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="font-medium text-slate-600 dark:text-slate-300 mb-1">Total Certificates</p>
+<p class="text-4xl font-bold text-slate-900 dark:text-white">125</p>
+</div>
+<div class="bg-white dark:bg-background-dark/50 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="font-medium text-slate-600 dark:text-slate-300 mb-1">Expiring Soon</p>
+<p class="text-4xl font-bold text-slate-900 dark:text-white">5</p>
+</div>
+<div class="bg-white dark:bg-background-dark/50 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="font-medium text-slate-600 dark:text-slate-300 mb-1">Active Service Requests</p>
+<p class="text-4xl font-bold text-slate-900 dark:text-white">2</p>
+</div>
+</div>
+</section>
+</main>
+</div>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+</body></html>

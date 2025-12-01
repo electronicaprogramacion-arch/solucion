@@ -1,0 +1,284 @@
+﻿@page "/usp41/{EntityID}"
+@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared;
+@using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+@using CalibrationSaaS.Infraestructure.Blazor.Helper
+@namespace CalibrationSaaS.Infraestructure.Blazor.LTI
+@inherits KavokuComponentBase<int>
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using System.Timers
+@using CalibrationSaaS.Infraestructure.Blazor.Shared
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+@using WeightSetComponent = CalibrationSaaS.Infraestructure.Blazor.LTI.Scale.WeightSetComponent;
+<style>
+
+    .grid-row1.headerRow {
+    height: 55% !important;
+    }
+
+
+
+
+    .noedit {
+    }
+
+
+
+
+    @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+
+
+    .editcolumn {
+    }
+
+    .container, .container-fluid {
+    padding-left: 0rem;
+    padding-right: 0rem;
+    }
+
+    .container-fluid {
+    width: 100%;
+    padding-right: 0rem;
+    padding-left: 0rem;
+    margin-right: auto;
+    margin-left: auto;
+    }
+    }
+</style>
+
+<div class="" style="min-height:600px;overflow:auto;padding-left:5px;width:100%;overflow-y:scroll">
+    @if (LIST != null)
+    {
+
+
+        <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion" style="display:none">
+
+        </div>
+
+
+
+
+        <div class="row">
+
+
+            <div class="col" style="max-height:500px">
+
+                <ResponsiveTable ItemsDataSource="LIST"
+                PageSize="20"
+                HasAction="false"
+                HasSelect="false"
+                HasDelete="false"
+                HasEdit="false"
+                @ref="@RT"
+                EnabledModal="true"
+                Context="ITEM"
+                TableItem="Domain.Aggregates.Entities.BasicCalibrationResult"
+                ForceNEwButton="false"
+                ClientPagination="true"
+                DisabledRowHover="true"
+                InLineEdit="true"
+                ColActionHeaderCSS="col-sm-2"
+                ColActionCSS="col-sm-2"
+                EnabledSearch="false"
+                HeaderRowClass="row grid-row1 headerRow displayFlex bg-dark"
+                Component="@Component">
+
+                    <GridHeader>
+
+                        @*<div class="displayFlex noinv">*@
+                        <div class="col">Repeatability Pass Criteria</div>
+                        <div class="col">As Left Standard Deviation</div>
+                        <div class="col">Resolution <br /> x 0.41</div>
+                        <div class="col">Max Value</div>
+                        <div class="col">Minimum Weight or SNW (Max Value x 2000)</div>
+                        <div class="col"></div>
+
+
+                    </GridHeader>
+
+                    <GridRow>
+
+                        <div class="" style="width:100%">
+
+                            <div class="row displayFlex">
+
+                                <div class="col">
+                                    <MaterializeComponent>
+                                        <Content>
+
+                                            <TextInput @bind-Value="@Entity.RepeatabilityPass"
+                                            Type="@Types.text"
+                                            Validate="false"
+                                            ValidationFor="() => Entity.RepeatabilityPass"
+                                            TValue="string"
+                                            IsDisabled="false"
+                                            LabelDown="true">
+                                            </TextInput>
+                                        </Content>
+                                    </MaterializeComponent>
+                                </div>
+
+
+                            </div>
+
+                        </div>
+
+                    </GridRow>
+                </ResponsiveTable>
+
+
+            </div>
+
+        </div>
+
+    }
+    else
+    {
+        <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+            <div class="row" style="width:100%,display:flex;flex-dirección:columna;justify-content: center;">
+                <div class="col">
+                </div>
+                <div class="col">
+                    <p><em>Loading...</em></p>
+                    <FluentProgressRing></FluentProgressRing>
+
+                </div>
+                <div class="col">
+                </div>
+
+
+            </div>
+        </div>
+    }
+</div>
+
+@code{
+
+    [CascadingParameter(Name = "CascadeParam1")]
+    public IWorkOrderItemCreate WorkOrderItemCreate { get; set; }
+
+    [Parameter]
+    public ResponsiveTable<BasicCalibrationResult> RT { get; set; } = new ResponsiveTable<BasicCalibrationResult>();
+    public Domain.Aggregates.ValueObjects.USP41 Entity { get; set; } = new Domain.Aggregates.ValueObjects.USP41();
+
+    public List<BasicCalibrationResult> LIST { get; set; } = new List<BasicCalibrationResult>();
+
+    public WorkOrderDetail eq
+
+    {
+
+        get { return WorkOrderItemCreate.eq; }
+
+        set { WorkOrderItemCreate.eq = value; }
+
+
+    }
+
+    public bool IsWeightLoaded { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        if (eq != null && (eq?.BalanceAndScaleCalibration?.Repeatability?.TestPointResult != null))
+        {
+
+           
+            double repeatabilityCriteriaPercentage = 0;
+
+            double repeatabilityStdDeviationAsLeft = CalculateStandardDeviation(eq?.BalanceAndScaleCalibration?.Repeatability?.TestPointResult.Select(r => r.AsLeft).ToList());
+            double repeReadingStandard = (double) eq?.BalanceAndScaleCalibration?.Repeatability?.TestPointResult?.FirstOrDefault().WeightApplied;
+
+
+            repeatabilityCriteriaPercentage = Math.Round((repeatabilityStdDeviationAsLeft * 2) / repeReadingStandard, 7);
+
+            string repeatabilityCriteriaResult = "";
+
+        if (repeatabilityCriteriaPercentage > 0.1)
+            {
+                repeatabilityCriteriaResult = "Fail";
+            }
+            else
+            {
+                repeatabilityCriteriaResult = "Pass";
+            }
+
+            
+           
+        var totalRep = repeatabilityCriteriaPercentage.ToString() + "-" + repeatabilityCriteriaResult.ToString();
+
+            USP41 uSP_41 = new USP41();
+            uSP_41.RepeatabilityPass = totalRep.ToString();
+            Entity = uSP_41;
+         
+        }
+       
+        
+
+    }
+    public static double CalculateStandardDeviation(List<double> values)
+    {
+        if (values == null || values.Count == 0)
+            return 0;
+
+        double average = values.Average();
+        double sumOfSquaresOfDifferences = values.Select(val => (val - average) * (val - average)).Sum();
+        double stdDev = Math.Sqrt(sumOfSquaresOfDifferences / values.Count);
+        return stdDev;
+    }
+
+
+    public async Task Calculate()
+    {
+        int lineerror = 0;
+        try
+        {
+
+         
+
+            if (RT == null || RT.Items == null || RT.Items.Count == 0)
+            {
+                return;
+            }
+
+            var linearities = RT.Items;
+            if (eq?.BalanceAndScaleCalibration == null)
+            {
+                eq.BalanceAndScaleCalibration = new BalanceAndScaleCalibration();
+                eq.BalanceAndScaleCalibration.Repeatability = new Repeatability();
+            }
+            if (eq?.BalanceAndScaleCalibration?.Repeatability == null)
+            {
+                eq.BalanceAndScaleCalibration.Repeatability = new Repeatability();
+            }
+            lineerror = 2;
+            eq.BalanceAndScaleCalibration.Repeatability.TestPointResult = linearities;
+            lineerror++;
+
+
+        }
+        catch (Exception ex)
+        {
+
+            await ShowError(ex, " repea " + lineerror);
+        }
+        finally
+        {
+           
+        }
+
+    }
+
+    private async Task<List<BasicCalibrationResult>> ObtenerDatosDeCalibracion()
+    {
+        // Lógica para obtener datos
+        return new List<BasicCalibrationResult>
+         {
+             new BasicCalibrationResult { SequenceID = 1, AsFound = 0.1, AsLeft = 0.2 },
+             new BasicCalibrationResult { SequenceID = 2, AsFound = 0.3, AsLeft = 0.4 }
+         };
+    }
+
+}

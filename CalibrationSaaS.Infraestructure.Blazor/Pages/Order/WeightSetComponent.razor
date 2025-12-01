@@ -1,0 +1,145 @@
+﻿@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+@using CalibrationSaaS.Domain.Aggregates.ValueObjects; 
+@namespace CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+@inherits WeightSetComponent_Base
+
+
+
+
+   
+@*@{ 
+    Group = lstWeightSet;
+}*@
+
+
+@if (Group != null || 1==1)
+{
+    
+    GroupWeights(Group);
+
+   
+
+
+    <div class="row" style="min-height:400px">
+        <div class="col-3">
+            <div class="list-group" id="list-tab" role="tablist">
+                @if (Group2 != null) {
+                @foreach (var item2 in Group2)
+                {
+                <button class="list-group-item list-group-item-action active" @onclick="@(async () => await CancelItem(item2))"
+                        @onclick:stopPropagation @onclick:preventDefault id="list-home-list" data-toggle="list" href="#list-home" role="tab" aria-controls="home">
+                   @item2.PieceOfEquipmentID
+
+                </button>
+                }
+                }
+
+                @*<a class="list-group-item list-group-item-action" id="list-profile-list" data-toggle="list" href="#list-home" role="tab" aria-controls="profile">Profile</a>
+        <a class="list-group-item list-group-item-action" id="list-messages-list" data-toggle="list" href="#list-home" role="tab" aria-controls="messages">Messages</a>
+        <a class="list-group-item list-group-item-action" id="list-settings-list" data-toggle="list" href="#list-profile" role="tab" aria-controls="settings">Settings</a>*@
+            </div>
+        </div>
+        <div class="col">
+           
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="list-home" role="tabpanel" aria-labelledby="list-home-list">
+                        <ResponsiveTable ItemsDataSource="@Group"
+                                         PageSize="20" HasAction="false" HasSelect="false" HasEdit="false" EnabledSearch="false"
+                                         HasDelete="true" TableItem="CalibrationSaaS.Domain.Aggregates.Entities.WeightSet"
+                                         Context="Entity"
+                                         editContext="@CurrentEditContext"
+                                         @ref="Grid"
+                                         FilterByObject="Filter33"
+                                     ClientDefaultSortDirection="Asc"
+                                     ClientDefaultSortField="PieceOfEquipmentID"
+                                        Component="@Component">
+                                         
+                            <ChildContent>
+
+                                <GridColumns>
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.PieceOfEquipmentID)" Title="ID" />
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.Reference)" Title="#Ref" />
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.WeightNominalValue)" Title="Ini. Value" DefaultSort="true" />
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.WeightNominalValue2)" Title="Final. Value" />
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.UnitOfMeasure.Abbreviation)" Title="UoM"  />
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.Note)" Title="Note" />
+
+
+                                </GridColumns>
+
+                            </ChildContent>
+                            <NewButton>
+                                <div class="col-sm-12 customcol" style="display:none">
+                                    <div class="row">
+
+                                        <div class="col-sm-4 customcol">
+                                            <button class="btn btn-sm btn-primary shadow-sm editButton"
+                                                    id="btnClearWeightset" @onclick=@(async () => await ClearWeightSet())
+                                                    @onclick:stopPropagation @onclick:preventDefault>
+                                                Add Weight Set
+                                            </button>
+                                            <button class="btn btn-sm btn-primary shadow-sm editButton"
+                                                    id="btnSetWeightset" @onclick=@(async () => await SelectWeightSet())
+                                                    @onclick:stopPropagation @onclick:preventDefault>
+                                                Add Weight Set
+                                            </button>
+                                        </div>
+                                        <div class="col-sm-4 customcol" style="display:none">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input " id="checkAccredited"
+                                                       @oninput="ChangeCheckBox">
+
+                                                <label class="custom-control-label" for="checkAccredited">Accredited</label>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </NewButton>
+                            @*<GridHeader>
+                            <div class="col-sm-2 customcol">PoE</div>
+                            <div class="col-sm-2 customcol">Weight<br />Value</div>
+                            <div class="col-sm-2 customcol">UnitOf<br />Measurement</div>
+                            <div class="col-sm-2 customcol">Note</div>
+                            <div class="col-sm-2 customcol">Actual <br />Value</div>
+
+                        </GridHeader>*@
+                            <GridRow>
+                                @*<div class="col-sm-2 customcol inv">PoE</div>
+                            <div class="col-sm-2 customcol"><a href="PieceOfEquipmentCreate/@context.PieceOfEquipmentID">@context.PieceOfEquipmentID</a></div>
+                            <div class="col-sm-2 customcol inv">WeightValue</div>
+                            <div class="col-sm-2 customcol">@context.WeightNominalValue</div>
+                            <div class="col-sm-2 customcol inv">UnitOfMeasurement</div>
+                            <div class="col-sm-2 customcol">@context?.UnitOfMeasure?.Abbreviation</div>
+                            <div class="col-sm-2 customcol inv">Note</div>
+                            <div class="col-sm-2 customcol">@context.Note</div>
+                            <div class="col-sm-2 customcol inv">Actual Value</div>
+                            <div class="col-sm-2 customcol">@context.WeightActualValue</div>*@
+                            </GridRow>
+
+                        </ResponsiveTable>
+                    </div>
+                    <div class="tab-pane fade" id="list-profile" role="tabpanel" aria-labelledby="list-profile-list">...</div>
+                    @*<div class="tab-pane fade" id="list-messages" role="tabpanel" aria-labelledby="list-messages-list">...</div>
+                <div class="tab-pane fade" id="list-settings" role="tabpanel" aria-labelledby="list-settings-list">...</div>*@
+                </div>
+           
+            </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-sm-12">
+        </div>
+    </div>
+}
+
+@code
+
+{
+
+}

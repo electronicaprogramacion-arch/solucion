@@ -1,0 +1,1039 @@
+﻿@page "/linearitycom/{EntityID}"
+@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+@using CalibrationSaaS.Infraestructure.Blazor.Helper
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@using CalibrationSaaS.Domain.Aggregates.Interfaces
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@inherits LinearityComponentBase
+<style>
+
+    .grid-row1.headerRow {
+        height: 55% !important;
+    }
+
+
+
+    .noedit {
+    }
+
+    .btnWidth {
+        width: 75px
+    }
+
+   
+    .secondGrid {
+        /*padding-left: 70px*/
+        /*left:-7%;*/
+    }
+    .linearityCol
+    {
+        padding:0px;
+    }
+
+    .linearityColHeader {
+        padding: 0px;
+    }
+
+    @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+        /*  .editcolumn {
+        }
+
+        .container, .container-fluid {
+            padding-left: 0rem;
+            padding-right: 0rem;
+        }
+
+        .container-fluid {
+            width: 100%;
+            padding-right: 0rem;
+            padding-left: 0rem;
+            margin-right: auto;
+            margin-left: auto;
+        }*/
+    }
+</style>
+
+
+@if (eq != null && LIST != null)
+{
+
+
+    <div style="display:none">
+        WeightSets :   @Description
+        @if (WeightSetList2 != null)
+        {
+            <div class="" style="max-height:300px;overflow:auto;width:100%">
+
+                @*<WeightSetComponent @ref="@WeightSetComponent" lstWeightSet="WeightSetList2" ChangeDescription="ChangeDescripcion">
+
+                </WeightSetComponent>*@
+            </div>
+        }
+    </div>
+
+
+
+    @if (eq?.PieceOfEquipment?.EquipmentTemplate != null)
+    {
+
+        if (eq == null
+           || eq?.PieceOfEquipment == null
+           || eq?.PieceOfEquipment?.EquipmentTemplate == null
+           || eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups == null
+           || eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups?.ElementAtOrDefault(0)?.TestPoints?.Count == 0
+           || eq.IsAccredited == false
+           )
+        {
+            EnableSetPoints = false;
+        }
+        else
+        {
+            EnableSetPoints = true;
+        }
+
+       
+    }
+
+
+    <div class="" style="min-height: 600px; overflow: auto; padding-left: 5px; width: 100%; overflow-y: scroll; max-height: 600px;">
+        @if (1 == 1)
+        {
+            var tem = LIST;
+            string sortField = "";
+
+            //@Grid.GetPropertyName(() => PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.Name)
+
+            <ResponsiveTable ItemsDataSource="LIST"
+                             PageSize="20" 
+                             HasAction="true" 
+                             HasSelect="true"
+                             HasDelete="true"
+                             HasDuplicate="true"
+                             HasEdit="false"
+                             HasNew="true"
+                             @ref="@RT"
+                             Context="ITEM"
+                             TableItem="Domain.Aggregates.Entities.Force"
+                             ForceNEwButton="false"
+                             ClientPagination="true"
+                             DisabledRowHover="true"
+                             InLineEdit="false"
+                             ColActionHeaderCSS="col-sm-2"
+                             EnabledSearch="false"
+                             ClientDefaultSortField="@SortField"
+                             ClientDefaultSortDirection="asc"
+                             RowExecute="RowChange"
+                             Component="@Component"
+                             RowAfterRender="@RowAfterRender"
+                             AfterAction="@TaskAfterSave"
+                             ColActionCSS="btnWidth"
+                             EnabledDrag="true"
+                             LabelHeader="true">
+
+                <NewButton>
+                    <div class="row" style="width:100%">
+                        @if (1 == 2)
+                        {
+                            <div class="col">
+
+                                <label>
+                                    As Found Multiplier
+                                </label>
+                                <input id="textMultiplerFound" disabled="!@Enabled" @bind-value="@TextMultiplerFound" type="number" />
+
+
+                            </div>
+                            <div class="col">
+                                <label>
+                                    As Left Multiplier
+                                </label>
+                                <input id="textMultiplerLeft" disabled="!@Enabled" @bind-value="@TextMultiplerLeft" type="number" />
+                            </div>
+                        }
+                        <div class="col">
+                            @*<button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth" disabled="@(!Enabled)" @onclick=@(async () => await Calculate()) @onclick:stopPropagation @onclick:preventDefault
+                                    aria-expanded="false" aria-controls="collapseTwo">
+                                Calculate
+                            </button>*@
+                        </div>
+
+                        <div class="col">
+                            @*@if (!EnableSetPoints && Enabled && 1 == 2)
+                                {
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth  marginButton" onclick="$('#btnTestPoints').click()" @onclick:stopPropagation @onclick:preventDefault
+                                            aria-expanded="false" aria-controls="collapseTwo">
+                                        Add 
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth marginButton" disabled="" @onclick:stopPropagation @onclick:preventDefault
+                                            aria-expanded="false" aria-controls="collapseTwo">
+                                        Add 
+                                    </button>
+                                }*@
+
+                        </div>
+                        @*<div class="col">
+                            <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth marginButton" disabled="@(!Enabled)" @onclick=@(async () => await Assing()) @onclick:stopPropagation @onclick:preventDefault
+                                    aria-expanded="false" aria-controls="collapseTwo">
+                                Assign Weights Automatically
+                            </button>
+                        </div>*@
+                        <div class="col">
+                            <div class="input-group mb-3">
+                                <input id="txtName" @bind-value="@TextNewValue" type="number" class="form-control" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                                <div class="input-group-append">
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled="@(!Enabled)" @onclick=@(async() => await AddNewItem()) @onclick:stopPropagation @onclick:preventDefault
+                                            aria-expanded="false" aria-controls="collapseTwo">
+                                        Add 
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        @*<div class="row">
+
+                                <div class="col">
+                                    <div class="col" style="width:40%;float:left">
+                                        <input id="txtName" @bind-value="@TextNewValue" type="number" style="width:80%;margin-left:3px" />
+                                    </div>
+                                    <div class="col" style="width:60%;float:left">
+
+                                        <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm marginButton" disabled="@(!Enabled)" @onclick=@(async () => await RT.SaveNewItem(DefaultNew())) @onclick:stopPropagation @onclick:preventDefault
+                                                aria-expanded="false" aria-controls="collapseTwo">
+                                            <span>
+                                                New Linearity
+                                                <i class="fas fa-plus fa-sm"></i>
+                                            </span>
+
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>*@
+
+                    </div>
+                </NewButton>
+
+                <GridHeader2>
+                    @if (ITEM != null && ITEM.BasicCalibrationResult != null)
+                    {
+                        <EditForm Model="@ITEM" class="col">
+                            <div class="form-row" style="width:100%">
+                                <div class="col-sm">
+                                    <div class="row">
+
+                                        <div class="col-sm-2 linearityCol">
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.FS"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.numberdecimal
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> ITEM.BasicCalibrationResult.FS)"
+                                                       TValue="double"
+                                                       IsDisabled="true"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString()
+                                                             + "FSTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="FS (%)"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+
+
+                                        </div>
+
+
+
+
+
+                                        <div class="col-sm-2 linearityCol editcolumn">
+
+                                            @if (eq.IsAccredited.HasValue && eq.IsAccredited.Value == false && Enabled)
+                                            {
+                                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Nominal"
+                                                           CSSClass="inputgrid"
+                                                           Type=@Types.numberdecimal
+                                                           TValue="double"
+                                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Nominal)"
+                                                           IsDisabled="!Enabled"
+                                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                           DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                           DecimalRoundType="RoundType.RoundToResolution"
+                                                           Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "NominalTexbox_" + ITEM.SequenceID.ToString())"
+                                                           EnableToastMessage="true"
+                                                           ToastMessage=@("in Force  the typed value {0} was rounded to {1}")
+                                                           ShowControl="RT.GetShowControl()"
+                                                           ShowLabel="RT.GetShowlabel()"
+                                                           Label="Nominal"
+                                                           OnlyHeader="true">
+                                                </TextInput>
+                                            }
+                                            else
+                                            {
+                                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Nominal"
+                                                           CSSClass="inputgrid"
+                                                           Type=@Types.numberdecimal
+                                                           TValue="double"
+                                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Nominal)"
+                                                           IsDisabled="true"
+                                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                           DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                           Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "NominalTexbox_" + ITEM.SequenceID.ToString())"
+                                                           DecimalRoundType="RoundType.RoundToResolution"
+                                                           ShowControl="RT.GetShowControl()"
+                                                           ShowLabel="RT.GetShowlabel()"
+                                                           Label="Nominal"
+                                                           OnlyHeader="true">
+                                                </TextInput>
+                                            }
+
+                                        </div>
+                                        @*<div class="col-sm linearityCol inv noedit">RUN1 as Found</div>*@
+                                        <div class="col-sm-2 linearityCol noedit">
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RUN1"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RUN1)"
+                                                       IsDisabled="!Enabled"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "RUN1Texbox_" + ITEM.SequenceID.ToString())"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       ToastMessage=@("in Force  the typed value {0} was rounded to {1}")
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="RUN1 as Found"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+
+                                        </div>
+
+
+                                        <div class="col-sm-2 linearityCol noedit">
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.ErrorRun1"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.ErrorRun1)"
+                                                       IsDisabled="true"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "RUN1ErrorTexbox_" + ITEM.SequenceID.ToString())"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Error"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+
+                                        </div>
+
+
+                                        <div class="col-sm-2 linearityCol noedit">
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.ClassRun1"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.text
+                                                       TValue="string"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.ClassRun1)"
+                                                       IsDisabled="true"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString()
+                                                             + "RUN1ClassTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Class"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+
+                                        </div>
+
+
+                                        <div class="col-sm-2 linearityCol">
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RUN2"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RUN2)"
+                                                       IsDisabled="!Enabled"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "RUN2Texbox_" + ITEM.SequenceID.ToString())"
+                                                       ToastMessage=@("in Force  the typed value {0} was rounded to {1}")
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="RUN1 As Adjusted"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+
+
+                                        </div>
+
+
+                                    </div>
+                                </div>
+
+                                <div class="col-sm">
+                                    <div class="row">
+
+
+                                        <div class="col-sm-2 linearityCol noedit">
+
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RUN3"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RUN3)"
+                                                       IsDisabled="!Enabled"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "RUN3Texbox_" + ITEM.SequenceID.ToString())"
+                                                       ToastMessage=@("in Force  the typed value {0} was rounded to {1}")
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="RUN2"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+
+
+
+                                        </div>
+
+
+                                        <div class="col-sm-2 linearityCol noedit">
+
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RUN4"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RUN4)"
+                                                       IsDisabled="!Enabled"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "RUN4Texbox_" + ITEM.SequenceID.ToString())"
+                                                       ToastMessage=@("in Force  the typed value {0} was rounded to {1}")
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="RUN3"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+
+
+
+                                        </div>
+
+
+
+                                        <div class="col-sm-2 linearityCol noedit secondGrid">
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Resolution"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.number
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Resolution)"
+                                                       TValue="double"
+                                                       IsDisabled="!Enabled"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.Ceiling"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString()
+                                                             + "ResolutionTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Resolution"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+                                        </div>
+
+
+                                        <div class="col-sm-2 linearityCol editcolumn secondGrid">
+
+                                            @*@ITEM?.BasicCalibrationResult?.RelativeIndicationError*@
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.MaxErrorNominal"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.number
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.MaxErrorNominal)"
+                                                       TValue="double"
+                                                       IsDisabled="true"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.Ceiling"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString()
+                                                             + "RelativeIndicationErrorTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Max Error"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+
+
+
+
+                                        </div>
+@*
+                                        <div class="col-sm-1 linearityCol noedit secondGrid">
+                                           
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RelativeRepeatabilityError"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.number
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RelativeRepeatabilityError)"
+                                                       TValue="double"
+                                                       IsDisabled="!Enabled"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.Ceiling"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString()
+                                                             + "RelativeRepeatabilityErrorTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Rel Rep Err"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+
+                                        </div>
+*@
+
+
+                                        <div class="col-sm-2 linearityCol editcolumn secondGrid">
+
+
+                                            @*@ITEM?.BasicCalibrationResult?.Uncertanty*@
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Uncertanty"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.number
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Uncertanty)"
+                                                       TValue="double"
+                                                       IsDisabled="!Enabled"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.Ceiling"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString()
+                                                             + "UncertaintyTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Uncertainty"
+                                                       OnlyHeader="true">
+                                            </TextInput>
+                                        </div>
+
+
+
+
+
+
+                                        <div class="col-sm-1 linearityCol noedit secondGrid">
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Class"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.number
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Class)"
+                                                       TValue="string"
+                                                       IsDisabled="!Enabled"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.Ceiling"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString()
+                                                             + "ClassTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       OnlyHeader="true"
+                                                       Label="Class">
+                                            </TextInput>
+
+
+
+                                        </div>
+
+
+
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </EditForm>
+                    }
+                </GridHeader2>
+
+                <GridSelect2 Context="select">
+
+                    @{
+                        var a = new ResponsiveTable<Force>.SelectRow();
+                        if (select != null)
+                        {
+                            a = select as ResponsiveTable<Force>.SelectRow;
+                        }
+                        var color = "";
+                    }
+
+
+                    @if (a.Entity.WeightSets != null && a.Entity.WeightSets.Count > 0)
+                    {
+                        color = "success";
+                    }
+                    else
+                    {
+                        color = "primary";
+                    }
+
+
+
+                    <div class="row" rt="TTT">
+                        @if (!Enabled || !EnableWeightSet)
+                        {
+                            @*<div class="btnWidth buttonLin">
+                    <button class="btn btn-sm btn-primary shadow-sm editButton" disabled
+                            id="setw"
+                            @onclick:stopPropagation @onclick:preventDefault>
+                        Standard
+                    </button>
+                </div>*@
+                            <div class="btnWidth buttonLin">
+                                <button class="btn btn-sm btn-@color shadow-sm editButton"
+                                        id="@("btnSelect_" + a.Position.ToString())" @onclick=@(async () => await  SelectWeight(a.Entity,a.Position))
+                                        @onclick:stopPropagation @onclick:preventDefault>
+                                    Standard
+                                </button>
+                            </div>
+                        }
+                        else if (a != null && a.Entity != null && eq != null && EnableWeightSet && Enabled
+                            || a != null && a.Entity != null && eq != null && eq.IsAccredited.HasValue && eq.IsAccredited.Value == true && Enabled)
+                        {
+                            <div class="btnWidth buttonLin">
+                                <button class="btn btn-sm btn-@color shadow-sm editButton"
+                                        id="@("btnSelect_" + a.Position.ToString())" @onclick=@(async () => await  SelectWeight(a.Entity,a.Position))
+                                        @onclick:stopPropagation @onclick:preventDefault>
+                                    Standard
+                                </button>
+                            </div>
+                        }
+                        @if (select != null && RT != null && a != null && a?.Entity != null)
+                        {
+
+                        }
+
+
+                    </div>
+                </GridSelect2>
+
+                <GridRow>
+                    @if (ITEM != null && ITEM.BasicCalibrationResult != null )
+                    {
+                        <EditForm Model="@ITEM" class="col">
+                            <div class="form-row" style="width:100%">
+                                <div class="col-sm">
+                                    <div class="row">
+                                        
+                                        <div class="col-sm-2 linearityCol">
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.FS"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.numberdecimal
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> ITEM.BasicCalibrationResult.FS)"
+                                                       TValue="double"
+                                                       IsDisabled="true"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() 
+                                                             + "FSTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="FS (%)">
+                                            </TextInput>
+
+
+                                        </div>
+
+
+
+
+                                       
+                                        <div class="col-sm-2 linearityCol editcolumn">
+
+                                            @if (eq.IsAccredited.HasValue && eq.IsAccredited.Value == false && Enabled)
+                                            {
+                                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Nominal"
+                                                           CSSClass="inputgrid"
+                                                           Type=@Types.numberdecimal
+                                                           TValue="double"
+                                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Nominal)"
+                                                           IsDisabled="!Enabled"
+                                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                           DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                           DecimalRoundType="RoundType.RoundToResolution"
+                                                           Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "NominalTexbox_" + ITEM.SequenceID.ToString())"
+                                                           EnableToastMessage="true"
+                                                           ToastMessage=@("in Force  the typed value {0} was rounded to {1}")
+                                                           ShowControl="RT.GetShowControl()"
+                                                           ShowLabel="RT.GetShowlabel()"
+                                                           Label="Nominal">
+                                                </TextInput>
+                                            }
+                                            else
+                                            {
+                                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Nominal"
+                                                           CSSClass="inputgrid"
+                                                           Type=@Types.numberdecimal
+                                                           TValue="double"
+                                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Nominal)"
+                                                           IsDisabled="true"
+                                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                           DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                           Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "NominalTexbox_" + ITEM.SequenceID.ToString())"
+                                                           DecimalRoundType="RoundType.RoundToResolution"
+                                                           ShowControl="RT.GetShowControl()"
+                                                           ShowLabel="RT.GetShowlabel()"
+                                                           Label="Nominal">
+                                                </TextInput>
+                                            }
+
+                                        </div>
+                                        @*<div class="col-sm linearityCol inv noedit">RUN1 as Found</div>*@
+                                        <div class="col-sm-2 linearityCol noedit">
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RUN1"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RUN1)"
+                                                       IsDisabled="!Enabled"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "RUN1Texbox_" + ITEM.SequenceID.ToString())"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       ToastMessage=@("in Force  the typed value {0} was rounded to {1}")
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="RUN1 as Found">
+                                            </TextInput>
+
+                                        </div>
+
+                                        
+                                        <div class="col-sm-2 linearityCol noedit">
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.ErrorRun1"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.ErrorRun1)"
+                                                       IsDisabled="true"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "RUN1ErrorTexbox_" + ITEM.SequenceID.ToString())"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Error">
+                                            </TextInput>
+
+                                        </div>
+
+                                        
+                                        <div class="col-sm-2 linearityCol noedit">
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.ClassRun1"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.text
+                                                       TValue="string"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.ClassRun1)"
+                                                       IsDisabled="true"                                                      
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() 
+                                                             + "RUN1ClassTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Class">
+                                            </TextInput>
+
+                                        </div>
+
+                                       
+                                        <div class="col-sm-2 linearityCol">
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RUN2"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RUN2)"
+                                                       IsDisabled="!Enabled"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "RUN2Texbox_" + ITEM.SequenceID.ToString())"
+                                                       ToastMessage=@("in Force  the typed value {0} was rounded to {1}")
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="RUN1 As Adjusted">
+                                            </TextInput>
+
+
+                                        </div>
+
+                                      
+                                    </div>
+                                </div>
+
+                                <div class="col-sm" >
+                                    <div class="row">
+
+                                      
+                                        <div class="col-sm-2 linearityCol noedit">
+
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RUN3"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RUN3)"
+                                                       IsDisabled="!Enabled"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "RUN3Texbox_" + ITEM.SequenceID.ToString())"
+                                                       ToastMessage=@("in Force  the typed value {0} was rounded to {1}")
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="RUN2">
+                                            </TextInput>
+
+
+
+                                        </div>
+
+                                        
+                                        <div class="col-sm-2 linearityCol noedit">
+
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RUN4"
+                                                       CSSClass="inputgrid"
+                                                       Type=@Types.numberdecimal
+                                                       TValue="double"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RUN4)"
+                                                       IsDisabled="!Enabled"
+                                                       OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.RoundToResolution"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() + "RUN4Texbox_" + ITEM.SequenceID.ToString())"
+                                                       ToastMessage=@("in Force  the typed value {0} was rounded to {1}")
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="RUN3">
+                                            </TextInput>
+
+
+
+                                        </div>
+
+
+                                       
+                                        <div class="col-sm-2 linearityCol noedit secondGrid">
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Resolution"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.number
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Resolution)"
+                                                       TValue="double"
+                                                       IsDisabled="!Enabled"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.Ceiling"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() 
+                                                             + "ResolutionTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Resolution">
+                                            </TextInput>
+                                        </div>
+                                       
+
+                                        <div class="col-sm-2 linearityCol editcolumn secondGrid">
+
+                                            @*@ITEM?.BasicCalibrationResult?.RelativeIndicationError*@
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.MaxErrorNominal"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.number
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.MaxErrorNominal)"
+                                                       TValue="double"
+                                                       IsDisabled="!Enabled"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.Ceiling"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString() 
+                                                             + "RelativeIndicationErrorTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Max Error">
+                                            </TextInput>
+
+
+
+
+                                        </div>
+                                       
+                                        @*<div class="col-sm-1 linearityCol noedit secondGrid">
+                                           
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.RelativeRepeatabilityError"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.number
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.RelativeRepeatabilityError)"
+                                                       TValue="double"
+                                                       IsDisabled="!Enabled"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.Ceiling"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString()
+                                                             + "RelativeRepeatabilityErrorTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Rel Rep Err">
+                                            </TextInput>
+
+                                        </div>
+*@
+
+                                       
+                                        <div class="col-sm-2 linearityCol editcolumn secondGrid">
+
+
+                                            @*@ITEM?.BasicCalibrationResult?.Uncertanty*@
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Uncertanty"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.number
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Uncertanty)"
+                                                       TValue="double"
+                                                       IsDisabled="!Enabled"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.Ceiling"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString()
+                                                             + "UncertaintyTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Uncertainty">
+                                            </TextInput>
+                                        </div>
+
+
+
+
+                                       
+                                        
+                                        <div class="col-sm-1 linearityCol noedit secondGrid">
+
+                                            <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Class"
+                                                       CSSClass="@("inputgridNoBorder")"
+                                                       Type=@Types.number
+                                                       Validate="false"
+                                                       ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Class)"
+                                                       TValue="string"
+                                                       IsDisabled="!Enabled"
+                                                       StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                       DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                       DecimalRoundType="RoundType.Ceiling"
+                                                       Id="@(LTILogic.GetCalibrationSubTypeStr(eq, IsCompresion).ToString()
+                                                             + "ClassTexbox_" + ITEM.SequenceID.ToString())"
+                                                       ShowControl="RT.GetShowControl()"
+                                                       ShowLabel="RT.GetShowlabel()"
+                                                       Label="Class">
+                                            </TextInput>
+                                           
+
+
+                                        </div>
+
+
+                                      
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            @BoudValues(ITEM)
+                        </EditForm>
+                    }
+                </GridRow>
+
+            </ResponsiveTable>
+        }
+    </div>
+
+
+
+}
+
+
+
+@code {
+
+    async Task newitem(EventArgs obj)
+    {
+
+    }
+
+
+    //public string GetInvalidClass(double a,double b)
+    //{
+    //    var valid = 0d;
+    //    if (b != 0)
+    //    {
+    //        valid = (a % b);
+    //    }
+    //    else
+    //    {
+    //        return "";
+    //    }
+    //    var c = true;
+    //    if(Math.Abs(valid) > 0)
+    //    {
+    //        c=  Math.Abs(valid % 1) <= (Double.Epsilon * 100);
+    //    }
+
+    //    var cssinvalid = "";
+    //    if (valid != 0 && !c )
+    //    {
+    //        cssinvalid = "inputinvalid";
+    //    }
+    //    return cssinvalid;
+    //}
+
+
+}

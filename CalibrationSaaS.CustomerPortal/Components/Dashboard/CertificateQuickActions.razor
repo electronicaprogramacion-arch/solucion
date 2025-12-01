@@ -1,0 +1,214 @@
+@using CalibrationSaaS.CustomerPortal.Services.Certificates
+@using CalibrationSaaS.CustomerPortal.Services.Downloads
+
+<RadzenCard Class="rz-p-4">
+    <RadzenStack Gap="1rem">
+        <RadzenText TextStyle="TextStyle.H6">Certificate Quick Actions</RadzenText>
+        
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
+            <RadzenButton Text="Search Certificates" Icon="search" ButtonStyle="ButtonStyle.Primary" 
+                         Click="@(() => Navigation.NavigateTo("/certificates"))" />
+            
+            <RadzenButton Text="Download All" Icon="download" ButtonStyle="ButtonStyle.Secondary" 
+                         Click="@DownloadAllCertificates" IsBusy="@isDownloadingAll" />
+            
+            <RadzenButton Text="Compliance Report" Icon="assessment" ButtonStyle="ButtonStyle.Info" 
+                         Click="@(() => Navigation.NavigateTo("/reports/compliance"))" />
+            
+            <RadzenButton Text="Due Date Report" Icon="event" ButtonStyle="ButtonStyle.Warning" 
+                         Click="@(() => Navigation.NavigateTo("/reports/due-dates"))" />
+        </RadzenStack>
+
+        <!-- Quick Filters -->
+        <RadzenFieldset Text="Quick Filters">
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <RadzenButton Text="Recent" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" 
+                             Click="@(() => NavigateToFilteredCertificates("recent"))" />
+                
+                <RadzenButton Text="Expiring Soon" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" 
+                             Click="@(() => NavigateToFilteredCertificates("expiring"))" />
+                
+                <RadzenButton Text="Non-Compliant" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" 
+                             Click="@(() => NavigateToFilteredCertificates("non-compliant"))" />
+                
+                <RadzenButton Text="This Month" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" 
+                             Click="@(() => NavigateToFilteredCertificates("this-month"))" />
+                
+                <RadzenButton Text="Last 30 Days" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" 
+                             Click="@(() => NavigateToFilteredCertificates("last-30-days"))" />
+            </RadzenStack>
+        </RadzenFieldset>
+
+        <!-- Download History -->
+        @if (showDownloadHistory && downloadHistory?.Any() == true)
+        {
+            <RadzenFieldset Text="Recent Downloads">
+                <RadzenStack Gap="0.5rem">
+                    @foreach (var download in downloadHistory.Take(3))
+                    {
+                        <RadzenCard Class="rz-p-2" Style="background-color: var(--rz-base-50);">
+                            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                                <RadzenStack Gap="0.25rem">
+                                    <RadzenText TextStyle="TextStyle.Body2" Class="rz-font-weight-bold">
+                                        @download.FileName
+                                    </RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                                        @download.DownloadDate.ToString("MMM dd, yyyy HH:mm")
+                                    </RadzenText>
+                                </RadzenStack>
+                                <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                                    @FormatFileSize(download.FileSize)
+                                </RadzenText>
+                            </RadzenStack>
+                        </RadzenCard>
+                    }
+                    
+                    @if (downloadHistory.Count > 3)
+                    {
+                        <RadzenButton Text="View All Downloads" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" 
+                                     Click="@(() => Navigation.NavigateTo("/downloads/history"))" />
+                    }
+                </RadzenStack>
+            </RadzenFieldset>
+        }
+
+        <!-- Toggle Download History -->
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+            <RadzenButton Text="@GetDownloadHistoryButtonText()"
+                         Icon="@GetDownloadHistoryButtonIcon()"
+                         ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                         Click="@ToggleDownloadHistory" />
+        </RadzenStack>
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter] public int CustomerId { get; set; }
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private IDownloadService DownloadService { get; set; } = default!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private NotificationService NotificationService { get; set; } = default!;
+    [Inject] private ILogger<CertificateQuickActions> Logger { get; set; } = default!;
+
+    private bool isDownloadingAll = false;
+    private bool showDownloadHistory = false;
+    private List<DownloadHistoryEntry>? downloadHistory;
+
+    private async Task DownloadAllCertificates()
+    {
+        try
+        {
+            isDownloadingAll = true;
+            StateHasChanged();
+
+            var result = await DownloadService.DownloadAllCertificatesAsync(CustomerId);
+
+            if (result.Success && result.FileData != null)
+            {
+                await JSRuntime.InvokeVoidAsync("downloadFile", 
+                    result.FileName, 
+                    result.ContentType, 
+                    Convert.ToBase64String(result.FileData));
+
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Download Started",
+                    Detail = $"All certificates download ({result.FileName}) has started.",
+                    Duration = 5000
+                });
+
+                // Refresh download history
+                if (showDownloadHistory)
+                {
+                    await LoadDownloadHistory();
+                }
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Download Failed",
+                    Detail = result.ErrorMessage ?? "Failed to download certificates.",
+                    Duration = 5000
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error downloading all certificates for customer {CustomerId}", CustomerId);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Download Error",
+                Detail = "An error occurred while downloading certificates.",
+                Duration = 5000
+            });
+        }
+        finally
+        {
+            isDownloadingAll = false;
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToFilteredCertificates(string filter)
+    {
+        var queryParams = filter switch
+        {
+            "recent" => "?sortBy=IssueDate&sortDirection=desc",
+            "expiring" => "?filter=expiring",
+            "non-compliant" => "?compliance=false",
+            "this-month" => $"?dateFrom={DateTime.Now:yyyy-MM-01}&dateTo={DateTime.Now:yyyy-MM-dd}",
+            "last-30-days" => $"?dateFrom={DateTime.Now.AddDays(-30):yyyy-MM-dd}&dateTo={DateTime.Now:yyyy-MM-dd}",
+            _ => ""
+        };
+
+        Navigation.NavigateTo($"/certificates{queryParams}");
+    }
+
+    private async Task ToggleDownloadHistory()
+    {
+        showDownloadHistory = !showDownloadHistory;
+        
+        if (showDownloadHistory && downloadHistory == null)
+        {
+            await LoadDownloadHistory();
+        }
+    }
+
+    private async Task LoadDownloadHistory()
+    {
+        try
+        {
+            var historyResponse = await DownloadService.GetDownloadHistoryAsync(CustomerId, 1, 10);
+            downloadHistory = historyResponse.Downloads;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading download history for customer {CustomerId}", CustomerId);
+        }
+    }
+
+    private string GetDownloadHistoryButtonText()
+    {
+        return showDownloadHistory ? "Hide Download History" : "Show Download History";
+    }
+
+    private string GetDownloadHistoryButtonIcon()
+    {
+        return showDownloadHistory ? "expand_less" : "expand_more";
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes == 0) return "0 Bytes";
+
+        const int k = 1024;
+        var sizes = new[] { "Bytes", "KB", "MB", "GB" };
+        var i = (int)Math.Floor(Math.Log(bytes) / Math.Log(k));
+
+        return $"{Math.Round(bytes / Math.Pow(k, i), 1)} {sizes[i]}";
+    }
+}

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Store\Features\Todos\Actions\LoadTodoDetail\**" />
+    <EmbeddedResource Remove="Store\Features\Todos\Actions\LoadTodoDetail\**" />
+    <None Remove="Store\Features\Todos\Actions\LoadTodoDetail\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Store\Features\Todos\Effects\LoadTodoDetailEffect.cs" />
+    <Compile Remove="Store\Features\Todos\Reducers\LoadTodoDetailActionsReducer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fluxor" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Helpers\Helpers.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,285 @@
+@page "/Log"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Settings
+@inherits Log_SearchBase
+@implements IDisposable
+@using System.Linq.Expressions
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using Microsoft.Extensions.Configuration
+@using Radzen
+@using Radzen.Blazor
+@inject IConfiguration Configuration
+@inject ILogger<Log_Search> Logger
+
+<link href="~/css/audit-log.css" rel="stylesheet" />
+
+<div class="col-med audit-log-container">
+    <HeaderComponent ActionBar="true" Enabled="true" Title="Audit Log"></HeaderComponent>
+    
+    <div class="contenido">
+        <div id="accordion">
+            <!-- Search Filters Card -->
+            <div class="card">
+                <div class="card-header" id="headingSearch">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseSearch" 
+                                @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseSearch">
+                            Search Filters
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="collapseSearch" class="collapse show" aria-labelledby="headingSearch" data-parent="#accordion">
+                    <div class="card-body">
+                        <EditForm OnSubmit="SearchAuditLogs" EditContext="@CurrentEditContext">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="form-row">
+                                <!-- Entity Type Dropdown -->
+                                <div class="form-group col-md-3">
+                                    <TextInput @bind-Value="@SelectedEntityType"
+                                               Label="Entity Type"
+                                               Type="@Types.select"
+                                               ShowDefaultOption="true"
+                                               IsDisabled="false"
+                                               LabelDown="false">
+                                        @if (EntityTypes != null)
+                                        {
+                                            @foreach (var item in EntityTypes)
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        }
+                                    </TextInput>
+                                </div>
+
+                                <!-- Entity ID Input -->
+                                <div class="form-group col-md-3">
+                                    <RadzenLabel Text="Entity ID" Component="EntityIdInput" />
+                                    <RadzenTextBox @bind-Value="@EntityId"
+                                                   Name="EntityIdInput"
+                                                   Placeholder="Enter Entity ID"
+                                                   Style="width: 100%;" />
+                                </div>
+
+                                <!-- User Name Input -->
+                                <div class="form-group col-md-3">
+                                    <RadzenLabel Text="User Name" Component="UserNameInput" />
+                                    <RadzenTextBox @bind-Value="@UserName"
+                                                   Name="UserNameInput"
+                                                   Placeholder="Enter User Name"
+                                                   Style="width: 100%;" />
+                                </div>
+
+                                <!-- Action Type Dropdown -->
+                                <div class="form-group col-md-3">
+                                    <TextInput @bind-Value="@SelectedActionType"
+                                               Label="Action Type"
+                                               Type="@Types.select"
+                                               ShowDefaultOption="true"
+                                               IsDisabled="false"
+                                               LabelDown="false">
+                                        @if (ActionTypes != null)
+                                        {
+                                            @foreach (var item in ActionTypes)
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        }
+                                    </TextInput>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <!-- From Date -->
+                                <div class="form-group col-md-3">
+                                    <RadzenLabel Text="From Date" Component="FromDatePicker" />
+                                    <RadzenDatePicker @bind-Value="@FromDate"
+                                                      Name="FromDatePicker"
+                                                      ShowTime="true"
+                                                      DateFormat="MM/dd/yyyy HH:mm"
+                                                      Style="width: 100%;" />
+                                </div>
+
+                                <!-- To Date -->
+                                <div class="form-group col-md-3">
+                                    <RadzenLabel Text="To Date" Component="ToDatePicker" />
+                                    <RadzenDatePicker @bind-Value="@ToDate"
+                                                      Name="ToDatePicker"
+                                                      ShowTime="true"
+                                                      DateFormat="MM/dd/yyyy HH:mm"
+                                                      Style="width: 100%;" />
+                                </div>
+
+                                <!-- Client IP Address Input -->
+                                <div class="form-group col-md-3">
+                                    <RadzenLabel Text="Client IP Address" Component="ClientIpInput" />
+                                    <RadzenTextBox @bind-Value="@ClientIpAddress"
+                                                   Name="ClientIpInput"
+                                                   Placeholder="Enter IP Address"
+                                                   Style="width: 100%;" />
+                                </div>
+
+                                <!-- Empty columns to maintain layout -->
+                                <div class="form-group col-md-3"></div>
+                            </div>
+
+                            <div class="form-row mt-3">
+                                <div class="form-group col-md-12">
+                                    <RadzenButton ButtonType="Radzen.ButtonType.Submit"
+                                                  Icon="search"
+                                                  Text="Search"
+                                                  ButtonStyle="ButtonStyle.Primary"
+                                                  Size="ButtonSize.Medium" />
+
+                                    <RadzenButton ButtonType="Radzen.ButtonType.Button"
+                                                  Icon="clear"
+                                                  Text="Clear"
+                                                  ButtonStyle="ButtonStyle.Light"
+                                                  Size="ButtonSize.Medium"
+                                                  Click="@ClearFilters"
+                                                  Style="margin-left: 10px;" />
+                                </div>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Card -->
+            <div class="card">
+                <div class="card-header" id="headingResults">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseResults" 
+                                @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseResults">
+                            Audit Log Results (@AuditLogs.Count)
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="collapseResults" class="collapse show" aria-labelledby="headingResults" data-parent="#accordion">
+                    <div class="card-body">
+                        @if (IsLoading)
+                        {
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                                <p>Loading audit logs...</p>
+                            </div>
+                        }
+                        else if (HasSearched)
+                        {
+                            <RadzenDataGrid @ref="AuditLogGrid"
+                                            Data="@AuditLogs"
+                                            TItem="AuditLogEntry"
+                                            AllowPaging="true"
+                                            PageSize="20"
+                                            AllowSorting="true"
+                                            AllowFiltering="false"
+                                            PagerHorizontalAlign="HorizontalAlign.Left"
+                                            ShowPagingSummary="true"
+                                            PageSizeOptions="@(new int[] { 10, 20, 50, 100 })"
+                                            Style="width: 100%;">
+                                <Columns>
+                                    <RadzenDataGridColumn TItem="AuditLogEntry" Property="Timestamp" Title="Timestamp" Width="180px">
+                                        <Template Context="entry">
+                                            @entry.Timestamp.ToString("MM/dd/yyyy HH:mm:ss")
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn TItem="AuditLogEntry" Property="UserName" Title="User" Width="150px" />
+                                    <RadzenDataGridColumn TItem="AuditLogEntry" Property="EntityType" Title="Entity Type" Width="120px" />
+                                    <RadzenDataGridColumn TItem="AuditLogEntry" Property="EntityId" Title="Entity ID" Width="100px" />
+                                    <RadzenDataGridColumn TItem="AuditLogEntry" Property="ActionType" Title="Action" Width="100px">
+                                        <Template Context="entry">
+                                            @if (entry.ActionType == "Insert")
+                                            {
+                                                <span class="badge badge-success">Created</span>
+                                            }
+                                            else if (entry.ActionType == "Update")
+                                            {
+                                                <span class="badge badge-warning">Updated</span>
+                                            }
+                                            else if (entry.ActionType == "Delete")
+                                            {
+                                                <span class="badge badge-danger">Deleted</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-info">@entry.ActionType</span>
+                                            }
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn TItem="AuditLogEntry" Property="ExecutionDuration" Title="Duration (ms)" Width="120px">
+                                        <Template Context="entry">
+                                            @if (entry.ExecutionDuration > 0)
+                                            {
+                                                <span class="@(entry.ExecutionDuration > 1000 ? "text-warning" : entry.ExecutionDuration > 5000 ? "text-danger" : "text-muted")">
+                                                    @entry.ExecutionDuration ms
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn TItem="AuditLogEntry" Property="ClientIpAddress" Title="IP Address" Width="130px">
+                                        <Template Context="entry">
+                                            @if (!string.IsNullOrEmpty(entry.ClientIpAddress))
+                                            {
+                                                <span class="text-monospace">@entry.ClientIpAddress</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                    <RadzenDataGridColumn TItem="AuditLogEntry" Property="CurrentState" Title="Data" Width="300px" Sortable="false">
+                                        <Template Context="entry">
+                                            @if (!string.IsNullOrEmpty(entry.CurrentState))
+                                            {
+                                                <div class="audit-data-cell">
+                                                    <div class="audit-data-preview">
+                                                        @(TruncateJson(entry.CurrentState, 100))
+                                                    </div>
+                                                    <RadzenButton ButtonType="Radzen.ButtonType.Button"
+                                                                  Icon="visibility"
+                                                                  Text="View"
+                                                                  ButtonStyle="ButtonStyle.Primary"
+                                                                  Size="ButtonSize.Small"
+                                                                  Click="@(() => ViewCurrentState(entry))"
+                                                                  Style="margin-top: 5px;" />
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No data</span>
+                                            }
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                </Columns>
+                            </RadzenDataGrid>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info" role="alert">
+                                <i class="fas fa-info-circle"></i>
+                                No audit log entries found matching the specified criteria.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JSON Viewer Modal -->
+<RadzenDialog />
+
+@code {
+    
+}

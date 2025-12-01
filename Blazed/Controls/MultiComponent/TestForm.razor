@@ -1,0 +1,168 @@
+﻿@using Bogus
+@using Blazed.Controls
+@using System.Linq
+@using System.Linq.Expressions
+<FormGenerator FEntity="@exa">
+
+</FormGenerator>
+
+
+
+
+@code
+{
+
+
+    public static Expression<Func<Customer, bool>> RuleTest()
+    {
+        Expression<Func<Customer, bool>> exprTree = x => x.CustomerID == 2;
+        return exprTree;
+    }
+
+
+    public static Expression<Func<int, bool>> RuleTestPrperty()
+    {
+        Expression<Func<int, bool>> exprTree = x => x.Equals(2);
+        return exprTree;
+    }
+
+
+    Customer customer;
+
+    public Faker<Domain.Aggregates.Entities.Customer> exa = new Faker<Domain.Aggregates.Entities.Customer>();
+
+    public async Task<Customer> testasync()
+    {
+        customer = new Domain.Aggregates.Entities.Customer();
+        customer.Name = "este ";
+        await Task.Delay(100);
+        return customer;
+    }
+
+
+    public bool FirstGenerate;
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        exa.CustomInstantiatorAsync(f => testasync())
+            .RuleFor(x => x.Name, notesexample)
+            .RuleFor(x => x.Description, notesexample2x);
+        //.RuleFor(x => x.CustomerID, "", notesexample3, notesexample4);
+
+        customer = await exa.GenerateAsync();
+
+        FirstGenerate = true;
+
+    }
+
+    async Task<ViewProperty<string>> notesexample(Faker f, Customer poe)
+    {
+
+        ViewProperty<string> viewPropertyt = new ViewProperty<string>();
+
+        viewPropertyt.Value = poe.Name + "xxxx";
+
+        viewPropertyt.ControlType = Types.text;
+
+        await Task.Delay(1000);
+        //poe.Description = "hola mundo" + poe.Name;
+
+        return viewPropertyt;
+
+
+    }
+
+    async Task<ViewProperty<string>> notesexample2x(Faker f, Customer poe)
+    {
+
+        ViewProperty<string> viewPropertyt = new ViewProperty<string>();
+
+        viewPropertyt.ControlType = Types.text;
+
+        viewPropertyt.ReGenerate = true;
+
+        viewPropertyt.Display = "Description";
+
+        if (poe.Description == "chupalo")
+        {
+            viewPropertyt.IsValid = false;
+
+            viewPropertyt.ErrorMesage = "error chupalo";
+
+            poe.Description = "";
+
+            viewPropertyt.Value = poe.Description;
+
+        }
+
+        viewPropertyt.Value = poe.Description;
+
+        return viewPropertyt;
+
+
+    }
+
+    async Task<ViewProperty<int>> notesexample3(Faker f, Customer poe)
+    {
+
+        ViewProperty<int> viewPropertyt = new ViewProperty<int>();
+
+        viewPropertyt.ControlType = Types.select;
+
+        viewPropertyt.ReGenerate = true;
+
+        viewPropertyt.Display = "Description";
+
+        Dictionary<int, string> dic = new Dictionary<int, string>();
+
+        dic.Add(1, 1.ToString());
+        dic.Add(2, 2.ToString());
+        dic.Add(3, 3.ToString());
+
+        viewPropertyt.Options = dic;
+        if (poe.CustomerID.SelectSingle(RuleTestPrperty()))
+        {
+            viewPropertyt.Value = poe.CustomerID;
+        }
+
+
+        poe.SelectSingle(RuleTest());
+
+        return viewPropertyt;
+
+
+    }
+
+    async Task<ViewProperty<int>> notesexample4(Faker f, Customer poe)
+    {
+
+        ViewProperty<int> viewPropertyt = new ViewProperty<int>();
+
+        viewPropertyt.ControlType = Types.select;
+
+        viewPropertyt.ReGenerate = true;
+
+        viewPropertyt.Display = "Description";
+
+        Dictionary<int, string> dic = new Dictionary<int, string>();
+
+        dic.Add(1, 1.ToString());
+        dic.Add(2, 2.ToString());
+        dic.Add(3, 3.ToString());
+
+        viewPropertyt.Options = dic;
+        if (poe.CustomerID.SelectSingle(RuleTestPrperty()))
+        {
+            viewPropertyt.Value = poe.CustomerID;
+        }
+
+
+        poe.SelectSingle(RuleTest());
+
+        return viewPropertyt;
+
+
+    }
+
+}

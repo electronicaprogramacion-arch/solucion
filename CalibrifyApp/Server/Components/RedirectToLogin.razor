@@ -1,0 +1,24 @@
+@namespace CalibrifyApp.Server.Components
+@inject NavigationManager Navigation
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Get current URL for return URL
+        var currentUrl = Navigation.Uri;
+
+        Console.WriteLine($"CalibrifyApp.Server RedirectToLogin triggered from URL: {currentUrl}");
+
+        // Prevent redirect loops - if already on login page, do nothing
+        if (currentUrl.Contains("/Account/Login") || currentUrl.Contains("/authentication/"))
+        {
+            Console.WriteLine("Already on login page, skipping redirect");
+            return;
+        }
+
+        // Redirect to the correct server-side login page (not WebAssembly authentication)
+        var returnUrl = Uri.EscapeDataString(currentUrl);
+        Console.WriteLine($"Redirecting to Account/Login with return URL: {returnUrl}");
+        Navigation.NavigateTo($"Account/Login?returnUrl={returnUrl}", forceLoad: false);
+    }
+}

@@ -1,0 +1,146 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
+using System.Text;
+
+namespace Helpers.Controls
+{
+
+
+    [DataContract]
+    public class KeyValueOption
+    {
+        public KeyValueOption()
+        {
+
+        }
+        public KeyValueOption(string key, string value,string option)
+        {
+
+            Key= key;   
+            Value= value;   
+            Option= option; 
+
+
+        }
+
+        [NotMapped]
+        [DataMember(Order = 1)]
+        public string Key { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 2)]
+        public string Value { get; set; }
+
+
+        [NotMapped]
+        [DataMember(Order = 3)]
+        public string Option { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 4)]
+        public int? CalibrationTypeID { get; set; }
+
+
+        [NotMapped]
+        [DataMember(Order = 5)]
+        public string Fields { get; set; }
+
+
+    }
+
+
+
+
+    [DataContract]
+    public class KeyValue2
+    {
+        public KeyValue2()
+        {
+
+        }
+        public KeyValue2(int Key, string value)
+        {
+
+        }
+
+        [NotMapped]
+        [DataMember(Order = 2)]
+        public int Key { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 1)]
+        public string Value { get; set; }
+
+       
+    }
+
+
+
+    [DataContract]
+    public class KeyValue 
+    {
+        public KeyValue()
+        {
+
+        }
+        public KeyValue(string Key, string value)
+        {
+          
+        }
+        [NotMapped]
+        [DataMember(Order = 1)]
+        public string Key { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 2)]
+        public int Value { get; set; }
+    }
+    [DataContract]
+    public class KeyValueDate 
+    {
+        public KeyValueDate()
+        {
+
+        }
+        public KeyValueDate(string Key, string value)
+        {
+
+        }
+        [NotMapped]
+        [DataMember(Order = 1)]
+        public DateTime Key { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 2)]
+        public int Value { get; set; }
+    }
+
+    [DataContract]
+    public class KeyValueSearch 
+    {
+        public KeyValueSearch()
+        {
+
+        }
+        public KeyValueSearch(string Key, string value)
+        {
+
+        }
+        [NotMapped]
+        [DataMember(Order = 1)]
+        public string Type { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 2)]
+        public string Link { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 3)]
+        public string Fields { get; set; }
+    }
+
+
+
+}

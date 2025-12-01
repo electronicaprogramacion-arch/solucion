@@ -1,0 +1,596 @@
+﻿@model CalibrationSaaS.Reports.Infraestructure.APIRep.ViewModels.ForceViewModel
+
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Report LTI</title>
+
+    <style>
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            font-size: 12px;
+            line-height: 24px;
+            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            color: #555;
+        }
+
+            .invoice-box table {
+                width: 100%;
+                line-height: inherit;
+                text-align: center;
+                border-collapse: collapse;
+                    border-spacing:unset;
+                    text-indent:unset;
+            }
+
+                .invoice-box table td {
+                    vertical-align: top;
+                }
+
+               
+                .invoice-box table tr.top table td.title {
+                    font-size: 45px;
+                    line-height: 45px;
+                    color: #333;
+                }
+
+                .invoice-box table tr.information table td {
+                    padding-bottom: 30px;
+                }
+
+                .invoice-box table tr.heading td {
+                    background: #eee;
+                    border: 1px solid #0c0c0c;
+                    font-weight: bold;
+                }
+                .table-header{
+                    text-align:left;
+                }
+
+                 aside{
+        float: right;
+        width: 40%;
+        text-align:center;
+
+    }
+     section{
+        float: left;
+        width: 60%
+    }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="invoice-box">
+            <table cellpadding="0" cellspacing="0">
+                <tr class="top">
+                    <td>
+                        <table>
+                            <tr>
+                                <td style="text-align:left">
+                                    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4RDaRXhpZgAATU0AKgAAAAgABAE7AAIAAAAFAAAISodpAAQAAAABAAAIUJydAAEAAAAKAAAQyOocAAcAAAgMAAAAPgAAAAAc6gAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEFjZXIAAAAFkAMAAgAAABQAABCekAQAAgAAABQAABCykpEAAgAAAAM0NwAAkpIAAgAAAAM0NwAA6hwABwAACAwAAAiSAAAAABzqAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAyMjowNDoxMyAxNzowMToxMQAyMDIyOjA0OjEzIDE3OjAxOjExAAAAQQBjAGUAcgAAAP/hCxdodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0n77u/JyBpZD0nVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkJz8+DQo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIj48cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIi8+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iPjx4bXA6Q3JlYXRlRGF0ZT4yMDIyLTA0LTEzVDE3OjAxOjExLjQ2NzwveG1wOkNyZWF0ZURhdGU+PC9yZGY6RGVzY3JpcHRpb24+PHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9InV1aWQ6ZmFmNWJkZDUtYmEzZC0xMWRhLWFkMzEtZDMzZDc1MTgyZjFiIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iPjxkYzpjcmVhdG9yPjxyZGY6U2VxIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpsaT5BY2VyPC9yZGY6bGk+PC9yZGY6U2VxPg0KCQkJPC9kYzpjcmVhdG9yPjwvcmRmOkRlc2NyaXB0aW9uPjwvcmRmOlJERj48L3g6eG1wbWV0YT4NCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgPD94cGFja2V0IGVuZD0ndyc/Pv/bAEMABwUFBgUEBwYFBggHBwgKEQsK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" style="width:100%; max-width:150px;" />
+                                </td>
+
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr class="information">
+                    <td colspan="7">
+                        <table>
+                            <tr>
+                                <td style="text-align:left">
+
+                                    @Model.Address , @Model.City , @Model.Country<br>
+                                    TEL: 90890800 | FAX:4235435 |yyyyy@gmail.com
+                                </td>
+
+                                <td style="text-align:right">
+                                    <b>LTI Order: @Model.Id</b><br>
+                                    <b>Revision: 1 | Rev Date: @Model.CreatedAt
+
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </header>
+    <div class="invoice-box">
+        <hr color="black">
+        <h2>Customer</h2>
+        <table>
+            <tr class="heading">
+                <td>
+                    Customer Id
+                </td>
+                <td>
+                    Name
+                </td>
+
+                <td>
+                    Address
+                </td>
+
+            </tr>
+            <tr class="item">
+                <td>
+                    @Model.customer.CustomerID
+                </td>
+                <td>
+                    @Model.customer.Name
+                </td>
+
+                <td>
+                   @Model.address.StreetAddress1 <br />
+                    @Model.address.State <br />
+                     @Model.address.Country <br />
+                </td>
+
+            </tr>
+        </table>
+        <hr color="red">
+        <h2>Piece Of Equipment</h2>
+        <table>
+            <tr class="heading">
+                <td>
+                    PoE Id
+                </td>
+                <td>
+                    Serial #
+                </td>
+
+                <td>
+                    Capacity
+                </td>
+                <td>
+                    Resolution
+                </td>
+
+                <td>
+                    Calibration Date
+                </td>
+                 <td>
+                    Due Date
+                </td>
+
+            </tr>
+             <tr class="item">
+                <td>
+                    @Model.pieceOfEquipment.PieceOfEquipmentID
+                </td>
+                <td>
+                    @Model.pieceOfEquipment.SerialNumber
+                </td>
+
+                <td>
+                    @Model.pieceOfEquipment.Capacity
+                </td>
+                <td>
+                    @Model.pieceOfEquipment.Resolution
+                </td>
+
+                <td>
+                    @Model.pieceOfEquipment.CalibrationDate
+                </td>
+
+                 <td>
+                    @Model.pieceOfEquipment.DueDate
+                </td>
+
+            </tr>
+        </table>
+        <hr color="red">
+        <h2>Standards</h2>
+        <table>
+            <tr class="heading">
+                <td>
+                    PoE Id
+                </td>
+                <td>
+                    Serial #
+                </td>
+
+                <td>
+                    Capacity
+                </td>
+                <td>
+                    Resolution
+                </td>
+
+                <td>
+                    Due Date
+                </td>
+
+            </tr>
+        </table>
+         <hr color="red">
+        <h2>LTI Statements</h2>
+        <p style="text-align:justify; line-height:100%">The services performed herein were done in accordance with LTIs QualitySystem Program Manual Revision 21 dated 5/1/2019 and ISO/IEC17025:2017. These results relate onlyto the items tested and this
+report shall not be reproduced, except in full,without the written approval of LaboratoryTesting, Inc. The services provided on this test report have been performed in conformance with the customer's purchase
+order requirements. L.T.I. is accredited byNadcap for NDTand Materials Testing for the test methods and specific services as listed in the Scopes of Accreditation available atwww.labtesting.com and
+www.eAuditNet.com. The results reported on this test report represent the actual attributes of the material tested and indicate full compliance with all applicable specification and contract requirements. This is a
+shared risk decision rule which the customer also has responsibilityfor determining acceptance of the results.
+MERCURYCONTAMINATION:During the testing and inspection, the product did not come in direct contactwith mercuryor anyof its compounds nor with anymercurycontaining devices employing a single
+boundaryof containment.
+NOTE:The recording of false, fictitious or fraudulent statements or entries on this document maybe punishable as a felonyunder Federal Statutes.
+
+        </p>
+    </div>
+
+    @if(@Model.ShowUniversal == "hidden")
+    {
+        <div class="invoice-box" style="page-break-before:always">
+            <h2>Tension</h2>
+            <table>
+                <tr class="heading">
+                    <td>
+                        Standard Id
+                    </td>
+                    <td>
+                        Nominal
+                    </td>
+
+                    <td>
+                        Run1 <br/>
+                        As Found
+                    </td>
+                    <td>
+                        Class <br/>
+                        As Found
+                    </td>
+                    <td>
+                        Error % <br/>
+                        As Found
+                    </td>
+                    <td>
+                        Run1 <br/>
+                        As Adjusted
+                    </td>
+                    <td>
+                        Run2
+                    </td>
+                    <td>
+                        Run3
+                    </td>
+                    <td>
+                        Rel Ind Error
+                    </td>
+                    <td>
+                        Rep Ind Error
+                    </td>
+                    <td>
+                        Max Error%
+                    </td>
+                    <td>
+                        Class
+                    </td>
+                     <td>
+                        Uncertainty
+                    </td>
+                </tr>
+
+                @if (@Model.Tension != null)
+                {
+                    foreach (var item in Model.Tension)
+                    {
+                        <tr class="item">
+                            <td>
+                                @item.StandardId
+                            </td>
+                            <td>
+                                @item.Nominal
+                            </td>
+
+                            <td>
+                                @item.Run1
+                            </td>
+                            <td>
+                                @item.ClassRun1
+                            </td>
+                            <td>
+                                @item.ErrorRun1_
+                            </td>
+                            <td>
+                                @item.Run2
+                            </td>
+                            <td>
+                                @item.Run3
+                            </td>
+                            <td>
+                                @item.Run4
+                            </td>
+                            <td>
+                                @item.RelativeIndicationError
+                            </td>
+                            <td>
+                                @item.RepeatabilitiIndicationError
+                            </td>
+                            <td>
+                                @item.MaxError
+                            </td>
+                            <td>
+                                @item.Class
+                            </td>
+                             <td>
+                                @item.Uncertainty
+                            </td>
+                        </tr>
+                    }
+                }
+            </table>
+      
+        </div>
+        }
+         @if(@Model.ShowUniversal == "hidden")
+         {
+         <div class="invoice-box" style="page-break-before:always">
+        
+    
+             <h2>Compression</h2>
+            <table>
+                <tr class="heading">
+                    <td>
+                        Standard Id
+                    </td>
+                    <td>
+                        Nominal
+                    </td>
+
+                    <td>
+                         Run1 <br/>
+                        As Found
+                    </td>
+                    <td>
+                         Class <br/>
+                        As Found
+                    </td>
+                     <td>
+                        Error % <br/>
+                        As Found
+                    </td>
+                    <td>
+                         Run1 <br/>
+                        As Adjusted
+                    </td>
+                    <td>
+                        Run2
+                    </td>
+                    <td>
+                        Run3
+                    </td>
+                    <td>
+                        Rel Ind Error
+                    </td>
+                    <td>
+                        Rep Ind Error
+                    </td>
+                     <td>
+                        Max Error%
+                    </td>
+                    <td>
+                        Class
+                    </td>
+                     <td>
+                       Uncertainty
+                    </td>
+                </tr>
+
+                @if(@Model.Compression !=null)
+                {
+                    foreach (var item in Model.Compression)
+                    {
+                        <tr class="item">
+                            <td>
+                                @item.StandardId
+                            </td>
+                            <td>
+                                @item.Nominal
+                            </td>
+
+                            <td>
+                                @item.Run1
+                            </td>
+                             <td>
+                                @item.ClassRun1
+                            </td>
+                             <td>
+                                @item.ErrorRun1_
+                            </td>
+                            <td>
+                                @item.Run2
+                            </td>
+                            <td>
+                                @item.Run3
+                            </td>
+                            <td>
+                                @item.Run4
+                            </td>
+                            <td>
+                                @item.RelativeIndicationError
+                            </td>
+                            <td>
+                                @item.RepeatabilitiIndicationError
+                            </td>
+                            <td>
+                               @item.MaxError
+                            </td>
+                            <td>
+                               @item.Class
+                            </td>
+                             <td>
+                                @item.Uncertainty
+                            </td>
+                        </tr>
+                            }
+                }
+            </table>
+      
+        </div>
+        }
+      @if(@Model.ShowUniversal != "hidden")
+      {
+         <div id="universaldiv" class="invoice-box" style="page-break-before:always">
+        
+    
+             <h2>Universal</h2>
+            <table>
+                <tr class="heading">
+                    <td>
+                        Standard Id
+                    </td>
+                    <td>
+                        Nominal
+                    </td>
+
+                     <td>
+                         Run1 <br/>
+                        As Found
+                    </td>
+                     <td>
+                         Class <br/>
+                        As Found
+                    </td>
+                     <td>
+                        Error % <br/>
+                        As Found
+                    </td>
+                    <td>
+                         Run1 <br/>
+                        As Adjusted
+                    </td>
+                    <td>
+                        Run2
+                    </td>
+                    <td>
+                        Run3
+                    </td>
+                    <td>
+                        Rel Ind Error
+                    </td>
+                    <td>
+                        Rep Ind Error
+                    </td>
+                     <td>
+                        Max Error%
+                    </td>
+                    <td>
+                        Class
+                    </td>
+                    <td>
+                        Uncertainty
+                    </td>
+                </tr>
+
+                @if(@Model.Universal !=null)
+                {
+                    foreach (var item in Model.Universal)
+                    {
+                        <tr class="item">
+                            <td>
+                                @item.StandardId
+                            </td>
+                            <td>
+                                @item.Nominal
+                            </td>
+
+                            <td>
+                                @item.Run1
+                            </td>
+                             <td>
+                                @item.ClassRun1
+                            </td>
+                             <td>
+                                @item.ErrorRun1_
+                            </td>
+                            <td>
+                                @item.Run2
+                            </td>
+                            <td>
+                                @item.Run3
+                            </td>
+                            <td>
+                                @item.Run4
+                            </td>
+                            <td>
+                                @item.RelativeIndicationError
+                            </td>
+                            <td>
+                                @item.RepeatabilitiIndicationError
+                            </td>
+                            <td>
+                               @item.MaxError
+                            </td>
+                            <td>
+                               @item.Class
+                            </td>
+                             <td>
+                                @item.Uncertainty
+                            </td>
+                        </tr>
+                            }
+                }
+            </table>
+      
+        </div>
+        }
+        <div class="invoice-box">
+             <p style="text-align:justify; line-height:100%">
+                 NOTE: Calibration results may drift from documented values prior to calibration due date attributable
+                 to various factors.
+                 Results obtained apply to the UUT only and are reflective of conditions at the time of this test.
+             </p>
+             <article>
+                 <section>
+                  <p style="text-align:justify; line-height:100%">
+                 Calibration services where performed under a controlled Quality System Program Manual, Rev.21 dated 5/1/2019 wich incorporates
+                 the requirements of ISO/IEC 17025, ISO 10012-1, ANSI/NCSL Z-540-1 and MIL-STD-45662A.
+                 Material did not come into contact with mercury or mercury compounds at our facility.
+                 These results relate only to the items calibrated and this report shall not be reproduced, except in full, without the written approval
+                 of Laboratory Testing, Inc. The recording of false, fictitious or fraudulent statements or entries on this document may be punishable as a felony 
+                 under Federal Statutes. An IN TOLERANCE(Pass) or OUT OF TOLERANCE (Fail) result indicates that all measured values fall within or outside
+                 unmodified limits. The statement of compliance does not take the reported measurement uncertainty into account, excluding gage blocks.
+                
+                
+             </p>
+             </section>
+             <aside>
+                 @Model.Sign <br />
+                 <hr color="red" width=80%/>
+                 Authorized Signature
+             </aside>
+             </article>
+             
+            
+        </div>
+    
+</body>
+</html>
+<script>
+      window.onload = init();
+
+        function init() {
+            let div = document.getElementById('universaldiv');
+            if (@Model.ShowUniversal=="hidden")
+            {
+               div.style.visibility = 'hidden';
+            
+            }
+            else
+            {
+                div.style.visibility = 'visible';
+            }
+          
+            
+        }
+    </script>

@@ -1,0 +1,199 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
+using System.Text;
+
+namespace CalibrationSaaS.Domain.Aggregates.Entities
+{
+    [DataContract]
+    public class WeightSet : IGeneric
+    {
+
+
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [DataMember(Order = 1)]
+        public int WeightValue { get; set; }
+
+        [DataMember(Order = 2)]
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [Range(1, Double.PositiveInfinity, ErrorMessage = "Required")]
+        public int UnitOfMeasureID { get; set; }
+
+        [DataMember(Order = 3)]
+        public string Note { get; set; }
+
+        [DataMember(Order = 4)]
+        [StringLength(100, ErrorMessage = "Name is too long.")]
+        public string Name { get; set; } 
+
+        [DataMember(Order = 5)]
+       
+        [StringLength(100, ErrorMessage = "Name is too long.")]
+        public string Description { get; set; } 
+
+        [DataMember(Order = 6)]
+        public string PieceOfEquipmentStatus { get; set; }
+
+        [DataMember(Order = 7)]
+        public int? PieceOfEquipmentId_new { get; set; } //fk WeigthSet
+
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [DataMember(Order = 8)]
+        public double WeightNominalValue { get; set; }
+
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [DataMember(Order = 9)]
+        public double WeightActualValue { get; set; }
+
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [DataMember(Order = 10)]
+        public double CalibrationUncertValue { get; set; }
+
+        [DataMember(Order = 11)]
+        public int? UncertaintyUnitOfMeasureId { get; set; }
+
+        //[Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        //[Range(0.001, Double.PositiveInfinity, ErrorMessage = "Required")]
+        [DataMember(Order = 12)]
+        public double Divisor { get; set; }
+
+        [DataMember(Order = 13)]
+        public string Type { get; set; }
+
+        //[Required(AllowEmptyStrings = false, ErrorMessage = "Required" )]
+        [DataMember(Order = 14)]
+        public string Distribution { get; set; }
+
+        
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]       
+        [DataMember(Order = 15)]
+        public int WeightSetID { get; set; }
+
+
+        [DataMember(Order = 16)]
+        public virtual UnitOfMeasure UnitOfMeasure { get; set; }
+
+        [DataMember(Order = 17)]
+        public string PieceOfEquipmentID { get; set; }
+
+        [DataMember(Order = 18)]
+        public bool IsDelete { get; set; }
+
+        [IgnoreDataMember]
+        public virtual UnitOfMeasure UncertaintyUnitOfMeasure { get; set; }
+
+
+        [IgnoreDataMember]
+        public virtual ICollection<WOD_Weight> WOD_Weights { get; set; }
+
+        [IgnoreDataMember]
+        public virtual ICollection<WO_Weight> WO_Weights { get; set; }
+
+        [IgnoreDataMember]
+        public virtual ICollection<CalibrationSubType_Weight> CalibrationSubType_Weights { get; set; }
+
+        //[NotMapped]
+        //public int PieceOfEquipmentId { get; set; }
+
+        [NotMapped]
+        [IgnoreDataMember]
+        public double WeightNomimalConversion { get; set; }
+
+        //[NotMapped]
+        //[DataMember(Order = 18)]
+        //public string Serial { get; set; }
+
+        //[Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [DataMember(Order = 19)]
+        public string  Reference { get; set; }
+
+        [DataMember(Order = 20)]
+        public string Serial { get; set; }
+
+        [NotMapped]
+        public bool Check { get; set; }
+
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [DataMember(Order = 21)]
+        public double WeightNominalValue2 { get; set; }
+
+         [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [DataMember(Order = 22)]
+        public decimal Class { get; set; }
+
+        [DataMember(Order = 23)]
+        public double Resolution { get; set; }
+
+        [NotMapped]
+        [DataMember(Order = 24)]
+        public virtual PieceOfEquipment PieceOfEquipment { get; set; }
+
+
+        
+        [DataMember(Order = 25)]
+        public string Option { get; set; }
+
+
+        [DataMember(Order = 26)]
+        public double? MPE { get; set; }
+
+        //[DataMember(Order = 26)]
+        //public int? EccentricityCalibrationSubTypeId { get; set; }
+
+        //[DataMember(Order = 26)]
+        //public int? EccentricityWorkOrderDetailId { get; set; }
+
+        //[DataMember(Order = 26)]
+        //public int? RepeatabilityCalibrationSubTypeId { get; set; }
+
+        //[DataMember(Order = 26)]
+        //public int? RepeatabilityWorkOrderDetailId { get; set; }
+
+    }
+
+    [DataContract]
+    public class WeightSetResult
+    {
+
+        public virtual List<WeightSet> WeightSetList { get; set; }
+
+        public double CalculateWeight { get; set; }
+
+        public virtual List<WeightSet> RemoveList { get; set; }
+
+    }
+
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    [DataContract]
+    public class SelectList
+    {
+        /// <summary>
+        /// Datasource
+        /// </summary>
+        public List<WeightSet> SetList { get; set; }
+       
+        /// <summary>
+        /// Choose items
+        /// </summary>
+        public List<WeightSet> SelecList { get; set; }
+
+        /// <summary>
+        /// Items Removed
+        /// </summary>
+
+        public List<WeightSet> RemoveList { get; set; }
+
+        /// <summary>
+        /// Resul of grpc service PoeService
+        /// </summary>
+        public List<PieceOfEquipment> Result { get; set; }
+
+    }
+
+}

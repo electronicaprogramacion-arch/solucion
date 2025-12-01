@@ -1,0 +1,64 @@
+@page "/EquipmentTypeError/General"
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.JSInterop
+@using System.Threading.Tasks
+@using Blazed.Controls.Toast
+@using CalibrifyApp.Server.Services
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using Helpers.Controls
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.Extensions.Logging
+@using Radzen
+@using Radzen.Blazor
+
+@inject NavigationManager NavigationManager
+@inject ILogger<EquipmentTypeError> Logger
+@inject IToastService ToastService
+
+<PageTitle>Equipment Type Error</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header">
+                    <h3 class="text-center font-weight-light my-4">Equipment Type Error</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="alert-heading">Error Loading Equipment Type</h4>
+                        <p>There was an error loading the Equipment Type page. This could be due to a connection issue or a missing dependency.</p>
+                        <hr>
+                        <p class="mb-0">Please try again later or contact your administrator if the problem persists.</p>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-primary" @onclick="GoToHome">Go to Home</button>
+                        <button class="btn btn-secondary ml-2" @onclick="TryAgain">Try Again</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Logger.LogInformation("EquipmentTypeError page initialized");
+    }
+
+    private void GoToHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void TryAgain()
+    {
+        NavigationManager.NavigateTo("/EquipmentType");
+    }
+}

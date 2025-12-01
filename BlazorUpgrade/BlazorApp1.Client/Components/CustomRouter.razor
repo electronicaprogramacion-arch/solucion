@@ -1,0 +1,416 @@
+
+@using System.Reflection
+@namespace BlazorApp1.Client.Components
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.RenderTree
+@using BlazorApp1.Components
+
+@implements IComponent
+@implements IHandleAfterRender
+@implements IDisposable
+
+@code {
+
+
+    [Parameter] public RenderFragment<RouteData> Found { get; set; }
+
+    [Parameter]
+    public List<RouteDefinition> Routes { get; set; }
+
+    [Parameter]
+    public Assembly AppAssembly { get; set; }
+
+    [Parameter]
+    public IEnumerable<Assembly> AdditionalAssemblies { get; set; }
+
+    [Parameter]
+    public RenderFragment NotFound { get; set; }
+
+    [Parameter]
+    public RenderFragment<AuthenticationState> NotAuthorized { get; set; }
+
+    [Parameter]
+    public Type DefaultLayout { get; set; }
+
+    [Parameter]
+    public EventCallback<CustomNavigationContext> OnNavigateAsync { get; set; }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    [Inject]
+    private INavigationInterception NavigationInterception { get; set; }
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+
+    private RenderHandle _renderHandle;
+    private string _location;
+    private bool _navigationInterceptionEnabled;
+    private List<RouteInfo> _routes = new List<RouteInfo>();
+
+    public void Attach(RenderHandle renderHandle)
+    {
+        _renderHandle = renderHandle;
+        _location = NavigationManager.Uri;
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    public async Task SetParametersAsync(ParameterView parameters)
+    {
+        parameters.SetParameterProperties(this);
+
+        // if (Found == null)
+        // {
+        //     throw new InvalidOperationException($"The {nameof(ConventionRouter)} component requires a value for the parameter {nameof(Found)}.");
+        // }
+
+
+        if (Routes == null)
+        {
+            throw new InvalidOperationException("The CustomRouter requires a non-null value for the Routes parameter.");
+        }
+
+        if (AppAssembly == null)
+        {
+            throw new InvalidOperationException("The CustomRouter requires a non-null value for the AppAssembly parameter.");
+        }
+
+        // Cargar los tipos de componentes desde los nombres
+        LoadComponentTypes();
+
+        // Renderizar la ruta actual
+        await RenderRouteAsync();
+    }
+
+    private void LoadComponentTypes()
+    {
+        _routes.Clear();
+
+        var assemblies = new List<Assembly> { AppAssembly };
+        if (AdditionalAssemblies != null)
+        {
+            assemblies.AddRange(AdditionalAssemblies);
+        }
+
+        // 1. Primero cargar las rutas definidas explícitamente (tienen prioridad)
+        if (Routes != null)
+        {
+            foreach (var route in Routes)
+            {
+                Type componentType = null;
+
+                // Buscar el tipo de componente en todos los ensamblados
+                foreach (var assembly in assemblies)
+                {
+                    componentType = assembly.GetType(route.ComponentTypeName);
+                    if (componentType != null)
+                    {
+                        break;
+                    }
+                }
+
+                if (componentType != null)
+                {
+                    var routeInfo = ParseRouteTemplate(route.Path, componentType);
+                    routeInfo.StaticParameters = route.Parameters ?? new Dictionary<string, object>();
+                    _routes.Add(routeInfo);
+                    Console.WriteLine($"Registered explicit route: '{route.Path}' -> {route.ComponentTypeName}");
+                }
+                else
+                {
+                    Console.WriteLine($"Warning: Component type '{route.ComponentTypeName}' not found for explicit route '{route.Path}'");
+                }
+            }
+        }
+
+        // 2. Luego cargar rutas desde el ensamblado principal y los adicionales
+        foreach (var assembly in assemblies)
+        {
+            // Buscar todos los tipos que implementan IComponent y tienen el atributo Route
+            var componentTypes = assembly.GetExportedTypes()
+                .Where(t => typeof(IComponent).IsAssignableFrom(t) && !t.IsAbstract);
+
+            foreach (var componentType in componentTypes)
+            {
+                // Buscar atributos de ruta en el componente
+                var routeAttributes = componentType.GetCustomAttributes(typeof(RouteAttribute), inherit: false)
+                    .Cast<RouteAttribute>();
+
+                foreach (var routeAttribute in routeAttributes)
+                {
+                    var routePath = routeAttribute.Template;
+                    var routeInfo = ParseRouteTemplate(routePath, componentType);
+                    _routes.Add(routeInfo);
+                    Console.WriteLine($"Registered assembly route: '{routePath}' -> {componentType.FullName}");
+                }
+            }
+        }
+
+        Console.WriteLine($"Total routes registered: {_routes.Count}");
+    }
+
+    private RouteInfo ParseRouteTemplate(string template, Type componentType)
+    {
+        var routeInfo = new RouteInfo
+        {
+            Template = template,
+            ComponentType = componentType
+        };
+
+        // Extraer nombres de parámetros del template
+        // Buscar segmentos que estén entre llaves {}
+        var segments = template.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var segment in segments)
+        {
+            if (segment.StartsWith("{") && segment.EndsWith("}"))
+            {
+                var paramName = segment.Substring(1, segment.Length - 2);
+                routeInfo.ParameterNames.Add(paramName);
+            }
+        }
+
+        return routeInfo;
+    }
+
+    private async Task RenderRouteAsync()
+    {
+        if (!_renderHandle.IsInitialized)
+        {
+            return;
+        }
+
+        // Obtener la ruta relativa
+        var relativePath = NavigationManager.ToBaseRelativePath(_location).TrimStart('/');
+
+        // Asegurar que la ruta comience con /
+        if (!relativePath.StartsWith("/"))
+        {
+            relativePath = "/" + relativePath;
+        }
+
+        // Intentar hacer match con las rutas registradas
+        var matchResult = MatchRoute(relativePath);
+
+        if (matchResult.IsMatch)
+        {
+            // Encontramos una coincidencia, renderizar el componente
+            Console.WriteLine($"Route matched: '{relativePath}' -> {matchResult.ComponentType.FullName}");
+            await RenderComponentAsync(matchResult.ComponentType, relativePath, matchResult.Parameters);
+        }
+        else
+        {
+            // No se encontró coincidencia, renderizar NotFound
+            Console.WriteLine($"No route matched for path: '{relativePath}'");
+            await RenderComponentAsync(null, null, null, true);
+        }
+    }
+
+    private RouteMatchResult MatchRoute(string path)
+    {
+        var pathSegments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var route in _routes)
+        {
+            var templateSegments = route.Template.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            // Si el número de segmentos no coincide, no es un match
+            if (pathSegments.Length != templateSegments.Length)
+            {
+                continue;
+            }
+
+            var parameters = new Dictionary<string, object>();
+            bool isMatch = true;
+
+            // Comparar cada segmento
+            for (int i = 0; i < templateSegments.Length; i++)
+            {
+                var templateSegment = templateSegments[i];
+                var pathSegment = pathSegments[i];
+
+                if (templateSegment.StartsWith("{") && templateSegment.EndsWith("}"))
+                {
+                    // Es un parámetro, extraer el valor
+                    var paramName = templateSegment.Substring(1, templateSegment.Length - 2);
+                    parameters[paramName] = Uri.UnescapeDataString(pathSegment);
+                }
+                else
+                {
+                    // Es un segmento literal, debe coincidir exactamente
+                    if (!string.Equals(templateSegment, pathSegment, StringComparison.OrdinalIgnoreCase))
+                    {
+                        isMatch = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isMatch)
+            {
+                // Agregar parámetros estáticos si los hay
+                foreach (var staticParam in route.StaticParameters)
+                {
+                    parameters[staticParam.Key] = staticParam.Value;
+                }
+
+                return new RouteMatchResult
+                {
+                    IsMatch = true,
+                    ComponentType = route.ComponentType,
+                    Parameters = parameters
+                };
+            }
+        }
+
+        return new RouteMatchResult { IsMatch = false };
+    }
+
+    private async Task RenderComponentAsync(Type componentType, string path, IReadOnlyDictionary<string, object> routeParameters = null, bool IsNotFound = false)
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (IsNotFound)
+        {
+            _renderHandle.Render(NotFound);
+        }
+        else if (user != null && user.Identity != null && user.Identity.IsAuthenticated && componentType != null)
+        {
+            // Combinar parámetros de ruta extraídos con parámetros definidos explícitamente
+            var allParameters = new Dictionary<string, object>();
+
+            // Agregar parámetros extraídos de la URL
+            if (routeParameters != null)
+            {
+                foreach (var param in routeParameters)
+                {
+                    allParameters[param.Key] = param.Value;
+                }
+            }
+
+            // Agregar parámetros definidos explícitamente (si los hay)
+            var explicitParameters = GetRouteParameters(path);
+            if (explicitParameters != null)
+            {
+                foreach (var param in explicitParameters)
+                {
+                    // Los parámetros explícitos tienen prioridad sobre los extraídos
+                    allParameters[param.Key] = param.Value;
+                }
+            }
+
+            // Crear los datos de ruta
+            var routeData = new RouteData(componentType, allParameters);
+
+            // Usuario autenticado, renderizar la vista de ruta
+            _renderHandle.Render(BuildAuthorizedRouteView(routeData));
+        }
+        else
+        {
+            // Usuario no autenticado, renderizar el componente NotAuthorized
+            _renderHandle.Render(BuildNotAuthorizedView(authState));
+        }
+    }
+
+    private Dictionary<string, object> GetRouteParameters(string path)
+    {
+        // Buscar los parámetros para esta ruta en las rutas definidas explícitamente
+        if (Routes != null && !string.IsNullOrEmpty(path))
+        {
+            var route = Routes.FirstOrDefault(r => string.Equals(r.Path, path, StringComparison.OrdinalIgnoreCase));
+            return route?.Parameters ?? new Dictionary<string, object>();
+        }
+        return new Dictionary<string, object>();
+    }
+
+    private RenderFragment BuildAuthorizedRouteView(RouteData routeData) => builder =>
+    {
+        builder.OpenComponent<AuthorizeRouteView>(0);
+        builder.AddAttribute(1, "RouteData", routeData);
+        builder.AddAttribute(2, "DefaultLayout", DefaultLayout);
+        builder.AddAttribute(3, "NotAuthorized", NotAuthorized);
+        builder.CloseComponent();
+    };
+
+    private RenderFragment BuildNotAuthorizedView(AuthenticationState authState) => builder =>
+    {
+        builder.AddContent(0, NotAuthorized?.Invoke(authState));
+    };
+
+    public async Task OnAfterRenderAsync()
+    {
+        if (!_navigationInterceptionEnabled)
+        {
+            _navigationInterceptionEnabled = true;
+            await NavigationInterception.EnableNavigationInterceptionAsync();
+        }
+    }
+
+    private async void OnLocationChanged(object sender, LocationChangedEventArgs args)
+    {
+        _location = args.Location;
+
+        if (OnNavigateAsync.HasDelegate)
+        {
+            var navigationContext = new CustomNavigationContext(
+                NavigationManager.ToBaseRelativePath(_location).TrimStart('/'),
+                args.IsNavigationIntercepted);
+
+            await OnNavigateAsync.InvokeAsync(navigationContext);
+
+            // Si se previno la navegación predeterminada, no renderizar
+            if (navigationContext.DefaultPrevented)
+            {
+                return;
+            }
+        }
+
+        await RenderRouteAsync();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+    // Clase para definir una ruta
+    public class RouteDefinition
+    {
+        public string Path { get; set; }
+        public string ComponentTypeName { get; set; }
+        public Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>();
+    }
+
+    // Clase interna para manejar información de rutas con parámetros
+    private class RouteInfo
+    {
+        public string Template { get; set; }
+        public Type ComponentType { get; set; }
+        public List<string> ParameterNames { get; set; } = new List<string>();
+        public Dictionary<string, object> StaticParameters { get; set; } = new Dictionary<string, object>();
+    }
+
+    // Clase para el resultado del matching de rutas
+    private class RouteMatchResult
+    {
+        public bool IsMatch { get; set; }
+        public Type ComponentType { get; set; }
+        public Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>();
+    }
+    [Inject]
+    IServiceProvider Services { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (Services.GetService<AuthenticationStateProvider>() is { } db)
+        {
+            AuthenticationStateProvider = db;
+        }
+
+    }
+
+
+}
+

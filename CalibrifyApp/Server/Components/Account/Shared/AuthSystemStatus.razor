@@ -1,0 +1,280 @@
+@using Microsoft.AspNetCore.Components
+@implements IDisposable
+
+<div class="auth-status-monitor">
+    <div class="status-header">
+        <h6>🔐 Authentication System Status</h6>
+        <span class="status-badge @GetStatusClass()">@GetStatusText()</span>
+    </div>
+    
+    <div class="status-details">
+        <div class="status-item">
+            <span class="label">Uptime:</span>
+            <span class="value">@GetUptime()</span>
+        </div>
+        <div class="status-item">
+            <span class="label">Layout:</span>
+            <span class="value">LoginLayout (Stable)</span>
+        </div>
+        <div class="status-item">
+            <span class="label">Last Check:</span>
+            <span class="value">@lastCheck.ToString("HH:mm:ss")</span>
+        </div>
+        <div class="status-item">
+            <span class="label">Health:</span>
+            <span class="value health-@healthStatus.ToLower()">@healthStatus</span>
+        </div>
+    </div>
+    
+    @if (showDetails)
+    {
+        <div class="status-expanded">
+            <div class="metric">
+                <span class="metric-label">Component Renders:</span>
+                <span class="metric-value">@renderCount</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Memory Usage:</span>
+                <span class="metric-value">@memoryUsage MB</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">SignalR Status:</span>
+                <span class="metric-value status-@signalRStatus.ToLower()">@signalRStatus</span>
+            </div>
+        </div>
+    }
+    
+    <button class="toggle-details" @onclick="ToggleDetails">
+        @(showDetails ? "▼ Less" : "▶ More")
+    </button>
+</div>
+
+<style>
+    .auth-status-monitor {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        font-size: 12px;
+        z-index: 10000;
+        min-width: 250px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .status-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 8px;
+    }
+    
+    .status-header h6 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    
+    .status-badge {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .status-badge.healthy {
+        background: #28a745;
+        color: white;
+    }
+    
+    .status-badge.warning {
+        background: #ffc107;
+        color: black;
+    }
+    
+    .status-badge.error {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .status-details {
+        margin-bottom: 10px;
+    }
+    
+    .status-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+    }
+    
+    .label {
+        color: #ccc;
+    }
+    
+    .value {
+        font-weight: 600;
+    }
+    
+    .health-excellent {
+        color: #28a745;
+    }
+    
+    .health-good {
+        color: #17a2b8;
+    }
+    
+    .health-warning {
+        color: #ffc107;
+    }
+    
+    .health-critical {
+        color: #dc3545;
+    }
+    
+    .status-expanded {
+        border-top: 1px solid #333;
+        padding-top: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .metric {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+    }
+    
+    .metric-label {
+        color: #aaa;
+        font-size: 11px;
+    }
+    
+    .metric-value {
+        font-weight: 600;
+        font-size: 11px;
+    }
+    
+    .status-connected {
+        color: #28a745;
+    }
+    
+    .status-disconnected {
+        color: #dc3545;
+    }
+    
+    .status-connecting {
+        color: #ffc107;
+    }
+    
+    .toggle-details {
+        background: #333;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        cursor: pointer;
+        width: 100%;
+    }
+    
+    .toggle-details:hover {
+        background: #555;
+    }
+</style>
+
+@code {
+    private DateTime startTime = DateTime.Now;
+    private DateTime lastCheck = DateTime.Now;
+    private string healthStatus = "Excellent";
+    private bool showDetails = false;
+    private int renderCount = 0;
+    private double memoryUsage = 0;
+    private string signalRStatus = "Connected";
+    private Timer? statusTimer;
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("[AUTH STATUS] Authentication system status monitor initialized");
+        
+        // Update status every second
+        statusTimer = new Timer(UpdateStatus, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        renderCount++;
+        if (firstRender)
+        {
+            Console.WriteLine("[AUTH STATUS] Status monitor first render completed");
+        }
+    }
+
+    private void UpdateStatus(object? state)
+    {
+        lastCheck = DateTime.Now;
+        
+        // Simulate memory usage calculation
+        memoryUsage = Math.Round(GC.GetTotalMemory(false) / 1024.0 / 1024.0, 1);
+        
+        // Determine health status based on uptime and performance
+        var uptime = DateTime.Now - startTime;
+        if (uptime.TotalMinutes < 1)
+            healthStatus = "Excellent";
+        else if (uptime.TotalMinutes < 5)
+            healthStatus = "Good";
+        else if (uptime.TotalMinutes < 15)
+            healthStatus = "Warning";
+        else
+            healthStatus = "Critical";
+        
+        // Update SignalR status (simplified)
+        signalRStatus = renderCount > 0 ? "Connected" : "Disconnected";
+        
+        InvokeAsync(StateHasChanged);
+    }
+
+    private string GetUptime()
+    {
+        var uptime = DateTime.Now - startTime;
+        return $"{uptime.Minutes:D2}:{uptime.Seconds:D2}";
+    }
+
+    private string GetStatusClass()
+    {
+        return healthStatus.ToLower() switch
+        {
+            "excellent" => "healthy",
+            "good" => "healthy",
+            "warning" => "warning",
+            "critical" => "error",
+            _ => "healthy"
+        };
+    }
+
+    private string GetStatusText()
+    {
+        return healthStatus switch
+        {
+            "Excellent" => "Optimal",
+            "Good" => "Stable",
+            "Warning" => "Monitor",
+            "Critical" => "Alert",
+            _ => "Unknown"
+        };
+    }
+
+    private void ToggleDetails()
+    {
+        showDetails = !showDetails;
+    }
+
+    public void Dispose()
+    {
+        statusTimer?.Dispose();
+        Console.WriteLine("[AUTH STATUS] Status monitor disposed");
+    }
+}

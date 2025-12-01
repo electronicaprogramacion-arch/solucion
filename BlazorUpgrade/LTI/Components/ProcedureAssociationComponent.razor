@@ -1,0 +1,133 @@
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Application.Services
+@using Microsoft.Extensions.Configuration
+@inherits ProcedureAssociationComponentBase
+
+@if (ShowProcedureSection)
+{
+    <div class="row">
+        <div class="col-12">
+            <h5 class="mb-3">Related Procedures</h5>
+            
+            @if (IsLoading)
+            {
+                <div class="text-center">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="sr-only">Loading procedures...</span>
+                    </div>
+                    <span class="ms-2">Loading procedures...</span>
+                </div>
+            }
+            else
+            {
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label for="procedureSelect" class="form-label">Add Procedure</label>
+                            <select id="procedureSelect" 
+                                    class="form-control" 
+                                    disabled="@(!Enabled)"
+                                    @onchange="@OnProcedureSelected">
+                                <option value="">-- Select a Procedure --</option>
+                                @if (AvailableProcedures != null)
+                                {
+                                    @foreach (var procedure in AvailableProcedures.Where(p => !AssociatedProcedures.Any(ap => ap.ProcedureID == p.ProcedureID)))
+                                    {
+                                        <option value="@procedure.ProcedureID">@procedure.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="button" 
+                                        class="btn btn-primary btn-sm"
+                                        disabled="@(!Enabled || SelectedProcedureId == 0)"
+                                        @onclick="@AddProcedureAssociation">
+                                    <i class="fas fa-plus"></i> Add Procedure
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (AssociatedProcedures != null && AssociatedProcedures.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Procedure Name</th>
+                                    <th>Document URL</th>
+                                    <th>Associated Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var association in AssociatedProcedures.OrderBy(ap => ap.Procedure?.Name))
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@association.Procedure?.Name</strong>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(association.Procedure?.DocumentUrl))
+                                            {
+                                                <a href="@association.Procedure.DocumentUrl" 
+                                                   target="_blank" 
+                                                   class="btn btn-link btn-sm p-0">
+                                                    <i class="fas fa-external-link-alt"></i> View Document
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No document</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                @association.CreatedDate.ToString("MM/dd/yyyy")
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <button type="button" 
+                                                    class="btn btn-danger btn-sm"
+                                                    disabled="@(!Enabled)"
+                                                    @onclick="@(() => RemoveProcedureAssociation(association))"
+                                                    title="Remove association">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        No procedures are currently associated with this piece of equipment.
+                    </div>
+                }
+
+                @if (HasChanges)
+                {
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Unsaved Changes:</strong> You have made changes to procedure associations. 
+                        These changes will be saved when you save the piece of equipment.
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    // Parameters are defined in ProcedureAssociationComponentBase - no need to redeclare them here
+}

@@ -1,0 +1,145 @@
+@page "/PriceTypeDetail/{PriceTypeId:int}"
+@page "/PriceTypeEdit/{PriceTypeId:int}"
+@page "/PriceTypeCreate"
+@inherits PriceTypeDetailBase
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "HasAccess")]
+
+<HeaderComponent Title="@PageTitle" ActionBar="false"></HeaderComponent>
+
+@if (IsLoading)
+{
+    <div class="d-flex justify-content-center">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <EditForm Model="@CurrentPriceType" OnValidSubmit="@SavePriceType">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                                <TextInput @bind-value="@CurrentPriceType.Name"
+                                           IsDisabled="!Enabled"
+                                           Label="Name"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> CurrentPriceType.Name)"
+                                           Type="@Types.text"
+                                           Validate="true"
+                                           Placeholder="e.g., On Site, Laboratory, Outsourcing">
+                                </TextInput>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                                <TextInput @bind-value="@CurrentPriceType.Description"
+                                           IsDisabled="!Enabled"
+                                           Label="Description"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> CurrentPriceType.Description)"
+                                           Type="@Types.TextArea"
+                                           Validate="false"
+                                           Placeholder="Optional description for this price type">
+                                </TextInput>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <TextInput @bind-value="@CurrentPriceType.RequiresTravel"
+                                           IsDisabled="!Enabled"
+                                           Label="Requires Travel"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> CurrentPriceType.RequiresTravel)"
+                                           Type="@Types.Switch"
+                                           Validate="false">
+                                </TextInput>
+                            </div>
+                            <div class="col-sm-6">
+                                <TextInput @bind-value="@CurrentPriceType.IsActive"
+                                           IsDisabled="!Enabled"
+                                           Label="Active"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> CurrentPriceType.IsActive)"
+                                           Type="@Types.Switch"
+                                           Validate="false">
+                                </TextInput>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <small class="form-text text-muted">
+                                    When enabled, travel costs from customer addresses will be added to quote final prices
+                                </small>
+                            </div>
+                            <div class="col-sm-6">
+                                <small class="form-text text-muted">
+                                    Inactive price types won't appear in quote creation
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <TextInput @bind-Value="@CurrentPriceType.SortOrder"
+                                           IsDisabled="!Enabled"
+                                           Label="Sort Order"
+                                           LabelDown="@LabelDown"
+                                           ValidationFor="(()=> CurrentPriceType.SortOrder)"
+                                           Type="@Types.number"
+                                           Min="0"
+                                           StepResol="1"
+                                           Placeholder="0">
+                                </TextInput>
+                                <small class="form-text text-muted">
+                                    Lower numbers appear first in dropdowns
+                                </small>
+                            </div>
+                        </div>
+
+
+
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                                <button type="submit" class="btn btn-primary" disabled="@IsSaving">
+                                    @if (IsSaving)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <text>Saving...</text>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-save"></i>
+                                        <text>@(IsNewPriceType ? "Create" : "Update") Price Type</text>
+                                    }
+                                </button>
+                                <button type="button" class="btn btn-secondary ml-2" @onclick="@CancelEdit">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                                @if (!IsNewPriceType)
+                                {
+                                    <button type="button" class="btn btn-danger ml-2" @onclick="@DeletePriceType" disabled="@IsSaving">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}

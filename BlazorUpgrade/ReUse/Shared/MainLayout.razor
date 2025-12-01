@@ -1,0 +1,412 @@
+﻿@using ProtoBuf.Grpc
+@using Grpc.Core
+@using System.Security.Claims
+
+@using Helpers.Controls;
+@inherits CalibrationSaaS.Infraestructure.Blazor.Pages.Base.LayoutBase
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@inject CalibrationSaaS.Application.Services.IFileUpload fileUpload
+@inject IJSRuntime JS
+@inject NavigationManager navManager
+@* @inject HttpClient Http *@
+@* @inject CalibrationSaaS.Infraestructure.Blazor.Services.CookieThemeService CookieThemeService *@
+@inject Microsoft.Extensions.Localization.IStringLocalizer<MainLayout> L
+
+@* @if (!AppSecurity.IsReport)
+{
+    <NavMenu />
+}
+ *@
+
+<Blazed.Controls.BlazoredToasts Timeout="10"/>
+<JavaScriptInteropHandler />
+
+
+<RadzenComponents />
+
+<RadzenLayout style="grid-template-areas: 'rz-sidebar rz-header rz-sidebar-settings' 'rz-sidebar rz-submenu rz-sidebar-settings' 'rz-sidebar rz-body rz-sidebar-settings'; grid-template-rows: auto auto 1fr;">
+    <RadzenHeader>
+        <TopMenu OnSettingsClick="@SettingsSidebarToggleClick"
+                 OnSidebarToggleClick="@SidebarToggleClick" />
+    </RadzenHeader>
+
+    <!-- Added SubMenu Component -->
+    <div style="grid-area: rz-submenu;">
+        <CascadingValue Value="this">
+            <SubMenu ContextButtons="@SubMenuContent"
+                     NavigateBackClick="OnNavigateBack"
+                     NavigateForwardClick="OnNavigateForward"
+                     PinnedChanged="OnSubMenuPinnedChanged" />
+        </CascadingValue>
+    </div>
+
+    <RadzenBody Expanded="@sidebarExpanded" Style="@GetBodyStyle()">
+        <RadzenRow class="rz-mx-auto rz-px-4 rz-pt-2 rz-pt-md-4 rz-pt-lg-6 rz-pt-xl-12 rz-pb-2 rz-pb-lg-12" Style="max-width: 1440px;">
+            <RadzenColumn Size="12">
+                <CascadingValue Value="this">
+                    @Body
+                </CascadingValue>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenBody>
+    <RadzenSidebar @bind-Expanded="@sidebarExpanded" style="z-index: 2">
+        <RadzenStack AlignItems="Radzen.AlignItems.Center" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding); border-bottom: var(--rz-panel-menu-item-border);">
+            <RadzenImage Path="img/logo/Transparent Logo.svg" style="width: 100%; max-width: 300px; height: auto; max-height: 180px;" AlternateText="Calibrify App"></RadzenImage>
+        </RadzenStack>
+        <NavMenu />
+        <RadzenStack AlignItems="Radzen.AlignItems.Center" Gap="0" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding);">
+            <RadzenText Text="Calibrify v1.0.0" TextStyle="Radzen.Blazor.TextStyle.Caption" TagName="Radzen.Blazor.TagName.P" TextAlign="Radzen.TextAlign.Center" />
+            <RadzenText Text="By Kavoku LLC" TextStyle="Radzen.Blazor.TextStyle.Caption" class="rz-mb-0" TagName="Radzen.Blazor.TagName.P" TextAlign="Radzen.TextAlign.Center" />
+            <RadzenText Text="Copyright Ⓒ 2025" TextStyle="Radzen.Blazor.TextStyle.Caption" class="rz-mb-0" TagName="Radzen.Blazor.TagName.P" TextAlign="Radzen.TextAlign.Center" />
+        </RadzenStack>
+    </RadzenSidebar>
+
+    @if (settingsSidebarExpanded)
+    {
+        <div class="settings-sidebar" style="z-index: 1040; grid-area: rz-sidebar-settings;">
+            <div class="settings-content">
+                <RadzenStack AlignItems="Radzen.AlignItems.Center" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding); border-bottom: var(--rz-panel-menu-item-border);">
+                    <div class="settings-header">
+                        <RadzenText Text="Settings" TextStyle="Radzen.Blazor.TextStyle.Subtitle1" class="rz-mb-0" style="color: var(--rz-sidebar-color);" />
+                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Click="@(() => SettingsSidebarToggleClick())" />
+                    </div>
+                </RadzenStack>
+                <RadzenStack Gap="1rem" class="rz-p-4">
+                    <!-- Theme Selection -->
+                    <RadzenStack>
+                        <RadzenText TextStyle="TextStyle.Subtitle2">Theme</RadzenText>
+                        <ThemePicker />
+                    </RadzenStack>
+
+                    <!-- Language Selection -->
+                    <RadzenStack>
+                        <RadzenText TextStyle="TextStyle.Subtitle2">@L["Language"]</RadzenText>
+                        <CulturePicker />
+                    </RadzenStack>
+
+                    <!-- Font Size -->
+                    <RadzenStack>
+                        <RadzenText TextStyle="TextStyle.Subtitle2">Font Size</RadzenText>
+                        <RadzenSlider Min="80" Max="120" Step="10" @bind-Value="@fontSize" />
+                        <RadzenText TextStyle="TextStyle.Caption">@fontSize%</RadzenText>
+                    </RadzenStack>
+
+                    <!-- Notifications -->
+                    <RadzenStack>
+                        <RadzenText TextStyle="TextStyle.Subtitle2">Notifications</RadzenText>
+                        <RadzenSwitch @bind-Value="@enableNotifications" Change="@OnNotificationsChange" />
+                        <RadzenText TextStyle="TextStyle.Caption">@(enableNotifications ? "Enabled" : "Disabled")</RadzenText>
+                    </RadzenStack>
+                </RadzenStack>
+            </div>
+        </div>
+    }
+
+    <FluentDialogProvider />
+    <FluentTooltipProvider />
+
+</RadzenLayout>
+
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
+
+
+@code{
+
+    [Inject]
+    public BrowserService BrowserService { get; set; }
+
+    [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity { get; set; }
+    // [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.AppStateCompany AppState { get; set; }
+    // [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.Basic.AppState AppStateBasics { get; set; }
+    // [Inject] public CalibrationSaaS.Application.Services.IUOMService<CallContext> UOM { get; set; }
+    // [Inject] public CalibrationSaaS.Application.Services.IBasicsServices<CallContext> Basics { get; set; }
+    // [Inject] public CalibrationSaaS.Application.Services.IAssetsServices<CallContext> Assets { get; set; }
+
+    // [Inject] ILogger<MainLayout> Logger { get; set; }
+    // [Inject]
+    // public Application.Services.IWorkOrderDetailServices<CallContext> Service2 { get; set; }
+
+
+
+    // [Inject]
+    // public IAuthorizationService AuthorizationService { get; set; }
+
+
+    public bool isDifferente { get; set; }  = false;
+    private string RootUrl;
+    public string currentVersion;
+    [Inject]
+    public HttpClient Http { get; set; } = null!;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await SetDefaultCulture();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+
+        #if DEBUG
+    //Write to the console
+        #else
+            await BrowserService.EnableLog();
+        #endif
+
+            var b1 = await JSRuntime.InvokeAsync<BrowserDimension>("getDimensions");
+            //setting the initial connection statius
+            //ConnectionStatusService.ChangeConnectionStatus(true);
+
+
+            ConnectionStatusService.ConnectedChangeStatus(b1.Online, b1.Install, AppSecurity.IsNotGrpc);
+
+
+            //var User0 = await GetUser();
+
+            //if (User0.Identity == null || !User0.Identity.IsAuthenticated)
+            //{
+            //    return;
+            //}
+
+
+            // await ShowProgress();
+
+            await base.OnInitializedAsync();
+
+            Logger.LogDebug("Main");
+
+            // Only try to access HttpClient if it's available
+            if (Http != null)
+            {
+                var fileUrl = "Version/CurrentVersion.txt";
+                double versionBlazor = 0;
+
+                try
+                {
+                    currentVersion = await Http.GetStringAsync(fileUrl);
+
+                    if (currentVersion != null)
+                        versionBlazor = Convert.ToDouble(currentVersion);
+
+                    isDifferente = false;
+
+                     var versionGrpc = await fileUpload.GetLatestBlazorVersion();
+
+                    if (versionGrpc != null && versionGrpc.Version != versionBlazor)
+                    {
+                        isDifferente = true;
+                    }
+                }
+                catch
+                {
+                    // Handle exception if HTTP request fails
+                    currentVersion = "0.0";
+                }
+            }
+            else
+            {
+                // HttpClient not available, set default values
+                currentVersion = "0.0";
+            }
+        }
+        catch(Exception ex)
+        {
+
+        }
+        finally
+        {
+            //await CloseProgress();
+        }
+    }
+
+    public CallOptions Header { get; set; }
+
+    public Task<Metadata> GetHeaderAsync()
+    {
+        return Task.FromResult<Metadata>(null);
+    }
+
+
+    private async Task ClearCacheAndReload()
+    {
+        // Clear the cache
+        await JS.InvokeVoidAsync("eval", @"
+            caches.keys().then(keys => {
+                keys.forEach(key => {
+                    caches.delete(key);
+                });
+            });
+        ");
+
+        // Unregister all service workers
+        await JS.InvokeVoidAsync("eval", @"
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(registration => {
+                        registration.unregister();
+                    });
+                });
+            }
+        ");
+
+        // Clear local storage
+        await JS.InvokeVoidAsync("localStorage.clear");
+
+        // Clear session storage
+        await JS.InvokeVoidAsync("sessionStorage.clear");
+
+        // Reload the page
+        await JS.InvokeVoidAsync("location.reload", true);
+    }
+
+    public async  Task SetDefaultCulture()
+    {
+        if(JSRuntime!= null)
+        {
+
+            var jsInterop = JSRuntime;//host.Services.GetRequiredService<IJSRuntime>();
+
+            //var js = (IJSInProcessRuntime)JSRuntime;
+            //       js.InvokeVoid("blazorCulture.set", value.Name);
+
+
+            CultureInfo culture;
+
+            await jsInterop.InvokeVoidAsync("blazorCulture.set", "en-US"); ;
+
+            var result = await jsInterop.InvokeAsync<string>("blazorCulture.get");
+            if (result != null)
+                //culture = new CultureInfo(result);
+                culture = new CultureInfo("en-US");
+            else
+                culture = new CultureInfo("en-US");
+
+            culture = new CultureInfo("en-US");
+
+            DateTimeFormatInfo dateformat = new DateTimeFormatInfo();
+
+
+            dateformat.ShortDatePattern = "MM/dd/yyyy";
+            dateformat.FullDateTimePattern = "dddd, mmmm dd, yyyy h:mm:ss tt";// Date format of en-us
+
+            culture.NumberFormat.NumberDecimalSeparator = ".";
+
+            culture.DateTimeFormat = dateformat;
+
+
+
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+        }
+
+
+    }
+
+
+    [Inject]
+    protected IJSRuntime JSRuntime { get; set; }
+
+    [Inject]
+    protected NavigationManager NavigationManager { get; set; }
+
+    [Inject]
+    protected Radzen.DialogService DialogService { get; set; }
+
+    [Inject]
+    protected TooltipService TooltipService { get; set; }
+
+    [Inject]
+    protected ContextMenuService ContextMenuService { get; set; }
+
+    [Inject]
+    protected NotificationService NotificationService { get; set; }
+
+    private bool sidebarExpanded = true;
+    private bool settingsSidebarExpanded = false;
+    private bool subMenuPinned = true;
+
+    void SidebarToggleClick()
+    {
+        sidebarExpanded = !sidebarExpanded;
+    }
+
+    void SettingsSidebarToggleClick()
+    {
+        settingsSidebarExpanded = !settingsSidebarExpanded;
+        StateHasChanged();
+    }
+
+    string GetBodyStyle()
+    {
+        return settingsSidebarExpanded
+            ? "margin-right: 300px; transition: margin-right 0.3s ease;"
+            : "margin-right: 0; transition: margin-right 0.3s ease;";
+    }
+
+    private int fontSize = 100;
+    private bool enableNotifications = true;
+
+    private void OnNotificationsChange(bool value)
+    {
+        // Update notification settings
+        enableNotifications = value;
+        // Additional notification update logic can be implemented here
+    }
+
+    // User Account Properties
+    public string UserName { get; set; } = "Paulo Burgos";
+    public string UserEmail { get; set; } = "pburgos@kavoku.com";
+    public string AccountType { get; set; } = "Administrator";
+
+    // SubMenu Content
+    public RenderFragment SubMenuContent { get; set; }
+
+    // Method to set submenu content from page components
+    public void SetSubMenuContent(RenderFragment content)
+    {
+        SubMenuContent = content;
+        StateHasChanged();
+    }
+
+    // Submenu pinned state
+    public void OnSubMenuPinnedChanged(bool isPinned)
+    {
+        subMenuPinned = isPinned;
+        // You could save this preference to local storage or a user setting
+    }
+
+    // Navigation methods - implement your custom logic here
+    public void OnNavigateBack()
+    {
+        // Example: Go back to previous page or specific location
+        // NavigationManager.NavigateTo("/previous-page");
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Back Navigation",
+                Detail = "Implement your custom back navigation here",
+                Duration = 4000
+            });
+    }
+
+    public void OnNavigateForward()
+    {
+        // Example: Go forward to next page or specific location
+        // NavigationManager.NavigateTo("/next-page");
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Forward Navigation",
+                Detail = "Implement your custom forward navigation here",
+                Duration = 4000
+            });
+    }
+
+}

@@ -1,0 +1,863 @@
+﻿@page "/WorkOrderCreate/{EntityID}"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@inherits WorkOrder_CreateBase
+@implements IDisposable
+@using System.Reflection
+@using System.Linq.Expressions
+@using Blazed.Controls
+@using Blazor.Pages.Customer
+@using CalibrationSaaS.Domain.Aggregates.Querys
+
+
+
+
+@inject ILogger<Customer_Create> Logger
+
+
+<div class="col-md-12" id="WorkOrderContainer" style="min-height:500px">
+
+    @if (Loading)
+    {
+
+        <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+            <div class="row" style="width:100%,display:flex;flex-dirección:columna;justify-content: center;">
+                <div class="col">
+                </div>
+                <div class="col">
+                    <p><em>Loading...</em></p>
+                    <FluentProgressRing></FluentProgressRing>
+
+                </div>
+                <div class="col">
+                </div>
+
+
+            </div>
+        </div>
+    }
+    else{
+
+           @if (Enabled)
+        {
+            <HeaderComponent Title="Work Order" Enabled="@Enabled" ActionBar="@Enabled"></HeaderComponent>
+
+        }     
+
+
+
+        
+        @if (_listWorkOrderDetail != null && _listWorkOrderDetail.Count > 0 && calibrationType != null && calibrationType.IsNivel1==true )
+        {
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <button class="navbar-toggler" type="button" data-toggle="collapse"
+                data-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03"
+                aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a class="navbar-brand" href="#">Actions</a>
+
+                <div class="collapse navbar-collapse" id="navbarTogglerDemo03">
+                    <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                        <li class="nav-item">
+                            <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrder">
+
+                                <a href="@(url + calibrationType?.UrlReport +  eq.WorkOrderId)" class="d-sm-inline-block btn btn-sm btn-primary " style="margin-right: 20px;" target="_blank">View Certificate</a>
+
+                            </MultiComponent>
+
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        }
+        <EditForm style="" EditContext="@CurrentEditContext" OnSubmit="FormSubmitted" @onreset="HandleReset">
+            @*<EditForm Model="@eq" style="margin:10px" OnSubmit="FormSubmitted"  Context="CurrentEditContext">*@
+            <DataAnnotationsValidator />
+            @*<ValidationSummary />*@
+            @*<h4>@LastSubmitResult</h4>*@
+            <SubmitComponent>
+
+            </SubmitComponent>
+            <div class="">
+                @*<article class="card-body">*@
+                <div id="accordion">
+                    <div class="card">
+                        <div class="card-header" id="headingOne">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" @onclick:stopPropagation @onclick:preventDefault aria-controls="collapseOne">
+                                    Work Order ID:   <TextInput @bind-Value="eq.WorkOrderId" Label="ID" LabelDown="false" IsDisabled="!Enabled" Type="@Types.label">
+
+                                    </TextInput>
+                                </button>
+                            </h5>
+                        </div>
+
+                        <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="row">
+
+                                    <div class="col-sm">
+
+                                        <TextInput @bind-Value="eq.WorkOrderDate" Label="Work Order Date" ValidationFor="@(()=>eq.WorkOrderDate)" 
+                                        LabelDown="@LabelDown" IsDisabled="!Enabled" Type="@Types.datetime">
+
+                                        </TextInput>
+                                    </div>
+
+                                    <div class="col-sm">
+                                        <div class="form-group">
+                                            <label class="form-control-label">Customer</label>
+
+                                            @if (eq.WorkOrderId == 0)
+                                            {
+                                                <label class="custom-select text-nowrap" @onclick="@(()=> ShowModal())">
+                                                    @_CustomerId @_CustomerValue
+                                                </label>
+                                            }
+                                            else
+                                            {
+                                                <label class="custom-select text-nowrap">
+                                                    @_CustomerId @_CustomerValue
+                                                </label>
+                                            }
+
+                                        </div>
+
+
+                                    </div>
+                                    <div class="col-sm">
+                                        <div class="form-group">
+
+                                            @if (Enabled)
+                                            {
+                                                IsDisabledEditCustomer = false;
+                                            }
+                                            else{
+                                                IsDisabledEditCustomer = true;
+                                            }
+                                            
+
+
+
+                                            <SearchButtonComponent FormType="typeof(Customer_Create)"
+                                            ID="@_CustomerId"
+                                            Tittle="Detail" Enabled="true"
+                                            Size="@ModalSize.LargeWindow"
+                                            Text="Configure Customer"
+                                            Type="search" CloseWindow="CloseEdit"
+                                            IsDisabled="@IsDisabledEditCustomer">
+                                            </SearchButtonComponent>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+
+                                <dl class="row">
+                                </dl>
+
+
+
+
+
+
+                                <div class="row">
+                                    <div class="col-sm">
+                                        <dl class="param param-feature">
+                                            <dt>Address</dt>
+                                            <dd>
+                                                @if (_addressFiltered != null && _addressFiltered.Addresses != null)
+                                                {
+                                                    <TextInput TValue="int" Validate="false"
+                                                    @bind-Value="eq.AddressId"
+                                                    ValidationFor="@(()=>eq.AddressId)" IsDisabled="!Enabled">
+
+                                                        @*<option value="@AddressId" selected="selected">@AddressStreet</option>*@
+                                                        @foreach (Address item in _addressFiltered.Addresses)
+                                                        {
+                                                            <option value="@item.AddressId">@item.StreetAddress1</option>
+                                                        }
+
+                                                    </TextInput>
+                                                }
+                                                else
+                                                {
+                                                    @*<p><em>Select a customer first</em></p>*@
+                                                    <label class="form-control">Select a customer first</label>
+                                                }
+                                                <ValidationMessage For="@(()=>eq.AddressId)" />
+                                            </dd>
+                                        </dl>  <!-- item-property-hor .// -->
+                                    </div>
+                                    <div class="col-sm">
+                                        <dl class="param param-feature">
+                                            <dt>Contact</dt>
+                                            <dd>
+                                                @if (_userFiltered != null && _userFiltered.Contacts != null)
+                                                {
+
+                                                    <TextInput TValue="int" Validate="false"
+                                                    @bind-Value="eq.ContactId"
+                                                    ValidationFor="@(()=>eq.ContactId)" IsDisabled="!Enabled">
+
+
+                                                        @foreach (Contact item in _userFiltered.Contacts)
+                                                        {
+                                                            <option selected="selected" value="@item.ContactID">@item.Name</option>
+                                                        }
+
+                                                    </TextInput>
+
+                                                }
+                                                else
+                                                {
+                                                    @*<p><em>Select a customer first</em></p>*@
+                                                    <label class="form-control">Select a customer first</label>
+                                                }
+                                                <ValidationMessage For="@(()=>eq.ContactId)" />
+                                            </dd>
+                                        </dl>  <!-- item-property-hor .// -->
+
+
+                                    </div>
+                                    <div class="col-sm">
+                                        <label class="form-control-label">Technicians</label>
+                                        <Typeahead
+                                        SearchMethod="@SearchTechnician" 
+                                        Items="@_userList"
+                                        @bind-Values="@eq.Users"
+                                        Placeholder="Technicians">
+                                            <SelectedTemplate Context="user">
+                                                @user.Name
+                                            </SelectedTemplate>
+                                            <ResultTemplate Context="user">
+                                                @user.Name
+                                            </ResultTemplate>
+                                        </Typeahead>
+
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm">
+
+                                        
+
+
+                                        <TextInput @bind-Value="eq.StatusID"
+                                                   IsDisabled="@(!Enabled)"
+                                                   Label="Status"
+                                                   LabelDown="@LabelDown"
+                                                   ValidationFor="(()=> eq.StatusID)">
+                                            @foreach (var item in AppSecurity.WOStatusList)
+                                            {
+                                                if (eq.StatusID.HasValue == false && item.WOStatusId == 1 
+                                                @* || eq.StatusID.HasValue == true && eq.StatusID.Value==1 *@
+                                                )
+                                                {
+                                                    <option value="@item.WOStatusId" selected>@item.Name</option>
+                                                }else{
+                                                    <option value="@item.WOStatusId">@item.Name</option>
+                                                }
+                                                
+                                            }
+                                        </TextInput>
+
+
+                                    </div>
+
+                                    <div class="col-sm">
+                                        <dl class="param param-feature">
+                                            <dt>Purchase Order </dt>
+                                            <dd>
+
+                                                <TextInput TValue="string" Validate="false"
+                                                @bind-Value="eq.PurchaseOrder"
+                                                ValidationFor="@(()=>eq.PurchaseOrder)" IsDisabled="!Enabled">
+                                                </TextInput>
+
+
+                                            </dd>
+                                        </dl>  <!-- item-property-hor .// -->
+                                    </div>
+                                    <div class="col-sm">
+                                        <dl class="param param-feature">
+                                            <dd>
+                                                <TextInput @bind-Value="eq.ScheduledDate" Label="Scheduled Date" ValidationFor="@(()=>eq.ScheduledDate)"
+                                                LabelDown="@LabelDown" IsDisabled="!Enabled" Type="@Types.datetime">
+
+                                                </TextInput>
+                                            </dd>
+                                        </dl>
+                                    </div>
+
+                                </div>
+                                @if (calibrationType !=null && calibrationType.IsNivel1==true )
+                                {
+                                    <div class="row">
+
+                                        <div class="col-sm">
+
+                                            <TextInput @bind-Value="eq.CalibrationDate" Label="Calibration Date" ValidationFor="@(()=>eq.CalibrationDate)"
+                                            LabelDown="@LabelDown" IsDisabled="!Enabled" Type="@Types.datetime">
+
+                                            </TextInput>
+                                        </div>
+                                        <div class="col-sm">
+
+                                            <TextInput @bind-Value="eq.NextDueDate" Label="Next Due Date" ValidationFor="@(()=>eq.NextDueDate)"
+                                            LabelDown="@LabelDown" IsDisabled="!Enabled" Type="@Types.datetime">
+
+                                            </TextInput>
+                                        </div>
+                                    </div>
+                                }
+                                <div class="row">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (eq.WorkOrderId > 0)
+                    {
+                        <div class="card">
+                            <div class="card-header" id="headingTwo">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo"
+                                    @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseTwo" >
+                                        Add PoE to Work Order (Work Order Detail)
+                                    </button>
+                                </h5>
+                            </div>
+                            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                                <div class="card-body">
+
+                                    <div class="row" style="height:50px">
+
+                                        <div class="col-5">
+
+
+
+                                            <div class="form-control-wrapper">
+
+                                                <label class="form-control-label">Test Codes</label>
+
+                                                <Typeahead @ref="Typehead" 
+                                                AllowClear="true"
+                                                SearchMethod="@SearchTestCode"
+                                                Items="@TestCodeList.ToList().Take(10).ToList()"
+                                                @bind-Value="@CurrentTestCode"
+                                                Placeholder="Test Codes">
+                                                    <SelectedTemplate Context="item">
+                                                        @item?.Code - @item?.Description - @item?.RangeMIn-@item?.RangeMax @item?.UnitOfMeasure?.Abbreviation @item?.CalibrationType?.Name @item?.Procedure?.Name
+                                                    </SelectedTemplate>
+                                                    <ResultTemplate Context="item">
+                                                        <div class="card" style="width: 90%">
+                                                            <div class="card-body">
+                                                                <h5 class="card-title"> @item?.CalibrationType?.Name</h5>
+                                                                <h5 class="card-title"> @item.Code</h5>
+                                                                <h6 class="card-subtitle mb-2 text-muted">@item.Description</h6>
+                                                                <p class="card-text">Range: @item.RangeMIn - @item.RangeMax @item?.UnitOfMeasure?.Abbreviation</p>
+                                                                <p class="card-text">Procedure: @item?.Procedure?.Name</p>
+                                                            </div>
+                                                        </div>
+                                                    </ResultTemplate>
+                                                </Typeahead>
+                                                @*   @{
+                                                if (CurrentTestCode != null)
+                                                {
+                                                    eq.IsAccredited = CurrentTestCode.Accredited;
+                                                }
+
+
+                                            } *@
+                                            </div>
+
+                                        </div>
+                                        <div class="col-sm" style="float:left;top:50%">
+                                            <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled="@(!Enabled)"
+                                            @onclick="@(()=> ShowModalPoEDueDate())"
+                                            @onclick:stopPropagation @onclick:preventDefault>
+                                                Select Assets
+                                            </button>
+                                        </div>
+
+                                        <div class="col-sm" style="float:left;top:50%">
+
+
+                                            <TextInput TValue="bool" 
+                                            Validate="false"
+                                            @bind-Value="eq.IsAccredited"
+                                            Label="Is Accredited Calibration?"
+                                            Type="@Types.Switch"
+                                            Style=""
+                                            IsDisabled="false">
+                                            </TextInput>
+
+
+                                        </div>
+
+                                    </div>
+
+                                    @if (_listPoEDueDate.Count() > 0)
+                                    {
+                                        <div class="row" style="margin:20px">
+
+
+                                            <div class="table-responsive">
+                                                <label>List Piece of Equipments</label>
+                                                <table class="table table-bordered table-hover table-striped" id="dataTable" width="100%" cellspacing="0">
+                                                    <thead class="thead-dark">
+                                                        <tr>
+                                                            <th width="5%">ID</th>
+                                                            <th>Serial</th>
+                                                            <th>Model</th>
+                                                            <th>Customer</th>
+                                                            <th>Capacity</th>
+                                                            @*<th>UoM</th>*@
+                                                            <th>Status</th>
+                                                            <th>DueDate</th>
+
+                                                        </tr>
+                                                    </thead>
+
+                                                    <tbody>
+
+                                                        @foreach (var item in _listPoEDueDate)
+                                                        {
+
+                                                            <tr>
+                                                                <td>@item.PieceOfEquipmentID</td>
+                                                                <td>@item.SerialNumber</td>
+                                                                <td>@item.EquipmentTemplate.Model</td>
+                                                                <td>@item.Customer.Name</td>
+                                                                @*<td>@item.Capacity</td>*@
+                                                                @if(item.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList, @item.Capacity) != null)
+                                                                {
+                                                                    <td>
+                                                                        @item.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList, @item.Capacity).CapacityFull</td>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <td>N/A</td>
+                                                                }
+
+                                                                <td>@item.Status.GetStatus(AppState.StatusListET)</td>
+                                                                <td>@String.Format("{0:MM/dd/yy}", item.DueDate)</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    }
+
+
+                                    <!--@if (AppSecurity.CalibrtionTypeList != null && AppSecurity.CalibrtionTypeList.Count > 0)
+                                    {
+                                    <div class="row">
+                                        <div class="col-sm">
+
+
+
+                                            <TextInput TValue="int" Validate="false"
+                                            @bind-Value="eq.CalibrationType"
+                                            Label="Method"
+                                            ValidationFor="@(() => eq.CalibrationType)" IsDisabled="!Enabled">
+
+
+
+                                                @foreach (var item in AppSecurity.CalibrtionTypeList)
+                                                {
+                                                <option value="@item.CalibrationTypeId">@item.Name</option>
+                                                }
+
+
+                                            </TextInput>
+                                            <ValidationMessage For="@(()=>eq.CalibrationType)" />
+
+
+                                        </div>
+                                        <div class="col-sm">
+
+
+
+                                            <TextInput TValue="int" Validate="false"
+                                            @bind-Value="eq.CalibrationType"
+                                            Label="Method"
+                                            ValidationFor="@(() => eq.CalibrationType)" IsDisabled="!Enabled">
+
+
+                                                @if (eq.CalibrationType > 0 && AppSecurity.CalibrtionTypeList.Where(x => x.CalibrationTypeId == eq.CalibrationType).FirstOrDefault().CalibrationSubTypes?.Count > 0)
+                                                {
+                                                @foreach (var item in AppSecurity.CalibrtionTypeList.Where(x => x.CalibrationTypeId == eq.CalibrationType).FirstOrDefault().CalibrationSubTypes)
+                                                {
+                                                <option value="@item.CalibrationTypeId">@item.Name</option>
+                                                }
+                                                }
+
+                                            </TextInput>
+                                            <ValidationMessage For="@(()=>eq.CalibrationType)" />
+
+
+                                        </div>
+                                    </div>-->
+                                    <!-- row.// -->
+                                    <!--}-->
+
+
+                                    <div class="row" style="margin-top:30px">
+
+                                    </div>
+                                    <div class="row">
+
+                                        <div class="col-sm" style="text-align:right">
+                                            @if (_listPoEDueDate.Count() > 0)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-info shadow-sm editButton" disabled="@(!Enabled)">
+                                                    <span>Create Work Order Details and Save Work Order
+                                                        @*<i class="fas fa-plus fa-sm"></i>*@
+                                                    </span>
+                                                </button>
+                                            }
+                                            else
+                                            {
+
+                                                <button class="btn btn-sm btn-info shadow-sm editButton" disabled="disabled">
+                                                    <span>Create Work Order Details and Save Work Order
+                                                        @*<i class="fas fa-plus fa-sm"></i>*@
+                                                    </span>
+                                                </button>
+
+                                            }
+
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="col-sm-4">
+                                        <button class="btn btn-primary" type="submit" @onclick:stopPropagation @onclick:preventDefault style="display:none"></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+
+
+            </div>
+
+
+
+            @if (eq != null && _listWorkOrderDetail != null && _listWorkOrderDetail.Count > 0)
+
+            {
+                <div class="card">
+                    <div class="card-header" id="headingThree">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" @onclick:stopPropagation @onclick:preventDefault
+                            aria-expanded="false" aria-controls="collapseThree">
+                                PoE List (List of Work Order Details)
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                        <div class="card-body">
+                            <CascadingValue Value="this">
+                                <CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics.WorkOrderDetail_Search @ref="@WorkOrderDetailSearch">
+                                </CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics.WorkOrderDetail_Search>
+
+                            </CascadingValue>
+
+
+                        </div>
+                    </div>
+                </div>
+
+            }
+            @*  YPPP 9515 *@
+            @if (eq != null && eq.WorkOrderId != 0 && _listWorkOrderDetail != null && _listWorkOrderDetail.Count > 0 && calibrationType != null && calibrationType.IsNivel1 == true)
+            {
+                foreach (var ist in GetStandardComponentArray())
+                {
+                    <div class="card">
+                        <div class="card-header" id="headingFour">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="@("#collapse" + @ist.Key)"
+                            aria-expanded="true" aria-controls="@("#collapse" + @ist.Key)">
+                                @ist.Value
+                            </button>
+
+                        </div>
+                        <div id="@("collapse" + @ist.Key)" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="d-sm-flex">
+                                    <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrder" RulesCondition="MultiComponent<WorkOrder>.Condition.OnlyOne">
+                                        @*<Rules>
+                                                <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationAndContractReviewStatus().Compile())" TTYPE="WorkOrder">
+
+                                                </Rule>
+                                               *@
+                                        @*  <ValidConditionsTemplate> *@
+                                        <div class="row w-100">
+                                            <div class="col-4">
+
+                                                <button href="#" style="margin:5px" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" onclick="@("$('#btnSetWeightset" + @ist.Key + "').click()")">
+                                                    <i class="fas fa-magic fa-sm text-white-50"></i>@("+ Add" + @ist.Value)
+                                                </button>
+                                            </div>
+                                            <div class="col-5">
+                                            </div>
+                                            <div class="col-3">
+                                                <button href="#" style="margin:5px;float:right" class="d-sm-inline-block btn btn-sm btn-danger shadow-sm" onclick="@("$('#btnClearWeightset" + @ist.Key + "').click()")">
+                                                    <i class="fas fa-magic fa-sm text-white-50"></i>@ClearWeightSets
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        @*   </ValidConditionsTemplate> *@
+                                        @*  <InvalidConditionsTemplate>
+                                            <button href="#" style="margin:5px" class="d-sm-inline-block btn btn-sm btn-warning shadow-sm" disabled onclick="@("$('#btnClearWeightset" + @ist.Key + "').click()")">
+                                                <i class="fas fa-magic fa-sm text-white-50"></i>@ClearWeightSets
+                                            </button>
+
+                                            <button href="#" style="margin:5px" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled onclick="@("$('#btnSetWeightset" + @ist.Key + "').click()")">
+                                                <i class="fas fa-magic fa-sm text-white-50"></i>@AddWeightSets
+                                            </button>
+
+                                        </InvalidConditionsTemplate> *@
+
+                                        @* </Rules> *@
+                                    </MultiComponent>
+                                </div>
+                                <div class="" style="max-height:300px;overflow:auto;width:100%">
+
+
+                                @if ((ist.Key) == "scale" && calibrationType?.CalibrationTypeId != 0  )
+                                    {
+                                        var state = new Status();
+                                        state.StatusId = 2;
+                                        var calibrationTypeId = calibrationType.CalibrationTypeId;
+                                        <CalibrationSaaS.Infraestructure.Blazor.LTI.Scale.WeightSetComponent @ref="@WeightSetComponent"
+                                                                                                             CurrentStatus="@state"
+                                                                                                             ChangeAdd="ChangeDescripcion"
+                                                                                                             ClearGrid="ClearWeightSet"
+                                                                                                             Master="true"
+                                                                                                             lstWeightSet="WeightSetList2"
+                                                                                                             Component="Component"
+                                                                                                             ID="@ist.Key"
+                                                                                                             Option="@ist.Option"
+                                                                                                             CalibrationTypeID="@calibrationTypeId"
+                                                                                                             JsonFields="@ist.Fields">
+
+                                        </CalibrationSaaS.Infraestructure.Blazor.LTI.Scale.WeightSetComponent>
+                                    }
+                                        
+                                    </div>
+
+                                </div>
+                                </div>
+                     </div>
+                }
+            }
+    </EditForm>
+   
+    
+        
+    }
+</div>
+
+
+@code
+{
+
+    public async Task OtherSave()
+    {
+
+
+
+    }
+
+
+    [Inject] IJSRuntime JSRuntime { get; set; }
+
+    private EditContext editContext;
+
+
+    int _equipmentTemplate;
+    string _EquipmentTemplateID;
+
+
+    Domain.Aggregates.ValueObjects.ContactResultSet _ContactFiltered;
+
+
+    public int CurrentCustomer { get; set; }
+    async Task ShowModal()
+    {
+        Dictionary<string, object>
+        EmptyValidationDictionary = new Dictionary<string, object>
+            ();
+        List<Customer>
+            listCustomer;
+
+        ModalOptions op = new ModalOptions();
+        op.ContentScrollable = true;
+        op.Class = "blazored-modal " + ModalSize.MediumWindow;
+
+        var parameters = new ModalParameters();
+        parameters.Add("SelectOnly", true);
+        parameters.Add("IsModal", true);
+
+
+        var messageForm = Modal.Show<CalibrationSaaS.Infraestructure.Blazor.Pages.Customer.Customer_Search>
+            ("Select Customer", parameters, op);
+        var result = await messageForm.Result;
+
+        if (!result.Cancelled)
+        {
+
+            _message = result.Data?.ToString() ?? string.Empty;
+
+            EmptyValidationDictionary = result.Data.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .ToDictionary(prop => prop.Name, prop => prop.GetValue(result.Data, null));
+
+            Customer = (Domain.Aggregates.Entities.Customer)result.Data;
+
+            _CustomerId = EmptyValidationDictionary["CustomerID"].ToString();
+            _CustomerValue = EmptyValidationDictionary["Name"].ToString();
+
+            await CustomerChange(_CustomerId);
+
+
+        }
+
+    }
+
+    async Task ShowModalPoE()
+    {
+        Dictionary<string, object>
+            EmptyValidationDictionary = new Dictionary<string, object>
+                ();
+
+        var parameters = new ModalParameters();
+        parameters.Add("SelectOnly", true);
+        parameters.Add("IsModal", true);
+
+        var messageForm = Modal.Show<PieceOfEquipment_Search>
+            ("Create Piece Of Equipment", parameters);
+        var result = await messageForm.Result;
+
+        if (!result.Cancelled)
+            _message = result.Data?.ToString() ?? string.Empty;
+
+        EmptyValidationDictionary = result.Data.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+        .ToDictionary(prop => prop.Name, prop => prop.GetValue(result.Data, null));
+
+
+        _PieceOfEquipmentId = EmptyValidationDictionary["PieceOfEquipmentId"].ToString();
+        _PieceOfEquipmentValue = EmptyValidationDictionary["SerialNumber"].ToString();
+
+    }
+
+
+
+
+    async Task ShowModalCustomer()
+    {
+        Dictionary<string, object>
+            EmptyValidationDictionary = new Dictionary<string, object>
+                ();
+
+        var parameters = new ModalParameters();
+        parameters.Add("SelectOnly", true);
+        parameters.Add("IsModal", true);
+
+        var messageForm = Modal.Show<Blazor.Pages.Customer.Customer_Search>
+            ("Customer", parameters);
+        var result = await messageForm.Result;
+
+        if (!result.Cancelled)
+            _message = result.Data?.ToString() ?? string.Empty;
+
+        EmptyValidationDictionary = result.Data.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+        .ToDictionary(prop => prop.Name, prop => prop.GetValue(result.Data, null));
+
+
+        _PieceOfEquipmentId = EmptyValidationDictionary["PieceOfEquipmentId"].ToString();
+        _PieceOfEquipmentValue = EmptyValidationDictionary["SerialNumber"].ToString();
+
+    }
+
+
+
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(eq);
+    }
+
+
+    private void HandleValidSubmit()
+    {
+        var modelJson = System.Text.Json.JsonSerializer.Serialize(eq, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        JSRuntime.InvokeVoidAsync("alert", $"SUCCESS!! :-)\n\n{modelJson}");
+    }
+
+    private void HandleReset()
+    {
+        eq = new WorkOrder();
+        editContext = new EditContext(eq);
+    }
+
+
+    public Task<IEnumerable<User>> SearchTechnician(string searchText)
+    {
+        var result = _userList.Where(x => x.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0);
+
+
+        return Task.FromResult<IEnumerable<User>>(result);
+    }
+
+
+    public  Task<IEnumerable<TestCode>> SearchTestCode(string searchText)
+    {
+        var result = TestCodeList.Where(x => x.Code != null && x.Code.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0
+        || (x.Description !=null && x.Description.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+        || x.CalibrationType != null && !string.IsNullOrEmpty(x.CalibrationType.Name) && x.CalibrationType.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0
+        ||  x.Procedure != null && !string.IsNullOrEmpty(x.Procedure.Name) && x.Procedure.Name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >=0
+        );
+
+
+        if (result == null)
+        {
+            return null;
+        }
+
+        return Task.FromResult<IEnumerable<TestCode>>(result);
+
+    }
+
+    async Task CloseEdit(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+
+            var c = (Customer)a.Data;
+
+            await CustomerChange(c.CustomerID.ToString());
+            //    var yy = searchComponent.List.Where(x => x.CustomerID == x.CustomerID).FirstOrDefault();
+
+            //    searchComponent.List.Remove(yy);
+
+            //    searchComponent.List.Add((Customer)a.Data);
+            IsDisabledEditCustomer = true;
+            StateHasChanged();
+        }
+
+    }
+
+}

@@ -1,0 +1,91 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-CalibrationSaaS.CustomerPortal-20240917</UserSecretsId>
+
+    <!-- Clean build configuration for Customer Portal only -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+
+    <!-- Suppress legacy package warnings and source link warnings -->
+    <NoWarn>NU1701;CS8632;NETSDK1138</NoWarn>
+
+    <!-- Disable source link for cleaner builds -->
+    <PublishRepositoryUrl>false</PublishRepositoryUrl>
+    <EmbedUntrackedSources>false</EmbedUntrackedSources>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" />
+    
+    <!-- Multi-tenancy -->
+    <PackageReference Include="Finbuckle.MultiTenant" Version="6.13.1" />
+    <PackageReference Include="Finbuckle.MultiTenant.AspNetCore" Version="6.13.1" />
+    <PackageReference Include="Finbuckle.MultiTenant.EntityFrameworkCore" Version="6.13.1" />
+    
+    <!-- Radzen Blazor Components -->
+    <PackageReference Include="Radzen.Blazor" Version="4.34.4" />
+    
+    <!-- gRPC Client and Server -->
+    <PackageReference Include="Grpc.Net.Client" Version="2.57.0" />
+    <PackageReference Include="Grpc.Net.Client.Web" Version="2.57.0" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.57.0" />
+    <PackageReference Include="protobuf-net.Grpc" Version="1.1.1" />
+    <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.1.1" />
+    
+    <!-- Email Services -->
+    <PackageReference Include="MailKit" Version="4.8.0" />
+    <PackageReference Include="MimeKit" Version="4.8.0" />
+
+    <!-- Security and Authentication -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.0" />
+    
+    <!-- Logging and Monitoring -->
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    
+    <!-- Rate Limiting -->
+    <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
+    
+    <!-- Utilities -->
+    <PackageReference Include="System.Text.Json" Version="9.0.8" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference to existing CalibrationSaaS models and services -->
+    <ProjectReference Include="../CalibrationSaaS.Models/CalibrationSaaS.Domain.Aggregates.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>compile;runtime</IncludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="../CalibrationSaaS.Application.Services/CalibrationSaaS.Application.Services.csproj">
+      <PrivateAssets>none</PrivateAssets>
+      <IncludeAssets>compile;runtime</IncludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Pages\Authentication\" />
+    <Folder Include="Pages\Certificates\" />
+    <Folder Include="Pages\Equipment\" />
+    <Folder Include="Services\Authentication\" />
+    <Folder Include="Services\Email\" />
+    <Folder Include="Services\GrpcClients\" />
+    <Folder Include="Models\Authentication\" />
+    <Folder Include="Models\ViewModels\" />
+    <Folder Include="Components\" />
+    <Folder Include="Data\" />
+    <Folder Include="Configuration\" />
+  </ItemGroup>
+
+</Project>

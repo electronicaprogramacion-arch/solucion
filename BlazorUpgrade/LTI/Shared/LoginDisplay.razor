@@ -1,0 +1,72 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
+@inject CacheStorage.Utils.CacheStorageAccessor CacheStorageAccessor
+@inject HttpClient HttpClient
+<AuthorizeView>
+    <Authorized>
+        @*Hello, @context.User.Identity.Name!*@
+        <button class="nav-link btn btn-link" @onclick="BeginSignOut" style="color: #808080; font-size: 80%; font-weight: 400;">Log out</button>
+    </Authorized>
+    <NotAuthorized>
+        <a href="authentication/login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+    private async Task BeginSignOut(MouseEventArgs args)
+    {
+
+        if(await SignOutManager.ValidateSignOutState())
+        {
+            Console.WriteLine("ValidateSignOutState");
+        }
+        
+        await CacheStorageAccessor.RemoveByUrlAsync("/connect/token");
+        await CacheStorageAccessor.RemoveByUrlAsync("/connect/userinfo");
+
+                //await SignOutManager.SetSignOutState();
+                //Navigation.NavigateTo("authentication/logout");
+                Navigation.NavigateToLogout("authentication/logout");
+            } 
+    private void BeginLogOut()
+    {
+
+
+        Navigation.NavigateToLogout("authentication/logout");
+    }
+
+
+    public string StoredValue { get; set; } = "";
+
+    public async Task SetValueAsync()
+    {
+        var message = CreateMessage();
+        var response = await HttpClient.SendAsync(message);
+        await CacheStorageAccessor.StoreAsync(message, response);
+    }
+
+    public async Task GetValueAsync()
+    {
+        StoredValue = await CacheStorageAccessor.GetAsync(CreateMessage());
+    }
+
+    public async Task RemoveAsync()
+    {
+        await CacheStorageAccessor.RemoveAsync(CreateMessage());
+    }
+
+    public async Task ClearAllAsync()
+    {
+        await CacheStorageAccessor.RemoveAllAsync();
+    }
+
+    public async Task RemoveByUrlAsync()
+    {
+        await CacheStorageAccessor.RemoveByUrlAsync("/sample-data/books.json");
+    }
+
+    public HttpRequestMessage CreateMessage() => new HttpRequestMessage(HttpMethod.Get, "/sample-data/books.json");
+}

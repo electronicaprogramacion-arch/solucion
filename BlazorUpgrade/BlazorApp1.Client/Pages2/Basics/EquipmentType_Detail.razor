@@ -1,0 +1,71 @@
+﻿@page "/EquipmentTypeDetail/{Disable}"
+@using Blazed.Controls
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@namespace BlazorApp1.Blazor.Pages.Basics
+@inherits BlazorApp1.Blazor.Pages.Basics.EquipmentType_DetailBase
+@implements IDisposable
+@using System.Linq.Expressions
+
+
+<HeaderComponent ActionBar="true" Enabled="false">
+
+</HeaderComponent>
+<div class="col-md-12">
+
+    <div class="form-row">
+        <div class="col-md-12 mb-3">
+            <div class="form-row">
+                <div class="col-md-6 mb-3">
+                    <label for="validationServer01">Equipment Type ID</label>
+                    <input type="number" @bind-value="eq.EquipmentTypeID" placeholder="ID" class="form-control" disabled="disabled" />
+                </div>
+
+            </div>
+
+            <div class="form-row">
+                <div class="col-md-6 mb-3">
+                    <label for="equipmentTypeName">Equipment Type Name</label>
+
+                    <input type="text" class="form-control" placeholder="" aria-label="search" id="validationServer01" disabled="disabled"
+                           @bind-value="eq.Name" aria-describedby="basic-addon2">
+
+                    <div class="footermessage @NameValidationMessage">
+                        it cannot be an empty field
+                    </div>
+                </div>
+
+            </div>
+            <div class="form-row">
+                <div class="col-md-3 mb-3">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" @bind-value="eq.IsEnabled" placeholder="Enabled" class="custom-control-input" id="customSwitch1" disabled="disabled" />
+                        <label class="custom-control-label" for="customSwitch1">Enabled</label>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="valid-feedback">
+                Looks good!
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@*<div class="card mb-3">
+    <div class="row no-gutters">
+        <div class="col-md-4">
+            <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;" src="img/undraw_launch_day_4e04.svg" alt="">
+        </div>
+        
+    </div>
+</div>*@
+
+
+@code{
+
+
+
+
+}

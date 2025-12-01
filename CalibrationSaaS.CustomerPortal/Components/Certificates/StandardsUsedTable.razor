@@ -1,0 +1,142 @@
+@using CalibrationSaaS.CustomerPortal.Models.Certificates
+
+<RadzenDataGrid Data="@Standards" TItem="StandardDto" 
+              AllowSorting="true" AllowFiltering="false" AllowPaging="false"
+              GridLines="DataGridGridLines.Both" Style="height: 300px;">
+    <Columns>
+        <RadzenDataGridColumn TItem="StandardDto" Property="SerialNumber" 
+                            Title="Serial Number" Width="150px" />
+
+        <RadzenDataGridColumn TItem="StandardDto" Property="Description" 
+                            Title="Description" Width="250px" />
+
+        <RadzenDataGridColumn TItem="StandardDto" Property="Manufacturer" 
+                            Title="Manufacturer" Width="150px">
+            <Template Context="standard">
+                @(standard.Manufacturer ?? "N/A")
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="StandardDto" Property="Model" 
+                            Title="Model" Width="150px">
+            <Template Context="standard">
+                @(standard.Model ?? "N/A")
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="StandardDto" Property="CertificateNumber" 
+                            Title="Certificate #" Width="150px">
+            <Template Context="standard">
+                @if (!string.IsNullOrEmpty(standard.CertificateNumber))
+                {
+                    <RadzenLink Text="@standard.CertificateNumber" 
+                              Path="@($"/certificates/standard/{standard.Id}")" />
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="StandardDto" Property="CalibrationDate" 
+                            Title="Cal. Date" Width="120px">
+            <Template Context="standard">
+                @if (standard.CalibrationDate.HasValue)
+                {
+                    <text>@standard.CalibrationDate.Value.ToString("yyyy-MM-dd")</text>
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="StandardDto" Property="ExpirationDate" 
+                            Title="Exp. Date" Width="120px">
+            <Template Context="standard">
+                @if (standard.ExpirationDate.HasValue)
+                {
+                    var daysUntilExpiration = (standard.ExpirationDate.Value - DateTime.Now).Days;
+                    var isExpired = daysUntilExpiration < 0;
+                    var isExpiringSoon = daysUntilExpiration <= 30 && daysUntilExpiration >= 0;
+                    
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Body2" 
+                                  Style="@(isExpired ? "color: var(--rz-danger);" : isExpiringSoon ? "color: var(--rz-warning);" : "")">
+                            @standard.ExpirationDate.Value.ToString("yyyy-MM-dd")
+                        </RadzenText>
+                        @if (isExpired || isExpiringSoon)
+                        {
+                            <RadzenText TextStyle="TextStyle.Caption" 
+                                      Style="@(isExpired ? "color: var(--rz-danger);" : "color: var(--rz-warning);")">
+                                @if (isExpired)
+                                {
+                                    <text>@Math.Abs(daysUntilExpiration) days expired</text>
+                                }
+                                else
+                                {
+                                    <text>@daysUntilExpiration days left</text>
+                                }
+                            </RadzenText>
+                        }
+                    </RadzenStack>
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="StandardDto" Property="Accuracy" 
+                            Title="Accuracy" Width="120px">
+            <Template Context="standard">
+                @if (standard.Accuracy.HasValue)
+                {
+                    <text>±@standard.Accuracy.Value.ToString("F4") @standard.AccuracyUnit</text>
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="StandardDto" Title="Status" Width="100px" Sortable="false">
+            <Template Context="standard">
+                @{
+                    var isExpired = standard.ExpirationDate.HasValue && standard.ExpirationDate.Value < DateTime.Now;
+                    var isExpiringSoon = standard.ExpirationDate.HasValue && 
+                                       (standard.ExpirationDate.Value - DateTime.Now).Days <= 30 && 
+                                       (standard.ExpirationDate.Value - DateTime.Now).Days >= 0;
+                }
+                
+                @if (isExpired)
+                {
+                    <RadzenBadge Text="Expired" BadgeStyle="BadgeStyle.Danger" />
+                }
+                else if (isExpiringSoon)
+                {
+                    <RadzenBadge Text="Expiring" BadgeStyle="BadgeStyle.Warning" />
+                }
+                else
+                {
+                    <RadzenBadge Text="Valid" BadgeStyle="BadgeStyle.Success" />
+                }
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@if (!Standards.Any())
+{
+    <RadzenAlert AlertStyle="AlertStyle.Info" Icon="info" Title="No Standards Used">
+        No standards information is available for this certificate.
+    </RadzenAlert>
+}
+
+@code {
+    [Parameter] public List<StandardDto> Standards { get; set; } = new();
+}

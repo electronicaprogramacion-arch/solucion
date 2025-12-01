@@ -1,0 +1,192 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    
+	  <WasmEnableThread>true</WasmEnableThread>
+	  <WasmBuildNative>true</WasmBuildNative>
+	  <EmccExtraLDFlags>-lidbfs.js</EmccExtraLDFlags>
+	  <EmccExtraLDFlags>-s WARN_ON_UNDEFINED_SYMBOLS=0</EmccExtraLDFlags>
+	  <TargetFramework>net10.0</TargetFramework>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <Nullable>enable</Nullable>
+	  <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+	  <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
+	  <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+	  <NuGetAudit>False</NuGetAudit>
+	  <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	  <PublishTrimmed>False</PublishTrimmed>
+	  <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
+	  <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
+	  <EnableNETAnalyzers>False</EnableNETAnalyzers>
+	  <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+	 
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="LTI\Reticles\Interface\**" />
+    <Compile Remove="LTI\Rokwell\**" />
+    <Compile Remove="Pages2\Order\Calibrations\**" />
+    <Content Remove="LTI\Reticles\Interface\**" />
+    <Content Remove="LTI\Rokwell\**" />
+    <Content Remove="Pages2\Order\Calibrations\**" />
+    <EmbeddedResource Remove="LTI\Reticles\Interface\**" />
+    <EmbeddedResource Remove="LTI\Rokwell\**" />
+    <EmbeddedResource Remove="Pages2\Order\Calibrations\**" />
+    <None Remove="LTI\Reticles\Interface\**" />
+    <None Remove="LTI\Rokwell\**" />
+    <None Remove="Pages2\Order\Calibrations\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="GenericMethods2\Create1000-6.cs" />
+    <Compile Remove="GenericMethods2\Get1000-6.cs" />
+    <Compile Remove="LTI\CalibrationInstructionsLTIBase.cs" />
+    <Compile Remove="Pages2\Basics\ResolutionComponentBase.cs" />
+    <Compile Remove="Pages2\Basics\TestPoints\RangeTestPoint_Base.cs" />
+    <Compile Remove="Pages2\Customer\Customer_Address_CreateBase.cs" />
+    <Compile Remove="Shared2\ICalibrationInstructionsLTIBase.cs" />
+    <Compile Remove="Shared2\IWorkOrderItemCreate.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Components\Account\Shared\ExternalLoginPicker.razor" />
+    <Content Remove="Components\Account\Shared\ManageNavMenu.razor" />
+    <Content Remove="LTI\CalibrationInstructionsLTI.razor" />
+    <Content Remove="Pages2\Basics\ResolutionComponent.razor" />
+    <Content Remove="Pages2\Basics\ResolutionComponentModal.razor" />
+    <Content Remove="Pages2\Basics\TestPoints\RangeTestPoint.razor" />
+    <Content Remove="Pages2\Customer\Customer_Address.razor" />
+    <Content Remove="wwwroot\Version\CurrentVersion.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Pages2\Customer\Customer_Address_CreateBase.cs.bak" />
+  </ItemGroup>
+
+
+
+
+
+	<ItemGroup>
+		<PackageReference Include="BlazorFrame" Version="2.3.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.0" />
+		<PackageReference Include="AKSoftware.Blazor.Utilities" Version="1.1.0" />
+		<PackageReference Include="Blazor.Extensions.Logging" Version="2.0.4" />
+		<PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+		<PackageReference Include="BlazorInputFile" Version="0.2.0" />
+		<PackageReference Include="BrowserInterop" Version="1.1.2" />
+		<PackageReference Include="CsvHelper" Version="33.1.0" />
+		<PackageReference Include="DynamicExpressions.NET" Version="1.1.0" />
+		<PackageReference Include="Fluxor" Version="6.9.0" />
+		<PackageReference Include="Fluxor.Blazor.Web" Version="6.9.0" />
+		<PackageReference Include="Fluxor.Blazor.Web.ReduxDevTools" Version="6.9.0" />
+		<PackageReference Include="Google.Protobuf" Version="3.33.1" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+		<PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.76.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="protobuf-net.Grpc" Version="1.2.2" />
+		<PackageReference Include="LinqKit.Core" Version="1.2.9" />
+		<PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Analyzers" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Forms" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+
+
+
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.0" />
+
+		<PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.0" />
+
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+
+		<PackageReference Include="Radzen.Blazor" Version="8.3.5" />
+		<PackageReference Include="Reshiru.Blazor.IndexedDB.Framework" Version="1.0.1" />
+		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+		<PackageReference Include="TG.Blazor.IndexedDB" Version="1.5.0-preview" />
+		<PackageReference Include="Select.HtmlToPdf.NetCore" Version="25.2.0" />
+		<PackageReference Include="System.Net.Http.Json" Version="10.0.0" />
+		<PackageReference Include="VxFormGenerator.Components.Plain" Version="0.4.0" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+	</ItemGroup>
+
+	<ItemGroup>
+
+		<ProjectReference Include="..\..\Blazed\Blazed.csproj" />
+		<ProjectReference Include="..\..\CalibrationSaaS.Infraestructure.Blazor.Pages.Base\CalibrationSaaS.Infraestructure.Blazor.Pages.Base.csproj" />
+		<ProjectReference Include="..\..\Blazored.Modal\Blazored.Modal.csproj" />
+		<ProjectReference Include="..\..\BlazorTimeline\BlazorTimeline.csproj" />
+		<ProjectReference Include="..\..\Bogus-master\Source\Bogus\Bogus.csproj" />
+		<ProjectReference Include="..\..\CalibrationSaaS.Infraestructure.Blazor.Services\CalibrationSaaS.Infraestructure.Blazor.Services.csproj" />
+		<ProjectReference Include="..\..\CalibrationSaaS.Models\CalibrationSaaS.Domain.Aggregates.csproj" />
+		<ProjectReference Include="..\..\Context\Context.csproj" />
+		<ProjectReference Include="..\..\csv-validator\src\Validate.Lib\Validate.Lib.csproj" />
+		<ProjectReference Include="..\..\DynamicClassLibrary\DynamicClassLibrary.csproj" />
+		<ProjectReference Include="..\..\Helpers\Helpers.csproj" />
+		<ProjectReference Include="..\..\Jint\Jint.csproj" />
+		<ProjectReference Include="..\..\LTIDomainLogic\LTIDomainLogic.csproj" />
+
+		<ProjectReference Include="..\..\Reports.Domain.ReportViewModels\Reports.Domain.ReportViewModels.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+
+		<ProjectReference Include="..\..\CalibrationSaaS.Data.EntityFramework\CalibrationSaaS.Infraestructure.EntityFramework.csproj" />
+		<ProjectReference Include="..\..\SqliteWasmHelper\SqliteWasmHelper.csproj" />
+		<ProjectReference Include="..\LTI\CalibrationSaaS.Infraestructure.Blazor.csproj" />
+		<ProjectReference Include="..\Shared\Blazor.BFF.OpenIddict.Shared.csproj" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<None Include="Components\Pages\HomeWasm.razor" />
+		<None Include="Pages2\Basics\TestPoints\GroupTestPoint2.razor" />
+		<None Include="wwwroot\Version\CurrentVersion.txt" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <Content Update="wwwroot\favicon.ico">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="wwwroot\icon-512.png">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="wwwroot\manifest.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+
+
+</Project>

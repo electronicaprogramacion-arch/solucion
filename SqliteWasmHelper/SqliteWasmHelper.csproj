@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Title>SQLite WASM Helper for EF Core</Title>
+	  <Description>Helper library for using SQLite with EF Core in the browser on Blazor WebAssembly. Provides
+	  the hooks to store the database in the browser application cache.</Description>   
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>	  
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>    
+	  <Authors>Jeremy Likness</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="XmlDocGen" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Remove="stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="stylecop.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<RepositoryUrl>https://github.com/JeremyLikness/SqliteWasmHelper</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageProjectUrl>https://github.com/JeremyLikness/SqliteWasmHelper</PackageProjectUrl>
+		<PackageTags>sqlite;ef core;entity framework;blazor;wasm;webassembly</PackageTags>
+		<Product>SQLite Wasm Helper</Product>
+		<UseFullSemVerForNuGet>true</UseFullSemVerForNuGet>
+		<IsPackable>true</IsPackable>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>		
+	</PropertyGroup>
+	
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="10.0.0" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.9.50">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.435">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+	
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\jeliknes\source\repos\SqliteWasmHelper\SqliteWasmHelper\.editorconfig" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <None Include="C:\Users\jeliknes\source\repos\SqliteWasmHelper\SqliteWasmHelper\.editorconfig" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Content Update="wwwroot\browserCache3.js">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

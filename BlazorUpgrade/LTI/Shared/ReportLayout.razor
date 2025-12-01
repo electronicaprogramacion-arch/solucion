@@ -1,0 +1,261 @@
+﻿@using ProtoBuf.Grpc
+@using Grpc.Core
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Helpers.Controls;
+@inherits CalibrationSaaS.Infraestructure.Blazor.Pages.Base.LayoutBase
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Entities
+
+@inject CalibrationSaaS.Application.Services.IFileUpload fileUpload
+@inject IJSRuntime JS
+@inject NavigationManager navManager
+@inject HttpClient Http
+
+<div id="content-wrapper" class="d-flex flex-column">
+    <!-- Main Content -->
+    <div id="content">      
+        
+        <div id="reportContainer" class="container-fluid" style="width:100%">
+            @Body
+        </div>
+        <!-- /.container-fluid -->
+        <!-- End of Main Content -->
+        <!-- Footer -->
+        <footer class="sticky-footer bg-white">
+            <div class="container my-auto">
+                <div class="copyright text-center my-auto">
+                    <span>Copyright &copy; Kavoku, LLC 2020-@DateTime.Now.Year VERSION: @typeof(Program).Assembly.GetName().Version
+                       
+                    </span>
+                </div>
+            </div>
+        </footer>
+        <!-- End of Footer -->
+    </div>
+    <FluentDialogProvider />
+    <FluentTooltipProvider />
+</div>
+<!-- End of Page Wrapper -->
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
+
+
+
+@code{
+
+    [Inject]
+    public BrowserService BrowserService { get; set; }
+
+    [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity { get; set; }
+    // [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.AppStateCompany AppState { get; set; }
+    // [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.Basic.AppState AppStateBasics { get; set; }
+    // [Inject] public CalibrationSaaS.Application.Services.IUOMService<CallContext> UOM { get; set; }
+    // [Inject] public CalibrationSaaS.Application.Services.IBasicsServices<CallContext> Basics { get; set; }
+    // [Inject] public CalibrationSaaS.Application.Services.IAssetsServices<CallContext> Assets { get; set; }
+
+    // [Inject] ILogger<MainLayout> Logger { get; set; }
+    // [Inject]
+    // public Application.Services.IWorkOrderDetailServices<CallContext> Service2 { get; set; }
+
+
+
+    // [Inject]
+    // public IAuthorizationService AuthorizationService { get; set; }
+
+    [CascadingParameter]
+    public Task<AuthenticationState> stateTask { get; set; }
+    public async Task<ClaimsPrincipal> GetUser()
+    {
+        var user = (await stateTask).User;
+
+        return user;
+    }
+    public bool isDifferente { get; set; }  = false;
+    private string RootUrl;
+    public string currentVersion;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await SetDefaultCulture();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+
+        #if DEBUG
+    //Write to the console
+        #else
+            //await BrowserService.EnableLog();
+        #endif
+
+            var b1 = await JSRuntime.InvokeAsync<BrowserDimension>("getDimensions");
+            //setting the initial connection statius
+            //ConnectionStatusService.ChangeConnectionStatus(true);
+
+
+            ConnectionStatusService.ConnectedChangeStatus(b1.Online, b1.Install, AppSecurity.IsNotGrpc);
+
+
+            //var User0 = await GetUser();
+
+            //if (User0.Identity == null || !User0.Identity.IsAuthenticated)
+            //{
+            //    return;
+            //}
+
+
+            // await ShowProgress();
+
+            await base.OnInitializedAsync();
+
+            Logger.LogDebug("Main");
+
+
+            var fileUrl = "Version/CurrentVersion.txt";
+            double versionBlazor = 0;
+
+            currentVersion = await Http.GetStringAsync(fileUrl);
+
+            if (currentVersion != null)
+                versionBlazor = Convert.ToDouble(currentVersion);
+
+            isDifferente = false;
+
+             var versionGrpc = await fileUpload.GetLatestBlazorVersion();
+
+            if (versionGrpc != null && versionGrpc.Version != versionBlazor)
+            {
+                isDifferente = true;
+            }
+        }
+        catch(Exception ex)
+        {
+
+        }
+        finally
+        {
+            //await CloseProgress();
+        }
+    }
+
+    public CallOptions Header { get; set; }
+
+    [Inject]
+    public IAccessTokenProvider TokenProvider { get; set; }
+
+    //        [Inject]
+    //public GrpcBearerTokenProvider TokenProvider { get; set; }
+
+    public async Task<Metadata> GetHeaderAsync()
+    {
+        var headers = new Metadata();
+        //var accessTokenResult = await TokenProvider.GetTokenAsync();
+        //headers.Add("Authorization", $"Bearer {accessTokenResult}");
+        //var accessTokenResult = await TokenProvider.RequestAccessToken();
+        AccessTokenResult accessTokenResult = null;
+
+        // try
+        // {
+        //     accessTokenResult = await this.TokenProvider.RequestAccessToken(
+        //new AccessTokenRequestOptions()
+        // {
+        //     Scopes = new[] { "GRPC" }
+        // });
+
+
+        // }
+        // catch(Exception ex)
+        // {
+        //     Console.WriteLine("Security error");
+        //     throw new Exception("Security error");
+        // }
+
+        // if (accessTokenResult == null)
+        // {
+        //     Console.WriteLine("Security error");
+        // }
+
+        //     var AccessToken = string.Empty;
+
+        //     if (accessTokenResult.TryGetToken(out var token))
+        //     {
+        //         AccessToken = token.Value;
+        //         headers.Add("Authorization", $"Bearer {AccessToken}");
+        //     }
+
+        return null;
+    }
+
+    
+    private async Task ClearCacheAndReload()
+    {
+        // Clear the cache
+        await JS.InvokeVoidAsync("eval", @"
+            caches.keys().then(keys => {
+                keys.forEach(key => {
+                    caches.delete(key);
+                });
+            });
+        ");
+
+        // Clear local storage
+        await JS.InvokeVoidAsync("localStorage.clear");
+
+        // Clear session storage
+        await JS.InvokeVoidAsync("sessionStorage.clear");
+
+        // Reload the page
+        await JS.InvokeVoidAsync("location.reload", true);
+    }
+
+    public async  Task SetDefaultCulture()
+    {
+        if(JSRuntime!= null)
+        {
+
+            var jsInterop = JSRuntime;//host.Services.GetRequiredService<IJSRuntime>();
+
+            //var js = (IJSInProcessRuntime)JSRuntime;
+            //       js.InvokeVoid("blazorCulture.set", value.Name);
+
+
+            CultureInfo culture;
+
+            await jsInterop.InvokeVoidAsync("blazorCulture.set", "en-US"); ;
+
+            var result = await jsInterop.InvokeAsync<string>("blazorCulture.get");
+            if (result != null)
+                //culture = new CultureInfo(result);
+                culture = new CultureInfo("en-US");
+            else
+                culture = new CultureInfo("en-US");
+
+            culture = new CultureInfo("en-US");
+
+            DateTimeFormatInfo dateformat = new DateTimeFormatInfo();
+
+
+            dateformat.ShortDatePattern = "MM/dd/yyyy";
+            dateformat.FullDateTimePattern = "dddd, mmmm dd, yyyy h:mm:ss tt";// Date format of en-us
+
+            culture.NumberFormat.NumberDecimalSeparator = ".";
+
+            culture.DateTimeFormat = dateformat;
+
+
+
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+        }
+
+
+    }
+
+}

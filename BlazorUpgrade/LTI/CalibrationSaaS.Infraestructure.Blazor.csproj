@@ -1,0 +1,424 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Remove="GenericMethods\StandardComponent.razor" />
+		<Content Remove="NavMenu.razor" />
+		<Content Remove="Pages\AssetsBasics\Certificate_Create.razor" />
+		<Content Remove="Pages\AssetsBasics\Certificate_CreatePoE.razor" />
+		<Content Remove="Pages\AssetsBasics\PieceOfEquipment_Create.razor" />
+		<Content Remove="Pages\AssetsBasics\PieceOfEquipment_SearchChildren.razor" />
+		<Content Remove="Pages\AssetsBasics\WorkOrderDetailChildren_Search.razor" />
+		<Content Remove="Pages\AssetsBasics\WorkOrderDetail_Search.razor" />
+		<Content Remove="Pages\AssetsBasics\WorkOrder_Create.razor" />
+		<Content Remove="Pages\Basics\BasicInformationComponent.razor" />
+		<Content Remove="Pages\Basics\Equipment_Create.razor" />
+		<Content Remove="Pages\Basics\ResolutionComponent.razor" />
+		<Content Remove="Pages\Basics\ResolutionComponentModal.razor" />
+		<Content Remove="Pages\Basics\TestCode_Create.razor" />
+		<Content Remove="Pages\Calculator.razor" />
+		<Content Remove="Pages\Customer\Customer_Create.razor" />
+		<Content Remove="Pages\Index.razor" />
+		<Content Remove="Pages\Offline\ViewDataBase.razor" />
+		<Content Remove="Pages\Offline\WorkOrderDetailOff2_Search.razor" />
+		<Content Remove="Pages\Offline\WorkOrderDetailOff_Search.razor" />
+		<Content Remove="Pages\Order\BasicInformation.razor" />
+		<Content Remove="Pages\Order\CalibrationInstructions.razor" />
+		<Content Remove="Pages\Order\EnviromentComponent.razor" />
+		<Content Remove="Pages\Order\EquipmentConditionComponent.razor" />
+		<Content Remove="Pages\Order\WeightSetComponent.razor" />
+		<Content Remove="Pages\Order\WorkOrderItemCreate.razor" />
+		<Content Remove="Shared\Component\Indicator.razor" />
+		<Content Remove="Shared\DynamicReport.razor" />
+		<Content Remove="Shared\GenericTestComponent.razor" />
+		<Content Remove="Shared\GetReportView.razor" />
+		<Content Remove="Shared\LoadConfiguration.razor" />
+		<Content Remove="Shared\MainLayout.razor" />
+		<Content Remove="Shared\NavMenu.razor" />
+		<Content Remove="Shared\RedirectToLogin.razor" />
+		<Content Remove="Shared\TopMenu.razor" />
+		<Content Remove="Shared\version1\GenericTestComponent.razor" />
+		<Content Remove="Shared\WeightSetComponent.razor" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="NavMenu.razor.css" />
+		<None Remove="Shared\MainLayout.razor.css" />
+		<None Remove="Shared\NavMenu.razor.css" />
+		<None Remove="Shared\TopMenu.razor.bak" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+
+
+	<ItemGroup>
+		<Content Update="wwwroot\Logo.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.0" />
+		<PackageReference Include="AKSoftware.Blazor.Utilities" Version="1.1.0" />
+		<PackageReference Include="Blazor.Extensions.Logging" Version="2.0.4" />
+		<PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+		<PackageReference Include="BlazorInputFile" Version="0.2.0" />
+		<PackageReference Include="BrowserInterop" Version="1.1.2" />
+		<PackageReference Include="CsvHelper" Version="33.1.0" />
+		<PackageReference Include="DynamicExpressions.NET" Version="1.1.0" />
+		<PackageReference Include="Fluxor" Version="6.9.0" />
+		<PackageReference Include="Fluxor.Blazor.Web" Version="6.9.0" />
+		<PackageReference Include="Fluxor.Blazor.Web.ReduxDevTools" Version="6.9.0" />
+		<PackageReference Include="Google.Protobuf" Version="3.33.1" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+		<PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.76.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="LinqKit.Core" Version="1.2.9" />
+		<PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Analyzers" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Forms" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+
+
+
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.0" />
+
+		<PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.0" />
+
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+
+		<PackageReference Include="Radzen.Blazor" Version="8.3.5" />
+		<PackageReference Include="Reshiru.Blazor.IndexedDB.Framework" Version="1.0.1" />
+		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.2" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
+		<PackageReference Include="TG.Blazor.IndexedDB" Version="1.5.0-preview" />
+		<PackageReference Include="Select.HtmlToPdf.NetCore" Version="25.2.0" />
+		<PackageReference Include="System.Net.Http.Json" Version="10.0.0" />
+		<PackageReference Include="VxFormGenerator.Components.Plain" Version="0.4.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Bitterman\Bitterman.csproj" />
+		<ProjectReference Include="..\..\Blazed\Blazed.csproj" />
+		<ProjectReference Include="..\..\Blazored.Modal\Blazored.Modal.csproj" />
+		<ProjectReference Include="..\..\BlazorTimeline\BlazorTimeline.csproj" />
+		<ProjectReference Include="..\..\CalibrationSaaS.Application.Services\CalibrationSaaS.Application.Services.csproj" />
+		<ProjectReference Include="..\..\CalibrationSaaS.Infraestructure.Blazor.Pages.Base\CalibrationSaaS.Infraestructure.Blazor.Pages.Base.csproj" />
+		<ProjectReference Include="..\..\CalibrationSaaS.Infraestructure.Blazor.Services\CalibrationSaaS.Infraestructure.Blazor.Services.csproj" />
+		<ProjectReference Include="..\..\CalibrationSaaS.Models\CalibrationSaaS.Domain.Aggregates.csproj" />
+		<ProjectReference Include="..\..\Context\Context.csproj" />
+		<ProjectReference Include="..\..\csv-validator\src\Validate.Lib\Validate.Lib.csproj" />
+		<ProjectReference Include="..\..\DynamicClassLibrary\DynamicClassLibrary.csproj" />
+		<ProjectReference Include="..\..\Helpers\Helpers.csproj" />
+		<ProjectReference Include="..\..\Jint\Jint.csproj" />
+		<ProjectReference Include="..\..\LTIDomainLogic\LTIDomainLogic.csproj" />
+		<ProjectReference Include="..\..\LTI\LTI.csproj" />
+		<ProjectReference Include="..\..\Reports.Domain.ReportViewModels\Reports.Domain.ReportViewModels.csproj" />
+	</ItemGroup>
+
+
+
+	<ItemGroup>
+		<Compile Remove="GenericMethods\NewFolder\**" />
+		<Compile Remove="LTI\**" />
+		<Compile Remove="Pages\Assets\**" />
+		<Compile Remove="Pages\Base\**" />
+		<Compile Remove="Services\**" />
+		<Compile Remove="Shared\OfflineModal\**" />
+		<Compile Remove="Shared\ReportView\**" />
+		<Compile Remove="Store\**" />
+		<Compile Remove="Upload\**" />
+		<Content Remove="GenericMethods\NewFolder\**" />
+		<Content Remove="LTI\**" />
+		<Content Remove="Pages\Assets\**" />
+		<Content Remove="Pages\Base\**" />
+		<Content Remove="Services\**" />
+		<Content Remove="Shared\OfflineModal\**" />
+		<Content Remove="Shared\ReportView\**" />
+		<Content Remove="Store\**" />
+		<Content Remove="Upload\**" />
+		<EmbeddedResource Remove="GenericMethods\NewFolder\**" />
+		<EmbeddedResource Remove="LTI\**" />
+		<EmbeddedResource Remove="Pages\Assets\**" />
+		<EmbeddedResource Remove="Pages\Base\**" />
+		<EmbeddedResource Remove="Services\**" />
+		<EmbeddedResource Remove="Shared\OfflineModal\**" />
+		<EmbeddedResource Remove="Shared\ReportView\**" />
+		<EmbeddedResource Remove="Store\**" />
+		<EmbeddedResource Remove="Upload\**" />
+		<None Remove="GenericMethods\NewFolder\**" />
+		<None Remove="LTI\**" />
+		<None Remove="Pages\Assets\**" />
+		<None Remove="Pages\Base\**" />
+		<None Remove="Services\**" />
+		<None Remove="Shared\OfflineModal\**" />
+		<None Remove="Shared\ReportView\**" />
+		<None Remove="Store\**" />
+		<None Remove="Upload\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="GenericMethods\Create1000-6.cs" />
+		<Compile Remove="GenericMethods\CreateET.cs" />
+		<Compile Remove="GenericMethods\CreatePOE1000-6.cs" />
+		<Compile Remove="GenericMethods\Get1000-6.cs" />
+		<Compile Remove="GenericMethods\StandardComponent_Base.cs" />
+		<Compile Remove="GlobalSuppressions.cs" />
+		<Compile Remove="Helper\Create.cs" />
+		<Compile Remove="ICalibrationInstructionsLTIBase.cs" />
+		<Compile Remove="IWorkOrderItemCreate.cs" />
+		<Compile Remove="KavokuComponentBase.cs" />
+		<Compile Remove="KavokuComponentBase2.cs" />
+		<Compile Remove="Pages\AssetsBasics\Certificate_Create.cs" />
+		<Compile Remove="Pages\AssetsBasics\Certificate_CreatePoE.cs" />
+		<Compile Remove="Pages\AssetsBasics\PieceOfEquipment_CreateBase.cs" />
+		<Compile Remove="Pages\AssetsBasics\PieceOfEquipment_CreateBase.old.cs" />
+		<Compile Remove="Pages\AssetsBasics\PieceOfEquipment_SearchBase.old.cs" />
+		<Compile Remove="Pages\AssetsBasics\POEWeightSets_SearchBase.cs" />
+		<Compile Remove="Pages\AssetsBasics\WorkOrderDetailChildren_SearchBase.cs" />
+		<Compile Remove="Pages\AssetsBasics\WorkOrderDetail_SearchBase.cs" />
+		<Compile Remove="Pages\AssetsBasics\WorkOrder_CreateBase.cs" />
+		<Compile Remove="Pages\Basics\BasicInformationComponent.cs" />
+		<Compile Remove="Pages\Basics\Equipment_CreateBase.cs" />
+		<Compile Remove="Pages\Basics\ResolutionComponentBase.cs" />
+		<Compile Remove="Pages\Basics\TestCode_CreateBase.cs" />
+		<Compile Remove="Pages\Customer\Customer_CreateBase.cs" />
+		<Compile Remove="Pages\Offline\WorkOrderDetailOff2_SearchBase.cs" />
+		<Compile Remove="Pages\Offline\WorkOrderDetailOff_SearchBase.cs" />
+		<Compile Remove="Pages\Order\BasicInformationBase.cs" />
+		<Compile Remove="Pages\Order\CalibrationInstructionsBase.cs" />
+		<Compile Remove="Pages\Order\Certified_Search.cs" />
+		<Compile Remove="Pages\Order\EccentricityComponent.cs" />
+		<Compile Remove="Pages\Order\LinearityComponentBase.cs" />
+		<Compile Remove="Pages\Order\OffLineData_SearchBase.cs" />
+		<Compile Remove="Pages\Order\PieceOfEquipment_SearchBase.cs" />
+		<Compile Remove="Pages\Order\RepeabilityComponent.cs" />
+		<Compile Remove="Pages\Order\WeightComponent.cs" />
+		<Compile Remove="Pages\Order\WeightSetComponent_Base.cs" />
+		<Compile Remove="Pages\Order\WorkOrderItemCreateBase.cs" />
+		<Compile Remove="Pages\PieceOfEquipment\PieceOfEquipment_CreateBase.cs" />
+		<Compile Remove="Pages\Security\Security_Search.cs" />
+		<Compile Remove="ResponsiveTableService.cs" />
+		<Compile Remove="Security\ArrayClaimsPrincipalFactory.cs" />
+		<Compile Remove="Shared\CalibrationInstructionsBase.cs" />
+		<Compile Remove="Shared\Component\Indicator_Base.cs" />
+		<Compile Remove="Shared\DynamicModalHandler.cs" />
+		<Compile Remove="Shared\DynamicReport.cs" />
+		<Compile Remove="Shared\GenericTestComponentBase.cs" />
+		<Compile Remove="Shared\ModalHandler.cs" />
+		<Compile Remove="Shared\version1\GenericTestComponentBase.cs" />
+		<Compile Remove="Shared\WeightSetBase.cs" />
+		<Compile Remove="Shared\WeightSetComponent_Base.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Remove="C:\Users\elect\.nuget\packages\chartjs.blazor.fork\2.0.2\contentFiles\any\netstandard2.1\wwwroot\ChartJsBlazorInterop.js" />
+		<Content Remove="Pages\AssetsBasics\PieceOfEquipmentDueDate_Search.razor" />
+		<Content Remove="Pages\AssetsBasics\PieceOfEquipment_Create.old.razor" />
+		<Content Remove="Pages\AssetsBasics\PieceOfEquipment_Search.old.razor" />
+		<Content Remove="Pages\AssetsBasics\POEWeightSets_Search.razor" />
+		<Content Remove="Pages\AssetsBasics\Technician_Create.razor" />
+		<Content Remove="Pages\Customer\Address_Search_Test.razor" />
+		<Content Remove="Pages\Customer\Contact-Create.razor" />
+		<Content Remove="Pages\Order\Eccentricity.razor" />
+		<Content Remove="Pages\Order\EccentricityComponent.razor" />
+		<Content Remove="Pages\Order\LinearityComponent.razor" />
+		<Content Remove="Pages\Order\OffLineData_Search.razor" />
+		<Content Remove="Pages\Order\PieceOfEquipment_Search.razor" />
+		<Content Remove="Pages\Order\RepeabilityComponent.razor" />
+		<Content Remove="Pages\Order\WeightComponent.razor" />
+		<Content Remove="Pages\PieceOfEquipment\PieceOfEquipment_Create.razor" />
+		<Content Remove="Pages\Security\Security_Search.razor" />
+		<Content Remove="Pages\Tools\Customer_Details.razor" />
+		<Content Remove="Pages\Tools\GetReportByTestPoint.razor" />
+		<Content Remove="Pages\Tools\GetReportView.razor" />
+		<Content Remove="Pages\Tools\ReportUncertBudgetComp.razor" />
+		<Content Remove="wwwroot\Files\ExamenOCA.jpeg" />
+		<Content Remove="wwwroot\Files\Rut Personal Yenny Papamija.pdf" />
+		<Content Remove="wwwroot\js\BlazorControls.css" />
+		<Content Remove="wwwroot\js\BlazorControls.js" />
+		<Content Remove="wwwroot\js\Chart.min.js" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="Pages\Basics\Equipment_Create.razor.old" />
+		<None Remove="Program.cs.bak" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\SqliteWasmHelper\SqliteWasmHelper.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Shared\version1\" />
+		<Folder Include="Pages\PieceOfEquipment\" />
+		<Folder Include="Pages\Report\" />
+		<Folder Include="wwwroot\content\" />
+		<Folder Include="wwwroot\files\" />
+		<Folder Include="wwwroot\NewFolder\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="Pages\Tools\Customer_Add.razor" />
+		<None Include="Pages\Tools\Customer_Edit.razor" />
+		<None Include="Pages\Tools\GetReport.razor" />
+		<None Include="Pages\Tools\GetReportPoints.razor" />
+		<None Include="Pages\Order\GetReportByTestPoint.razor" />
+		<None Include="Pages\Tools\ReportUncertBudgetComp.razor" />
+		<None Include="Pages\Tools\GetReportUncertBudget.razor" />
+		<None Include="Pages\Tools\GetSticker.razor" />
+		<None Include="wwwroot\Files\ExamenOCA.jpeg" />
+		<None Include="wwwroot\Files\Rut Personal Yenny Papamija.pdf" />
+		<None Include="wwwroot\Version\CurrentVersion.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Update="Pages\AssetsBasics\POEChildren_Search.razor">
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+		</Content>
+		<Content Update="wwwroot\appsettings.onpremise.Production.json">
+			<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+		<Content Update="wwwroot\appsettings.Development.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\appsettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\Certificate\550A141F12DE6341FBA65B0AD0433500.pdf">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\Certificate\ExamenOCA.jpeg">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\css\print.min.css">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\css\sb-admin-2.css">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\css\site.css">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\favicon.ico">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\Files\reticles.csv">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\Files\WeightsUploadExample.csv">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\icon-512.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\index.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\Canvas.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\dexie-export-import.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\dexie.min.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\download.min.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\file5.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\getReportCanvasDemo.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\moment.min.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\pdf.min.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\pdf.worker.min.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\print.min.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\sb-admin-2.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\js\site.js">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\manifest.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\Version\CurrentVersion.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<BlazorLinkerDescriptor Include="Linker.xml" />
+	</ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+		<TypeScriptTarget>ES5</TypeScriptTarget>
+		<TypeScriptJSXEmit>React</TypeScriptJSXEmit>
+		<TypeScriptModuleKind />
+		<TypeScriptCompileOnSaveEnabled>False</TypeScriptCompileOnSaveEnabled>
+		<TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
+		<TypeScriptRemoveComments>False</TypeScriptRemoveComments>
+		<TypeScriptOutFile />
+		<TypeScriptOutDir />
+		<TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
+		<TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
+		<TypeScriptSourceMap>True</TypeScriptSourceMap>
+		<TypeScriptMapRoot />
+		<TypeScriptSourceRoot />
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<Optimize>False</Optimize>
+		<RunAOTCompilation>False</RunAOTCompilation>
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<BlazorWebAssemblyEnableLinking>false</BlazorWebAssemblyEnableLinking>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<Nullable>enable</Nullable>
+		<RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<Title></Title>
+		<IncludeSymbols>False</IncludeSymbols>
+		<StartupObject></StartupObject>
+		<NuGetAudit>False</NuGetAudit>
+	</PropertyGroup>
+
+</Project>

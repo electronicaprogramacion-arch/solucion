@@ -1,0 +1,64 @@
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using System;
+using System.Threading.Tasks;
+
+namespace CalibrationSaaS.Infraestructure.Blazor.Services
+{
+    public static class ConnectionStatusService
+    {
+        private static bool isOnline = true;
+        
+        public static string grpcUrl;
+        private static bool isConnected;
+        private static bool isChangeStatus;
+        public static event Func<bool, Task> OnChange;
+        public static event Action<bool> OnChangeConnection;
+
+        [Inject]
+        public static IJSRuntime JSRuntime { get; set; }
+
+        public static bool GetChangeStatus()
+        {
+            return isChangeStatus;
+        }
+
+
+        public static bool GetCurrentStatus()
+        {
+            return isOnline;
+        }
+
+        public static bool GetCurrentConnected()
+        {
+            return isConnected;
+        }
+
+        public static string GetCurrentStatusLabel()
+        {
+            return isOnline ? "Online" : "Offline";
+        }
+
+        public static async Task ChangeConnectionStatus(bool connectionStus)
+        {
+            if (!isChangeStatus)
+            {
+                isChangeStatus = true;
+            }
+            else
+            {
+                isChangeStatus = false;
+            }
+
+            isOnline = connectionStus;
+            await OnChange?.Invoke(connectionStus);
+        }
+
+
+        public static void ConnectedChangeStatus(bool connectionStus)
+        {
+            isConnected = connectionStus;
+            OnChangeConnection?.Invoke(connectionStus);
+        }
+    }
+}

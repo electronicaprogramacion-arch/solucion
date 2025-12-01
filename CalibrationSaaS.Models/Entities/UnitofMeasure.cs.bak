@@ -1,0 +1,190 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Text.Json.Serialization;
+
+namespace CalibrationSaaS.Domain.Aggregates.Entities
+{
+    [DataContract]
+    public class UnitOfMeasure : IGeneric
+    {
+        public UnitOfMeasure()
+        {
+            
+        }
+
+        [Key]
+        [Required]       
+        [DataMember(Order = 1)]
+        public int UnitOfMeasureID { get; set; }
+        
+        [DataMember(Order = 2)]        
+        [Required(AllowEmptyStrings =false,ErrorMessage = "Required")]
+        [StringLength(100, ErrorMessage = "Name is too long.")]
+        public string Name { get; set; }
+
+        [DataMember(Order = 3)]
+        [Required(AllowEmptyStrings = false, ErrorMessage = "Required")]
+        [StringLength(10, ErrorMessage = "Name is too long.")]
+        public string Abbreviation { get; set; } = "";
+
+        [DataMember(Order = 4)]
+        public bool IsEnabled { get; set; }
+
+        [DataMember(Order = 5)]
+        public virtual UnitOfMeasureType Type { get; set; }
+
+
+        [NotMapped]
+        [DataMember(Order = 6)]
+        public virtual UnitOfMeasure UnitOfMeasureBase { get; set; }
+
+        [DataMember(Order = 7)]
+        public int TypeID { get; set; }
+
+        [DataMember(Order = 8)]
+        public double ConversionValue { get; set; }
+
+       
+        [DataMember(Order = 9)]
+        public virtual UnitOfMeasure UncertaintyUnitOfMeasure { get; set; }
+
+
+        //[NotMapped]
+        //[IgnoreDataMember]
+        //public virtual UnitOfMeasure ParentUncertaintyUnitOfMeasure { get; set; }
+
+        [DataMember(Order = 10)]
+        public int? UncertaintyUnitOfMeasureID { get; set; }
+
+        [IgnoreDataMember]
+        public string Description { get ; set ; }
+
+        [NotMapped]
+        [IgnoreDataMember]
+        public string CapacityFull { get; set; }
+
+        [NotMapped]
+        [JsonIgnore]
+        [IgnoreDataMember]
+        public virtual ICollection<EquipmentTemplate> EquipmentTemplates { get; set; }
+
+        [NotMapped]
+        [JsonIgnore]
+        //[InverseProperty(nameof(TestPoint.UnitOfMeasurement))]
+        [IgnoreDataMember]
+        public virtual ICollection<TestPoint> TestPointsIn { get; set; }
+        //[InverseProperty(nameof(TestPoint.UnitOfMeasurementOut))]
+        [JsonIgnore]
+        [IgnoreDataMember]
+        public virtual ICollection<TestPoint> TestPointsOut { get; set; }
+        [JsonIgnore]
+        [IgnoreDataMember]
+        public virtual ICollection<TestPointGroup> TestPointGroups { get; set; }
+
+        [JsonIgnore]
+        [IgnoreDataMember]
+        public virtual ICollection<BasicCalibrationResult> BasicCalibrationResult { get; set; }
+
+        [JsonIgnore]
+        [IgnoreDataMember]
+        public virtual ICollection<WeightSet> WeightSets { get; set; }
+
+        [JsonIgnore]
+        [IgnoreDataMember]
+        public virtual ICollection<WeightSet> UncertaintyWeightSets { get; set; }
+
+        [JsonIgnore]
+        [IgnoreDataMember]
+        public virtual ICollection<Linearity> Linearities { get; set; }
+
+        [JsonIgnore]
+        [IgnoreDataMember]
+        public virtual ICollection<Linearity> UncertaintyLinearities { get; set; }
+
+        [JsonIgnore]
+        [IgnoreDataMember]
+        public virtual ICollection<PieceOfEquipment> PieceOfEquipments { get; set; }
+
+        [DataMember(Order = 11)]
+        public int? UnitOfMeasureBaseID { get; set; }
+
+        [NotMapped]
+        [IgnoreDataMember]
+        public UnitOfMeasure ParentUnitOfMeasureBase { get; set; }
+        //General Static Conversion Method
+        public static double ConvertToUOM(UnitOfMeasure ini, double value, UnitOfMeasure final)
+        {
+            if (ini.ConversionValue == 0 || final.ConversionValue == 0)
+            {
+                throw new Exception("Conversion Value not zero");
+            }
+            
+            if (ini.TypeID != final.TypeID) 
+            { 
+                throw new Exception("The units of measure " + ini.Name + " and " + final.Name + " are from different unit types, a conversion can't be done");
+            }
+            
+            var result = (value * ini.ConversionValue) * (1 / final.ConversionValue);
+            
+            return result;
+        }
+
+        //Conversion Method
+        public double ConvertToUOM(double value, UnitOfMeasure final)
+        {
+            if (this.ConversionValue == 0 || final.ConversionValue == 0)
+            {
+                throw new Exception("Conversion Value not zero");
+            }
+
+            if (this.TypeID != final.TypeID)
+            {
+                throw new Exception("The units of measure " + this.Name + " and " + final.Name + " are from different unit types, a conversion can't be done");
+            }
+
+            var result = (value * this.ConversionValue) * (1 / final.ConversionValue);
+
+            return result;
+        }
+        
+        public bool requiresUncertantyConversion()
+        {
+            return (this.UncertaintyUnitOfMeasureID != this.UnitOfMeasureID);
+        }
+
+
+
+    }
+
+
+    [DataContract]
+    public class UnitOfMeasureType : IGeneric
+    {
+        [Key]
+        [DataMember(Order = 1)]
+        public int Value { get; set; }
+
+
+        [DataMember(Order = 2)]
+        public string Name { get ; set ; }
+
+        [DataMember(Order = 3)]
+        public string Description { get ; set ; }
+
+
+        [DataMember(Order = 4)]
+        public int? CalibrationTypeID { get; set; }
+
+        
+
+
+
+
+    }
+
+
+}

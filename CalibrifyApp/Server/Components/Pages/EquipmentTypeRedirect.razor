@@ -1,0 +1,13 @@
+@page "/EquipmentTypeRedirect"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Logging
+@inject NavigationManager NavigationManager
+@inject ILogger<EquipmentTypeRedirect> Logger
+
+@code {
+    protected override void OnInitialized()
+    {
+        Logger.LogInformation("Redirecting from EquipmentTypeCustom to EquipmentType");
+        NavigationManager.NavigateTo("/EquipmentType");
+    }
+}

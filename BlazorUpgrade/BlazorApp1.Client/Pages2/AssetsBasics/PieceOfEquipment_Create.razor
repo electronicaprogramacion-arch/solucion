@@ -1,0 +1,1803 @@
+@page "/PieceOfEquipmentCreate/{EntityID}"
+@using BlazorApp1.Blazor.Blazor.LTI.Rockwell
+@using BlazorApp1.Blazor.Blazor.Pages.Basics
+@using BlazorApp1.Blazor.Blazor.Shared.Component
+@using BlazorApp1.Blazor.Pages.AssetsBasics
+@using BlazorApp1.Blazor.Shared
+@using BlazorApp1.Client.Pages2.AssetsBasics
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+
+@using System.Reflection
+@namespace BlazorApp1.Client.Pages.AssetsBasics
+@inherits PieceOfEquipmen_CreateBase
+@implements IDisposable
+@inject IModalService modal
+
+@using Helpers
+@using Microsoft.JSInterop;
+@using Blazed.Controls
+@using Blazed.Controls.Toast
+
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using Microsoft.AspNetCore.Components.Forms
+
+@if (!LoadingWait)
+{
+
+    <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+        <div class="row" style="width:100%,display:flex;flex-dirección:columna;justify-content: center;">
+            <div class="col">
+            </div>
+            <div class="col">
+                <p><em>Loading...</em></p>
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+
+            </div>
+            <div class="col">
+            </div>
+
+
+        </div>
+    </div>
+}
+else if (LoadingWait && (EquipmentTypeObject != null || (EntityID == "0" || string.IsNullOrEmpty(EntityID))))
+{
+    <CascadingValue Value="@eq" Name="CascadeParam1">
+
+
+        @if (Enabled)
+        {
+            <HeaderComponent Enabled="Enabled" ActionBar="Enabled">
+
+            </HeaderComponent>
+
+        }
+        <EditForm EditContext="@CurrentEditContext" OnSubmit="FormSubmitted">
+            @*  <DataAnnotationsValidator /> *@
+
+            <Blazed.Controls.SubmitComponent>
+
+            </Blazed.Controls.SubmitComponent>
+
+
+            <div class="accordion" id="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header" id="headingOne">
+                         <RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal">
+
+                             <RadzenRow>
+
+                             <div class="row">
+                            <div class="col">
+                                <h5 class="mb-0">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                                    @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseOne">
+
+                                        @if (eq != null && eq?.EquipmentTemplate?.EquipmentTypeID > 0 && EquipmentTypeObject?.Name != null)
+                                        {
+                                            string parent="";
+                                            if(!string.IsNullOrEmpty(ParentID))
+                                            {
+                                                parent = "Parent :" + ParentID + " - " ;
+                                            }
+
+                                            <h6>
+                                                Basic Information  : @(parent + EquipmentTypeObject.Name + " - " + eq.EquipmentTemplate?.DeviceClass)
+                                            </h6>
+                                        }
+                                        else
+                                        {
+                                            string parent = "";
+                                            if (!string.IsNullOrEmpty(ParentID))
+                                            {
+                                                parent = ": Parent :" + ParentID + " - ";
+                                            }
+                                            <h6>
+                                                Basic Information: + @(parent)
+                                            </h6>
+                                        }
+                                    </button>
+                                </h5>
+                            </div>
+                            <div class="col">
+                            </div>
+                            <div class="col">
+
+                                @if(EquipmentTypeObject != null && (EquipmentTypeObject.HasStandard|| EquipmentTypeObject.HasStandardRange))
+                                {
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                    type="button"
+                                    @onclick:stopPropagation @onclick:preventDefault @onclick="@(()=> ShowModalReport())">
+
+                                        Work Order Detail Report
+                                    </button>
+                                }
+
+
+                            </div>
+                        </div>
+                       
+                       
+                         </RadzenRow>
+                        </RadzenStack>
+                    </div>
+
+                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-bs-parent="#accordion">
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="col">
+                                    @if (EntityID != "0" || Tenant=="LTI")
+                                    {
+
+
+                                        <TextInput Label="Equipment Number" @bind-Value="eq.PieceOfEquipmentID"
+                                                   Validate="true" ValidationFor="@(() => eq.PieceOfEquipmentID)"
+                                                   Type="@Types.text" IsDisabled="true">
+                                        </TextInput>
+
+                                       
+
+                                    }
+                                    else
+                                    {
+                                        <TextInput Label="Equipment Number" @bind-Value="eq.PieceOfEquipmentID"
+                                                   Validate="true" ValidationFor="@(() => eq.PieceOfEquipmentID)"
+                                                   Type="@Types.text" IsDisabled="false">
+                                        </TextInput>
+                                    }
+
+                                </div>
+                                <div class="col">
+                                    <div class="form-group" style="margin-top:0px;margin-bottom:0rem">
+                                        <label class="form-control-label">Equipment Template</label>
+                                        @if (editCustomer == true)
+                                        {
+                                            <label class="custom-select text-nowrap" style="overflow:hidden" @onclick="@(()=> ShowModal())">
+                                                @_EquipmentTemplateID - @_Name
+
+                                            </label>
+
+                                        }
+                                        else
+                                        {
+                                            <label class="custom-select text-nowrap">
+                                                @_EquipmentTemplateID - @_Name
+
+                                            </label>
+                                        }
+
+                                    </div>
+                                </div>
+
+                                @*             <div class="col alignCenter" style="margin-top:1.5rem;margin-bottom:0rem">
+                                <SearchButtonComponent FormType="typeof(CalibrationSaaS.Infraestructure.Blazor.Pages.Basics.Equipment_Create)"
+                                                       Type="new"
+                                                       Size="@Blazed.Controls.ModalSize.MediumWindow"
+                                                       Text="Add Equipment Template"
+                                                       IsDisabled="!Enabled"
+                                                       ID="0"
+                                                       CloseWindow="CloseET">
+
+                                </SearchButtonComponent>
+                            </div> *@
+                                <div class="col alignCenter" style="margin-top:1.5rem;margin-bottom:0rem">
+
+                                    @if (_EquipmentTemplateID.HasValue  && _EquipmentTemplateID.Value.ToString() != "0")
+                                    {
+                                        <SearchButtonComponent FormType="typeof(Equipment_Create)"
+                                        Type="search"
+                                        Size="@Blazed.Controls.ModalSize.FullScreen"
+                                        Text=""
+                                        IsDisabled="!Enabled"
+                                        Parameters="ModalParametersET"
+                                        CloseWindow="CloseET">
+
+                                        </SearchButtonComponent>
+                                    }
+
+                                    <SearchButtonComponent FormType="typeof(Equipment_Create)"
+                                    Type="new"
+                                    Size="@Blazed.Controls.ModalSize.MediumWindow"
+                                    Text="Add Equipment Template"
+                                    IsDisabled="!Enabled"
+                                    Parameters="ModalParametersET"
+                                    CloseWindow="CloseET">
+
+                                    </SearchButtonComponent>
+                                </div>
+                                @* @if (!eq.IsStandard)
+                            { *@
+
+                                <div class="col">
+
+                                    <label class="form-control-label">Test Codes</label>
+
+                                    <Typeahead @ref="Typehead"
+                                    AllowClear="true"
+                                    SearchMethod="@SearchTestCode"
+                                    Items="@TestCodeList.ToList().Take(10).ToList()"
+                                    @bind-Value="@CurrentTestCode"
+                                    Placeholder="Test Codes">
+                                        <SelectedTemplate Context="item">
+                                            @item.Code - @item.Description - @item.RangeMIn-@item.RangeMax @item?.UnitOfMeasure?.Abbreviation @item?.CalibrationType?.Name @item?.Procedure?.Name
+                                        </SelectedTemplate>
+                                        <ResultTemplate Context="item">
+                                            <div class="card" style="width: 90%">
+                                                <div class="card-body">
+                                                    <h5 class="card-title"> @item?.CalibrationType?.Name</h5>
+                                                    <h5 class="card-title"> @item.Code</h5>
+                                                    <h6 class="card-subtitle mb-2 text-muted">@item.Description</h6>
+                                                    <p class="card-text">Range: @item.RangeMIn - @item.RangeMax @item?.UnitOfMeasure?.Abbreviation</p>
+                                                    <p class="card-text">Procedure: @item?.Procedure?.Name</p>
+                                                </div>
+                                            </div>
+                                        </ResultTemplate>
+                                    </Typeahead>
+                                    @{
+                                        if (CurrentTestCode != null)
+                                        {
+                                            IsAccredited = CurrentTestCode.Accredited;
+                                        }
+
+
+                                    }
+                                </div>
+
+
+
+                                @if (_listPoEDueDate.Count() > 0 && 1==2)
+                                {
+                                    <div class="row" style="margin:20px">
+
+
+                                        <div class="table-responsive">
+                                            <label>List Piece of Equipments</label>
+                                            <table class="table table-bordered table-hover table-striped" id="dataTable" width="100%" cellspacing="0">
+                                                <thead class="thead-dark">
+                                                    <tr>
+                                                        <th width="5%">ID</th>
+                                                        <th>Serial</th>
+                                                        <th>Model</th>
+                                                        <th>Device Class</th>
+                                                        @*  <th>Customer</th> *@
+                                                        @*  <th>Capacity</th> *@
+
+                                                        <th>Status</th>
+                                                        <th>DueDate</th>
+
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody>
+
+                                                    @foreach (var item in _listPoEDueDate)
+                                                    {
+                                                        <tr>
+                                                            <td>@item.PieceOfEquipmentID</td>
+                                                            <td>@item.SerialNumber</td>
+                                                            <td>@item.EquipmentTemplate.Model</td>
+                                                            @if (!string.IsNullOrEmpty(item.EquipmentTemplate.DeviceClass))
+                                                            {
+                                                                <td>@item.EquipmentTemplate.DeviceClass</td>
+                                                            }
+                                                            else
+                                                            {
+                                                                <td></td>
+                                                            }
+
+                                                            <td>@item.Status.GetStatus(AppState.StatusList)</td>
+                                                            <td>@String.Format("{0:MM/dd/yy}", item.DueDate)</td>
+                                                        </tr>
+
+                                                        @*  <tr>
+                                                            <td>@item.PieceOfEquipmentID</td>
+                                                            <td>@item.SerialNumber</td>
+                                                            <td>@item.EquipmentTemplate.Model</td>
+                                                            <td>@item.Customer.Name</td>
+
+                                                            @if (item.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList, @item.Capacity) != null)
+                                                            {
+                                                                <td>
+                                                                    @item.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList, @item.Capacity).CapacityFull
+                                                                </td>
+                                                            }
+                                                            else
+                                                            {
+                                                                <td>N/A</td>
+                                                            }
+
+
+                                                            <td>@String.Format("{0:MM/dd/yy}", item.DueDate)</td>
+                                            </tr>*@
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="col" style="display:none">
+                                    <dl class="param param-feature">
+                                        <dt>Equipment Template</dt>
+                                        <dd>
+
+                                       @*  <InputNumber @bind-Value="eq.EquipmentTemplateId">
+                                            @_EquipmentTemplateID
+                                        </InputNumber> *@
+
+                                        @* @{
+                                            _EquipmentTemplateID = eq.EquipmentTemplateId;
+                                        } *@
+
+
+                                        </dd>
+                                    </dl>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="col">
+
+                                    <TextInput Label="Serial Number" @bind-Value="eq.SerialNumber"
+                                    Validate="true" ValidationFor="@(() => eq.SerialNumber)" IsDisabled="!Enabled">
+
+
+                                    </TextInput>
+
+                                </div>
+                                <div class="col">
+
+                                    <TextInput Label="Customer Tool Id" @bind-Value="eq.CustomerToolId"
+                                    Validate="true" ValidationFor="@(() => eq.CustomerToolId)" IsDisabled="!Enabled">
+
+
+                                    </TextInput>
+
+                                </div>
+                                <div class="col">
+
+                                    <TextInput @bind-Value="eq.Status"
+                                    IsDisabled="!Enabled"
+                                    Label="Status"
+                                    LabelDown="@LabelDown"
+                                    ValidationFor="(()=> eq.Status)">
+
+                                        @foreach (KeyValuePair<string, string> item in AppState.StatusList)
+                                        {
+                                            <option value="@item.Key">@item.Value</option>
+                                        }
+                                    </TextInput>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group" style="margin-top:0px;margin-bottom:0rem">
+                                        <label class="form-control-label">Calibration Date</label>
+
+                                        <InputDate @bind-Value="eq.CalibrationDate" class="form-control">
+                                        </InputDate>
+                                        <ValidationMessage For="@(()=>eq.CalibrationDate)" />
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col">
+                                    <div class="form-group" style="margin-top:0px;margin-bottom:0rem">
+                                        <label class="form-control-label">Due Date</label>
+
+                                        <InputDate @bind-Value="eq.DueDate" class="form-control">
+                                        </InputDate>
+                                        <ValidationMessage For="@(()=>eq.DueDate)" />
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            <div class="row">
+
+                                <div class="col">
+                                    <div class="form-group" style="margin-top:0px;margin-bottom:0rem">
+                                        <label class="form-control-label">Customer</label>
+                                        @if (Enabled && !IsModal)
+                                        {
+                                            
+                                            <label class="custom-select text-nowrap" @onclick="@(()=> ShowModalCustomer())">
+                                                @_CustomerId - @_CustomerValue
+
+                                            </label>
+
+                                            <ValidationMessage For="@(()=>eq.CustomerId)" />
+                                        }
+                                        else
+                                        {
+                                            <label class="custom-select text-nowrap">
+                                                @_CustomerId - @_CustomerValue
+
+                                            </label>
+                                        }
+
+
+                                    </div>
+                                </div>
+                                <div class="col-sm-2" style="display:none">
+                                    <dl class="param param-feature">
+                                        <dt>CustomerId</dt>
+                                        <dd>
+
+                                            @*  <InputNumber @bind-Value="eq.CustomerId">
+                                            @_CustomerId
+                                        </InputNumber> *@
+
+                                            @{
+                                                _CustomerId = eq.CustomerId;
+                                            }
+
+
+                                        </dd>
+                                    </dl>
+                                </div>
+                                <div class="col">
+
+                                    @if (_addressFiltered?.Addresses != null)
+                                    {
+                                        <TextInput TValue="int" Validate="false" Label="Address"
+                                        @bind-Value="eq.AddressId"
+                                        ValidationFor="@(()=>eq.AddressId)" IsDisabled="!Enabled" ShowDefaultOption="false">
+
+                                            @foreach (Address item in _addressFiltered.Addresses)
+                                            {
+
+
+                                                if (@item.AddressId == AddressId && AddressId > 0)
+                                                {
+
+                                                    <option value="@item.AddressId" selected="selected">@item.StreetAddress1</option>
+
+                                                }
+                                                else
+                                                {
+                                                    <option value="@item.AddressId">@item.StreetAddress1</option>
+                                                }
+                                            }
+
+                                        </TextInput>
+
+                                    }
+                                    else
+                                    {
+                                        <p><em>No addresses in the selected customer</em></p>
+                                    }
+                                    <ValidationMessage For="@(()=>eq.AddressId)" />
+
+                                </div>
+                                @*@if (IsScale)
+                            {*@
+                                <div class="col">
+                                    <TextInput @bind-Value="@eq.InstallLocation" Label="Install Location"
+                                    LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.InstallLocation)">
+
+                                    </TextInput>
+                                </div>
+                                @* }*@
+                            </div>
+
+                            @if (IsScale || IsWeigthSet || HashCapacity)
+                            {
+                                <div class="row">
+
+                                    @if (IsScale || HashCapacity)
+                                    {
+                                        <div class="col">
+                                            <div class="form-group" style="margin-top:0px;margin-bottom:0rem">
+                                                <label class="form-control-label">Capacity</label>
+
+
+                                                <InputNumber @bind-Value="@eq.Capacity" class="form-control">
+
+                                                </InputNumber>
+                                                <ValidationMessage For="@(()=>eq.Capacity)" />
+
+                                            </div>
+                                        </div>
+                                        <div class="col">
+
+                                            <TextInput @bind-Value="@eq.UnitOfMeasureID" Label="Unit Of Measurement" TValue="int?"
+                                            LabelDown="@LabelDown" IsDisabled="!Enabled">
+                                                @if (AppState.UnitofMeasureList != null)
+                                                {
+
+                                                    if (EquipmentTypeObject != null)
+                                                    {
+                                                        @* var tc = AppSecurity.EquipmentTypeWODList.Where(x => x.EquipmentTypeID == eq.EquipmentTemplate.EquipmentTypeObject.EquipmentTypeID).FirstOrDefault();
+
+                                                        EquipmentTypeObject.CalibrationTypeID = tc.CalibrationTypeID; *@
+
+                                                        @foreach (var item in AppState.GetUoMByEquipmentType(EquipmentTypeObject))
+                                                        {
+                                                            //string name = item.Name + " " + @item.LastName;
+                                                            if(eq.UnitOfMeasureID==item.UnitOfMeasureID)
+                                                            {
+                                                                <option value="@item.UnitOfMeasureID" selected>@item.Abbreviation - @item.Name</option>
+                                                            }else{
+                                                                <option value="@item.UnitOfMeasureID">@item.Abbreviation - @item.Name</option>
+                                                            }
+                                                            
+
+                                                        }
+                                                    }
+                                                    @* else
+                                                    {
+                                                        @foreach (var item in AppState.GetUoMByCalibrationTypeObj(EquipmentTypeObject.CalibrationType))
+                                                        {
+                                                            //string name = item.Name + " " + @item.LastName;
+
+                                                            <option value="@item.UnitOfMeasureID">@item.Abbreviation - @item.Name</option>
+
+                                                        }
+
+                                                    } *@
+
+
+                                                }
+                                                @*       @foreach (var item in AppState.GetUoMByEquipmentType(EquipmentTypeObject))
+                                                {
+                                                    //string name = item.Name + " " + @item.LastName;
+
+                                                    <option value="@item.UnitOfMeasureID">@item.Abbreviation - @item.Name</option>
+
+                                                }
+ *@
+
+                                            </TextInput>
+
+                                        </div>
+                                    }
+
+
+
+
+                                    @if (IsWeigthSet && EquipmentTypeObject != null && EquipmentTypeObject.HasAccredited)
+                                    {
+
+
+                                        <div class="col">
+                                            <dl class="param param-feature">
+                                                <dt>Accredited Calibration</dt>
+                                                <dd>
+
+                                                    @if (Enabled)
+                                                    {
+
+                                                        <Select id="accreditedSelect" class="form-control" @onchange=@selectAccredited>
+                                                            @foreach (var item in listBool)
+                                                            {
+                                                                @if (eq.IsForAccreditedCal && item == "Y")
+                                                                {
+                                                                    <option value=@item selected>@item</option>
+                                                                }
+                                                                else if (!eq.IsForAccreditedCal && item == "N" && !string.IsNullOrEmpty(eq.PieceOfEquipmentID))
+                                                                {
+                                                                    <option value=@item selected>@item</option>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <option value=@item>@item</option>
+                                                                }
+
+                                                            }
+                                                        </Select>
+
+
+                                                    }
+                                                    else
+                                                    {
+                                                        <Select id="accreditedSelect" class="form-control" @onchange=@selectAccredited disabled="disabled">
+                                                            @foreach (var item in listBool)
+                                                            {
+                                                                @if (eq.IsForAccreditedCal && item == "Y")
+                                                                {
+                                                                    <option value=@item selected>@item</option>
+                                                                }
+                                                                else if (!eq.IsForAccreditedCal && item == "N" && !string.IsNullOrEmpty(eq.PieceOfEquipmentID))
+                                                                {
+                                                                    <option value=@item selected>@item</option>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <option value=@item>@item</option>
+                                                                }
+
+                                                            }
+                                                        </Select>
+                                                    }
+
+
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                    }
+                                    else
+                              if (IsWeigthSet && EquipmentTypeObject != null && !EquipmentTypeObject.HasAccredited)
+                                    {
+                                        eq.IsForAccreditedCal = true;
+                                    }
+
+
+                                    @if (eq != null && EquipmentTypeObject != null && EquipmentTypeObject.HasClass==true)
+                                    {
+
+                                        <div class="col-sm">
+                                            <TextInput @bind-Value="eq.Class" Label="Class" LabelDown="@LabelDown" IsDisabled="!Enabled"
+                                            ValidationFor="(()=>eq.Class)">
+
+                                                @foreach (var it in AppState.ClassPOE)
+                                        {
+                                            if(eq.Class==it.Value)
+                                            {
+                                                <option value="@it.Value" selected>@it.Value</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@it.Value">@it.Value</option>
+                                            }
+
+                                        }
+                                        @*<option value="" selected>N/A</option>
+                                    <option value="I">I</option>
+                                    <option value="II">II</option>
+                                    <option value="III">III</option>
+                                    <option value="IV">IV</option>
+                                    <option value="F">F</option>*@
+
+                                    </TextInput>
+                                </div>
+
+                                    }
+                                </div>
+                            }
+
+
+
+
+                            @if (IsScale)
+                            {
+                                <div class="row">
+                                    <div class="col-sm-6" style="padding-top:1.5rem">
+
+                                        @if (eq.CustomerId > 0)
+                                        {
+                                            SelectedUser = false;
+                                        }
+                                        @if (!Enabled)
+                                        {
+                                            SelectedUser = true;
+                                        }
+                                        @if (EquipmentTypeObject != null && EquipmentTypeObject.HasIndicator)
+                                        {
+                                            <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+                                            @onclick="@(() => ShowModalPoEIndicator())" @onclick:stopPropagation @onclick:preventDefault
+                                            disabled="@SelectedUser">
+                                                Select Indicator
+                                            </button>
+                                            <button class="d-sm-inline-block btn btn-sm btn-primary  btn-danger"
+                                            @onclick="@(() => DeleteIndicator())" @onclick:stopPropagation @onclick:preventDefault
+                                            disabled="@SelectedUser">
+                                                Delete Indicator
+                                            </button>
+                                        }
+                                        @if (EquipmentTypeObject != null && EquipmentTypeObject.HasPeripheral)
+                                        {
+                                            <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm"
+                                            @onclick="@(()=> ShowModalPoEDueDate())"
+                                            @onclick:stopPropagation @onclick:preventDefault disabled="@SelectedUser">
+                                                Select Peripherals
+                                            </button>
+
+                                        }
+
+                                    </div>
+                                    @if (_listPoEIndicator != null && _listPoEIndicator?.SerialNumber != null)
+                                    {
+                                        <Indicator _listPoEIndicator="@_listPoEIndicator" Manufacturer="@_listPoEIndicator.EquipmentTemplate.Manufacturer1.Name" Model="@_listPoEIndicator.EquipmentTemplate.Model"></Indicator>
+                                    }
+                                    <div class="col-sm-2" style="display:none">
+                                        <dl class="param param-feature">
+                                            <dt>E</dt>
+                                            <dd>
+
+                                                <InputText @bind-Value="eq.IndicatorPieceOfEquipmentID">
+                                                    @eq.IndicatorPieceOfEquipmentID
+                                                </InputText>
+
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col">
+                                        @if (_listPoEDueDate != null && _listPoEDueDate?.Count() > 0)
+                                        {
+                                            <div class="table-responsive">
+                                                <label>Peripherals</label>
+                                                <table class="table table-bordered table-hover table-striped" id="dataTable" width="100%" cellspacing="0">
+                                                    <thead class="thead-dark">
+                                                        <tr>
+                                                            <th width="5%">ID</th>
+                                                            <th>Serial</th>
+                                                            <th>Model</th>
+
+                                                            <th>Device Class</th>
+                                                            @*<th>UoM</th>*@
+                                                            <th>Status</th>
+                                                            <th>DueDate</th>
+
+                                                        </tr>
+                                                    </thead>
+
+                                                    <tbody>
+
+                                                        @foreach (var item in _listPoEDueDate)
+                                                        {
+
+                                                            <tr>
+                                                                <td>@item.PieceOfEquipmentID</td>
+                                                                <td>@item.SerialNumber</td>
+                                                                <td>@item.EquipmentTemplate.Model</td>
+                                                                @if (!string.IsNullOrEmpty(item.EquipmentTemplate.DeviceClass))
+                                                                {
+                                                                    <td>@item.EquipmentTemplate.DeviceClass</td>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <td></td>
+                                                                }
+
+
+
+
+
+                                                                <td>@item.Status.GetStatus(AppState.StatusList)</td>
+                                                                <td>@String.Format("{0:MM/dd/yy}", item.DueDate)</td>
+                                                            </tr>
+                                                        }
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        }
+                                    </div>
+
+
+                                </div>
+
+                            }
+
+
+                            <div class="table-responsive">
+
+
+                                <label>Equipment Template Detail</label>
+                                <table class="table table-bordered table-hover table-striped" id="dataTable" width="100%" cellspacing="0">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th width="5%">ID</th>
+                                            <th>Manufacturer</th>
+                                            <th>Model</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+
+
+                                        <tr>
+                                            <td>@_EquipmentTemplateID</td>
+                                            <td>"@_Manufacturer"</td>
+                                            <td>@_Model</td>
+                                            <td>
+                                                @if (_EquipmentTemplateID != null && _EquipmentTemplateID.HasValue)
+                                                {
+                                                    <SearchButtonComponent FormType="typeof(Equipment_Create)"
+                                                    ID="@_EquipmentTemplateID.Value.ToString()"
+                                                    Type="search"
+                                                    Size="@Blazed.Controls.ModalSize.LargeWindow"
+                                                    Text="View Template"
+                                                    CSSButton="primary"
+                                                    Enabled="false"
+                                                    IsDisabled="!Enabled">
+
+                                                    </SearchButtonComponent>
+                                                }
+                                                else
+                                                {
+                                                    <SearchButtonComponent FormType="typeof(Equipment_Create)"
+                                                    Type="search"
+                                                    Size="@Blazed.Controls.ModalSize.LargeWindow"
+                                                    Text="View Template"
+                                                    CSSButton="primary" IsDisabled="true">
+
+                                                    </SearchButtonComponent>
+                                                }
+
+                                            </td>
+                                        </tr>
+
+
+
+                                    </tbody>
+                                </table>
+
+
+
+
+
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                @if (EquipmentTypeObject?.HasTolerance == true)
+                {
+                    <div class="accordion-item">
+                        <div class="accordion-header" id="heading3">
+                            <h2 class="mb-0">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ToleranceCard2"
+                                @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="ToleranceCard2">
+                                    Tolerance and resolution Information
+                                </button>
+                            </h2>
+                        </div>
+                        <div id="ToleranceCard2" class="collapse" aria-labelledby="heading3" data-bs-parent="#accordion">
+
+                            @if (eq != null && EquipmentTypeObject != null && eq.EquipmentTemplate?.EquipmentTypeObject?.CalibrationTypeID > 0 && eq.EquipmentTemplate?.EquipmentTypeObject?.HasResolution == true) @* && AppState?.ToleranceList2 != null) *@
+                            {
+                                Tolerance tol = new Tolerance();
+                                @if (eq.Tolerance != null && tol.ToleranceTypeID == 0)
+                                {
+                                    tol = eq.EquipmentTemplate.Tolerance;
+                                }
+                                else
+                                {
+                                    tol = eq.Tolerance;
+
+                                }
+                                <CascadingValue Value="@tol" Name="CascadeTolerance">
+
+
+                                    <ResolutionComponent @ref="@ResolutionComponent"
+                                    Title="Resolution Component"
+                                    Type="1"
+                                    IsPOE="true"
+                                    ToleranceList="AppState.ToleranceList2.Where(x=>x.CalibrationTypeId==EquipmentTypeObject.CalibrationTypeID).ToList()" 
+                                    Enabled="@GetEnabled()"
+                                    IsToleranceImport="@eq.IsToleranceImport"
+                                    Refresh="@(async () => await Refresh())"
+                                    DeleteTolerance="@(async () => await DeleteTolerance())"
+                                    AfterActionF="AfterAction"></ResolutionComponent>
+
+
+                                </CascadingValue>
+
+
+                            }
+
+
+                        </div>
+                    </div>
+                }
+
+            
+
+            @*<article class="card-body">*@
+            <div class="accordion" id="accordionDynamic">
+                @if (eq != null && _listCetificate != null && EquipmentTypeObject != null && EquipmentTypeObject.HasCertificate)
+
+                {
+                    <div class="accordion-item">
+                        <div class="accordion-header" id="headingCertificate">
+                            <h5 class="mb-0">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseTwo">
+                                    Certificate
+                                </button>
+                            </h5>
+                        </div>
+                        <div id="collapseTwo" class="collapse" aria-labelledby="headingCertificate" data-bs-parent="#accordionDynamic">
+                            <div class="card-body">
+                                @*<Weight_Create @ref="@WeightCreate" _listWeightSets="@_listWeightSets">*@
+                                <BlazorApp1.Blazor.Pages.AssetsBasics.Certificate_CreatePoE @ref="@CertificateCreate" Component="Component">
+                                </BlazorApp1.Blazor.Pages.AssetsBasics.Certificate_CreatePoE>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                  @if (eq != null && EquipmentTypeObject != null
+           && EquipmentTypeObject.DynamicConfiguration2 == true
+           && EquipmentTypeObject.CalibrationType != null)
+        {
+            
+
+            <CascadingValue Value="@eq" Name="CascadeParam3">
+
+                <CascadingValue Value="@EquipmentTypeObject.CalibrationType" Name="CascadeParam2">
+
+
+                    <CalibrationTypeComponent UseIsVisible="true" ShowProgress="true"
+                                                                                            Entity="PieceOfEquipment"
+                                                                                            CalibrationItem="GenericCalibration2"
+                                                                                            CalibrationItemResult="GenericCalibrationResult2"
+                                                                                            Component="@Component"
+                                                                                            ChangeResolution="false"
+                                                                                            HasBeenCompleted="false"
+                                                                                            @ref="CalibrationTypeComponent"
+                                                                                            ResultCalibration="DynamicResult"
+                                                                                            GetGroupsProperty="EquipmentTemplate">
+
+
+                    </CalibrationTypeComponent>
+
+
+                </CascadingValue>
+            </CascadingValue>
+
+        }
+
+        else if (EquipmentTypeObject != null && (IsStandard || IsWeigthSet)
+        && EquipmentTypeObject.DynamicConfiguration2 == false)
+        {
+
+            StandardTitle = EquipmentTypeObject.Name;
+
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingConfiguration">
+                    <h5 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" @onclick:stopPropagation @onclick:preventDefault
+                                aria-expanded="false" aria-controls="collapseThree">
+                            @if (eq.IsForAccreditedCal != true)
+                            {
+                                <div>Configure @StandardTitle</div>
+                            }
+                            else
+                            {
+                                <div>Configure @StandardTitle - Accredited</div>
+                            }
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseThree" class="collapse" aria-labelledby="headingConfiguration" data-bs-parent="#accordion">
+                    <div class="card-body">
+
+                        @if (EquipmentTypeObject != null && EquipmentTypeObject?.HasStandardRange==true)
+
+                        {
+
+                            @*<Weight_Create @ref="@WeightCreate" _listWeightSets="@_listWeightSets">*@
+                            <Weight_Create @ref="@WeightCreate" EquipmentTypeObject="EquipmentTypeObject" Enabled="Enabled" Component="Component">
+                            </Weight_Create>
+                        }
+                        @if (eq != null && EquipmentTypeObject != null && EquipmentTypeObject?.HasStandard==true
+                       && EquipmentTypeObject?.HasStandardRange==false
+                       && EquipmentTypeObject?.HardnessTestBlockInformation==false)
+
+                         {
+
+                            @*<Weight_Create @ref="@WeightCreate" _listWeightSets="@_listWeightSets">*@
+                            <CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics.Weight_Create EquipmentTypeObject="EquipmentTypeObject" @ref="@WeightCreate" Enabled="Enabled" Component="Component">
+                            </CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics.Weight_Create>
+                        }
+
+                        @if (EquipmentTypeObject != null && EquipmentTypeObject.CalibrationTypeID == 4
+                       && EquipmentTypeObject.DynamicConfiguration2 == false && EquipmentTypeObject.DynamicConfiguration == true)
+
+                        {
+
+                            <div class="row">
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.LoadKGF" Label="Load (kgf)" TValue="double?"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.LoadKGF)">
+
+                                    </TextInput>
+
+                                </div>
+                                <div class="col">
+                                    <TextInput @bind-Value="@eq.TypeMicro" Label="Type" TValue="int?" OnChangeControl="@(async (arg) => await ChangeControl2(arg))"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="(()=>eq.TypeMicro)">
+                                        @if (AppState?.TYpeMicro?.Count > 0)
+                                        {
+                                            @foreach (var item in AppState.TYpeMicro)
+                                            {
+                                                //string name = item.Name + " " + @item.LastName;
+
+                                                <option value="@item.Key">@item.Value</option>
+
+                                            }
+
+                                        }
+                                    </TextInput>
+                                </div>
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.MicronValue" Label="Standard �m"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.MicronValue)">
+
+                                    </TextInput>
+
+                                </div>
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.ToleranceHV" Label="@ToleranceLabel" TValue="double?"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.ToleranceHV)">
+
+                                    </TextInput>
+
+                                </div>
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.Tolerance.ToleranceValue" Label="Tol +/- (�m)"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.Tolerance.ToleranceValue)">
+                                    </TextInput>
+
+                                </div>
+
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.UncertaintyValue" Label="@UncertaintyLabel"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.UncertaintyValue)">
+
+                                    </TextInput>
+
+                                </div>
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.Hardness" Label="Hardness Value"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.Hardness)">
+
+                                    </TextInput>
+
+                                </div>
+
+
+
+
+
+
+                            </div>
+
+                        }
+
+                        @if (EquipmentTypeObject != null
+                       && EquipmentTypeObject?.HardnessTestBlockInformation==true
+                       && EquipmentTypeObject?.DynamicConfiguration2 == false)
+
+                        {
+
+                            <div class="row">
+
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.Scale" Label="Scale"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.Scale)">
+
+                                    </TextInput>
+
+
+                                    @* <TextInput Label="Customer Tool Id" @bind-Value="eq.CustomerToolId"
+                            Validate="true" ValidationFor="@(() => eq.CustomerToolId)" IsDisabled="!Enabled">
+
+
+                            </TextInput>*@
+                                </div>
+
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.UncertaintyValue" Label="Uncertainty"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.UncertaintyValue)">
+
+                                    </TextInput>
+
+                                </div>
+
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.Tolerance.ToleranceValue" Label="Tolerance ASTM"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.Tolerance.ToleranceValue)">
+
+                                    </TextInput>
+
+                                </div>
+                                <div class="col">
+                                    <TextInput @bind-Value="eq.ToleranceValueISO" Label="Tolerance ISO"
+                                               LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.ToleranceValueISO)">
+
+                                    </TextInput>
+
+                                </div>
+                            </div>
+
+                        }
+
+
+
+
+                    </div>
+                </div>
+            </div>
+        }
+            </div>
+
+
+            @if (HasChildren && !string.IsNullOrEmpty(eq.PieceOfEquipmentID) && eq.IsNew==false)
+            {
+                <div class="accordion-item">
+                    <div class="accordion-header" id="headingFour">
+                        <h5 class="mb-0">
+                            <div class="row">
+                                <div class="col">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePeripherals" @onclick:stopPropagation @onclick:preventDefault
+                                    aria-expanded="false" aria-controls="collapsePeripherals">
+                                        Children Associated
+                                    </button>
+
+                                </div>
+                                <div class="col">
+
+                                </div>
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="col-sm">
+                                                <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled="@(!Enabled)"
+                                                        @onclick="@(() => ShowModalPoEChildren())"
+                                                        @onclick:stopPropagation @onclick:preventDefault>
+                                                    Select Child PoE to Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+
+                                            @{
+
+                                                parameters = new ModalParameters();
+                                                parameters.Add("HasChildren", false);
+                                                parameters.Add("ParentID", eq.PieceOfEquipmentID);
+                                                parameters.Add("CustomerId", eq.CustomerId.ToString());
+                                                parameters.Add("Customer", eq.Customer);
+                                                parameters.Add("IsModal", true);
+                                                if (!string.IsNullOrEmpty(eq?.Customer?.Name))
+                                                {
+                                                    parameters.Add("CustomerName", eq.Customer.Name);
+                                                }
+                                            }
+
+                                            <SearchButtonComponent FormType="typeof(PieceOfEquipment_Create)"
+                                                                   ID="@(0.ToString())" Type="new"
+                                                                   Size="@ModalSize.AllWindow"
+                                                                   Text="Create new Child PoE"
+                                                                   Enabled="true"
+                                                                   AllWidth="false"
+                                                                   Parameters="@parameters"
+                                                                   CloseWindow="CloseAddChild">
+
+                                            </SearchButtonComponent>
+                                        </div>
+
+                                    </div>
+
+                                 
+                                </div>
+                               
+                            </div>
+                           
+                          
+                        </h5>
+                    </div>
+                    <div id="collapsePeripherals" class="collapse" aria-labelledby="headingFour" data-bs-parent="#accordion">
+                        <div class="card-body">
+
+                           
+
+                            <PieceOfEquipment_SearchChildren @ref="Children" ParentID="@eq.PieceOfEquipmentID" />
+                          
+
+                        </div>
+                    </div>
+                </div>
+
+
+            }
+
+        @if (EquipmentTypeObject != null && EquipmentTypeObject?.HasUncertanity==true)
+        {
+            <div class="accordion-item">
+                <div class="accordion-item">
+                    <div class="accordion-header" id="headingUncertainty">
+                        <h5 class="mb-0">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUncertainty"
+                            @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseUncertainty">
+                                Uncertainty Attributes
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseUncertainty" class="collapse" aria-labelledby="headingUncertainty" data-bs-parent="#accordion">
+                        <div class="card-body">
+                            @*<Weight_Create @ref="@WeightCreate" _listWeightSets="@_listWeightSets">*@
+                            <UncertaintyComponent @ref="UncertaintyComponent"
+                                                                                             PieceOfEquipmentID="@eq.PieceOfEquipmentID">
+
+
+
+
+                            </UncertaintyComponent>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+
+        @if (eq != null && EquipmentTypeObject?.HasStandard==true)
+        {
+
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingTechnicians">
+                    <h5 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" @onclick:stopPropagation @onclick:preventDefault
+                                aria-expanded="false" aria-controls="collapseFive">
+                            Assigned Technicians
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="collapseFive" class="collapse" aria-labelledby="headingTechnicians" data-bs-parent="#accordion">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mx-auto">
+                                <form>
+
+                                    <div class="form-group row">
+                                        <div class="col-sm-12">
+                                            <label>Technicians</label>
+                                            <Typeahead SearchMethod="@SearchTechnician" Disabled="!Enabled"
+                                                       Items="@_userList"
+                                            @bind-Values="@eq.Users"
+                                                       Placeholder="Technicians">
+                                                <SelectedTemplate Context="user">
+                                                    @user.Name
+                                                </SelectedTemplate>
+                                                <ResultTemplate Context="user">
+                                                    @user.Name
+                                                </ResultTemplate>
+                                            </Typeahead>
+                                        </div>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+
+        }
+
+        @if (eq?.EquipmentTemplate != null && EquipmentTypeObject != null && EquipmentTypeObject?.HasTestpoint==true)
+        {
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingTestPoints">
+                    <h5 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTestPoints" @onclick:stopPropagation @onclick:preventDefault
+                                aria-expanded="false" aria-controls="collapseTestPoints">
+                            Test Points
+                        </button>
+                    </h5>
+                </div>
+
+
+                <div id="collapseTestPoints" class="collapse" aria-labelledby="headingTestPoints" data-bs-parent="#accordion">
+                    <div class="card-body">
+
+                            @{
+                                var s = true;
+
+                                if (!eq.IsTestPointImport)
+                                {
+                                    s = false;
+                                }
+
+                                if (!Enabled)
+                                {
+                                    s = false;
+                                }
+                                EquipmentTemplate etini = eq.EquipmentTemplate;
+                                etini.EquipmentTypeObject = EquipmentTypeObject;
+                                //if (eq.IsTestPointImport && !Saving)
+                                if (eq.IsTestPointImport && (eq.TestGroups == null || eq.TestGroups.Count == 0))
+                                {
+                                    if (_ImportTestPoint && etini != null && etini?.TestGroups?.Count > 0)
+                                    {
+
+
+                                        etini.Resolution = ResolutionComponent.eq.Resolution;
+                                        etini.Tolerance.AccuracyPercentage = ResolutionComponent.eq.Tolerance.AccuracyPercentage;
+                                        etini.Tolerance.ToleranceTypeID = ResolutionComponent.eq.Tolerance.ToleranceTypeID;
+                                        etini.ClassHB44 = ResolutionComponent.eq.ClassHB44;
+                                        etini.Ranges = ResolutionComponent.eq.Ranges;
+
+
+                                        if (etini.TestGroups != null)
+                                        {
+                                            Console.WriteLine("xxxxxxx");
+                                            var tpg = etini.TestGroups;
+
+                                            eq.TestGroups = tpg;
+                                            foreach (var t in eq.TestGroups)
+                                            {
+                                                //t.EquipmentTemplateID = null;
+                                                t.PieceOfEquipmentID = eq.PieceOfEquipmentID;
+                                                t.TypeID = "POE";
+                                                if (!IsOnline || 1==1)
+                                                {
+                                                    t.TestPoitGroupID = NumericExtensions.GetUniqueID(t.TestPoitGroupID);
+                                                }
+                                                else
+                                                {
+                                                    t.TestPoitGroupID = 0;
+                                                }
+
+                                                t.Name = "POE";
+                                                if (t.TestPoints != null)
+                                                {
+                                                    foreach (var tp in t.TestPoints)
+                                                    {
+                                                        if (!IsOnline || 1 == 1)
+                                                        {
+                                                            tp.TestPointID = NumericExtensions.GetUniqueID(tp.TestPointID);
+                                                        }
+                                                        else
+                                                        {
+                                                            tp.TestPointID = 0;
+                                                        }
+                                                        tp.TestPointTarget = 2;
+
+                                                    }
+                                                }
+
+
+                                            }
+                                        }
+                                        else
+                                        {
+                                            eq.TestGroups = new List<TestPointGroup>();
+                                        }
+
+                                        //et.TestGroups = eq.TestGroups;
+
+
+
+                                        if (eq.Capacity == 0 && etini.Capacity != 0)
+                                        {
+                                            eq.Capacity = etini.Capacity;
+                                        }
+                                        else if (eq.Capacity != 0 && etini.Capacity != 0 && eq.Capacity != etini.Capacity)
+                                        {
+                                            if (JavaMessage == null)
+                                            {
+                                                JavaMessage = new CalibrationSaaS.Infraestructure.Blazor.JavaMessage<PieceOfEquipment>();
+
+                                                JavaMessage.Message = "the capacity on this piece of equipment is different from his template, do you want to change it?";
+                                                JavaMessage.Other = etini;
+                                            }
+
+                                            //if(ConfirmAsync("the capacity on this piece of equipment is different from his template, do you want to change it? "))
+                                            //{
+                                            //    eq.Capacity = etini.Capacity;
+                                            //}
+                                        }
+                                        /// 15 is for unknown type
+                                        if (!eq.UnitOfMeasureID.HasValue || (eq.UnitOfMeasureID.HasValue && eq.UnitOfMeasureID.Value == 15))
+                                        {
+                                            eq.UnitOfMeasureID = etini.UnitofmeasurementID;
+                                        }
+                                        else
+                                    if (eq.UnitOfMeasureID != etini.UnitofmeasurementID && etini?.UnitofmeasurementID.Value != 15)
+                                        {
+
+                                            if (JavaMessage2 == null)
+                                            {
+                                                JavaMessage2 = new CalibrationSaaS.Infraestructure.Blazor.JavaMessage<PieceOfEquipment>();
+
+                                            JavaMessage2.Message = "The UoM on this piece of equipment is different from his template, do you want to change itT";
+
+                                            JavaMessage.Other = etini;
+                                        }
+
+
+
+
+                                    }
+
+
+
+                                    eq.Resolution = etini.Resolution;
+                                    eq.Tolerance.AccuracyPercentage = etini.Tolerance.AccuracyPercentage;
+                                    eq.Tolerance.ToleranceTypeID = etini.Tolerance.ToleranceTypeID.Value;
+                                    //eq.Class = etini.Class.ToString();
+                                    _ImportTestPoint = false;
+                                }
+
+
+
+                                //et.TestGroups = eq.TestGroups;
+
+
+
+                                et.Capacity = eq.Capacity;
+                                et.UnitofmeasurementID = eq.UnitOfMeasureID.Value;
+
+
+
+                                et.Resolution = eq.Resolution;
+                                et.Tolerance.AccuracyPercentage = eq.Tolerance.AccuracyPercentage;
+                                et.Tolerance.ToleranceTypeID = eq.Tolerance.ToleranceTypeID;
+
+                                @*<CalibrationSaaS.Infraestructure.Blazor.Pages.Basics.TestPoints.GroupTestPoint @ref="@GroupComponent"
+                    Eq="@et" ShowResolution="false"
+                    Enabled="@s" AlwaysRender="true"
+                    funcGenerate="UpdateValues">
+
+                    </CalibrationSaaS.Infraestructure.Blazor.Pages.Basics.TestPoints.GroupTestPoint>*@
+
+                                    Console.WriteLine("Import");
+
+                                }
+                                else if (eq.IsTestPointImport == false)
+
+                                {
+                                    if (eq.EquipmentTemplate != null)
+                                    {
+                                        et = eq.EquipmentTemplate;
+                                    }
+
+
+
+
+                                    Console.WriteLine("no Import");
+
+
+                                }
+                                else
+                            if (eq.IsToleranceImport && eq.TestGroups != null && eq.TestGroups.Count > 0)
+                                {
+
+                                    et.Capacity = eq.Capacity;
+                                    et.Resolution = eq.Resolution;
+                                    et.Tolerance.AccuracyPercentage = eq.Tolerance.AccuracyPercentage;
+                                    et.Tolerance.ToleranceTypeID = eq.Tolerance.ToleranceTypeID;
+                                    et.ClassHB44 = eq.ClassHB44;
+                                    et.Ranges = eq.Ranges;
+                                    et.UnitofmeasurementID = eq.UnitOfMeasureID;
+                                    foreach (var iii in eq.TestGroups)
+                                    {
+                                        iii.OutUnitOfMeasurementID = eq.UnitOfMeasureID.Value;
+                                    }
+                                    //eq.TestGroups.ElementAtOrDefault(0).OutUnitOfMeasurementID = eq.UnitOfMeasureID.Value;
+                                    if (!string.IsNullOrEmpty(eq.PieceOfEquipmentID))
+                                    {
+                                        et.TestGroups = eq.TestGroups;
+                                    }
+
+                                    //et.TestGroups.ElementAtOrDefault(0).OutUnitOfMeasurementID = eq.UnitOfMeasureID.Value;
+                                    et.EquipmentTemplateID = 0;
+                                    Console.WriteLine("Import si");
+
+                                }
+
+
+                                if(EquipmentTypeObject != null){
+                                      et.EquipmentTypeObject = EquipmentTypeObject;
+                                }
+                              
+
+
+                        }
+
+                        @if (!Saving)
+                        {
+                            <BlazorApp1.Client.Pages.Basics.TestPoints.GroupTestPoint2 @ref="@GroupComponent" Component="Component"
+                                                                                                           Eq="et"
+                                                                                                           Enabled="@s" AlwaysRender="true"
+                                                                                                           funcGenerate="UpdateValues" AfterGenerate="AfterValues">
+
+                            </BlazorApp1.Client.Pages.Basics.TestPoints.GroupTestPoint2>
+                        }
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (EquipmentTypeObject != null && EquipmentTypeObject?.HasScales==true)
+        {
+
+            //StandardTitle = EquipmentTypeObject.Name;
+
+
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingScales">
+                    <h5 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseScales" @onclick:stopPropagation @onclick:preventDefault
+                                aria-expanded="false" aria-controls="collapseScales">
+                            @* @if (eq.IsForAccreditedCal != true)
+                        {
+                        <div>Configure @StandardTitle</div>
+                        }
+                        else
+                        {
+                        <div>Configure @StandardTitle - Acredited</div>
+                        }*@
+                            Scales
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseScales" class="collapse" aria-labelledby="headingScales" data-bs-parent="#accordion">
+                    <div class="card-body">
+
+                        <Scales_Create @ref="@Scales" Enabled="Enabled" Component="Component">
+                        </Scales_Create>
+
+
+                    </div>
+                </div>
+            </div>
+        }
+
+
+
+        <div class="accordion-item">
+
+            <div class="accordion-header" id="headingNotes">
+                <h5 class="mb-0">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNotes" @onclick:stopPropagation @onclick:preventDefault
+                            aria-expanded="false" aria-controls="collapseNotes">
+                        Notes
+                    </button>
+                </h5>
+            </div>
+
+            <div id="collapseNotes" class="collapse" aria-labelledby="headingNotes" data-bs-parent="#accordion">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <TextInput @bind-Value="@eq.Notes" Label="Notes"
+                                       LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.Notes)" Type="@Types.TextArea">
+
+                            </TextInput>
+                        </div>
+
+
+                    </div>
+
+                    @*
+                    <div class="row">
+                    <div class="col">
+                    <TextInput @bind-Value="@eq.Notes" Label="Job Comments"
+                    LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="@(() => eq.JobComments)" Type="@Types.TextArea">
+
+                    </TextInput>
+                    </div>
+                    </div>
+
+                    *@
+
+
+
+                </div>
+            </div>
+
+
+        </div>
+
+        @if (eq != null && _listWorkOrderDetail != null && _listWorkOrderDetail.Count > 0)
+
+        {
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingWorkOrderHistory">
+                    <h5 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWorkOrderHistory" @onclick:stopPropagation @onclick:preventDefault
+                                aria-expanded="false" aria-controls="collapseWorkOrderHistory">
+                            Work Order Detail History
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseWorkOrderHistory" class="collapse" aria-labelledby="headingWorkOrderHistory" data-bs-parent="#accordion">
+                    <div class="card-body">
+
+
+
+                        <WorkOrderDetailHist_Search @ref="@WorkOrderDetailSearch" LIST1="_listWorkOrderDetail.ToList()">
+                        </WorkOrderDetailHist_Search>
+
+
+                    </div>
+                </div>
+            </div>
+
+        }
+
+        @if (EquipmentTypeObject != null && EquipmentTypeObject?.HasIndicator==true)
+        {
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingBalances">
+                    <h5 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBalances" @onclick:stopPropagation @onclick:preventDefault
+                                aria-expanded="false" aria-controls="collapseBalances">
+                            Balances and Scales Associated
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseBalances" class="collapse" aria-labelledby="headingBalances" data-bs-parent="#accordion">
+                    <div class="card-body">
+
+
+
+                        <POEBalance_Search IndicatorID="@eq.PieceOfEquipmentID">
+                        </POEBalance_Search>
+
+
+                    </div>
+                </div>
+            </div>
+
+        }
+
+
+      @if (IsScale && eq?.Peripherals?.Count > 0)
+
+            {
+                
+ 
+ <div class="accordion-item">
+            <div class="accordion-header" id="headingPeripherals">
+                <h5 class="mb-0">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePeripheralsScale" @onclick:stopPropagation @onclick:preventDefault
+                            aria-expanded="false" aria-controls="collapsePeripheralsScale">
+                        Peripherals Associated
+                    </button>
+                </h5>
+            </div>
+            <div id="collapsePeripheralsScale" class="collapse" aria-labelledby="headingPeripherals" data-bs-parent="#accordion">
+                <div class="card-body">
+
+                    <ResponsiveTable ItemsDataSource="eq?.Peripherals.ToList()"
+                                     PageSize="paginaSize"
+                                     HasAction="true"
+                                     Context="Entity2"
+                                     @ref="@Grid"
+                                     GridID="gridPeripherals"
+                                     InLineEdit="false"
+                                     RowEditClass=""
+                                     RowNewClass=""
+                                     TableItem="PieceOfEquipment"
+                                     EnabledSearch="true"
+                                     editContext="@CurrentEditContext"
+                                     EnabledModal="false"
+                                     SaveButtonSubmit="false"
+                                     Component="Component"
+                                     HasNew="false">
+
+                        <ChildContent>
+                            <GridColumns>
+
+                                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.SerialNumber)" />
+
+                                <GridColumn TableItem="PieceOfEquipment" Title="@nameof(eq.EquipmentTemplate.Model)"
+                                            Field="@Grid.GetPropertyName(() => eq.EquipmentTemplate.Model)">
+                                    <ResponsiveTemplate Context="entidad">
+                                        @{ var entity = entidad as PieceOfEquipment;
+
+                                            @Format(entity.EquipmentTemplate.Model)
+
+                                        }
+                                    </ResponsiveTemplate>
+                                </GridColumn>
+
+                                @*<GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Customer.Name)" Title="Customer" />*@
+                                @*<GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => EquipmentTypeObject.Name)" Title="Type" />*@
+                                @*<GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Capacity)" />*@
+                                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.UnitOfMeasureID)" Title="Capacity">
+
+                                    <ResponsiveTemplate Context="entidad">
+
+                                        @{
+                                            UnitOfMeasure d;
+                                            string h = "";
+                                            var c = entidad as PieceOfEquipment;
+                                            if (c.UnitOfMeasureID.HasValue)
+                                            {
+                                                d = c.UnitOfMeasureID.Value.GetUoM(AppState.UnitofMeasureList, c.Capacity);
+                                                if (d != null && !string.IsNullOrEmpty(d?.Abbreviation))
+                                                {
+                                                    h = d.CapacityFull;
+                                                }
+
+                                            }
+                                        }
+                                        @h
+
+
+                                    </ResponsiveTemplate>
+
+                                </GridColumn>
+                                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Status)">
+
+                                    <ResponsiveTemplate Context="entidad">
+
+                                        @{
+                                            var a = entidad as PieceOfEquipment;
+                                            var b = a.Status.GetStatus(AppState.StatusList);
+                                        }
+                                        @b
+
+
+                                    </ResponsiveTemplate>
+
+                                </GridColumn>
+
+                                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.DueDate)" Format="{0:MM/dd/yy}" DefaultSort="true" />
+
+                            </GridColumns>
+                        </ChildContent>
+
+
+                        <GridRow>
+
+
+
+
+
+                        </GridRow>
+
+
+
+                        <GridSelect>
+
+                            @*<button class="btn btn-sm btn-primary" id="_btnselect"
+                                        @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                                    select
+                                </button>*@
+
+                        </GridSelect>
+                    </ResponsiveTable>
+
+
+
+                </div>
+            </div>
+        </div>
+
+
+        }
+
+            </div>
+    </EditForm>
+
+   
+</CascadingValue>
+}
+
+
+
+
+
+@code {
+
+
+}
+

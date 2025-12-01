@@ -1,0 +1,40 @@
+﻿
+
+
+<BlazorApp1.Client.Shared.TopMenu OnSettingsClick="@SettingsSidebarToggleClick" />
+@code {
+
+    [Inject]
+    protected Radzen.DialogService DialogService { get; set; }
+    private int fontSize = 100;
+    private bool enableNotifications = true;
+    async Task SettingsSidebarToggleClick()
+    {
+        // settingsSidebarExpanded = !settingsSidebarExpanded;
+        // StateHasChanged();
+
+
+
+        var result = await DialogService.OpenSideAsync<BlazorApp1.Blazor.Pages.Layout.DialogSideContent>("Settings", options: new SideDialogOptions { CssClass = "custom-dialog-class", WrapperCssClass = "custom-dialog-wrapper-class", CloseDialogOnOverlayClick = false, Position = DialogPosition.Right, ShowMask = true });
+
+        if (result != null)
+        {
+            enableNotifications = result[0];
+            fontSize = result[1];
+        }
+
+        //  var result = await DialogService.OpenSideAsync("Simple Dialog", ds =>
+        // @<RadzenStack Gap="1.5rem">
+
+        //     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Normal" JustifyContent="JustifyContent.SpaceBetween">
+        //         <RadzenStack Orientation="Orientation.Horizontal">
+        //             <RadzenButton Text="Ok" Click="() => ds.Close(true)" Style="width: 80px;" />
+        //             <RadzenButton Text="Cancel" Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Light" />
+        //         </RadzenStack>
+        //         <RadzenButton Text="Refresh" Click="(() => { ds.Refresh(); })" ButtonStyle="ButtonStyle.Light" />
+        //     </RadzenStack>
+        // </RadzenStack>
+        // );
+
+    }
+}

@@ -1,0 +1,287 @@
+﻿@* @implements IDisposable
+
+@inject NavigationManager NavigationManager
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">BlazorApp1</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="counter">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="weather">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="auth">
+                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
+            </NavLink>
+        </div>
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Account/Manage">
+                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <form action="Account/Logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                        <button type="submit" class="nav-link">
+                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                        </button>
+                    </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Account/Register">
+                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Account/Login">
+                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </nav>
+</div>
+
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}
+ *@
+
+@* @inject NavigationManager NavigationManager
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">BlazorWebApp</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable">
+    <nav class="nav flex-column">
+        <AuthorizeView Policy="HasAccess">
+            <Authorized>
+                
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="counter">
+                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="auth">
+                        <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+
+                    <NavLink class="collapse-item" href="CustomerSearch">
+                        <span class="bi bi-lock-nav-menu" aria-hidden="true"></span>  Customer
+                        </NavLink>
+
+                 
+                </div>
+               
+
+
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="weather">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    <form action="logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                        <button type="submit" class="nav-link">
+                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                        </button>
+                    </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="api/Account/Login">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Login
+                    </NavLink>
+                    <div class="nav-item px-3">
+
+                     
+
+                    </div>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+
+
+    </nav>
+</div>
+
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+} *@
+
+
+<!-- Sidebar -->
+@using Blazed.Controls
+@using BlazorApp1.Blazor.Shared
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@using CalibrationSaaS.Infraestructure.Blazor.Shared
+@using Radzen
+@namespace BlazorApp1.Blazor.Shared
+@inherits BlazorApp1.Blazor.Shared.NavMenu_Base
+@inject ILogger<NavMenu> Logger;
+  <AuthorizeView Policy="HasAccess">
+            <Authorized>
+<RadzenPanelMenu>
+    <RadzenPanelMenuItem Text="Dashboard" Path="" Icon="dashboard" />
+
+    @if (Customer?.ToLower() == "lti")
+    {
+        <RadzenPanelMenuItem Text="Backlog" Path="BackLog/0" Icon="assignment" />
+    }
+
+    @if (CanShow && ConnectionStatusService.GetCurrentStatus())
+    {
+        <RadzenPanelMenuItem Text="Basics"  Icon="settings">
+            @if (isdemo == "false")
+            {
+                <RadzenPanelMenuItem Text="Equipment Type" Path="EquipmentType" Icon="category" />
+            }
+                    <RadzenPanelMenuItem Text="Manufacturer" Path="ManufacturerSearch" Icon="business" />
+            <RadzenPanelMenuItem Text="Equipment Template" Path="EquipmentTemplateSearch" Icon="description" />
+            <RadzenPanelMenuItem Text="CMC Values" Path="CalibrationTypeDetail" Icon="tune" />
+            <RadzenPanelMenuItem Text="Test Codes" Path="TestCodeSearch" Icon="code" />
+            <RadzenPanelMenuItem Text="Procedure" Path="ProcedureSearch" Icon="receipt_long" />
+        </RadzenPanelMenuItem>
+
+        <RadzenPanelMenuItem Text="Company"  Icon="business_center">
+                    <RadzenPanelMenuItem Text="Technicians" Path="UserSearch" Icon="engineering" />
+        </RadzenPanelMenuItem>
+        <RadzenPanelMenuItem Text="Customer"  Icon="people">
+            <RadzenPanelMenuItem Text="Customer" Path="CustomerSearch" Icon="person_search" />
+        </RadzenPanelMenuItem>
+    }
+
+    <RadzenPanelMenuItem Text="Assets"  Icon="inventory">
+        <RadzenPanelMenuItem Text="Piece Of Equipment" Path="PieceOfEquipmentSearch" Icon="build" />
+        @if (ConnectionStatusService.GetCurrentStatus())
+        {
+            <RadzenPanelMenuItem Text="Weight Set CSV" Path="weightCreateCSV" Icon="file_upload" />
+        }
+    </RadzenPanelMenuItem>
+    <RadzenPanelMenuItem Text="Orders"  Icon="shopping_cart">
+        <RadzenPanelMenuItem Text="Work Order" Path="WorkOrderSearchNew" Icon="assignment_turned_in" />
+    </RadzenPanelMenuItem>
+    @if (!ConnectionStatusService.GetCurrentStatus())
+    {
+        <RadzenPanelMenuItem Text="Offline"  Icon="cloud_off">
+            <RadzenPanelMenuItem Text="Download Wod" Path="Down/0" Icon="download" />
+            <RadzenPanelMenuItem Text="Upload Wod" Path="WODOff2/1" Icon="upload" />
+                </RadzenPanelMenuItem>
+    }
+     else
+    {
+                <RadzenPanelMenuItem Text="Offline" Icon="cloud_off">
+                   
+                    <RadzenPanelMenuItem Text="Upload Wod" Path="WODOff2/1" Icon="upload" />
+                </RadzenPanelMenuItem>
+    }
+
+    <RadzenPanelMenuItem Text="Settings"  Icon="settings">
+        @if (ConnectionStatusService.GetCurrentStatus())
+        {
+            <RadzenPanelMenuItem Text="Roles and Permissions" Path="SecurityCreate" Icon="security" />
+            <RadzenPanelMenuItem Text="Storage Options" Path="View" Icon="storage" />
+        }
+    </RadzenPanelMenuItem>
+
+    <RadzenPanelMenuItem Text="Examples"  Icon="code">
+        <RadzenPanelMenuItem Text="Radzen Table" Path="radzen-table-example" Icon="table_chart" />
+        <RadzenPanelMenuItem Text="Radzen Table with Columns" Path="radzen-table-with-columns-example" Icon="view_column" />
+    </RadzenPanelMenuItem>
+</RadzenPanelMenu>
+
+</Authorized>
+   <NotAuthorized>
+                @* <BlazorApp1.Client.Pages.RedirectToLogin /> *@
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="api/Account/Login">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Login
+                    </NavLink>
+                    <div class="nav-item px-3">                     
+
+                    </div>
+                </div>
+            </NotAuthorized>
+</AuthorizeView>
+

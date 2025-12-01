@@ -1,0 +1,103 @@
+@page "/AddressSearch"
+@inherits Address_SearchBase
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using Blazed.Controls
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Customer
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using CalibrationSaaS.Models.ViewModels
+
+
+    <div class="card-body" style="z-index:100000">
+        <HeaderComponent Title="Address" ActionBar="false"></HeaderComponent>
+        <ResponsiveTable ItemsDataSource="@ListAddress"
+                         PageSize="paginaSize"
+                         HasAction="true"
+                         Context="Entity"
+                         @ref="@Grid"
+                         GridID="gridAddress"
+                         InLineEdit="false"
+                         RowEditClass=""
+                         RowNewClass=""
+                         TableItem="AddressCustomerViewModel"
+                         EnabledSearch="true"
+                         editContext="@CurrentEditContext"
+                         EnabledModal="false"
+                         OnChangeWindow="ClearList"
+                         SelectOnly="@SelectOnly"
+                         SaveButtonSubmit="false"
+                         PaginationFunction1="LoadData"
+                
+                         DeleteAction="Delete"
+                         Component="@Component">
+
+            <ChildContent>
+
+                <GridColumns>
+                <GridColumn TableItem="AddressCustomerViewModel" Field="@Grid.GetPropertyName(() => eq.CustomerID)" Title="Customer ID" CSScol="col-sm-2 customcol" />
+              @*   <GridColumn TableItem="AddressCustomerViewModel" Field="@Grid.GetPropertyName(() => eq.AddressId)" Title="ID" CSScol="col-sm-2 customcol" /> *@
+                <GridColumn TableItem="AddressCustomerViewModel" Field="@Grid.GetPropertyName(() => eq.CustomerName)" Title="Customer" DefaultSort="true" />
+                <GridColumn TableItem="AddressCustomerViewModel" Field="@Grid.GetPropertyName(() => eq.StreetAddress1)" Title="Street Address" DefaultSort="true" />
+                <GridColumn TableItem="AddressCustomerViewModel" Field="@Grid.GetPropertyName(() => eq.City)" Title="City" CSScol="col-sm-2 customcol" />
+                   
+                </GridColumns>
+
+            </ChildContent>
+
+            <GridRow>
+                <!-- Custom row content if needed -->
+            </GridRow>
+
+            <GridSelect>
+                <button class="btn btn-sm btn-primary" id="_btnselect"
+                        @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                    select
+                </button>
+            </GridSelect>
+            
+            <NewButton>
+                <a class="btn btn-primary btn-sm" href="Address/0">
+                    <span>new</span>
+                </a>
+            </NewButton>
+            
+            <EditButton>
+                <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                    <a class="d-sm-inline-block btn btn-sm btn-primary shadow-sm editButton" href="Address/@Entity.AddressId">
+                        <span>edit <i class="fas fa-pen fa-sm"></i></span>
+                    </a>
+                </div>
+            </EditButton>
+   
+        </ResponsiveTable>
+    </div>
+@code
+{
+    void Close(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+            StateHasChanged();
+        }
+    }
+
+    void CloseEdit(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+            StateHasChanged();
+        }
+    }
+
+    async Task Select(object arg, AddressCustomerViewModel entity)
+    {
+        await CloseModal(entity);
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+    }
+}

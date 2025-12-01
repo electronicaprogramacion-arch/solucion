@@ -1,0 +1,196 @@
+﻿@page "/ManufacturerSearch"
+@using Blazed.Controls
+
+@using Blazored.Modal.Services
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@namespace BlazorApp1.Blazor.Pages.Basics.Test
+@inherits Manufacturer_SearchBase
+
+
+
+<div class="">
+    @*<div class="d-flex bd-highlight bg-white shadow" id="headermodal" style="height: 50px">
+            <div class="bd-highlight">
+                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 5rem;"
+                     src="img/undraw_launch_day_4e04.svg" alt="">
+            </div>
+            <div class="align-self-end p-2 bd-highlight">
+
+                Manufacturer
+
+            </div>
+            <div class="p-2 bd-highlight"></div>
+        </div>
+
+
+        <nav class="navbar sticky-top navbar-dark bg-light topBar" id="toolbarmodal" style=" background-color:#563d7c !important; min-height:50px !important;width:100%">
+
+        </nav>*@
+
+    <HeaderComponent Title="Manufacturer" ActionBar="false"></HeaderComponent>
+
+    <div class="row mb-3">
+        <div class="col-md-6 ml-auto"> <!-- ml-auto pushes the div to the right -->
+            <div class="input-group">
+                <RadzenTextBox Placeholder="Search manufacturers..." @bind-Value="@searchTerm" @onkeypress="@SearchKeyPress" class="form-control" />
+                <div class="input-group-append">
+                    <RadzenButton Click="@Search" Icon="search" ButtonStyle="ButtonStyle.Primary" Text="Search" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (ListMan == null || ListMan.Count == 0)
+    {
+        <div class="alert alert-warning">
+            <p>No manufacturer data available. Loading...</p>
+            <button class="btn btn-primary" @onclick="RefreshData">Refresh Data</button>
+        </div>
+    }
+    else
+    {
+        <RadzenDataGrid @ref="dataGrid"
+                       Data="@ListMan"
+                       AllowFiltering="true"
+                       AllowColumnResize="true"
+                       AllowAlternatingRows="false"
+                       AllowSorting="true"
+                       PageSize="@pageSize"
+                       AllowPaging="true"
+                       PagerHorizontalAlign="HorizontalAlign.Right"
+                       ShowPagingSummary="true"
+                       LoadData="@LoadDataForGrid"
+                       Count="@totalCount"
+                       TItem="Manufacturer"
+                       IsLoading="@isLoading"
+                       FilterMode="FilterMode.Advanced"
+                       LogicalFilterOperator="LogicalFilterOperator.Or"
+                       PageSizeOptions="@pageSizeOptions"
+                       PageSizeText="Items per page:"
+                       RowHover="true"
+                       PageSizeChanged="@OnPageSizeChange"
+                       class="manufacturer-grid rz-datatable-hoverable-rows"
+                       Style="cursor: pointer;">
+
+            <Columns>
+                <RadzenDataGridColumn TItem="Manufacturer" Property="ManufacturerID" Title="ID" Width="80px" />
+                <RadzenDataGridColumn TItem="Manufacturer" Property="Name" Title="Name" />
+                <RadzenDataGridColumn TItem="Manufacturer" Property="Abbreviation" Title="Abbreviation" />
+                <RadzenDataGridColumn TItem="Manufacturer" Width="150px" TextAlign="TextAlign.Center" Filterable="false" Sortable="false">
+                    <Template Context="data">
+                        <RadzenButton Icon="edit"  ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small"
+                                     Click="@(() => NavigateToEdit(data))" Text="Edit" />
+
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    }
+
+
+    @*</EditForm>*@
+
+</div>
+
+<style>
+    /* Direct targeting of Radzen DataGrid rows */
+    ::deep .rz-grid-table tr:hover td {
+        background-color: var(--rz-secondary-lighter) !important;
+        cursor: pointer;
+    }
+
+    ::deep .rz-grid-table tr:hover {
+        background-color: var(--rz-secondary-lighter) !important;
+        cursor: pointer;
+    }
+
+    /* Target the specific row classes */
+    ::deep .rz-grid-table .rz-grid-row:hover,
+    ::deep .rz-grid-table .rz-grid-row-odd:hover,
+    ::deep .rz-grid-table .rz-grid-row-even:hover {
+        background-color: var(--rz-secondary-lighter) !important;
+        cursor: pointer;
+    }
+
+    /* Target all cells in a row */
+    ::deep .rz-grid-table tr:hover > td {
+        background-color: var(--rz-secondary-lighter) !important;
+    }
+
+    /* Target the Radzen DataGrid rows */
+    ::deep .rz-datatable-hoverable-rows .rz-datatable-row:hover {
+        background-color: var(--rz-secondary-lighter) !important;
+        cursor: pointer;
+    }
+
+    /* Target the specific Radzen classes */
+    ::deep .rz-data-row:hover,
+    ::deep .rz-datatable-row:hover,
+    ::deep .rz-datatable-data tr:hover {
+        background-color: var(--rz-secondary-lighter) !important;
+        cursor: pointer;
+    }
+</style>
+
+@code {
+
+
+    //private Address AddresInstance = new Address() { StreetAddress1 = "sssss" };
+
+    public async Task EndSave(Manufacturer m)
+    {
+
+    }
+
+
+    void Close(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+            searchComponent.List.Add((Manufacturer)a.Data);
+
+            StateHasChanged();
+        }
+
+    }
+
+    async Task CloseEdit(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        //if (a.Data != null)
+        //{
+        //    var yy = searchComponent.List.Where(x => x.ManufacturerID == x.ManufacturerID).FirstOrDefault();
+
+        //    searchComponent.List.Remove(yy);
+
+        //    searchComponent.List.Add((Manufacturer)a.Data);
+
+        //    StateHasChanged();
+        //}
+
+        if (!a.Cancelled)
+        {
+            // Reload the grid data by refreshing the data source
+            await RefreshData();
+        }
+    }
+
+    async Task Select(object arg, Manufacturer entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+
+    }
+
+
+}

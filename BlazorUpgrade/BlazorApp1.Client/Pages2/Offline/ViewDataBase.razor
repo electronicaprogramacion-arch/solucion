@@ -1,0 +1,175 @@
+﻿@page "/View"
+@inherits FComponentBase
+@using static SQLite.SQLite3;
+@using BlazorApp1.Blazor
+@using BlazorFrame
+@using CalibrationSaaS.Infraestructure.Blazor
+@using CalibrationSaaS.Infraestructure.Blazor.Services.Offline.Sqlite;
+@using SqliteWasmHelper;
+
+ <div class="row">
+     <div class="col">
+        <div class="accordion" id="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header" id="headingOne">
+               
+                    
+                
+                    <h2 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                                @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseOne">
+                       
+                            Storage Operations
+                        </button>
+                    </h2>
+                </div>
+            
+            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-bs-parent="#accordion">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <LoadConfiguration ShowDelete="true"></LoadConfiguration>
+                        </div>
+
+                    </div>
+               </div>
+               </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" id="headingtwo">
+                    <h2 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsetwo"
+                                @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapsetwo">
+                            Database Viewer
+                        </button>
+                    </h2>
+                </div>
+              
+            <div id="collapsetwo" class="collapse" aria-labelledby="headingtwo" data-bs-parent="#accordion">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                        </div>
+                        <div class="col">
+                            <h5>Database Viewer</h5>
+                        </div>
+                        <div class="col">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12" style="min-height:560px">
+
+                               @*  <iframe width="100%" height="90%" src="ViewDatabase.html" frameborder="0" allowfullscreen ></iframe> *@
+
+                                <BlazorFrame Src="ViewDatabase.html" SecurityOptions="devOptions"   />
+
+
+                        </div>
+                    </div>
+               </div>
+
+               </div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header" id="heading3">
+
+                    <h2 class="mb-0">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3"
+                                @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapsetwo">
+                            SQL Execute
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapse3" class="collapse" aria-labelledby="heading3" data-bs-parent="#accordion">
+                    <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <LoadConfiguration IsSQLExcecute="true"></LoadConfiguration>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+               </div>
+           
+           
+        </div>
+</div>
+</div>
+ 
+
+
+
+
+@code {
+    MessageSecurityOptions devOptions = new MessageSecurityOptions()
+        .ForDevelopment()
+        ;
+
+    string activeId = "accordion-1";
+    public bool OpenAditional { get; set; }
+    
+    // private void HandleOnAccordionItemChange(FluentAccordionItem item)
+    // {
+    //     changed = item;
+    //     if (changed.Class == "acco7" && !OpenAditional)
+    //     {
+    //         OpenAditional = true;
+    //     }
+    //     else
+    //     {
+    //         OpenAditional = false;
+    //     }
+    // }
+    // [Inject]
+    // public Func<dynamic, Application.Services.ISampleService2<CallContext>> OffLineClient { get; set; }
+    // [Inject]
+    // public ISqliteWasmDbContextFactory<CalibrationSaaSDBContextOff2> DbFactory { get; set; }
+    // [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.Basic.AppState AppStateBasics { get; set; }
+    // [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.AppStateCompany AppState { get; set; }
+    // public async Task DeleteDataBase()
+    // {
+    //     var loadpa = await ConfirmAsync("Delete Data in Offline Database");
+
+    //     await ShowProgress();
+
+    //     if (loadpa)
+    //     {
+    //         //await DatabaseService.deleteDatabaseAsync();
+
+    //         //await DatabaseService.InitDatabaseAsync();
+
+    //         //await OffLineClient(DbFactory).InitializeAsync();
+
+    //         await OffLineClient(DbFactory).DeleteDatabase();
+
+
+    //         //await LoadParametrics(Technician);
+    //     }
+
+    //     await CloseProgress();
+
+    // }
+  
+
+    // public void DeleteCache()
+    // {
+    //     AppStateBasics.UnitofMeasureList = null;
+    //     AppState.UnitofMeasureList = null;
+
+    //     AppState.UnitofMeasureTypeList = null;
+    //     AppStateBasics.UnitofMeasureTypeList = null;
+
+    //     AppSecurity.RolesList = null;
+    //     AppSecurity.Permissions = null;
+    //     AppSecurity.UserList = null;
+    //     AppSecurity.CertificationList = null;
+    //     AppSecurity.CalibrtionTypeList = null;
+    //     AppSecurity.EquipmentTypeWODList = null;
+    //     AppState.ToleranceList2 = null;
+    //     AppStateBasics.ToleranceList2 = null;
+    //     AppSecurity.AlreadyLoad = false;
+
+
+    // }
+}

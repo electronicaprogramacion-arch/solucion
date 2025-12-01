@@ -1,0 +1,502 @@
+@page "/{tenant}/certificates/{CertificateId:int}"
+@using CalibrationSaaS.CustomerPortal.Models.Certificates
+@using CalibrationSaaS.CustomerPortal.Models.ViewModels
+@using CalibrationSaaS.CustomerPortal.Services.Certificates
+@using CalibrationSaaS.CustomerPortal.Components.Certificates
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ICertificateService CertificateService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject ILogger<CertificateDetail> Logger
+
+<PageTitle>Certificate Details - Customer Portal</PageTitle>
+
+@if (ViewModel.IsLoading)
+{
+    <RadzenStack AlignItems="AlignItems.Center" Gap="2rem" Style="padding: 4rem;">
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large" />
+        <RadzenText TextStyle="TextStyle.H6" Class="rz-color-secondary">
+            Loading certificate details...
+        </RadzenText>
+    </RadzenStack>
+}
+else if (!string.IsNullOrEmpty(ViewModel.LoadError))
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Icon="error" Title="Error Loading Certificate">
+        @ViewModel.LoadError
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Style="margin-top: 1rem;">
+            <RadzenButton Text="Try Again" Click="@LoadCertificate" />
+            <RadzenButton Text="Back to Search" Click="@(() => Navigation.NavigateTo($"/{tenant}/certificates"))" Variant="Variant.Outlined" />
+        </RadzenStack>
+    </RadzenAlert>
+}
+else
+{
+    <RadzenStack Gap="1rem">
+        <!-- Header -->
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <RadzenCard>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                            <RadzenButton Icon="arrow_back" Click="@(() => Navigation.NavigateTo($"/{tenant}/certificates"))"
+                                        Variant="Variant.Text" Size="ButtonSize.Large" />
+                            <RadzenStack Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" Class="rz-mb-0">
+                                    Certificate @ViewModel.Certificate.Certificate.CertificateNumber
+                                </RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">
+                                    Work Order: @ViewModel.Certificate.Certificate.WorkOrderNumber
+                                </RadzenText>
+                            </RadzenStack>
+                        </RadzenStack>
+                        
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                            <RadzenBadge Text="@ViewModel.Certificate.Certificate.Status" 
+                                       BadgeStyle="@GetStatusBadgeStyle(ViewModel.Certificate.StatusColor)" />
+                            <RadzenButton Icon="download" Text="Download PDF" 
+                                        Click="@DownloadCertificate" 
+                                        Disabled="@(!ViewModel.Certificate.CanDownload)"
+                                        IsBusy="@ViewModel.Certificate.IsDownloading" />
+                            <RadzenButton Icon="print" Text="Print" Click="@PrintCertificate" Variant="Variant.Outlined" />
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <!-- Certificate Overview -->
+        <RadzenRow>
+            <RadzenColumn Size="12" SizeMD="8">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H6">Certificate Information</RadzenText>
+                        
+                        <RadzenRow>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Issue Date" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@ViewModel.Certificate.Certificate.IssueDate.ToString("yyyy-MM-dd")" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Calibration Date" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@ViewModel.Certificate.Certificate.CalibrationDate.ToString("yyyy-MM-dd")" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        <RadzenRow>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Next Calibration Date" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@(ViewModel.Certificate.Certificate.NextCalibrationDate?.ToString("yyyy-MM-dd") ?? "N/A")" 
+                                                 ReadOnly="true" 
+                                                 Style="@(ViewModel.Certificate.IsOverdue ? "color: var(--rz-danger);" : ViewModel.Certificate.IsExpiringSoon ? "color: var(--rz-warning);" : "")" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="6">
+                                <RadzenFormField Text="Technician" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@(ViewModel.Certificate.Certificate.TechnicianName ?? "N/A")" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        @if (!string.IsNullOrEmpty(ViewModel.Certificate.Certificate.Comments))
+                        {
+                            <RadzenFormField Text="Comments" Variant="Variant.Outlined">
+                                <RadzenTextArea Value="@ViewModel.Certificate.Certificate.Comments" ReadOnly="true" Rows="3" />
+                            </RadzenFormField>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="4">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H6">Status & Compliance</RadzenText>
+                        
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenIcon Icon="@ViewModel.Certificate.StatusIcon" 
+                                          Style="@($"color: var(--rz-{ViewModel.Certificate.StatusColor});")" />
+                                <RadzenText TextStyle="TextStyle.Body1">@ViewModel.Certificate.Certificate.Status</RadzenText>
+                            </RadzenStack>
+
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenIcon Icon="@(ViewModel.Certificate.Certificate.IsCompliant ? "check_circle" : "error")" 
+                                          Style="@($"color: var(--rz-{ViewModel.Certificate.ComplianceStatusColor});")" />
+                                <RadzenText TextStyle="TextStyle.Body1">@ViewModel.Certificate.ComplianceStatusText</RadzenText>
+                            </RadzenStack>
+
+                            @if (ViewModel.Certificate.DaysUntilNextCalibration.HasValue)
+                            {
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                    <RadzenIcon Icon="schedule" 
+                                              Style="@(ViewModel.Certificate.IsOverdue ? "color: var(--rz-danger);" : ViewModel.Certificate.IsExpiringSoon ? "color: var(--rz-warning);" : "color: var(--rz-info);")" />
+                                    <RadzenText TextStyle="TextStyle.Body1" 
+                                              Style="@(ViewModel.Certificate.IsOverdue ? "color: var(--rz-danger);" : ViewModel.Certificate.IsExpiringSoon ? "color: var(--rz-warning);" : "")">
+                                        @if (ViewModel.Certificate.DaysUntilNextCalibration.Value < 0)
+                                        {
+                                            <text>@Math.Abs(ViewModel.Certificate.DaysUntilNextCalibration.Value) days overdue</text>
+                                        }
+                                        else
+                                        {
+                                            <text>@ViewModel.Certificate.DaysUntilNextCalibration.Value days until due</text>
+                                        }
+                                    </RadzenText>
+                                </RadzenStack>
+                            }
+                        </RadzenStack>
+
+                        @if (!ViewModel.Certificate.Certificate.IsCompliant && ViewModel.Certificate.Certificate.NonComplianceReasons.Any())
+                        {
+                            <RadzenFieldset Text="Non-Compliance Reasons">
+                                <RadzenStack Gap="0.25rem">
+                                    @foreach (var reason in ViewModel.Certificate.Certificate.NonComplianceReasons)
+                                    {
+                                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-danger">
+                                            • @reason
+                                        </RadzenText>
+                                    }
+                                </RadzenStack>
+                            </RadzenFieldset>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <!-- Equipment Information -->
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H6">Equipment Information</RadzenText>
+                        
+                        <RadzenRow>
+                            <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                <RadzenFormField Text="Serial Number" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@ViewModel.Certificate.Certificate.Equipment.SerialNumber" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                <RadzenFormField Text="Asset Number" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@ViewModel.Certificate.Certificate.Equipment.AssetNumber" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                <RadzenFormField Text="Manufacturer" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@(ViewModel.Certificate.Certificate.Equipment.Manufacturer ?? "N/A")" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="6" SizeLG="3">
+                                <RadzenFormField Text="Model" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@(ViewModel.Certificate.Certificate.Equipment.Model ?? "N/A")" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        <RadzenRow>
+                            <RadzenColumn Size="12" SizeMD="8">
+                                <RadzenFormField Text="Description" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@ViewModel.Certificate.Certificate.Equipment.Description" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="4">
+                                <RadzenFormField Text="Equipment Type" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@(ViewModel.Certificate.Certificate.Equipment.EquipmentType ?? "N/A")" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        @if (ViewModel.Certificate.Certificate.Equipment.Range.HasValue || !string.IsNullOrEmpty(ViewModel.Certificate.Certificate.Equipment.Location))
+                        {
+                            <RadzenRow>
+                                @if (ViewModel.Certificate.Certificate.Equipment.Range.HasValue)
+                                {
+                                    <RadzenColumn Size="12" SizeMD="6">
+                                        <RadzenFormField Text="Range" Variant="Variant.Outlined">
+                                            <RadzenTextBox Value="@($"{ViewModel.Certificate.Certificate.Equipment.Range} {ViewModel.Certificate.Certificate.Equipment.RangeUnit}")" ReadOnly="true" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                }
+                                @if (!string.IsNullOrEmpty(ViewModel.Certificate.Certificate.Equipment.Location))
+                                {
+                                    <RadzenColumn Size="12" SizeMD="6">
+                                        <RadzenFormField Text="Location" Variant="Variant.Outlined">
+                                            <RadzenTextBox Value="@ViewModel.Certificate.Certificate.Equipment.Location" ReadOnly="true" />
+                                        </RadzenFormField>
+                                    </RadzenColumn>
+                                }
+                            </RadzenRow>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <!-- Customer Information -->
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H6">Customer Information</RadzenText>
+                        
+                        <RadzenRow>
+                            <RadzenColumn Size="12" SizeMD="6">
+                                <RadzenFormField Text="Customer Name" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@ViewModel.Certificate.Certificate.Customer.Name" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="6">
+                                <RadzenFormField Text="Company" Variant="Variant.Outlined">
+                                    <RadzenTextBox Value="@(ViewModel.Certificate.Certificate.Customer.CompanyName ?? "N/A")" ReadOnly="true" />
+                                </RadzenFormField>
+                            </RadzenColumn>
+                        </RadzenRow>
+
+                        @if (ViewModel.Certificate.Certificate.Customer.Address != null)
+                        {
+                            <RadzenFormField Text="Address" Variant="Variant.Outlined">
+                                <RadzenTextArea Value="@(ViewModel.Certificate.Certificate.Customer.Address?.FormattedAddress ?? "")" ReadOnly="true" Rows="2" />
+                            </RadzenFormField>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <!-- Expandable Sections -->
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <!-- Calibration Results -->
+                @if (ViewModel.Certificate.Certificate.CalibrationResults.Any())
+                {
+                    <RadzenCard Style="margin-bottom: 1rem;">
+                        <RadzenStack Gap="1rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                                <RadzenText TextStyle="TextStyle.H6">Calibration Results</RadzenText>
+                                <RadzenButton Icon="@(ViewModel.ShowCalibrationResults ? "expand_less" : "expand_more")" 
+                                            Text="@(ViewModel.ShowCalibrationResults ? "Hide" : "Show")" 
+                                            Click="@(() => ViewModel.ShowCalibrationResults = !ViewModel.ShowCalibrationResults)" 
+                                            Variant="Variant.Text" />
+                            </RadzenStack>
+
+                            @if (ViewModel.ShowCalibrationResults)
+                            {
+                                <CalibrationResultsTable Results="@ViewModel.Certificate.Certificate.CalibrationResults" />
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                }
+
+                <!-- Standards Used -->
+                @if (ViewModel.Certificate.Certificate.StandardsUsed.Any())
+                {
+                    <RadzenCard Style="margin-bottom: 1rem;">
+                        <RadzenStack Gap="1rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                                <RadzenText TextStyle="TextStyle.H6">Standards Used</RadzenText>
+                                <RadzenButton Icon="@(ViewModel.ShowStandardsUsed ? "expand_less" : "expand_more")" 
+                                            Text="@(ViewModel.ShowStandardsUsed ? "Hide" : "Show")" 
+                                            Click="@(() => ViewModel.ShowStandardsUsed = !ViewModel.ShowStandardsUsed)" 
+                                            Variant="Variant.Text" />
+                            </RadzenStack>
+
+                            @if (ViewModel.ShowStandardsUsed)
+                            {
+                                <StandardsUsedTable Standards="@ViewModel.Certificate.Certificate.StandardsUsed" />
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                }
+
+                <!-- Environmental Conditions -->
+                @if (ViewModel.Certificate.Certificate.Temperature.HasValue || ViewModel.Certificate.Certificate.Humidity.HasValue || ViewModel.Certificate.Certificate.Pressure.HasValue)
+                {
+                    <RadzenCard Style="margin-bottom: 1rem;">
+                        <RadzenStack Gap="1rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                                <RadzenText TextStyle="TextStyle.H6">Environmental Conditions</RadzenText>
+                                <RadzenButton Icon="@(ViewModel.ShowEnvironmentalConditions ? "expand_less" : "expand_more")" 
+                                            Text="@(ViewModel.ShowEnvironmentalConditions ? "Hide" : "Show")" 
+                                            Click="@(() => ViewModel.ShowEnvironmentalConditions = !ViewModel.ShowEnvironmentalConditions)" 
+                                            Variant="Variant.Text" />
+                            </RadzenStack>
+
+                            @if (ViewModel.ShowEnvironmentalConditions)
+                            {
+                                <EnvironmentalConditionsDisplay Certificate="@ViewModel.Certificate.Certificate" />
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                }
+
+                <!-- Uncertainty Information -->
+                @if (ViewModel.Certificate.Certificate.MeasurementUncertainty.HasValue)
+                {
+                    <RadzenCard Style="margin-bottom: 1rem;">
+                        <RadzenStack Gap="1rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                                <RadzenText TextStyle="TextStyle.H6">Uncertainty Information</RadzenText>
+                                <RadzenButton Icon="@(ViewModel.ShowUncertaintyInfo ? "expand_less" : "expand_more")" 
+                                            Text="@(ViewModel.ShowUncertaintyInfo ? "Hide" : "Show")" 
+                                            Click="@(() => ViewModel.ShowUncertaintyInfo = !ViewModel.ShowUncertaintyInfo)" 
+                                            Variant="Variant.Text" />
+                            </RadzenStack>
+
+                            @if (ViewModel.ShowUncertaintyInfo)
+                            {
+                                <UncertaintyInformationDisplay Certificate="@ViewModel.Certificate.Certificate" />
+                            }
+                        </RadzenStack>
+                    </RadzenCard>
+                }
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenStack>
+}
+
+@code {
+    [Parameter] public string? tenant { get; set; }
+    [Parameter] public int CertificateId { get; set; }
+
+    private CertificateDetailViewModel ViewModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCertificate();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ViewModel.Certificate?.Certificate?.Id != CertificateId)
+        {
+            await LoadCertificate();
+        }
+    }
+
+    private async Task LoadCertificate()
+    {
+        try
+        {
+            ViewModel.IsLoading = true;
+            ViewModel.LoadError = null;
+            StateHasChanged();
+
+            // Get customer ID from authentication context
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated != true)
+            {
+                ViewModel.LoadError = "You must be logged in to view certificates.";
+                return;
+            }
+
+            var customerId = authState.User.GetCustomerId();
+            if (!customerId.HasValue)
+            {
+                ViewModel.LoadError = "Unable to determine your customer account.";
+                return;
+            }
+
+            var certificate = await CertificateService.GetCertificateByIdAsync(CertificateId, customerId.Value);
+
+            if (certificate != null)
+            {
+                ViewModel.Certificate = new CertificateViewModel { Certificate = certificate };
+                ViewModel.LoadError = null;
+            }
+            else
+            {
+                ViewModel.LoadError = "Certificate not found or you don't have permission to view it.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading certificate {CertificateId}", CertificateId);
+            ViewModel.LoadError = "Failed to load certificate. Please try again.";
+        }
+        finally
+        {
+            ViewModel.IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DownloadCertificate()
+    {
+        try
+        {
+            if (ViewModel.Certificate == null) return;
+
+            ViewModel.Certificate.IsDownloading = true;
+            StateHasChanged();
+
+            // Get customer ID from authentication context
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var customerId = authState.User.GetCustomerId();
+            if (!customerId.HasValue)
+            {
+                Logger.LogError("Unable to get customer ID for certificate download");
+                return;
+            }
+
+            var result = await CertificateService.DownloadCertificateAsync(CertificateId, customerId.Value);
+
+            if (result.Success && result.FileData != null)
+            {
+                await JSRuntime.InvokeVoidAsync("downloadFile",
+                    result.FileName,
+                    result.ContentType,
+                    Convert.ToBase64String(result.FileData));
+            }
+            else
+            {
+                ViewModel.Certificate.DownloadError = result.ErrorMessage ?? "Download failed";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error downloading certificate {CertificateId}", CertificateId);
+            if (ViewModel.Certificate != null)
+            {
+                ViewModel.Certificate.DownloadError = "Download failed. Please try again.";
+            }
+        }
+        finally
+        {
+            if (ViewModel.Certificate != null)
+            {
+                ViewModel.Certificate.IsDownloading = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task PrintCertificate()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("window.print");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error printing certificate {CertificateId}", CertificateId);
+        }
+    }
+
+    private BadgeStyle GetStatusBadgeStyle(string statusColor)
+    {
+        return statusColor switch
+        {
+            "success" => BadgeStyle.Success,
+            "warning" => BadgeStyle.Warning,
+            "danger" => BadgeStyle.Danger,
+            "info" => BadgeStyle.Info,
+            "secondary" => BadgeStyle.Secondary,
+            "light" => BadgeStyle.Light,
+            _ => BadgeStyle.Secondary
+        };
+    }
+}

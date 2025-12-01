@@ -1,0 +1,181 @@
+﻿@page "/Basic/{EntityID}"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics.TestPoints
+@inherits BasicInformation_CreateBase
+@implements IDisposable
+@using System.Linq.Expressions
+@using Blazed.Controls
+@using CalibrationSaaS.Infraestructure.Blazor.Helper
+
+<HeaderComponent Enabled="true" Title="Equipment Template">
+
+</HeaderComponent>
+
+
+
+<EditForm EditContext="@CurrentEditContext" OnSubmit="FormSubmitted">
+    <DataAnnotationsValidator />
+    @*<button class="btn btn-sm btn-info shadow-sm" id="executebutton"
+            type="submit" onclick="$('#progressBar').show()" style="display:none"  @onkeypress:preventDefault>
+        Save
+        <i class="fas fa-save fa-sm text-white-50"></i>
+    </button>*@
+    <Blazed.Controls.SubmitComponent>
+
+    </Blazed.Controls.SubmitComponent>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-sm-3">
+              @*   <TextInput @bind-Value="eq.EquipmentTypeID"
+                           IsDisabled="!Enabled"
+                           Label="Equipment Type"
+                           LabelDown="@LabelDown"
+                           ValidationFor="(()=> eq.EquipmentTypeID)">
+                    @foreach (EquipmentType item in AppState.EquipmentTypes)
+                    {
+                        <option value="@item.EquipmentTypeID">@item.Name</option>
+                    }
+                </TextInput> *@
+                @{
+                    List<EquipmentTypeGroup> etg = null;
+
+                    @if (AppState != null && AppState.EquipmentTypeGroups != null && AppState.EquipmentTypeGroups.Count > 0)
+                    {
+                        etg = AppState.EquipmentTypeGroups;
+
+                    }
+                }
+
+                @if (AppState != null && AppState.EquipmentTypeGroups != null && AppState.EquipmentTypeGroups.Count > 0)
+                {
+                    etg = AppState.EquipmentTypeGroups;
+
+                }
+
+
+
+                @if (etg != null)
+                {
+                    <div class="col">
+                        <TextInput @bind-Value="eq.EquipmentTypeGroupID"
+                                   IsDisabled="!Enabled"
+                                   Label="Equipment Type"
+                                   LabelDown="@LabelDown"
+                                   ValidationFor="(()=> eq.EquipmentTypeGroupID)">
+                            @foreach (var item in AppState.EquipmentTypeGroups)
+                            {
+                                <option value="@item.EquipmentTypeGroupID">@item.Name</option>
+                            }
+                        </TextInput>
+                    </div>
+                }
+            </div>
+            <div class="col-sm-5">
+                <TextInput @bind-Value="eq.ManufacturerID"
+                           IsDisabled="!Enabled"
+                           Label="Manufacturer"
+                           LabelDown="@LabelDown"
+                           ValidationFor="(()=> eq.ManufacturerID)">
+                    @foreach (Manufacturer item in AppState.Manufacturers)
+                    {
+                        <option value="@item.ManufacturerID">@item.Name</option>
+                    }
+                </TextInput>
+            </div>
+            <div class="col-sm-4">
+                <TextInput @bind-Value="eq.StatusID"
+                           IsDisabled="!Enabled"
+                           Label="Status"
+                           LabelDown="@LabelDown"
+                           ValidationFor="(()=> eq.StatusID)">
+
+                    @foreach (KeyValuePair<string, string> item in AppState.StatusList)
+                    {
+                        <option value="@item.Key">@item.Value</option>
+                    }
+                </TextInput>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <TextInput @bind-Value="eq.Name" Label="Name" Validate="true"
+                           LabelDown="@LabelDown" IsDisabled="!Enabled"
+                           ValidationFor="@(() => eq.Name)">
+                </TextInput>
+            </div>
+            <div class="col">
+                <TextInput @bind-Value="eq.Model" Label="Model#" Validate="true"
+                           LabelDown="@LabelDown" IsDisabled="!Enabled"
+                           ValidationFor="@(() => eq.Model)">
+                </TextInput>
+            </div>
+        </div>
+        @if (eq.EquipmentTypeObject != null && eq.EquipmentTypeObject.HasCapacity)
+        {
+            <div class="row">
+                <div class="col-sm-3">
+                    <TextInput @bind-Value="eq.Capacity" Label="Capacity" Validate="true"
+                               LabelDown="@LabelDown" IsDisabled="!Enabled"
+                               ValidationFor="@(() => eq.Capacity)">
+                    </TextInput>
+                </div>
+                <div class="col-sm-5">
+                    <TextInput @bind-Value="@eq.UnitofmeasurementID" class="form-control"
+                               LabelDown="LabelDown"
+                               IsDisabled="!Enabled"
+                               Label="Unit of Measure"
+                               ValidationFor="@(() => eq.UnitofmeasurementID)">
+                        @foreach (UnitOfMeasure item in AppState.GetUoMByEquipmentType(eq.GetEquipmentType()))
+                        {
+                            <option value="@item.UnitOfMeasureID">@item.Name</option>
+                        }
+                    </TextInput>
+                </div>
+                <div class="col-sm-4">
+                    <TextInput @bind-Value="@eq.IsEnabled" Label="Enabled" Validate="false"
+                               LabelDown="@LabelDown" IsDisabled="!Enabled"
+                               ValidationFor="@(() => eq.IsEnabled)"
+                               Type="@Types.Switch">
+                    </TextInput>
+                </div>
+            </div>
+        }
+        </div>
+@* 
+    @if (eq?.EquipmentTypeObject != null && eq.EquipmentTypeObject.HasResolution)
+    { *@
+
+        <div class="card">
+            <div class="card-header" id="headingTwo">
+                <h2 class="mb-0">
+                    <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" @onclick:stopPropagation @onclick:preventDefault aria-expanded="false" aria-controls="collapseTwo">
+                        Tolerance and resolution Information
+                    </button>
+                </h2>
+            </div>
+            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+
+                <CascadingValue Value="@eq.Tolerance" Name="CascadeTolerance">
+
+                    @*<RangeTestPoint @ref="@RangeComponent" Title="Resolution Compound" Type="1"></RangeTestPoint>*@
+                    <ResolutionComponent @ref="@ResolutionComponent" Title="Resolution Component"
+                                         ToleranceList="AppState.ToleranceList2.Where(x=>eq.EquipmentTypeObject.CalibrationTypeID > 0 && x.CalibrationTypeId==eq.EquipmentTypeObject.CalibrationTypeID)" Type="1" Enabled="@Enabled">
+
+                    </ResolutionComponent>
+
+                </CascadingValue>
+
+            </div>
+        </div>
+
+ @*    }
+ *@
+</EditForm>
+@code {
+
+
+
+
+
+
+}

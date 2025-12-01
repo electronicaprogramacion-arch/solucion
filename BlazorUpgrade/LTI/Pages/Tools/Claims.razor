@@ -1,0 +1,39 @@
+﻿@page "/Claims"
+@using Blazed.Controls
+@using Microsoft.AspNetCore.Authorization
+<h3>claims</h3>
+<button @onclick="ShowInfo">Show Info</button>
+@infoString
+
+
+<AuthorizeView Roles="admin">
+    <Authorized>
+        <div>Autorize</div>
+    </Authorized>
+    </AuthorizeView>
+
+    <!-- End of Sidebar -->
+    <AuthorizeView>
+        <h2>
+            Hello @context.User.Identity.Name,
+            here's the list of your claims:
+        </h2>
+        <ul>
+            @foreach (var claim in context.User.Claims)
+            {
+                <li><b>@claim.Type</b>: @claim.Value</li>
+            }
+        </ul>
+    </AuthorizeView>
+    @code {
+        [CascadingParameter]
+        private Task<AuthenticationState> stateTask { get; set; }
+        private string infoString { get; set; }
+
+        private async void ShowInfo()
+        {
+            var user = (await stateTask).User;
+
+            infoString = $"Is admin: {user.IsInRole("admin")}"; // Always False
+        }
+    }

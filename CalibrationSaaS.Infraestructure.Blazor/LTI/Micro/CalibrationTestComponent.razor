@@ -1,0 +1,267 @@
+﻿
+@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+@using CalibrationSaaS.Infraestructure.Blazor.Helper
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@using CalibrationSaaS.Domain.Aggregates.Interfaces
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@namespace CalibrationSaaS.Infraestructure.Blazor
+@typeparam CalibrationItem
+@typeparam CalibrationItemResult 
+@*IResult2 @inherits CalibrationSaaS.Infraestructure.Blazor.ASTMRockAsleftComponentBase<CalibrationItem,CalibrationItemResult>*@
+@inherits CalibrationSaaS.Infraestructure.Blazor.GridResultsComponentBase<GenericCalibration>
+<style>
+
+    .grid-row1.headerRow {
+        height: 55% !important;
+    }
+
+
+
+    .noedit {
+    }
+
+    .btnWidth {
+        width: 75px
+    }
+
+
+    .secondGrid {
+        /*padding-left: 70px*/
+        /*left:-7%;*/
+    }
+
+    .linearityCol {
+        padding: 0px;
+    }
+
+    .linearityColHeader {
+        padding: 0px;
+    }
+
+    @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+        /*  .editcolumn {
+        }
+
+        .container, .container-fluid {
+            padding-left: 0rem;
+            padding-right: 0rem;
+        }
+
+        .container-fluid {
+            width: 100%;
+            padding-right: 0rem;
+            padding-left: 0rem;
+            margin-right: auto;
+            margin-left: auto;
+        }*/
+    }
+</style>
+
+
+@if (WorkOrderItemCreate.eq != null && LIST != null)
+{
+
+
+    <div style="display:none">
+        WeightSets :   @Description
+        @if (WeightSetList2 != null)
+        {
+            <div class="" style="max-height:300px;overflow:auto;width:100%">
+
+               
+            </div>
+        }
+    </div>
+
+
+
+    @if (WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate != null)
+    {
+
+        if (WorkOrderItemCreate.eq == null
+           || WorkOrderItemCreate.eq?.PieceOfEquipment == null
+           || WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate == null
+           || WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups == null
+           || WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups?.ElementAtOrDefault(0)?.TestPoints?.Count == 0
+           || WorkOrderItemCreate.eq.IsAccredited == false
+           )
+        {
+            EnableSetPoints = false;
+        }
+        else
+        {
+            EnableSetPoints = true;
+        }
+
+
+    }
+
+
+    <div class="" style="min-height: 600px; overflow: auto; padding-left: 5px; width: 100%; overflow-y: scroll; max-height: 600px;">
+        @if (1 == 1)
+        {
+            var tem = LIST;
+            string sortField = "";
+
+            //@Grid.GetPropertyName(() => PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.Name)
+
+        <ResponsiveTable ItemsDataSource="LIST"
+                         PageSize="20"
+                         HasAction="true"
+                         HasSelect="true"
+                         HasDelete="true"
+                         HasDuplicate="true"
+                         HasEdit="false"
+                         HasNew="true"
+                         @ref="@RT"
+                         Context="ITEM"
+                         TableItem="CalibrationItem"
+                         ForceNEwButton="false"
+                         ClientPagination="true"
+                         DisabledRowHover="true"
+                         InLineEdit="false"
+                         ColActionHeaderCSS="col-sm-2"
+                         EnabledSearch="false"
+                         ClientDefaultSortField="@SortField"
+                         ClientDefaultSortDirection="asc"
+                         RowExecute="RowChange"
+                         Component="@Component"
+                         RowAfterRender="@RowAfterRender"
+                         AfterAction="@TaskAfterSave"
+                         ColActionCSS="btnWidth"
+                         EnabledDrag="true"
+                         LabelHeader="true"
+                         Key="SequenceID">
+
+           
+           <GridHeader2>
+               
+            </GridHeader2>
+
+                <GridRow>
+                    @if (ITEM != null && ITEM.BasicCalibrationResult != null)
+                    {
+                        
+                        <EditForm Model="@ITEM" class="col">
+                           
+
+
+
+
+                        </EditForm>
+                    }
+                </GridRow>
+
+                <GridSelect2 Context="select">
+
+                    @{
+                        var a = new ResponsiveTable<CalibrationItem>.SelectRow();
+                        if (select != null)
+                        {
+                            a = select as ResponsiveTable<CalibrationItem>.SelectRow;
+                        }
+
+                        var color = "";
+
+                    }
+
+                    <div class="row" rt="TTT">
+
+
+                        @if ((a.Entity.WeightSets != null && a.Entity.WeightSets.Count > 0) || a?.Entity?.Standards?.Count > 0)
+                        {
+                            color = "success";
+                        }
+                        else
+                        {
+                            color = "primary";
+                        }
+
+
+
+                        @if (!Enabled || !EnableWeightSet)
+                        {
+                           
+                            <div class="btnWidth buttonLin">
+                                <button class="btn btn-sm btn-@color shadow-sm editButton"
+                            id="@("btnSelect_" + a.Position.ToString())" @onclick=@(async () => await SelectWeight(a.Entity,a.Position))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                    Standard
+                                </button>
+                            </div>
+                        }
+                        else if (a != null && a.Entity != null && WorkOrderItemCreate.eq != null && EnableWeightSet && Enabled
+                        || a != null && a.Entity != null && WorkOrderItemCreate.eq != null && WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == true && Enabled)
+                        {
+                            <div class="btnWidth buttonLin">
+                                <button class="btn btn-sm btn-@color shadow-sm editButton"
+                            id="@("btnSelect_" + a.Position.ToString())" @onclick=@(async () => await SelectWeight(a.Entity,a.Position))
+                            @onclick:stopPropagation @onclick:preventDefault>
+                                    Standard
+                                </button>
+                            </div>
+                        }
+                        @if (select != null && RT != null && a != null && a?.Entity != null)
+                        {
+
+                        }
+
+
+                    </div>
+                </GridSelect2>
+        </ResponsiveTable>
+
+            <CalibrationSaaS.Infraestructure.Blazor.LTI.Rockwell.EnviromentComponent @ref="EnviromentComponent" IsAsFound="true">
+
+
+        </CalibrationSaaS.Infraestructure.Blazor.LTI.Rockwell.EnviromentComponent>
+
+
+        }
+    </div>
+
+
+
+}
+
+
+
+@code {
+
+    async Task newitem(EventArgs obj)
+    {
+
+    }
+
+
+    //public string GetInvalidClass(double a,double b)
+    //{
+    //    var valid = 0d;
+    //    if (b != 0)
+    //    {
+    //        valid = (a % b);
+    //    }
+    //    else
+    //    {
+    //        return "";
+    //    }
+    //    var c = true;
+    //    if(Math.Abs(valid) > 0)
+    //    {
+    //        c=  Math.Abs(valid % 1) <= (Double.Epsilon * 100);
+    //    }
+
+    //    var cssinvalid = "";
+    //    if (valid != 0 && !c )
+    //    {
+    //        cssinvalid = "inputinvalid";
+    //    }
+    //    return cssinvalid;
+    //}
+
+
+}

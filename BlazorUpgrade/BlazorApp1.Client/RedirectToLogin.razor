@@ -1,0 +1,16 @@
+﻿@page "/RedirectToLogin"
+@namespace  BlazorApp1.Client.Pages 
+@using Microsoft.AspNetCore.Authorization
+@inject NavigationManager NavigationManager
+@inject CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity
+@attribute [AllowAnonymous]
+@code {
+    protected override void OnInitialized()
+    {
+        AppSecurity.IsOffline = false;
+        // NavigationManager.NavigateTo($"Account/Login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}", forceLoad: true);
+        NavigationManager.NavigateTo($"api/Account/Login", forceLoad: true);
+        //api/Account/Login
+
+    }
+}

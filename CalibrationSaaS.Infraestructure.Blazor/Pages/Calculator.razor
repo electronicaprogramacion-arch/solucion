@@ -1,0 +1,87 @@
+﻿@page "/calculator"
+
+<h1>Counter</h1>
+
+<p>Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+<h2>Greeter</h2>
+
+<p>Current count: @greeterReplyMessage</p>
+
+<button class="btn btn-primary" @onclick="CallService">Click me</button>
+
+
+<h2>Customer</h2>
+
+<p>Current count: @currentCustomer</p>
+
+<button class="btn btn-primary" @onclick="CreateCustomer">Click me</button>
+
+
+@code {
+    private int currentCount = 0;
+
+    private async Task IncrementCount()
+    {
+        //ProtoBuf.Grpc.Client.GrpcClientFactory.AllowUnencryptedHttp2 = true;
+        // Create a gRPC-Web channel pointing to the backend server
+        var httpClient = new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new HttpClientHandler()));
+        using var channel = GrpcChannel.ForAddress("https://localhost:5001", new GrpcChannelOptions { HttpClient = httpClient });
+        var calculator = channel.CreateGrpcService<CalibrationSaaS.Application.Services.ICalculator>();
+        var result = await calculator.MultiplyAsync(new CalibrationSaaS.Application.Services.MultiplyRequest { X = 12, Y = 4 });
+        currentCount = result.Result;
+    }
+
+    private int currentCustomer = 0;
+
+    private async Task CreateCustomer()
+    {
+        //ProtoBuf.Grpc.Client.GrpcClientFactory.AllowUnencryptedHttp2 = true;
+        // Create a gRPC-Web channel pointing to the backend server
+        var httpClient = new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new HttpClientHandler()));
+        using var channel = GrpcChannel.ForAddress("https://localhost:5001", new GrpcChannelOptions { HttpClient = httpClient });
+        var calculator = channel.CreateGrpcService<CalibrationSaaS.Application.Services.ICustomerService<CallContext>>();
+        //var result = await calculator.CreateCustomer(new CalibrationSaaS.Domain.Aggregates.Entities.Customer { CustomerId = 1, CustomerName = "customer one", TenantId = 1 });
+        // currentCustomer = result.CustomerId;
+    }
+
+    private async Task CreateWorkOrder()
+    {
+        //ProtoBuf.Grpc.Client.GrpcClientFactory.AllowUnencryptedHttp2 = true;
+        // Create a gRPC-Web channel pointing to the backend server
+        var httpClient = new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new HttpClientHandler()));
+        using var channel = GrpcChannel.ForAddress("https://localhost:5001", new GrpcChannelOptions { HttpClient = httpClient });
+        var calculator = channel.CreateGrpcService<CalibrationSaaS.Application.Services.IWorkOrderService<CallContext>>();
+        //var result = await calculator.CreateCustomer(new CalibrationSaaS.Domain.Aggregates.Entities.Customer { CustomerId = 1, CustomerName = "customer one", TenantId = 1 });
+        // currentCustomer = result.CustomerId;
+    }
+
+
+    private string greeterReplyMessage;
+
+    private async Task CallService()
+    {
+        //try
+        //{
+        //    // Create a gRPC-Web channel pointing to the backend server
+        //    var httpClient = new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new HttpClientHandler()));
+
+        //    var channel = GrpcChannel.ForAddress("https://localhost:5001", new GrpcChannelOptions { HttpClient = httpClient });
+
+        //    //var channel = GrpcChannel.ForAddress("https://localhost:32768/");
+
+        //    var client = new CalibrationSaaS.Service.Greeter.GreeterClient(channel);
+        //    var input = new CalibrationSaaS.Service.HelloRequest { Name = "test" };
+        //    var reply = await client.SayHelloAsync(input);
+        //    greeterReplyMessage = reply.Message;
+        //}
+        //catch (Exception ex)
+        //{
+        //    greeterReplyMessage = ex.Message + " " + ex.InnerException.ToString();
+
+        //}
+    }
+
+}

@@ -1,0 +1,72 @@
+﻿@page "/OfflineManager"
+<h3>OfflineManager</h3>
+
+
+<style>
+
+    div.column {
+        float: left;
+        margin: 12px;
+    }
+
+    #dropzone {
+        width: 600px;
+        height: 20px;
+        border: 2px dotted #bbb;
+        border-radius: 10px;
+        padding: 35px;
+        color: #bbb;
+        text-align: center;
+    }
+
+    table {
+        text-align: left;
+    }
+</style>
+
+<div class="column">
+    <p>
+        <button class="btn btn-secondary btn-sm buttonsep"
+                type="button" id="SaveMenuButton"
+                @onclick="@(async () => await SetCurrentStatus())"
+                @onclick:stopPropagation @onclick:preventDefault">
+
+            Backup - Database
+        </button>
+    </p>
+    <p>
+        <a id="DeleteLink" onclick="deleteDatabase()" href="#">Click here to Delete the database</a>
+    </p>
+    <div id="dropzone">
+        Drop DataBase file here
+    </div>
+</div><div class="column">
+    <h3>Database Info</h3>
+    <table border="1">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+
+
+
+
+
+
+
+
+
+@code {
+
+    [Inject] public IJSRuntime JSRuntime { get; set; }
+
+    public async Task SetCurrentStatus()
+    {
+
+        await JSRuntime.InvokeVoidAsync("BackUp");
+    }
+
+
+
+}

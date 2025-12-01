@@ -1,0 +1,444 @@
+﻿@page "/TestCode/{EntityId}"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@inherits TestCode_CreateBase
+@implements IDisposable
+@using System.Linq.Expressions
+@using Blazed.Controls
+
+
+@{
+
+
+    SetEnabled();
+
+
+}
+
+
+
+@if (Enabled)
+    {
+<HeaderComponent Title="Test Code" ActionBar="@Enabled" Enabled="@Enabled"></HeaderComponent>
+    }
+
+
+<div class="col-md-12">
+
+
+    <EditForm style="margin:10px" OnSubmit="FormSubmitted" Model="@eq">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        @*<h4>@LastSubmitResult</h4>*@
+        <SubmitComponent>
+
+        </SubmitComponent>
+        <div class="form-row">
+            <div class="col-md-12">
+                @*<div class="form-row">
+                        <div style="visibility:hidden">
+                            <label for="validationServer01">@TypeName ID</label>
+                            <InputNumber @bind-Value="eq.ManufacturerID"
+                                         @attributes="@EnabledFunction()"
+
+                                         />
+                        </div>
+                        <ValidationMessage For="@(() => eq.ManufacturerID)" />
+                    </div>*@
+
+                <div class="form-row p-3">
+                    <div class="col-md">
+                        <label for="abbreviation">ID</label>
+                        <TextInput TValue="int" @bind-Value="eq.TestCodeID" placeholder="ID" class="form-control"
+                                   @attributes="@EnabledFunction()" IsDisabled="true" />
+                    </div>
+
+                    <div class="col-md">
+
+
+                        <TextInput Label="Code" @bind-Value="eq.Code" TValue="string"
+                                   Validate="true"  @attributes="@EnabledFunction()" ValidationFor="@(() => eq.Code)" IsDisabled="!Enabled">
+
+
+                        </TextInput>
+
+                    </div>
+
+
+
+                    <div class="col invisible" style="display:none">
+                        <TextInput TValue="int?" Validate="false"
+                                   @bind-Value="eq.CalibrationTypeID"
+                                   Label="Method"
+                                   ShowDefaultOption="true">
+                            @if (AppSecurity.CalibrtionTypeList.Count > 0)
+                                    {
+                            @foreach (var item in AppSecurity.CalibrtionTypeList)
+                                        {
+                            <option value="@item.CalibrationTypeId">@item.Name</option>
+                                        }
+                                    }
+
+                        </TextInput>
+                    </div>
+                    <div class="col">
+                        <TextInput TValue="int?" Validate="false"
+                        @bind-Value="eq.EquipmentTypeID"
+                                   Label="Method"
+                                   ShowDefaultOption="true">
+                            @if (AppSecurity.EquipmentTypeWODList.Count > 0)
+                            {
+                                    @foreach (var item in AppSecurity.EquipmentTypeWODList)
+                                {
+                                    <option value="@item.EquipmentTypeID">@item.Name</option>
+                                }
+                            }
+
+                        </TextInput>
+                      
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="col-md">
+
+
+                        <TextInput Label="Description" @bind-Value="eq.Description" TValue="string"
+                                   Validate="true" ValidationFor="@(() => eq.Description)" IsDisabled="!Enabled">
+
+
+                        </TextInput>
+
+                    </div>
+                    <div class="col-md-3 mb-3">
+
+
+                        <TextInput Label="Accredited" @bind-Value="eq.Accredited" TValue="bool"
+                                   Validate="false" ValidationFor="@(() => eq.Accredited)" IsDisabled="!Enabled"
+                                   Type="@Types.Switch">
+
+
+                        </TextInput>
+
+
+                    </div>
+                </div>
+                <div class="form-row p-3">
+                    <div class="col-md-3 mb-3">
+
+
+                        <TextInput Label="Range Min" @bind-Value="eq.RangeMIn" TValue="double"
+                                   Validate="false" ValidationFor="@(() => eq.RangeMIn)" IsDisabled="!Enabled" 
+                                   Type="@Types.number">
+
+
+                        </TextInput>
+
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+
+                        <TextInput Label="Range Max" @bind-Value="eq.RangeMax" TValue="double"
+                                   Validate="false" ValidationFor="@(() => eq.RangeMax)" IsDisabled="!Enabled"
+                                   Type="@Types.number">
+
+
+                        </TextInput>
+
+
+                    </div>
+
+                    <div class="col">
+
+                        <TextInput @bind-Value="@eq.UnitOfMeasureID" Label="Unit Of Measurement" TValue="int?"
+                                   LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="(()=>eq.UnitOfMeasureID)">
+                            @if (AppState.UnitofMeasureList != null)
+                                    {
+
+                                if (eq.EquipmentTypeID.HasValue)
+                                {
+                                    var tc = AppSecurity.EquipmentTypeWODList.Where(x => x.EquipmentTypeID == eq.EquipmentTypeID).FirstOrDefault();
+
+                                    eq.CalibrationTypeID = tc.CalibrationTypeID;
+
+                                    
+                                    @* @foreach(var item in AppState.UnitofMeasureList.Where(x => x.Type.CalibrationTypeID == tc.CalibrationTypeID)) *@
+                                    @foreach (var item in AppState.GetUoMByEquipmentType(tc))
+                                    {
+                                        //string name = item.Name + " " + @item.LastName;
+
+                                        <option value="@item.UnitOfMeasureID">@item.Abbreviation - @item.Name</option>
+
+                                    }
+                                }
+                                else
+                                {
+                                    @* @foreach (var item in AppState.GetUoMByEquipmentType(tc))
+                                    {
+                                        //string name = item.Name + " " + @item.LastName;
+
+                                        <option value="@item.UnitOfMeasureID">@item.Abbreviation - @item.Name</option>
+
+                                    } *@
+
+                                }
+
+
+                                    }
+                        </TextInput>
+                    </div>
+
+                    <div class="col">
+
+                        @if(eq != null)
+                        {
+                            var comp = (Helpers.Controls.Component) this.Component.CloneObject();
+
+                            comp.Group = "procedure,admin,tech";
+
+                            var a = GetAccess(Policies.HasView, comp);
+
+                            var b = GetAccess(Policies.HasEdit, comp);
+
+                            var c = GetAccess(Policies.HasNew, comp);
+
+                            if (a == true)
+                            {
+
+
+                                <TextInput @bind-Value="@eq.ProcedureID" Label="Procedure" TValue="int?"
+                                   LabelDown="@LabelDown" IsDisabled="!(b||c)" ValidationFor="(()=>eq.ProcedureID)">
+                                    @if (procedureList_ != null)
+                                    {
+                                        @foreach (var item in procedureList_)
+                                        {
+                                            //string name = item.Name + " " + @item.LastName;
+
+                                            <option value="@item.ProcedureID">@item.Name</option>
+
+                                        }
+
+                                    }
+                                </TextInput>
+                            }
+
+                      
+
+                        }
+                    </div>
+                </div>
+
+
+
+                <div class="form-row p-3">
+
+                </div>
+
+
+                <div class="valid-feedback">
+                    Looks good!
+                </div>
+            </div>
+        </div>
+
+        @if (Customer == "LTI")
+
+        {
+        <div class="row">
+        <div class="col-sm-12">
+
+           <ResponsiveTable ItemsDataSource="@LIST1" PageSize="5" HasAction="true"
+                                 TableItem="CalibrationSaaS.Domain.Aggregates.Entities.Note"
+                                 @ref="@RT" 
+                                 InLineEdit="@true"
+                                 EnabledModal="@false" 
+                                 Context="Entity"
+                                 NewButtonText="Add Note"
+                                 NewItemDefaultItem="@NewNote"
+                                 HasDelete="@true"
+                                 Component="@Component"
+                                 ColActionCSS="col-sm-2"
+                         RowExecute="RowChange"
+                         EnabledDrag="true"
+                                 ClientDefaultSortField="Position"
+                                 ClientDefaultSortDirection="asc">
+                  
+
+
+                    <ChildContent>
+
+                        <GridColumns>
+
+                    <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.Note" Field="@RT.GetPropertyName(() => NoteRef.Position)" DefaultSort="true" Title="ID" IsVisble="false" />
+
+                            <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.Note" Field="@RT.GetPropertyName(() => NoteRef.Text)"  Title="Data" />
+
+                           @* <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.Note" Field="@RT.GetPropertyName(() => NoteRef.Condition)"  Title="Condition" />*@
+
+                                 <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.Note" Field="@RT.GetPropertyName(() => NoteRef.Condition)" Title="Condition">
+
+                    <ResponsiveTemplate Context="_context">
+
+                                    @{
+                                        string cond = "";
+
+                                        var c = _context as CalibrationSaaS.Domain.Aggregates.Entities.Note;
+
+                                        var condition = AppState.Comments.Where(x=>x.Key==c.Condition).FirstOrDefault();
+
+                                        if(condition != null)
+                                        {
+                                            cond = condition.Value;
+                                        }
+
+                        }
+                                
+                        @cond
+                    
+                    
+                    </ResponsiveTemplate>
+
+                            </GridColumn>
+                             <GridColumn TableItem="CalibrationSaaS.Domain.Aggregates.Entities.Note" Field="@RT.GetPropertyName(() => NoteRef.Validation)" Title="Validation" />
+
+                            <GridColumn TableItem="Note" Field="@RT.GetPropertyName(() => NoteRef.CalibrationSubtypeId)" Title="Data Grid">
+
+                                <ResponsiveTemplate Context="_context">
+
+                                    @{
+                                        string cond = "";
+
+                                        var c = _context as CalibrationSaaS.Domain.Aggregates.Entities.Note;
+
+                                        var dataGrid = _calibrationSubtypeList.Where(x => x.CalibrationSubTypeId == c.CalibrationSubtypeId).FirstOrDefault();
+
+                                        if (dataGrid != null)
+                                        {
+                                            cond = dataGrid.Name;
+                                        }
+
+                                    }
+
+                                    @cond
+
+
+                                </ResponsiveTemplate>
+
+                            </GridColumn>
+
+                        </GridColumns>
+
+
+                    </ChildContent>
+
+
+                    <GridRow>
+                        @*<div class="col-sm-2 customcol inv">WeightValue</div>
+                        <div class="col-sm-2 customcol">@Entity.WeightNominalValue</div>
+                        <div class="col-sm-2 customcol inv">UnitOfMeasurement</div>
+                        <div class="col-sm-2 customcol">@Entity.UnitOfMeasureID</div>
+                        <div class="col-sm-2 customcol inv">Note</div>
+                        <div class="col-sm-2 customcol">@Entity.Note</div>
+                        <div class="col-sm-2 customcol inv">PoEStatus</div>
+                        <div class="col-sm-2 customcol">@Entity.PieceOfEquipmentStatus</div>*@
+                    </GridRow>
+                
+                    <GridEdit>
+                        <div class="row" style="width:100%">
+                                    <div class="col-sm-2" style="display:none">
+
+                                        <TextInput Label="TestCodeID" @bind-Value="@eq.TestCodeID"
+                                                       Validate="true" ValidationFor="@(() => eq.TestCodeID)" IsDisabled="!Enabled">
+
+
+                                        </TextInput>
+
+                                    </div>
+
+                                    <div class="col-sm-2">
+
+                                <TextInput Label="Position" @bind-Value="@Entity.Position"
+                                           Validate="true" ValidationFor="@(() => Entity.Position)" IsDisabled="!Enabled">
+
+
+                                        </TextInput>
+
+                                    </div>
+
+                                 <div class="col-sm">
+
+                                <TextInput Label="Data" @bind-Value="Entity.Text"
+                                           Validate="true" ValidationFor="@(() => Entity.Text)" IsDisabled="!Enabled">
+
+
+                                        </TextInput>
+                                    </div>
+                                  
+                                     <div class="col-sm-3">
+
+                                <TextInput @bind-Value="@Entity.Condition" Label="Condition" TValue="int"
+                                           LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="(()=>Entity.Condition)">
+                                    @if (AppState.Comments != null)
+                                    {
+                                        @foreach (var item in AppState.Comments)
+                                        {
+                                            //string name = item.Name + " " + @item.LastName;
+
+                                            <option value="@item.Key">@item.Value</option>
+
+                                        }
+
+                                    }
+                                </TextInput>
+                                    </div>
+                                    <div class="col-sm">
+
+                                <TextInput Label="Validation" @bind-Value="@Entity.Validation"
+                                           Validate="true" ValidationFor="@(() => Entity.Validation)" IsDisabled="!Enabled">
+
+
+                                </TextInput>
+                            </div>
+                            <div class="col-sm customcol">
+                                <TextInput @bind-Value="Entity.CalibrationSubtypeId" Label="DataGrid" Validate="false" Type="@Types.select" LabelDown="LabelDown"
+                                           ValidationFor="(()=>Entity.CalibrationSubtypeId)" IsDisabled="!Enabled">
+                                    @if (_calibrationSubtypeList?.Count > 0)
+                                    {
+                                        @foreach (CalibrationSubType item in _calibrationSubtypeList.Where(x => x.CalibrationTypeId == eq.CalibrationTypeID && x.CalibrationTypeId != 1 && x.CalibrationTypeId != 2))
+                                        {
+                                            <option value="@item.CalibrationSubTypeId">@item.Name</option>
+                                        }
+                                    }
+
+                                </TextInput>
+
+                            </div>
+                        </div>
+                    </GridEdit>
+                </ResponsiveTable>
+
+
+        </div>
+    </div>
+        }
+    </EditForm>
+
+
+
+</div>
+    
+
+
+
+@*<div id="dvModalCreateCustomer">
+        <StandardModal @ref="child"></StandardModal>
+    </div>*@
+
+@code{
+
+
+
+
+}

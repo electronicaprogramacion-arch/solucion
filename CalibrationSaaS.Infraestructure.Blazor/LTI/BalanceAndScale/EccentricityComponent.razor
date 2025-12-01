@@ -1,0 +1,542 @@
+﻿@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+@using CalibrationSaaS.Infraestructure.Blazor.Helper
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using System.Timers;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+@using WeightSetComponent = CalibrationSaaS.Infraestructure.Blazor.LTI.Scale.WeightSetComponent
+@namespace CalibrationSaaS.Infraestructure.Blazor.LTI.BalanceAndScale
+@inherits CalibrationSaaS.Infraestructure.Blazor.LTI.BalanceAndScale.EccentricityComponentBase
+<style>
+
+
+
+    .noedit {
+        /*width: 50%;*/
+    }
+</style>
+
+<div class="" style="min-height:600px;overflow:auto;padding-left:5px;width:100%;overflow-y:scroll">
+    @if (LIST != null && ShowGrid)
+    {
+
+
+
+        <div style="display:none">
+            @if (WeightSetList2 != null)
+            {
+                <div heights="" style="max-height:300px;overflow:auto;width:100%">
+
+                    <CalibrationSaaS.Infraestructure.Blazor.Pages.Order.WeightSetComponent 
+                    @ref="@WeightSetComponent" lstWeightSet="WeightSetList2" ChangeAdd="ChangeDescripcion">
+
+                    </CalibrationSaaS.Infraestructure.Blazor.Pages.Order.WeightSetComponent>
+                </div>
+            }
+        </div>
+
+        //
+
+        <div class="row">
+            <div class="col-md-2 noinv">
+                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 15rem;" src="/img/box.png" alt="">
+            </div>
+            <div class="col">
+                <div class="" style="overflow:auto;max-height:600px">
+                    @* <EditForm Model="@Entity"> *@
+                        <ResponsiveTable ItemsDataSource="LIST"
+                                         PageSize="20"
+                                         HasAction="false"
+                                         HasSelect="false"
+                                         HasDelete="false"
+                                         HasEdit="false"
+                                         @ref="@RT"
+                                         Context="ITEM"
+                                         TableItem="Domain.Aggregates.Entities.BasicCalibrationResult"
+                                         ForceNEwButton="false"
+                                         ClientPagination="true"
+                                         DisabledRowHover="true"
+                                         InLineEdit="true"
+                                         ColActionHeaderCSS="col-sm-2"
+                                         ColActionCSS="col-sm-2"
+                                         EnabledSearch="false"
+                                         HeaderRowClass="row grid-row1 headerRow displayFlex bg-dark"
+                                         Component="@Component"
+                                         RowExecute="RowExecute"
+                                         AfterAction="@TaskAfterSave"
+                                         RowAfterRender="@RowAfterRender">
+
+
+
+                            <GridHeader>
+                                @*<div class="col"></div>*@
+                                <div class="col"></div>
+                                <div class="col">Weight Applied</div>
+                                <div class="col">Low<br /> Tolerance</div>
+                                <div class="col">High<br />Tolerance</div>
+                                <div class="col">UoM</div>
+                                <div class="col">As Found</div>
+                                <div class="col">Result</div>
+                                <div class="col">As Left</div>
+                                <div class="col">Result</div>
+                                <div class="col"></div>
+
+                            </GridHeader>
+
+
+                            <NewButton>
+                                <div class="row">
+                                    <div class="col-md-4 inv">
+                                        <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: auto;" src="/img/box.png" alt="">
+                                    </div>
+                                    <div class="row" style="width:100%">
+                                        @*<div class="col-1">
+                                    <input id="txtName" @bind-value="@TextNewValue" type="number" />
+                                    </div>*@
+                                        <div class="col marginButton">
+
+                                            <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth" @onclick=@(async () => await AddNewItem()) @onclick:stopPropagation @onclick:preventDefault
+                                                    aria-expanded="false" aria-controls="collapseTwo">
+                                                <span>
+                                                    New Eccentricity
+                                                    @*<i class="fas fa-plus fa-sm"></i>*@
+                                                </span>
+
+                                            </button>
+                                        <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth marginButton" disabled="@(!Enabled)" @onclick=@(async () => await CopyAsFoundToAsLeft()) @onclick:stopPropagation @onclick:preventDefault
+                                                aria-expanded="false" aria-controls="collapseTwo">
+                                            Copy AsFound to AsLeft
+                                        </button>
+
+                                        </div>
+                                        <div class="col marginButton">
+                                            <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth" @onclick=@(async () => await SelectWeight(Entity)) @onclick:stopPropagation @onclick:preventDefault
+                                                    aria-expanded="false" aria-controls="collapseTwo">
+                                                Set Weights
+                                            </button>
+                                        </div>
+                                        @*                                     <div class="col">
+                                    <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth" disabled="@(!Enabled)" @onclick=@(async () => await Calculate()) @onclick:stopPropagation @onclick:preventDefault
+                                    aria-expanded="false" aria-controls="collapseTwo">
+                                    Calculate
+                                    </button>
+                                    </div> *@
+                                        <div class="col">
+
+                                            <div class="input-group mb-3">
+
+                                                <input @bind-value="TextValue" disabled="@WorkOrderItemCreate.eq.IsAccredited"
+                                                       class="form-control" type="search" placeholder="Type a Weight" aria-label="Search" style="width:120px" />
+                                                <div class="input-group-append">
+                                                    <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled="@WorkOrderItemCreate.eq.IsAccredited" @onclick=@(async () => await SaveACC()) @onclick:stopPropagation @onclick:preventDefault
+                                                            aria-expanded="false" aria-controls="collapseTwo">
+                                                        Assign Weight
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </NewButton>
+                            <GridEdit>
+                                @{
+                                    var Decimals = 0;
+                                    var Resolution = "";
+                                    if (Entity.TestPoint != null)
+                                    {
+                                        Decimals = Entity.TestPoint.DecimalNumber;
+                                        Resolution = Entity.TestPoint.Resolution.ToString();
+                                    }
+                                    else
+                                    {
+                                        Decimals = WorkOrderItemCreate.eq.DecimalNumber;
+                                        Resolution = WorkOrderItemCreate.eq.Resolution.ToString();
+                                    }
+                                }
+
+                                <div class="col-sm-2  inv">Weight Applied</div>
+                                <div class="col-sm-2 ">@ITEM.WeightApplied</div>
+                                <div class="col-sm-2  inv noedit">Position</div>
+                                <div class="col-sm-2 ">@ITEM.Position</div>
+                                <div class="col-sm-2  inv">AsFound</div>
+                                <div class="col-sm-2 ">
+
+                                    <TextInput @bind-Value="@ITEM.AsFound"
+                                               class="form-control"
+                                               Type=@Types.number
+                                               Validate="false"
+                                               OnChangeControl="@(async (e) =>  ChangeValue("AsFound",e))"
+                                               ValidationFor="()=> ITEM.AsFound"
+                                               TValue="double"
+                                               IsDisabled="!Enabled"
+                                               StepResol="@Resolution"
+                                               DecimalNumbers="@Decimals"
+                                               DecimalRoundType="RoundType.RoundToResolution"
+                                               EnableToastMessage="true"
+                                               ToastMessage=@("in Testpoint (Weight) the typed value {0} was rounded to {1}")
+                                               OnKeyDown="HandleKeyDown">
+                                    </TextInput>
+
+
+
+                                </div>
+                                <div class="col-sm-2  inv">AsLeft</div>
+                                <div class="col-sm-2">
+
+
+                                    <TextInput @bind-Value="@ITEM.AsLeft"
+                                               class="form-control"
+                                               Type=@Types.number
+                                               Validate="false"
+                                               OnChangeControl="@(async (e) => ChangeValue("AsLeft", e))"
+                                               ValidationFor="() => ITEM.AsLeft"
+                                               TValue="double"
+                                               IsDisabled="!Enabled"
+                                               StepResol="@Resolution"
+                                               DecimalNumbers="@Decimals"
+                                               DecimalRoundType="RoundType.RoundToResolution"
+                                               EnableToastMessage="true"
+                                               ToastMessage=@("in Testpoint (Weight) the typed value {0} was rounded to {1}")>
+
+                                    </TextInput>
+
+
+
+
+                                </div>
+                                <div class="col-sm">
+                                </div>
+                            </GridEdit>
+
+                            <GridRow>
+                                @{
+                                    var Decimals = 0;
+                                    var Resolution = "";
+                                    if (Entity?.TestPoint != null)
+                                    {
+                                        Decimals = Entity.TestPoint.DecimalNumber;
+                                        Resolution = Entity.TestPoint.Resolution.ToString();
+                                    }
+                                    else
+                                    {
+                                        Decimals = WorkOrderItemCreate.eq.DecimalNumber;
+                                        Resolution = WorkOrderItemCreate.eq.Resolution.ToString();
+                                    }
+                                }
+                                <div class="row displayFlex" style="width:100%">
+
+                                    @*<div class="col-sm-2  inv noedit">Position</div>*@
+                                    <div class="col">
+
+                                        <MaterializeComponent>
+                                            <Content>
+                                                @ITEM.Position
+                                            </Content>
+                                        </MaterializeComponent>
+
+
+                                    </div>
+                                    @*<div class="col-sm-2  inv">Weight Applied</div>*@
+                                    <div class="col">
+
+                                        <MaterializeComponent>
+                                            <Content>
+                                                @*@ITEM.WeightApplied*@
+                                                <TextInput @bind-Value="@ITEM.WeightApplied"
+                                                           Type=@Types.numberdecimal
+                                                           CSSClass="inputgrid"
+                                                           Validate="false"
+                                                           ValidationFor="() => ITEM.WeightApplied"
+                                                           TValue="double"
+                                                           IsDisabled="true"
+                                                           LabelDown="true"
+                                                           StepResol="@Resolution"
+                                                           DecimalNumbers="@Decimals"
+                                                           >
+
+                                                </TextInput>
+                                            </Content>
+                                        </MaterializeComponent>
+                                    </div>
+                                    @*<div class="col-sm-1  inv noedit">UOM</div>*@
+
+                                    <div class="col">
+                                        <TextInput @bind-Value="@ITEM.LowerTolerance"
+                                                   Type=@Types.numberdecimallabel
+                                                   Validate="false"
+                                                   CSSClass="inputgrid"
+                                                   ValidationFor="() => ITEM.LowerTolerance"
+                                                   TValue="double"
+                                                   IsDisabled="true"
+                                                   LabelDown="true"
+                                                   StepResol="@Resolution"
+                                                   DecimalNumbers="@Decimals">
+
+                                        </TextInput>
+                                    </div>
+
+                                    <div class="col">
+                                        <TextInput @bind-Value="@ITEM.UpperTolerance"
+                                                   Type=@Types.numberdecimallabel
+                                                   Validate="false"
+                                                   ValidationFor="() => ITEM.UpperTolerance"
+                                                   TValue="double"
+                                                   IsDisabled="true"
+                                                   LabelDown="true"
+                                                   StepResol="@Resolution"
+                                                   CSSClass="inputgrid"
+                                                   DecimalNumbers="@Decimals">
+
+                                        </TextInput>
+                                    </div>
+
+
+                                    <div class="col">
+
+
+                                        <MaterializeComponent>
+                                            <Content>
+                                                @ITEM?.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList).Abbreviation
+                                            </Content>
+                                        </MaterializeComponent>
+
+                                    </div>
+
+
+                                    <div class="col">
+                                        <TextInput @bind-Value="@ITEM.AsFound"
+                                                   Type=@Types.numberdecimal
+                                                   Validate="false"
+                                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                   ValidationFor="() => ITEM.AsFound"
+                                                   TValue="double"
+                                                   IsDisabled="!Enabled"
+                                                   LabelDown="false"
+                                                   StepResol="@Resolution"
+                                                   DecimalNumbers="@Decimals"
+                                                   EnableToastMessage="true"
+                                                   CSSClass="inputgrid"
+                                                   Id="@("eccAsFoundTexbox_" + ITEM.SequenceID.ToString())"
+                                                   IsValid="@(GetClass(@ITEM, 1))"
+                                                   ToastMessage=@("in Eccentricity (As Found) the typed value {0} was rounded to {1}")
+                                                   Onkeydown="HandleKeyDown">
+
+                                        </TextInput>
+                                    </div>
+                                    <div class="col">
+                                        <MaterializeComponent>
+                                            <Content>
+                                                <TextInput @bind-Value="@ITEM.InToleranceFound"
+                                                           Type=@Types.text
+                                                           Validate="false"
+                                                           ValidationFor="() => ITEM.InToleranceFound"
+                                                           TValue="string"
+                                                           IsDisabled="true"
+                                                           CSSClass="inputgrid"
+                                                           LabelDown="true">
+
+                                                </TextInput>
+                                            </Content>
+                                        </MaterializeComponent>
+                                    </div>
+
+                                    <div class="col">
+                                        <TextInput @bind-Value="@ITEM.AsLeft"
+                                                   Type=@Types.numberdecimal
+                                                   Validate="false"
+                                                   OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                   ValidationFor="() => ITEM.AsLeft"
+                                                   TValue="double"
+                                                   IsDisabled="!Enabled"
+                                                   LabelDown="false"
+                                                   StepResol="@Resolution"
+                                                   DecimalNumbers="@Decimals"
+                                                   EnableToastMessage="true"
+                                                   CSSClass="inputgrid"
+                                                   Id="@("eccAsLeftTexbox_" + ITEM.SequenceID.ToString())"
+                                                   IsValid="@(GetClass(@ITEM, 2))"
+                                                   ToastMessage=@("in Eccentricity (As Left) the typed value {0} was rounded to {1}")>
+
+                                        </TextInput>
+                                    </div>
+                                    <div class="col">
+                                        <MaterializeComponent>
+                                            <Content>
+                                                <TextInput @bind-Value="@ITEM.InToleranceLeft"
+                                                           Type=@Types.text
+                                                           Validate="false"
+                                                           ValidationFor="() => ITEM.InToleranceLeft"
+                                                           TValue="string"
+                                                           IsDisabled="true"
+                                                           CSSClass="inputgrid"
+                                                           LabelDown="true">
+
+                                                </TextInput>
+                                            </Content>
+                                        </MaterializeComponent>
+                                    </div>
+
+
+                                    <div class="col">
+                                        @if (RT.TotalRenderRow > 0 && RT.TotalRenderRow - 1 == RT.CurrentRenderIndexRow)
+                                        {
+
+
+                                            <a class="btn btn-sm btn-danger shadow-sm customlink"
+                                               id="" @onclick=@(async () => await RT.DeleteItem(ITEM))
+                                            @onclick:stopPropagation @onclick:preventDefault disabled="@(!Enabled)">
+                                                Delete
+                                            </a>
+
+
+
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-warning shadow-sm" disabled
+                                                    id=""
+                                            @onclick:stopPropagation @onclick:preventDefault>
+                                                Delete
+                                            </button>
+                                        }
+
+
+
+                                    </div>
+
+                                </div>
+
+                            </GridRow>
+                            @*<GridEdit>
+                        <EditForm Model="ITEM" Context="cont">
+                        <DataAnnotationsValidator />
+                        <div class="col-sm-2 customcol inv">NominalTestPoit</div>
+                        <div class="col-sm-2 customcol">
+
+                        </div>
+                        <div class="col-sm-3 customcol inv">UnitOfMeasurement</div>
+
+                        </EditForm>
+                        </GridEdit>*@
+                        </ResponsiveTable>
+                   @*  </EditForm> *@
+
+                    @*<div>@Prom - @Prom2</div>*@
+                </div>
+
+            </div>
+        </div>
+
+
+
+
+    }
+
+    else
+    {
+        <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+            <div class="row" style="width:100%,display:flex;flex-dirección:columna;justify-content: center;">
+                <div class="col">
+                </div>
+                <div class="col">
+                    <p><em>Loading...</em></p>
+                    <FluentProgressRing></FluentProgressRing>
+
+                </div>
+                <div class="col">
+                </div>
+
+
+            </div>
+        </div>
+    }
+</div>
+@code {
+
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            JSRuntime.InvokeVoidAsync("eval", "event.preventDefault();");
+        }
+    }
+    public bool GetClass(BasicCalibrationResult obj, int run1)
+    {
+
+        bool result = true;
+        if (run1 == 1)
+        {
+            if (!string.IsNullOrEmpty(obj.InToleranceFound) && obj.InToleranceFound.ToUpper() == "PASS")
+                result = true;
+            else
+                result = false;
+        }
+        else
+        {
+            if (!string.IsNullOrEmpty(obj.InToleranceFound) && obj.InToleranceLeft.ToUpper() == "PASS")
+                result = true;
+            else
+                result = false;
+        }
+
+        return result;
+
+    }
+
+    private double Percentage(double tolerance, int ToleranceRange, double testpoint)
+    {
+        double Accuracy = tolerance;
+        double toleranceLow = 0;
+
+        double TestPoint = testpoint;
+        if (ToleranceRange == 1)
+            toleranceLow = TestPoint - (TestPoint * Accuracy) / 100;
+        else
+            toleranceLow = TestPoint + (TestPoint * Accuracy) / 100;
+
+
+
+
+        return toleranceLow;
+    }
+    private double PercentageResolutionTolerance(double tolerance, double resol, int ToleranceRange, double testpoint)
+    {
+        double toleranceLow;
+        double Accuracy = tolerance;
+        double resolution = resol;
+        double TestPoint;
+
+
+        TestPoint = testpoint;
+
+
+        if (ToleranceRange == 1)
+            toleranceLow = TestPoint - (((TestPoint * Accuracy) / 100) + resolution);
+        else
+            toleranceLow = TestPoint + (((TestPoint * Accuracy) / 100) + resolution);
+
+        return toleranceLow;
+    }
+
+    //Resolution
+    private double ResolutionTolerance(double tolerance, int ToleranceRange, double testpoint)
+    {
+        double resolution = tolerance;
+        double toleranceLow;
+
+
+        double TestPoint = testpoint;
+        if (ToleranceRange == 1)
+            toleranceLow = TestPoint - resolution;
+        else
+            toleranceLow = TestPoint + resolution;
+        return toleranceLow;
+    }
+
+
+}

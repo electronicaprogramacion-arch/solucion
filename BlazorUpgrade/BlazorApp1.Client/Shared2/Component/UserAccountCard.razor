@@ -1,0 +1,134 @@
+﻿@using CacheStorage.Utils
+@using Radzen
+@inject NavigationManager NavigationManager
+
+@inject NavigationManager Navigation
+
+@inject CacheStorageAccessor CacheStorageAccessor
+@inject HttpClient HttpClient
+
+
+
+<RadzenProfileMenu>
+    <Template>
+        <RadzenGravatar Email="@UserEmail" Size="40" />
+    </Template>
+    <ChildContent>
+        <div class="user-account-card-container">
+            <RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent="Radzen.JustifyContent.Start" Gap="1rem" class="rz-p-4">
+                <RadzenGravatar Email="@UserEmail" Size="80" Style="border-radius: 50%;" />
+                <RadzenStack Gap="0">
+                    <RadzenText TextStyle="TextStyle.H6" class="rz-mb-0">@UserName</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-mb-2">@UserEmail</RadzenText>
+                    <RadzenBadge BadgeStyle="BadgeStyle.Primary" Text="@AccountType" Style="font-size: 0.8rem;" />
+                </RadzenStack>
+            </RadzenStack>
+
+            <RadzenCard class="rz-background-color-primary-light rz-shadow-0 rz-border-radius-0 rz-p-6" style="margin: 0 -1rem;">
+                <RadzenText TextStyle="TextStyle.H6" class="rz-color-on-primary-light"><strong>Account Information</strong></RadzenText>
+                <RadzenRow RowGap="0">
+                    <RadzenColumn SizeSM="12">
+                        <RadzenStack>
+                            <div>
+                                <RadzenText TextStyle="TextStyle.Overline" class="rz-color-on-primary-light rz-display-flex rz-mt-4 rz-mb-0">Account Type</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body1" class="rz-color-on-primary-light"><b>@AccountType</b></RadzenText>
+                            </div>
+                            <div>
+                                <RadzenText TextStyle="TextStyle.Overline" class="rz-color-on-primary-light rz-display-flex rz-mt-4 rz-mb-0">Last Login</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body1" class="rz-color-on-primary-light"><b>@DateTime.Now.ToString("MMM dd, yyyy HH:mm")</b></RadzenText>
+                            </div>
+                        </RadzenStack>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenCard>
+
+            <RadzenStack class="rz-mt-4">
+                <RadzenButton Text="View Account" Icon="account_circle" ButtonStyle="ButtonStyle.Light" Style="width: 100%;" />
+                <RadzenButton Text="Settings" Icon="settings" ButtonStyle="ButtonStyle.Light" Style="width: 100%;"  />
+                @* <RadzenButton Click="@BeginSignOut" Text="Sign Out" Icon="logout" ButtonStyle="ButtonStyle.Secondary" Style="width: 100%;" /> *@
+               @*  <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="RedirectToLogout" >
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Logout
+                    </NavLink>
+                    <div class="nav-item px-3">
+                    </div>
+                </div> *@
+                <RadzenLink Path="RedirectToLogout" Text="Sign Out" Icon="logout" Style="width:100%" class="rz-button rz-button-md rz-variant-filled rz-light rz-shade-default" />
+            </RadzenStack>
+        </div>
+    </ChildContent>
+</RadzenProfileMenu>
+
+
+
+<style>
+    .user-account-card-container {
+    padding: 0;
+    width: 350px;
+    }
+</style>
+
+@code {
+    [Parameter] public string UserName { get; set; }
+    [Parameter] public string UserEmail { get; set; }
+    [Parameter] public string AccountType { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        UserName = "Guest User";
+        UserEmail = string.Empty;
+        AccountType = "Guest";
+
+        return Task.CompletedTask;
+    }
+
+    private void BeginSignOut(MouseEventArgs args)
+    {
+        // No authentication to sign out from - just navigate to home
+        Navigation.NavigateTo("RedirectToLogout");
+    }
+
+    private void NavigateToProfile()
+    {
+        NavigationManager.NavigateTo("/profile");
+    }
+
+    private void NavigateToSettings()
+    {
+        NavigationManager.NavigateTo("/settings");
+    }
+
+
+
+
+    public string StoredValue { get; set; } = "";
+
+    public async Task SetValueAsync()
+    {
+        var message = CreateMessage();
+        var response = await HttpClient.SendAsync(message);
+        await CacheStorageAccessor.StoreAsync(message, response);
+    }
+
+    public async Task GetValueAsync()
+    {
+        StoredValue = await CacheStorageAccessor.GetAsync(CreateMessage());
+    }
+
+    public async Task RemoveAsync()
+    {
+        await CacheStorageAccessor.RemoveAsync(CreateMessage());
+    }
+
+    public async Task ClearAllAsync()
+    {
+        await CacheStorageAccessor.RemoveAllAsync();
+    }
+
+    public async Task RemoveByUrlAsync()
+    {
+        await CacheStorageAccessor.RemoveByUrlAsync("/sample-data/books.json");
+    }
+
+    public HttpRequestMessage CreateMessage() => new HttpRequestMessage(HttpMethod.Get, "/sample-data/books.json");
+}

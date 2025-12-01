@@ -1,0 +1,111 @@
+@page "/Quotes/PriceTypesConfiguration"
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using Microsoft.AspNetCore.Authorization
+@inherits PriceTypesConfigurationBase
+@attribute [Authorize(Policy = "HasAccess")]
+
+<div class="">
+    <HeaderComponent Title="Price Types Configuration" Enabled="true" ActionBar="false"></HeaderComponent>
+
+    <div class="row">
+        <!-- Price Types List -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <ResponsiveTable ItemsDataSource="@ListPriceTypes.ToList()"
+                                     PageSize="10"
+                                     TotalRows="@TotalRows"
+                                     HasAction="true"
+                                     HasEdit="true"
+                                     HasNew="true"
+                                     HasDelete="true"
+                                     Context="Entity"
+                                     @ref="@GridPriceTypes"
+                                     GridID="gridPriceTypes"
+                                     InLineEdit="false"
+                                     RowEditClass=""
+                                     RowNewClass=""
+                                     TableItem="PriceType"
+                                     EnabledSearch="true"
+                                     editContext="@CurrentEditContext"
+                                     EnabledModal="false"
+                                     OnChangeWindow="ClearList"
+                                     SelectOnly="false"
+                                     SaveButtonSubmit="false"
+                                     PaginationFunction1="LoadData"
+                                     DeleteAction="@DeletePriceType"
+                                     Enabled="true"
+                                     Policy="HasAccess"
+                                     Component="@Component">
+
+                        <ChildContent>
+                            <GridColumns>
+
+                                <GridColumn TableItem="PriceType" Field="@GridPriceTypes.GetPropertyName(() => eq.Name)" Title="Name" DefaultSort="true">
+                                    <ResponsiveTemplate Context="priceType">
+                                        @priceType.Name
+                                    </ResponsiveTemplate>
+                                </GridColumn>
+                                <GridColumn TableItem="PriceType" Field="@GridPriceTypes.GetPropertyName(() => eq.Description)" Title="Description">
+                                    <ResponsiveTemplate Context="priceType">
+                                        @priceType.Description
+                                    </ResponsiveTemplate>
+                                </GridColumn>
+                                <GridColumn TableItem="PriceType" Field="@GridPriceTypes.GetPropertyName(() => eq.RequiresTravel)" Title="Requires Travel">
+                                    <ResponsiveTemplate Context="priceType">
+                                        <span class="badge @(priceType.RequiresTravel ? "bg-success" : "bg-secondary") text-white">
+                                            @(priceType.RequiresTravel ? "Yes" : "No")
+                                        </span>
+                                    </ResponsiveTemplate>
+                                </GridColumn>
+                                <GridColumn TableItem="PriceType" Field="@GridPriceTypes.GetPropertyName(() => eq.IsActive)" Title="Active">
+                                    <ResponsiveTemplate Context="priceType">
+                                        <span class="badge @(priceType.IsActive ? "bg-success" : "bg-danger") text-white">
+                                            @(priceType.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </ResponsiveTemplate>
+                                </GridColumn>
+                                <GridColumn TableItem="PriceType" Field="@GridPriceTypes.GetPropertyName(() => eq.SortOrder)" Title="Sort Order">
+                                    <ResponsiveTemplate Context="priceType">
+                                        @priceType.SortOrder
+                                    </ResponsiveTemplate>
+                                </GridColumn>
+                            </GridColumns>
+                        </ChildContent>
+
+	                        <GridRow>
+
+	                        </GridRow>
+
+
+                        <GridSelect>
+                            <button class="btn btn-sm btn-primary" id="_btnselect"
+                                    @onclick=@(async (arg) => await ViewPriceType(@Entity.PriceTypeId)) @onclick:stopPropagation @onclick:preventDefault>
+                                Select
+                            </button>
+                        </GridSelect>
+
+                        <NewButton>
+                            <button class="btn btn-sm btn-success" id="_btnnew"
+                                    @onclick=@(async (arg) => await CreateNewPriceType()) @onclick:stopPropagation @onclick:preventDefault>
+                                New
+                            </button>
+                        </NewButton>
+
+                        <EditButton>
+                            <button class="btn btn-sm btn-warning" id="_btnedit"
+                                    @onclick=@(async (arg) => await EditPriceType(@Entity.PriceTypeId)) @onclick:stopPropagation @onclick:preventDefault>
+                                Edit
+                            </button>
+                        </EditButton>
+
+                    </ResponsiveTable>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+</div>

@@ -1,0 +1,51 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using CalibrifyApp.Server.Data
+
+@implements IDisposable
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager NavigationManager
+
+<RadzenCard class="rz-mb-4">
+    <RadzenStack>
+        <AuthorizeView>
+            <Authorized>
+                <RadzenText TextStyle="TextStyle.H5">Manage your account</RadzenText>
+                <RadzenDivider class="rz-my-2" />
+                <RadzenPanelMenu class="manage-nav">
+                    <RadzenPanelMenuItem Text="Profile" Path="Account/Manage" 
+                                       Match="NavLinkMatch.All" Icon="account_circle" />
+                    <RadzenPanelMenuItem Text="Email" Path="Account/Manage/Email" Icon="email" />
+                    <RadzenPanelMenuItem Text="Change Password" Path="Account/Manage/ChangePassword" Icon="lock" />
+                    @if (canDisplayTwoFactorLink)
+                    {
+                        <RadzenPanelMenuItem Text="Two-Factor Authentication" 
+                                           Path="Account/Manage/TwoFactorAuthentication" Icon="security" />
+                    }
+                    <RadzenPanelMenuItem Text="Personal Data" Path="Account/Manage/PersonalData" Icon="folder_shared" />
+                </RadzenPanelMenu>
+            </Authorized>
+        </AuthorizeView>
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    private bool canDisplayTwoFactorLink = true;
+    private System.Threading.Timer? timer;
+
+    protected override void OnInitialized()
+    {
+        timer = new System.Threading.Timer((_) =>
+        {
+            canDisplayTwoFactorLink = NavigationManager.ToBaseRelativePath(NavigationManager.Uri)
+                != "Account/Manage/TwoFactorAuthentication";
+
+            InvokeAsync(StateHasChanged);
+        }, null, 0, 300);
+    }
+
+    public void Dispose()
+    {
+        timer?.Dispose();
+    }
+}

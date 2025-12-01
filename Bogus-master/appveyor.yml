@@ -1,0 +1,70 @@
+version: '{build}'
+image: Visual Studio 2022
+
+environment:
+  FAKE_DETAILED_ERRORS: true
+  SNKFILE_SECRET: #SecretDatabase.kdbx / OpenSource / Bogus.snk.enc
+    secure: Bce2VwNFEBM1oWspgNlpTXSH290GZmc5DCuxjnAX72nBWNbR0S2tq/odIdfv2+t3bA9xzFHEwqvjGVEWgg5ZdfWUYj+PSBr+con0PiUGng0=
+
+skip_commits:
+  message: /(//skip\W*ci)|(read\W*me)/
+
+init:
+    - ps: |
+            If ($Env:APPVEYOR_REPO_TAG_NAME -match "-"){
+              Set-AppveyorBuildVariable -Name "IsPreRelease" -Value True
+            }
+            Else{
+              Set-AppveyorBuildVariable -Name "IsPreRelease" -Value False
+            }
+
+build_script: build.cmd ci
+
+test_script:
+  - build.cmd citest
+
+
+artifacts:
+  - path: __package\*.nupkg
+    name: NuGet
+  - path: __package\*.snupkg
+    name: Symbols
+  - path: __package\*.zip
+    name: Zip
+
+
+nuget:
+    disable_publish_on_pr: true
+
+deploy:
+    - provider: GitHub
+      release: 'Release $(APPVEYOR_REPO_TAG_NAME) build $(APPVEYOR_BUILD_VERSION)'
+      tag: $(APPVEYOR_REPO_TAG_NAME)
+      description: '[**CHANGE LOG**](https://github.com/bchavez/Bogus/blob/master/HISTORY.md)'
+      prerelease: $(IsPreRelease)
+      artifact: Zip, NuGet, Symbols
+      auth_token:
+          secure: cyivrWQwrZNAb6UCNXlIQlGfVSnKIC6TatUOIP95CQgMeKGnmBSqBgAFv2TsRZhR
+      on:
+          branch: master
+          appveyor_repo_tag_name: /v\d+\.\d+\.\d+/ 
+          appveyor_repo_tag: true
+
+    - provider: NuGet
+      server:
+      symbol_server:
+      skip_symbols: false
+      api_key:
+          secure: kFZHO4Qm7fIMq8rUhCxZ7vQDUqBdcjsflV89N0B/hm9c2Jk/uiCDfwtT9fm5juk2
+      artifact: NuGet, Symbols
+      on:
+          branch: master
+          appveyor_repo_tag_name: /v\d+\.\d+\.\d+/
+          appveyor_repo_tag: true
+
+
+on_failure:
+    - ps: |
+            # Enables RDP for debugging and setup some tools
+            #$blockRdp = $true; choco install notepad2; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+            

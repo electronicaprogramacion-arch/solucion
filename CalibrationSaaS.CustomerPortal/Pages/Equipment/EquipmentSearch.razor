@@ -1,0 +1,258 @@
+@page "/equipment/search"
+@using CalibrationSaaS.CustomerPortal.Models.Equipment
+@using CalibrationSaaS.CustomerPortal.Services.Equipment
+@using Microsoft.AspNetCore.Components.Authorization
+@using Radzen
+@using Radzen.Blazor
+@inject IEquipmentService EquipmentService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NotificationService NotificationService
+@inject NavigationManager Navigation
+@inject ILogger<EquipmentSearch> Logger
+
+<PageTitle>Equipment Search - CalibrationSaaS Customer Portal</PageTitle>
+
+<RadzenStack Gap="1.5rem">
+    <!-- Page Header -->
+    <RadzenCard Class="rz-p-4">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.H4" Class="rz-mb-0">
+                    <RadzenIcon Icon="search" Class="rz-mr-2" />
+                    Equipment Search
+                </RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1" Class="rz-color-secondary">
+                    Search and manage your calibration equipment
+                </RadzenText>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <RadzenButton Icon="refresh" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium"
+                             Click="@LoadEquipment" IsBusy="@isLoading" Title="Refresh" />
+                <RadzenButton Icon="file_download" Text="Export" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium"
+                             Click="@ExportEquipment" Disabled="@(!equipment?.Any() == true)" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+
+    <!-- Search and Filters -->
+    <RadzenCard Class="rz-p-4">
+        <RadzenStack Gap="1rem">
+            <RadzenText TextStyle="TextStyle.H6">Search Criteria</RadzenText>
+            <RadzenRow Gap="1rem">
+                <RadzenColumn Size="12" SizeMD="3">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenLabel Text="Serial Number" />
+                        <RadzenTextBox @bind-Value="@searchCriteria.SerialNumber" Placeholder="Enter serial number..."
+                                      @oninput="@((args) => OnSearchChanged())" />
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="3">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenLabel Text="Description" />
+                        <RadzenTextBox @bind-Value="@searchCriteria.Description" Placeholder="Equipment description..."
+                                      @oninput="@((args) => OnSearchChanged())" />
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="3">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenLabel Text="Manufacturer" />
+                        <RadzenTextBox @bind-Value="@searchCriteria.Manufacturer" Placeholder="Enter manufacturer..."
+                                      Change="@OnSearchChanged" />
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="3">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenLabel Text="Equipment Type" />
+                        <RadzenTextBox @bind-Value="@searchCriteria.EquipmentType" Placeholder="Enter equipment type..."
+                                      Change="@OnSearchChanged" />
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <RadzenButton Text="Clear Filters" Icon="clear" ButtonStyle="ButtonStyle.Light"
+                             Click="@ClearFilters" />
+                <RadzenButton Text="Search" Icon="search" ButtonStyle="ButtonStyle.Primary"
+                             Click="@LoadEquipment" IsBusy="@isLoading" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+
+    <!-- Equipment Grid -->
+    <RadzenCard Class="rz-p-4">
+        <RadzenStack Gap="1rem">
+            <RadzenText TextStyle="TextStyle.H6">Equipment (@(totalCount))</RadzenText>
+
+            @if (isLoading)
+            {
+                <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-4">
+                    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Medium" />
+                    <RadzenText TextStyle="TextStyle.Body2">Searching equipment...</RadzenText>
+                </RadzenStack>
+            }
+            else if (equipment?.Any() == true)
+            {
+                <RadzenDataGrid Data="@equipment" TItem="EquipmentDto"
+                               AllowPaging="true" PageSize="10" AllowSorting="true" AllowFiltering="false"
+                               Class="rz-datatable">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="EquipmentDto" Property="SerialNumber" Title="Serial Number" Width="150px" />
+                        <RadzenDataGridColumn TItem="EquipmentDto" Property="Description" Title="Description" />
+                        <RadzenDataGridColumn TItem="EquipmentDto" Property="Manufacturer" Title="Manufacturer" Width="150px" />
+                        <RadzenDataGridColumn TItem="EquipmentDto" Property="Model" Title="Model" Width="120px" />
+                        <RadzenDataGridColumn TItem="EquipmentDto" Property="Location" Title="Location" Width="120px" />
+                        <RadzenDataGridColumn TItem="EquipmentDto" Property="NextCalibrationDate" Title="Next Due" Width="120px">
+                            <Template Context="equip">
+                                @if (equip.NextCalibrationDate.HasValue)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption">
+                                        @equip.NextCalibrationDate.Value.ToString("MM/dd/yyyy")
+                                    </RadzenText>
+                                }
+                                else
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">N/A</RadzenText>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            }
+            else
+            {
+                <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-4">
+                    <RadzenIcon Icon="precision_manufacturing" Style="font-size: 3rem; color: var(--rz-secondary);" />
+                    <RadzenText TextStyle="TextStyle.H6" Class="rz-color-secondary">No Equipment Found</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">
+                        No equipment matches your search criteria. Try adjusting your filters.
+                    </RadzenText>
+                </RadzenStack>
+            }
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    private List<EquipmentDto>? equipment;
+    private bool isLoading = false;
+    private int totalCount = 0;
+
+    private EquipmentSearchCriteria searchCriteria = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEquipment();
+    }
+
+    private async Task LoadEquipment()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            // Mock data for demonstration
+            equipment = GenerateMockEquipment();
+            totalCount = equipment.Count;
+            await Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading equipment");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error Loading Equipment",
+                Detail = "Unable to load equipment. Please try again.",
+                Duration = 5000
+            });
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSearchChanged()
+    {
+        await LoadEquipment();
+    }
+
+    private async Task ClearFilters()
+    {
+        searchCriteria = new EquipmentSearchCriteria();
+        await LoadEquipment();
+    }
+
+    private async Task ExportEquipment()
+    {
+        try
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Export Started",
+                Detail = "Preparing equipment data for export...",
+                Duration = 3000
+            });
+            await Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting equipment");
+        }
+    }
+
+    private void ViewCalibrationHistory(int equipmentId)
+    {
+        Navigation.NavigateTo($"/equipment/history?equipmentId={equipmentId}");
+    }
+
+    private void ScheduleCalibration(int equipmentId)
+    {
+        Navigation.NavigateTo($"/work-orders/create?equipmentId={equipmentId}");
+    }
+
+    private List<EquipmentDto> GenerateMockEquipment()
+    {
+        return new List<EquipmentDto>
+        {
+            new EquipmentDto
+            {
+                Id = 1,
+                SerialNumber = "CAL-001",
+                Description = "Digital Multimeter",
+                Manufacturer = "Fluke",
+                Model = "87V",
+                Location = "Lab A",
+                LastCalibrationDate = DateTime.Now.AddMonths(-10),
+                NextCalibrationDate = DateTime.Now.AddMonths(2),
+                CalibrationInterval = 12
+            },
+            new EquipmentDto
+            {
+                Id = 2,
+                SerialNumber = "CAL-002",
+                Description = "Pressure Gauge",
+                Manufacturer = "Ashcroft",
+                Model = "1009",
+                Location = "Lab B",
+                LastCalibrationDate = DateTime.Now.AddMonths(-13),
+                NextCalibrationDate = DateTime.Now.AddDays(-5),
+                CalibrationInterval = 12
+            }
+        };
+    }
+
+    private class EquipmentSearchCriteria
+    {
+        public string? SerialNumber { get; set; }
+        public string? Description { get; set; }
+        public string? Manufacturer { get; set; }
+        public string? EquipmentType { get; set; }
+        public string? CalibrationStatus { get; set; }
+        public string? Location { get; set; }
+        public DateTime? DueDateFrom { get; set; }
+        public DateTime? DueDateTo { get; set; }
+    }
+}

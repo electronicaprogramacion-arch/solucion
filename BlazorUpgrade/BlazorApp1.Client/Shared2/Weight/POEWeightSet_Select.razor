@@ -1,0 +1,253 @@
+@page "/SelectWODWeight"
+@using BlazorApp1.Blazor.Blazor.GenericMethods
+@using CalibrationSaaS.Infraestructure.Blazor.GenericMethods
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using Helpers.Controls
+
+@namespace BlazorApp1.Blazor.Blazor.GenericMethods
+@inherits POEWeightSet_SelectBase
+@inject Radzen.DialogService dialogService
+
+<ResponsiveTable ItemsDataSource="@_pieceOfEquipmentsDueDate"
+                 PageSize="@paginaSize"
+                 HasAction="false"
+                 HasDelete="false"
+                 HasEdit="false"
+                 HasSelect="false"
+                 HasNew="true"
+                 Context="Entity"
+                 @ref="@Grid"
+                 GridID="gridPoe"
+                 InLineEdit="false"
+                 RowEditClass=""
+                 RowNewClass=""
+                 TableItem="PieceOfEquipment"
+                 EnabledSearch="true"
+                 editContext="@CurrentEditContext"
+                 EnabledModal="false"
+                 SaveButtonSubmit="false"
+                 PaginationFunction1="LoadData"                 
+                 DeleteAction="@Delete"
+                 SelectOnly="false"
+                 ClientPagination="false"
+                 Component="@Component"
+                 CheckList="_pieceOfEquipmentsFiltered"
+                 HasCheck="true"
+                 AddToListCheck="AddToList">
+
+    <ChildContent>
+
+        <GridColumns>
+
+
+          @*   <GridColumn TableItem="PieceOfEquipment" Title=" " Field="@Grid.GetPropertyName(() => eq.PieceOfEquipmentID)" CSScol="col-sm-1 customcol">
+                <ResponsiveTemplate>
+                    @{
+                        bool ch = false;
+                        bool dis = false;
+                        var entity = context as PieceOfEquipment;
+                        if (_pieceOfEquipmentsFiltered != null && _pieceOfEquipmentsFiltered.Count > 0 && entity != null)
+                        {
+                            var a = _pieceOfEquipmentsFiltered.Where(x => x.PieceOfEquipmentID == entity.PieceOfEquipmentID).ToList();
+
+                            if (a != null && a?.Count > 0)
+                            {
+                                ch = true;
+                            }
+                        }
+
+                       
+
+                    }
+                    @if (ch)
+                    {
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" value="@entity.PieceOfEquipmentID" checked="checked" disabled="@dis"
+                                   id="switch-@entity.PieceOfEquipmentID" @onclick="@(async () => await addToListPoE(entity.PieceOfEquipmentID))">
+
+                            <label class="custom-control-label" for="switch-@entity.PieceOfEquipmentID"></label>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" value="@entity.PieceOfEquipmentID" disabled="@dis"
+                                   id="switch-@entity.PieceOfEquipmentID" @onclick="@(async () => await addToListPoE(entity.PieceOfEquipmentID))">
+
+                            <label class="custom-control-label" for="switch-@entity.PieceOfEquipmentID"></label>
+
+                        </div>
+
+                    }
+
+
+                </ResponsiveTemplate>
+            </GridColumn>
+ *@
+
+
+
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipmentID)" Title="ID" />
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.SerialNumber)" />
+
+
+            @*<GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Capacity)" />*@
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.UnitOfMeasureID)" Title="Range">
+
+                <ResponsiveTemplate Context="POE">
+
+                    @{
+
+                        string s = "";
+
+                        var a = POE as PieceOfEquipment;
+                        if(a.WeightSets !=null && a.WeightSets.Count > 0)
+                        {
+                            var b = a.WeightSets.ElementAtOrDefault(0).UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList, a.WeightSets.ElementAtOrDefault(0).WeightNominalValue, a.WeightSets.ElementAtOrDefault(0).WeightNominalValue2);
+
+                            if (b != null)
+                            {
+                                s = b.CapacityFull;
+                            }
+                        }
+
+
+                    }
+                    @s
+
+
+                </ResponsiveTemplate>
+
+            </GridColumn>
+
+            
+            @if (CalibrationTypeID == 4 )
+            {
+                <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.MicronValue)" Title="Micron"/>
+
+                 <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.TypeMicro)">
+
+                <ResponsiveTemplate>
+
+                        @{
+
+                            var a = context as PieceOfEquipment;
+                            KeyValue2 b = null;
+                            if (a.TypeMicro.HasValue)
+                            {
+                                b = AppState.TYpeMicro.Where(x => x.Key == a.TypeMicro).FirstOrDefault();
+                            }
+
+
+                        }
+                        @if (b != null)
+                        {
+                            <div>
+                                @b.Value
+                            </div>
+                            
+                        }
+                       
+                </ResponsiveTemplate>
+                </GridColumn>
+
+
+            }
+
+
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Status)">
+
+                <ResponsiveTemplate>
+
+                    @{
+
+                        var a = context as PieceOfEquipment;
+
+                        var b = a.Status.GetStatus(AppState.StatusListET);
+                    }
+                    @b
+                </ResponsiveTemplate>
+
+
+            </GridColumn>
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.DueDate)" Format="{0:MM/dd/yy}" DefaultSort="true">
+
+
+            </GridColumn>
+
+        </GridColumns>
+
+
+
+    </ChildContent>
+   @* <GridSelect>
+
+        <button class="btn btn-sm btn-primary" id="_btnselect"
+                @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+            Select
+        </button>
+
+    </GridSelect>*@
+
+    <GridRow>
+
+
+    </GridRow>
+
+    <NewButton>
+       @*  <button class="btn btn-primary" @onclick=@(async () => await ReturnModal())>Select</button> *@
+
+
+        <RadzenStack Visible="true" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <RadzenButton Click="@(async (args) =>  dialogService.Close(await ReturnSelect()))" Variant="Variant.Flat" Text="Save" Style="width: 120px" />
+            <RadzenButton Click="@((args) => dialogService.Close(null))" Variant="Variant.Flat" Text="Close" Style="width: 120px" />
+        </RadzenStack>
+
+
+    </NewButton>
+    @*<EditButton>
+            <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton" href="PieceOfEquipmentCreate/@Entity.PieceOfEquipmentID">Edit</a>
+
+        </EditButton>*@
+
+        <GridFooter>
+
+        <RadzenStack Visible="true" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <RadzenButton Click="@(async (args) => dialogService.Close(await ReturnSelect()))" Variant="Variant.Flat" Text="Save" Style="width: 120px" />
+            <RadzenButton Click="@((args) => dialogService.Close(null))" Variant="Variant.Flat" Text="Close" Style="width: 120px" />
+        </RadzenStack>
+        </GridFooter>
+
+</ResponsiveTable>
+
+
+
+@code {
+    string classPieceOfEquipment;
+
+ 
+    async Task Select(object arg, PieceOfEquipment entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+
+}

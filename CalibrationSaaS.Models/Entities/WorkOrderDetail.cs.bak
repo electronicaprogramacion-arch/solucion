@@ -1,0 +1,569 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+using System.Collections;
+using CalibrationSaaS.Domain.Aggregates.Interfaces;
+using System.Collections.Specialized;
+using System.Linq;
+using Helpers.Controls;
+using Newtonsoft.Json;
+
+namespace CalibrationSaaS.Domain.Aggregates.Entities
+{
+    [DataContract]
+    public partial class WorkOrderDetail :  IGenericCalibrationCollection<GenericCalibrationResult2>, IGeneric, IDisposable, INoteWOD, IResolution, IConfiguration,ITolerance,IUncetainty
+    {
+        public WorkOrderDetail()
+        {
+
+            //WorkOder = new WorkOrder();
+            //CalibrationResult = new HashSet<CalibrationResult>();
+            //EquipmentCondition = new HashSet<EquipmentCondition>();
+            CurrentStatus = new Status();
+            PreviusStatus = new List<Status>();
+
+
+        }
+
+        [Key]
+        [Required(ErrorMessage = "Required WorkOrderDetailID")]
+        [DataMember( Order = 1)]
+        public int WorkOrderDetailID { get; set; }
+
+        [Required(ErrorMessage = "Required WorkOrderID")]
+        [DataMember(Order = 2)]
+        public int WorkOrderID { get; set; }
+
+        //[Required(ErrorMessage = "Required")]
+        [DataMember(Order = 3)]
+        public int TenantId { get; set; }
+
+
+        [NotMapped]
+        [Required(ErrorMessage = "Required PieceOfEquipmentId")]
+        [DataMember(Order = 4)]
+        public string PieceOfEquipmentId { get; set; }
+
+        [Required(ErrorMessage = "Required IsAccredited")]
+        [DataMember(Order = 5)]
+        public bool? IsAccredited { get; set; } = false;
+
+
+        [Required(ErrorMessage = "Required IsService")]
+        [DataMember(Order = 6)]
+        public bool? IsService { get; set; } = true;
+        [Required(ErrorMessage = "Required IsRepair")]
+        [DataMember(Order = 7)]
+        public bool? IsRepair { get; set; } = false;
+
+        [Required(ErrorMessage = "Required SelectedNewStatus")]
+        [DataMember(Order = 8)]
+        public short SelectedNewStatus { get; set; } = 1; //Ready for Calibration
+
+
+
+        [DataMember(Order = 9)]
+        public virtual Status CurrentStatus { get; set; }
+
+        [NotMapped]
+
+        [DataMember(Order = 10)]
+        public virtual ICollection<Status> PreviusStatus { get; set; }
+
+
+        //[DataMember(Order = 11)]
+        //public string Comments { get; set; }
+
+        //[Required(ErrorMessage = "Required")]
+        //[DataMember(Order = 12)]
+        //public string TechnicianName { get; set; }
+        // [Required(ErrorMessage = "Required")]
+        [DataMember(Order = 11)]
+        public string CertificateComment { get; set; }
+
+
+
+        //[DataMember(Order = 13)]
+        //public string StandardDescription { get; set; }
+
+
+        [DataMember(Order = 12)]
+        public double Humidity { get; set; }
+
+
+
+        [DataMember(Order = 13)]
+        public double Temperature { get; set; }
+
+        [DataMember(Order = 14)]
+        public string Description { get; set; }
+
+
+        //[DataMember(Order = 17)]
+        //public virtual EquipmentTemplate EquipmentTemplate { get; set; }
+
+        [DataMember(Order = 15)]
+        public int TemperatureUOMID { get; set; }
+
+
+        //[NotMapped]
+        [DataMember(Order = 16)]
+        public virtual PieceOfEquipment PieceOfEquipment { get; set; }
+
+        [DataMember(Order = 17)]
+        public virtual User Technician { get; set; }
+
+        [DataMember(Order = 18)]
+        public int StandarID { get; set; }
+
+        [DataMember(Order = 19)]
+        public int CalibrationIntervalID { get; set; }
+
+
+        [DataMember(Order = 20)]
+        public int CalibrationIntervalName { get; set; }
+
+
+        [DataMember(Order = 21)]
+        public DateTime? CalibrationDate { get; set; }
+
+
+        [DataMember(Order = 22)]
+        public DateTime? CalibrationCustomDueDate { get; set; }
+
+
+        [DataMember(Order = 23)]
+        public DateTime? CalibrationNextDueDate { get; set; }
+
+
+        [DataMember(Order = 24)]
+        public virtual WorkOrder WorkOder { get; set; }
+
+        [DataMember(Order = 25)]
+        public virtual ICollection<EquipmentCondition> EquipmentCondition { get; set; }
+
+
+        [NotMapped]
+
+        [DataMember(Order = 26)]
+        public virtual UnitOfMeasure HumidityUOM { get; set; }
+
+
+        [NotMapped]
+
+        [DataMember(Order = 27)]
+        public virtual UnitOfMeasure TemperatureUOM { get; set; }
+
+        [StringLength(500, ErrorMessage = "Note is too long.")]
+        [DataMember(Order = 28)]
+        public string TechnicianComment { get; set; } 
+
+
+        [DataMember(Order = 29)]
+        public int TestPointNumber { get; set; } = 5;
+
+        [DataMember(Order = 30)]
+        public int HumidityUOMID { get; set; }
+
+
+        [DataMember(Order = 31)]
+        public int? TechnicianID { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        [DataMember(Order = 32)]
+        public ICollection<Status> PossibleNextStatus { get; set; }
+
+        [DataMember(Order = 33)]
+        public int CurrentStatusID { get; set; }
+
+
+        //[DataMember(Order = 33)]
+        //public int TemperatureUOMID { get; set; }
+
+        //[Required(ErrorMessage = "Required")]
+        //[DataMember(Order = 36)]
+
+        //public virtual ICollection<EquipmentCondition> EquipmentCondition { get; set; }
+
+        //[DataMember(Order = 34)]
+        //public int? ToleranceTypeID { get; set; }
+
+        [DataMember(Order = 35)]
+        public virtual BalanceAndScaleCalibration BalanceAndScaleCalibration { get; set; }
+
+        //[DataMember(Order = 36)]
+        //public double AccuracyPercentage { get; set; }
+
+        [DataMember(Order = 37)]
+        public int DecimalNumber { get; set; }
+
+        [DataMember(Order = 38)]
+        public double Resolution { get; set; }
+
+        //[DataMember(Order = 39)]
+        //public double Tolerance { get; set; }
+
+
+
+        [DataMember(Order = 40)]
+        public string Environment { get; set; }
+
+
+        [DataMember(Order = 41)]
+        public virtual ICollection<WOD_TestPoint> WOD_TestPoints { get; set; }
+
+
+        [DataMember(Order = 42)]
+        public virtual ICollection<WOD_Weight> WOD_Weights { get; set; }
+
+
+        [DataMember(Order = 43)]
+        public string WorkOrderDetailHash { get; set; }
+
+
+
+        [DataMember(Order = 44)]
+        public virtual ICollection<WorkDetailHistory> WorkDetailHistorys { get; set; }
+
+
+        [DataMember(Order = 45)]
+        public int? AddressID { get; set; }
+
+
+        public virtual Address Address { get; set; }
+
+
+
+        [DataMember(Order = 46)]
+        public int? CalibrationTypeID { get; set; }
+
+
+        [DataMember(Order = 47)]
+        public virtual CalibrationType CalibrationType { get; set; }
+
+
+        [DataMember(Order = 48)]
+        public virtual ICollection<TestPointGroup> TestGroups { get; set; }
+
+
+        [DataMember(Order = 49)]
+        public int ClassHB44 { get; set; }
+
+        [DataMember(Order = 50)]
+        public bool IsComercial { get; set; }
+        //AccuracyPercentage
+
+        //    DecimalNumber
+        //    Resolution
+
+        //    Tolerance
+        [DataMember(Order = 51)]
+        public ICollection<RangeTolerance> Ranges { get; set; }
+
+        [IgnoreDataMember]
+        public string Name { get; set; }
+
+        [DataMember(Order = 52)]
+        public int Multiplier { get; set; } = 1;
+
+        [DataMember(Order = 53)]
+        public string OfflineID { get; set; }
+
+        [DataMember(Order = 54)]
+        public int OfflineStatus { get; set; }
+
+        [DataMember(Order = 55)]
+        public DateTime? StatusDate { get; set; }
+
+        [DataMember(Order = 56)]
+        public bool HasBeenCompleted { get; set; }
+
+
+         [DataMember(Order = 57)]
+        public Certificate Certificate { get; set; }
+
+         [NotMapped] 
+        public int? ModeID { get; set; }
+
+         [DataMember(Order = 58)] 
+        public bool IncludeASTM { get; set; }
+
+       [DataMember(Order = 59)]
+        public bool IsUniversal { get; set; }
+
+
+        
+         [DataMember(Order = 60)]
+         public double TemperatureAfter { get; set; }
+
+         [DataMember(Order = 61)]
+         public int? CertificationID { get; set; }
+
+         [DataMember(Order = 62)]
+        public virtual Certification Certification { get; set; }
+
+
+
+         //[DataMember(Order = 63)]
+         //public  int CalibrationSubTypeID{ get; set; }
+
+
+       [DataMember(Order = 64)]
+        public string TemperatureStandardId { get; set; }
+
+
+         [DataMember(Order = 65)]
+        public virtual TestCode TestCode  { get; set; }
+
+
+         [DataMember(Order = 66)]
+        public int? TestCodeID  { get; set; }
+
+        [DataMember(Order = 67)]
+        public bool? EndOfMonth { get; set; }
+
+        //[DataMember(Order = 68)]
+        //public int? ExternalConditionId { get; set; }
+
+        [DataMember(Order = 68)]
+        public ICollection<ExternalCondition> EnviromentCondition { get; set; }
+
+        [DataMember(Order = 69)]
+        public ICollection<NoteWOD> NotesWOD { get; set; }
+      
+
+        [DataMember(Order = 70)]
+        public virtual ICollection<WOD_Standard> WOD_Standard { get; set; }
+
+        [DataMember(Order = 71)]
+        public string WorkOrderDetailUserID { get; set; }
+
+
+        [NotMapped]
+        public virtual ICollection<CalibrationSubType_Standard> CalibrationSubType_Standards { get; set; }
+
+        [NotMapped]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool dispose { get; set; }
+
+
+        [NotMapped]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool Refresh { get; set; }
+
+
+        [DataMember(Order = 72)]
+        public string Configuration { get ; set ; }
+
+
+        [NotMapped]
+        [DataMember(Order = 73)]
+        public virtual ICollection<WOD_Procedure> WOD_Procedure { get; set; }
+
+ 		[NotMapped]
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public bool IsModifiedOff { get; set; }
+
+
+        [NotMapped]
+        [DataMember(Order = 73)]
+        public bool IsOffline { get; set; }
+
+        [DataMember(Order = 74)]
+        public int ToleranceTypeID { get; set; }
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Tolerance section
+        /// </summary>
+        //[DataMember(Order = 73)]
+        //public bool? FullScale { get; set; }
+
+        //[DataMember(Order = 74)]
+        //public double? TolerancePercentage { get; set; }
+
+        //[DataMember(Order = 75)]
+        //public double? ToleranceValue { get; set; }
+
+        //[DataMember(Order = 76)]
+        //public double? ToleranceFixedValue { get ; set ; }
+
+        [NotMapped]
+        public double ResolutionValue { get => Resolution;  }
+
+        [NotMapped]
+        public List<GenericCalibrationResult2> TestPointResult { get 
+            {
+                
+                if(this.BalanceAndScaleCalibration.TestPointResult == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return this.BalanceAndScaleCalibration.TestPointResult;
+                }
+                
+            
+            
+            } set 
+            {
+                this.BalanceAndScaleCalibration.TestPointResult=value; 
+            } 
+         }
+
+        //[DataMember(Order = 77)]
+        //public string JsonTolerance { get ; set ; }
+
+        //[DataMember(Order = 78)]
+        //public Tolerance Tolerance { get ; set ; }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        private string _JsonTolerance;
+        [DataMember(Order = 101)]
+        public string JsonTolerance
+        {
+            get
+            {
+
+                return this._JsonTolerance;
+
+            }
+
+            set
+            {
+                this._JsonTolerance = value;
+            }
+
+
+        }
+
+
+
+
+        private Tolerance _Tolerance = new Tolerance();
+
+        [NotMapped]
+        [DataMember(Order = 102)]
+        public Tolerance Tolerance
+        {
+            get
+            {
+                Tolerance tol = new Tolerance();
+
+                _Tolerance = tol.GetTolerance(_Tolerance.Json, this.JsonTolerance, _Tolerance);
+
+
+                return _Tolerance;
+            }
+            set
+            {
+                _Tolerance = value;
+
+                JsonTolerance = _Tolerance.Json;
+            }
+        }
+
+
+        [NotMapped]
+        public ICollection<Uncertainty> Uncertainty { get ; set ; }
+
+        public void Dispose()
+        {
+            dispose2();
+
+
+        }
+
+        public void dispose2()
+        {
+            if (dispose)
+            {
+            this.BalanceAndScaleCalibration = null;
+            this.PieceOfEquipment = null;
+            this.Ranges = null;
+            this.CurrentStatus = null;
+            this.WorkOder = null;
+            this.WorkDetailHistorys = null;
+            this.WOD_Weights = null;
+            this.TestGroups = null;
+            }
+           
+        }
+
+        public int? GetCalibrationTypeID()
+        {
+            if (this?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject != null)
+            {
+
+                return this?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject.CalibrationTypeID;
+
+            }
+
+            return null;
+        }
+
+
+        public List<KeyValueOption> GetStandardComponentArray()
+        {
+
+            //List<KeyValueOption> n = new List<KeyValueOption>();
+
+            //n.Add(new KeyValueOption("scale", "Load Weight Set Kits", "3" ));
+            //n.Add(new KeyValueOption("rockwell", "Load Balance & Scale","4"));
+
+            //var str = Newtonsoft.Json.JsonConvert.SerializeObject(n);
+
+            if (!string.IsNullOrEmpty(this?.PieceOfEquipment?.EquipmentTemplate?.GetEquipmentType(this).StandardComponent))  //EquipmentTypeObject != null && !string.IsNullOrEmpty(this?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject.StandardComponent))
+            {
+                //var nvc = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValueOption>>(str);
+                var nvc= Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValueOption>>(this?.PieceOfEquipment?.EquipmentTemplate?.GetEquipmentType(this).StandardComponent);
+                //var items = nvc.AllKeys.SelectMany(nvc.GetValues, (k, v) => new { key = k, value = v });
+                return nvc;//this?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject.StandardComponent.Split(",");
+
+            }
+
+            return new List<KeyValueOption>(); ;
+        }
+
+
+        public string GetStandardComponent()
+        {
+            if (this?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject != null)
+            {
+
+                return this?.PieceOfEquipment?.EquipmentTemplate?.EquipmentTypeObject.StandardComponent;
+
+            }
+
+            return null;
+        }
+
+        public ICalibrationType GetCalibrationType()
+        {
+            if (this?.PieceOfEquipment?.EquipmentTemplate?.GetEquipmentType(this).CalibrationType != null)
+            {
+
+                return this.PieceOfEquipment.EquipmentTemplate.GetEquipmentType(this).CalibrationType;
+
+            }
+
+            ICalibrationType cal = new CalibrationType() as ICalibrationType;
+
+            cal.CalibrationSubTypes = new List<CalibrationSubType>();
+            
+            return cal;
+        }
+
+
+    }
+
+
+
+
+}

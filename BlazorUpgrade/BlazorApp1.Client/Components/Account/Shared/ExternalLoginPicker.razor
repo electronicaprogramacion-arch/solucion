@@ -1,0 +1,88 @@
+﻿@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager NavigationManager
+
+<div class="external-login-picker">
+    @if (externalLogins.Length == 0)
+    {
+        <div class="no-external-providers">
+            <div class="no-providers-icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <p class="no-providers-text">No external authentication services are currently configured.</p>
+            <p class="no-providers-subtext">Contact your administrator to enable social login options.</p>
+        </div>
+    }
+    else
+    {
+        <form class="external-login-form" action="Account/PerformExternalLogin" method="post">
+            <div class="external-providers-grid">
+                @foreach (var provider in externalLogins)
+                {
+                    <button type="submit"
+                            name="provider"
+                            value="@provider.Name"
+                            class="external-provider-btn @GetProviderClass(provider.DisplayName)">
+                        <div class="provider-icon">
+                            <i class="@GetProviderIcon(provider.DisplayName)"></i>
+                        </div>
+                        <div class="provider-content">
+                            <span class="provider-name">@provider.DisplayName</span>
+                            <span class="provider-subtitle">Continue with @provider.DisplayName</span>
+                        </div>
+                        <div class="provider-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                    </button>
+                }
+            </div>
+            <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
+        </form>
+    }
+</div>
+
+@code {
+    private AuthenticationScheme[] externalLogins = [];
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        externalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToArray();
+    }
+
+    private string GetProviderIcon(string providerName)
+    {
+        return providerName.ToLower() switch
+        {
+            "google" => "fab fa-google",
+            "facebook" => "fab fa-facebook-f",
+            "microsoft" => "fab fa-microsoft",
+            "twitter" => "fab fa-twitter",
+            "github" => "fab fa-github",
+            "linkedin" => "fab fa-linkedin-in",
+            "apple" => "fab fa-apple",
+            "amazon" => "fab fa-amazon",
+            _ => "fas fa-sign-in-alt"
+        };
+    }
+
+    private string GetProviderClass(string providerName)
+    {
+        return providerName.ToLower() switch
+        {
+            "google" => "provider-google",
+            "facebook" => "provider-facebook",
+            "microsoft" => "provider-microsoft",
+            "twitter" => "provider-twitter",
+            "github" => "provider-github",
+            "linkedin" => "provider-linkedin",
+            "apple" => "provider-apple",
+            "amazon" => "provider-amazon",
+            _ => "provider-default"
+        };
+    }
+}

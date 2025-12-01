@@ -1,0 +1,22 @@
+﻿@namespace CalibrationSaaS.Infraestructure.Blazor
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+@if (isdemo == "false")
+{
+    <img class="img-fluid" style="width: 8rem;" src="_content/@customer/Logo.png" alt="Logo">
+}
+@code
+{
+
+    public string isdemo { get; set; }
+    public string customer  { get; set; }
+    protected override async Task OnInitializedAsync()
+
+    {
+        isdemo = Configuration.GetSection("Reports")["IsDemo"];
+        customer = Configuration.GetSection("Reports")["Customer"];
+    }
+
+
+}

@@ -1,0 +1,520 @@
+﻿@page "/BackLog/{EntityID}"
+@using Blazed.Controls
+@namespace CalibrationSaaS.Infraestructure.Blazor
+@inherits BackLogBase
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+
+@inject ILogger<BackLog> Logger
+@*<EditForm style="margin:10px" OnValidSubmit="Submit" Model="@eq" Context="CurrenEditContext">
+    <DataAnnotationsValidator />*@
+@if (1==1)
+{
+    
+
+    
+    <EditForm style="margin:10px" OnSubmit="Submit" EditContext="@CurrentEditContext">
+        <DataAnnotationsValidator />
+
+        <ResponsiveTable ModalFilter="false"
+                         PageSize="50"
+                         HasAction="true"
+                         Context="Entity"
+                         @ref="@Grid"
+                         GridID="gridWorkOrderDetail"
+                         RowEditClass=""
+                         RowNewClass=""
+                         InLineEdit=false
+                         TableItem="WorkOrderDetail"
+                         EnabledSearch="true"
+                         editContext="@CurrentEditContext"
+                         OnChangeWindow="ClearList"
+                         HasEdit="false"
+                         HasDelete="false"
+                         Component="@Component"
+                         HasNew="true"                        
+                         PaginationFunction1="LoadData"
+                         ReportView="false"
+                         AutoGenerateColumn="false"
+                         Report="report">
+                         
+             <NewButton>
+                <div class="row">
+                    <div class="col border border-dark">
+                        Total
+                    </div>
+                    <div class="col border border-dark">
+                        Late
+                    </div>
+                    <div class="col border border-dark">
+                        Due Today
+                    </div>
+                    <div class="col border border-dark">
+                        Next day
+                    </div>
+                    <div class="col border border-dark">
+                        2 days
+                    </div>
+                    <div class="col border border-dark">
+                        3 days
+                    </div>
+                    <div class="col border border-dark">
+                        4 days
+                    </div>
+
+                </div>
+                 <div class="row">
+                    <div class="col border border-dark">
+                         @Total
+                     </div>
+                    <div class="col border border-dark bg-danger text-white">
+                        @Late
+                     </div>
+                    <div class="col border border-dark bg-warning">
+                          @DueToday
+                     </div>
+                    <div class="col border border-dark bg-success">
+                        @NextDay
+                     </div>
+                    <div class="col border border-dark">
+                        @TwoDay
+                     </div>
+                      <div class="col border border-dark">
+                        @ThreeDay
+                     </div>
+                    <div class="col border border-dark">
+                        @FourDay
+                    </div>
+
+                 </div>
+
+
+             </NewButton>
+
+            <ChildContent>
+
+                <div class="col">
+
+                <GridColumn TableItem="WorkOrderDetail"  ControlType="navlink" Value="@(@"/WorkOrderCreate/")" Field="@Grid.GetPropertyName(() => eq.WorkOder.WorkOrderId)" Title="WO ID" />
+
+                <GridColumn TableItem="WorkOrderDetail"  ControlType="navlink" Value="@(@"/WorkOrderItem/")" Key="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailUserID)" Title="ID" />
+
+                <GridColumn TableItem="WorkOrderDetail"   Format="{0:MM/dd/yy}" CustomColumn="Div" Field="@Grid.GetPropertyName(() => eq.WorkOder.ScheduledDate)" Title="Due Date" DefaultSort="true" SortDescending="true" />
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.TestCode.Code)" Title="TestCode" />
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.EquipmentTemplate.EquipmentTypeGroup.Name)" Title="Equipment Type" />
+
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.CalibrationTypeID)" Title="CalibrationType">
+                    <ResponsiveTemplate Context="_context">
+
+                            @{
+
+                                var d1 = _context as WorkOrderDetail;
+                                EquipmentType cert = null;
+                                if (d1 != null && AppSecurity?.EquipmentTypeWODList?.Count > 0)
+                                {
+                                    AppSecurity.EquipmentTypeWODList.Where(x => x.CalibrationTypeID == d1.CalibrationTypeID).FirstOrDefault();
+                                }                            
+
+
+                        }
+                        @if (cert != null)
+                        {
+                            @cert.Name
+                        }
+
+                    </ResponsiveTemplate>
+
+                </GridColumn>
+
+                </div>
+
+                    <div class="col">
+                 
+
+                <GridColumn TableItem="WorkOrderDetail" ControlType="navlink" Value="@(@"/PieceOfEquipmentCreate/")" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.PieceOfEquipmentID)" Title="POE ID" />
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.EquipmentTemplate.Model)" Title="Model" />
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.SerialNumber)" Title="Serial" />
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOder.PurchaseOrder)" Title="PurchaseOrder" />
+
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOder.WorkOrderDate)" Format="{0:MM/dd/yy}" Title="Wo Date">
+
+
+
+                </GridColumn>
+
+
+
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.CurrentStatus.Name)" Title="Status"></GridColumn>
+
+                </div>
+
+                <div class="col">
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.Customer.Name)" Title="Customer"></GridColumn>
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.Technician.Name)" Title="Technician"></GridColumn>
+
+                </div>
+
+              
+
+
+            </ChildContent>
+
+
+
+
+            <GridRow>
+
+
+            </GridRow>
+
+
+            <EditButton>
+                <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton"
+                   type="button" data-dismiss="modal" href="WorkOrderItem/@Entity?.WorkOrderDetailID.ToString()">
+                    <span aria-hidden="true">View Detail</span>
+                </a>
+            </EditButton>
+
+            <GridFilter Context="filter">
+                @{
+
+
+                    var a = filter as FilterObject<WorkOrderDetail>;
+                    if (a != null && eq != null)
+                    {
+                        a.EntityFilter = eq;
+                    }
+
+
+                }
+
+                <div class="form-row">
+                    <div class="col-md">
+
+                        <TextInput @bind-Value="a.EntityFilter.WorkOder.WorkOrderId" Label="WorkOrder ID" Validate="false"></TextInput>
+
+                    </div>
+
+                    <div class="col-md">
+
+                        <TextInput @bind-Value="a.EntityFilter.WorkOrderDetailUserID" Label="WorkOrderDetail ID" Validate="false"></TextInput>
+
+                    </div>
+
+
+                </div>
+
+                <div class="form-row">
+
+                    <div class="col-md p-2">
+                        <label class="form-control-label" for="InitDate">Init Date</label>
+                        <InputDate class="form-control" @bind-Value="a.InitDate" Label="Init Date" Validate="false"></InputDate>
+                    </div>
+                    <div class="col-md p-2">
+                        <label class="form-control-label" for="EndDate">End Date</label>
+                        <InputDate class="form-control" @bind-Value="a.EndDate" Label="End Date" Validate="false"></InputDate>
+                    </div>
+
+                </div>
+
+                <div class="form-row">
+                    <div class="col-md p-2">
+
+                        <TextInput @bind-Value="a.EntityFilter.WorkOder.PurchaseOrder" Label="Purchase Order" Validate="false"></TextInput>
+
+                    </div>
+                    <div class="col-md p-2">
+
+                        <TextInput @bind-Value="a.EntityFilter.PieceOfEquipment.Customer.Name" Label="Customer" Validate="false"></TextInput>
+
+                    </div>
+                    <div class="col-md p-2">
+
+                        <TextInput @bind-Value="@a.EntityFilter.TechnicianID"   Label="Assigned Technician">
+                            @if (AppSecurity.UserList != null)
+                            {
+                                @foreach (var item in AppSecurity.UserList)
+                                {
+                                    string name = item.Name.Trim() + " " + @item.LastName.Trim();
+
+
+                                    <option value="@item.UserID">@name </option>
+                                }
+                            }
+                        </TextInput>
+
+                    </div>
+
+                   
+
+                </div>
+                    <div class="form-row">
+@*                         <div class="col-md p-2">
+
+                            <TextInput @bind-Value="@a.EntityFilter.PieceOfEquipment.EquipmentTemplate.EquipmentTypeGroupID" Label="Assigned Technician">
+                                @if (AppSecurity.EquipmentTypeWODList != null)
+                                {
+                                    @foreach (var item in AppSecurity.EquipmentTypeWODList)
+                                    {
+                                        string name = item.EquipmentTypeGroup.Name ;
+
+
+                                        <option value="@item.EquipmentTypeGroupID">@name </option>
+                                    }
+                                }
+                            </TextInput>
+
+                        </div> *@
+                   
+                </div>
+
+                <div class="form-row">
+                    <div class="col-md p-2">
+                        <TextInput @bind-Value="a.EntityFilter.PieceOfEquipment.PieceOfEquipmentID" Label="POE ID" Validate="false"></TextInput>
+                    </div>
+                    <div class="col-md p-2">
+                        <TextInput @bind-Value="a.EntityFilter.PieceOfEquipment.SerialNumber" Label="Serial" Validate="false"></TextInput>
+                    </div>
+
+                     <div class="col-md p-2">
+                        <TextInput @bind-Value="a.EntityFilter.PieceOfEquipment.EquipmentTemplate.Model" Label="Model" Validate="false"></TextInput>
+                    </div>
+                </div>
+
+              
+
+
+                <div class="form-row">
+                    <div class="col-md p-2">
+
+                        <TextInput @bind-Value="a.EntityFilter.TestCode.Code" Label="TestCode" Validate="false"></TextInput>
+
+                    </div>
+                    <div class="col-md p-2">
+                        @if (AppState != null && AppState.StatusList != null && AppState.StatusList.Count > 0)
+                        {
+                            <TextInput @bind-Value="a.EntityFilter.CurrentStatusID"
+                                       IsDisabled="!Enabled"
+                                       Label="Status"
+                                       LabelDown="@LabelDown"
+                                       ValidationFor="(()=> a.EntityFilter.CurrentStatusID)">
+                                @foreach (var item in AppState.StatusList)
+                                {
+                                    <option value="@item.Key">@item.Value</option>
+                                }
+                            </TextInput>
+                        }
+                    </div>
+                    <div class="col-md p-2">
+                        @if (AppState != null && AppState.EquipmentTypeGroups != null && AppState.EquipmentTypeGroups.Count > 0)
+                        {
+                            <TextInput @bind-Value="a.EntityFilter.PieceOfEquipment.EquipmentTemplate.EquipmentTypeGroupID"
+                                       IsDisabled="!Enabled"
+                                       Label="Equipment Type"
+                                       LabelDown="@LabelDown"
+                                       ValidationFor="(()=> a.EntityFilter.PieceOfEquipment.EquipmentTemplate.EquipmentTypeGroupID)">
+                                @foreach (EquipmentTypeGroup item in AppState.EquipmentTypeGroups)
+                                {
+                                    <option value="@item.EquipmentTypeGroupID">@item.Name</option>
+                                }
+                            </TextInput>
+                        }
+                    </div>
+                </div>
+              
+                <div class="form-row">
+                   
+
+                </div>
+               @*  <div class="form-row">
+                    <div class="col-md p-2">
+                        <label class="form-control-label" for="InitDate">Due Date</label>
+                    </div>
+                </div>
+                <div class="form-row">
+
+                    <div class="col-md p-2">
+                        <label class="form-control-label" for="InitDate">Init Date</label>
+                        <InputDate class="form-control" @bind-Value="a.InitDate" Label="Init Date" Validate="false"></InputDate>
+                    </div>
+                    <div class="col-md p-2">
+                        <label class="form-control-label" for="EndDate">End Date</label>
+                        <InputDate class="form-control" @bind-Value="a.EndDate" Label="End Date" Validate="false"></InputDate>
+                    </div>
+
+                </div> *@
+
+                @*<button class="btn btn-sm btn-primary" id="_btnselect2"
+            @onclick=@(async(arg) => await SelectFilter(arg)) @onclick:stopPropagation @onclick:preventDefault>
+            Search
+            </button>*@
+            </GridFilter>
+
+        </ResponsiveTable>
+    </EditForm>
+}
+
+@*</EditForm>*@
+
+@code
+{
+
+
+    RenderFragment Div(GridColumn<WorkOrderDetail> wod,object value,object Key)
+    {
+        //.bg - primary, .bg - success, .bg - info, .bg - warning, .bg - danger, .bg - secondary, .bg - dark and.bg - light
+
+        if (value != null)
+        {
+            string color = "";
+
+            if (((DateTime)value).Date < DateTime.Now.Date)
+            {
+                color = " bg-danger text-white";
+            }
+            if (((DateTime)value).Date == DateTime.Now.Date)
+            {
+                color = " bg-warning";
+            }
+            if (((DateTime)value).Date == DateTime.Now.AddDays(1).Date)
+            {
+                color = " bg-success";
+            }
+            
+            
+            var cssclass = wod.CSScol + color;
+
+            return @<div class="@cssclass">@(string.IsNullOrEmpty(wod.Format) ? value.ToString() : string.Format(wod.Format, value))</div>;
+        }
+
+        return@<div class="@wod.CSScol"></div>;
+    }
+
+    RenderFragment linkWO(GridColumn<WorkOrderDetail> wod, object PropertyValue)
+    {
+        //.bg - primary, .bg - success, .bg - info, .bg - warning, .bg - danger, .bg - secondary, .bg - dark and.bg - light
+
+        //return @<NavLink class="nav-link" href="BackLog/0"><span>@(string.IsNullOrEmpty(wod.Format) ? wod.PropertyValue : string.Format(wod.Format, wod.PropertyValue))</span></NavLink>
+        if (PropertyValue == null)
+        {
+            return@<div></div>;
+        }
+
+        wod.CSScol= "nav-link";
+        return @<NavLink href=@("WorkOrderCreate/" + PropertyValue) class="@wod.CSScol">@(PropertyValue.ToString())</NavLink>;
+    }
+
+    RenderFragment linkWOD(GridColumn<WorkOrderDetail> wod)
+    {
+        //.bg - primary, .bg - success, .bg - info, .bg - warning, .bg - danger, .bg - secondary, .bg - dark and.bg - light
+
+        //return @<NavLink class="nav-link" href="BackLog/0"><span>@(string.IsNullOrEmpty(wod.Format) ? wod.PropertyValue : string.Format(wod.Format, wod.PropertyValue))</span></NavLink>
+        if (wod.PropertyValue == null)
+        {
+            return@<div></div>;
+        }
+        
+        wod.CSScol = "nav-link";
+        return @<NavLink href=@("WorkOrderItem/" + wod.PropertyValue) class="@wod.CSScol">@(wod.PropertyValue.ToString())</NavLink>;
+    }
+
+
+
+    public List<WorkOrderDetail> _listWorkOrderDetail { get; set; } = new List<WorkOrderDetail>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //eq = Grid.currentEdit;
+        //CurrentEditContext = Grid.editContext;&& _listWorkOrderDetail.Count != WorkOrder_Create._listWorkOrderDetail.Count
+        //if (WorkOrder_Create != null )
+        //{
+
+        //    _listWorkOrderDetail = WorkOrder_Create._listWorkOrderDetail.ToList();
+        //    //foreach (var item in _listWorkOrderDetail)
+        //    //{
+        //    //    Grid.SaveNewItem(item); //Add(item);
+        //    //}
+        //    Grid.ItemsDataSource = _listWorkOrderDetail;
+        //}
+
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        //editContex = new EditContext(user);
+
+        await base.OnInitializedAsync();
+        
+
+
+    }
+
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        return base.OnParametersSetAsync();
+    }
+
+
+
+    public string _strroles { get; set; }
+
+    //IList<Rol> result= GetRoles(_strroles)
+
+
+
+    protected async Task Submit(EditContext editContext)
+    {
+
+    }
+
+
+    public void ClearList(EventArgs arg)
+    {
+        List.Clear();
+
+    }
+
+    public async void Show(List<WorkOrderDetail> group)
+    {
+        if (Grid != null && group != null)
+        {
+            _listWorkOrderDetail = group;
+
+
+            //gger.LogDebug(group.Count().ToString());
+
+            //foreach (var item in group)
+            //{
+            //    await Grid.SaveNewItem(item); //Add(item);
+            //}
+
+            //Grid.Items = group;
+            StateHasChanged();
+            //Logger.LogDebug(RT.ItemsDataSource.Count());
+        }
+
+
+    }
+
+
+
+}
+
+

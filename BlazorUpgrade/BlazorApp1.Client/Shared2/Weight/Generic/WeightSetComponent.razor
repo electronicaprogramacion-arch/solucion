@@ -1,0 +1,179 @@
+﻿@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+@using CalibrationSaaS.Domain.Aggregates.ValueObjects; 
+@namespace BlazorApp1.Blazor.Blazor.GenericMethods
+@inherits WeightSetComponent_Base
+
+
+
+
+   
+@*@{ 
+    Group = lstWeightSet;
+}*@
+
+
+@if (Group != null || 1==1)
+{
+    
+    GroupWeights(Group);
+
+   
+
+
+    <div class="row" >
+        @*   <div class="col-3">
+          <div class="list-group" id="list-tab" role="tablist">
+                @if (Group2 != null) {
+                @foreach (var item2 in Group2)
+                {
+                <button class="list-group-item list-group-item-action active" @onclick="@(async () => await CancelItem(item2))"
+                        @onclick:stopPropagation @onclick:preventDefault id="list-home-list" data-toggle="list" href="#list-home" role="tab" aria-controls="home">
+                   @item2.PieceOfEquipmentID
+
+                </button>
+                }
+                }
+
+        </div>  
+        </div>*@
+        <div class="col">
+           
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="list-home" role="tabpanel" aria-labelledby="list-home-list">
+                        @*<div>scale</div>*@
+
+                    @{
+
+                        if (Group != null)
+                        {
+                            Group = Group.DistinctBy(x => x.WeightSetID).ToList();
+                        }
+                    }
+
+                        <ResponsiveTable ItemsDataSource="@Group"
+                                         PageSize="20" HasAction="false" 
+                                         HasSelect="false" HasEdit="false" 
+                                         EnabledSearch="false"
+                                         HasDelete="true" 
+                                         TableItem="CalibrationSaaS.Domain.Aggregates.Entities.WeightSet"
+                                         Context="Entity"
+                                         editContext="@CurrentEditContext"
+                                         @ref="Grid"
+                                         FilterByObject="Filter33"
+                                         Component="@Component"
+                                 DeleteAction="Delete">
+
+                            <ChildContent>
+
+                                <GridColumns>
+                                @if (Fields != null && Fields.Count > 0)
+                                {
+                                    @foreach(var item in Fields)
+                                    {
+                                        <GridColumn TableItem="WeightSet" Field="@item.Key" Title="@item.Value.Title" CSScol="@item.Value.CSScol" DefaultSort="@item.Value.DefaultSort" />
+                                    }
+                                }
+                                else
+                                {
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.PieceOfEquipmentID)" Title="ID"  />
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.Reference)" Title="#Ref" />
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.WeightNominalValue)" Title="Nominal Weight" DefaultSort="true" />
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.WeightActualValue)" Title="Actual Weight" />
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.UnitOfMeasure.Abbreviation)" Title="UoM"  />
+                                    <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.Note)" Title="Note" />
+
+
+                                }                                  
+                                </GridColumns>
+
+                            </ChildContent>
+                        <NewButton>
+                        @if (Group2 != null)
+                        {
+                            <div class="btn-group btn-group-sm" style="margin-bottom:-2px">
+                                @foreach (var item2 in Group2)
+                                {//list-group-item list-group-item-action
+                                    @*  <div class="col-3"> *@
+                                    <button class="btn btn-success" style="margin-right:4px" @onclick="@(async () => await CancelItem(item2))"
+                                    @onclick:stopPropagation @onclick:preventDefault id="list-home-list" data-toggle="list" href="#list-home" role="tab" aria-controls="home">
+                                        @item2.PieceOfEquipmentID
+
+                                    </button>
+                                    @*   </div> *@
+                                }
+                            </div>
+                        }
+                            <div class="col-sm-12 customcol" style="display:none">
+                                <div class="row">
+
+                                    <div class="col-sm-4 customcol">
+                                        <button class="btn btn-sm btn-primary shadow-sm editButton"
+                                            id="@("btnClearWeightset" + ID + "")" @onclick=@(async () => await ClearWeightSet())
+                                            @onclick:stopPropagation @onclick:preventDefault>
+                                            Add Standard
+                                        </button>
+                                        <button class="btn btn-sm btn-primary shadow-sm editButton"
+                                            id="@("btnSetWeightset" + ID + "")" @onclick=@(async () => await SelectWeightSet())
+                                            @onclick:stopPropagation @onclick:preventDefault>
+                                            Add Standard
+                                        </button>
+                                    </div>
+                                    <div class="col-sm-4 customcol" style="display:none">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input " id="checkAccredited"
+                                               @oninput="ChangeCheckBox">
+
+                                            <label class="custom-control-label" for="checkAccredited">Accredited</label>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </NewButton>
+                            @*<GridHeader>
+                            <div class="col-sm-2 customcol">PoE</div>
+                            <div class="col-sm-2 customcol">Weight<br />Value</div>
+                            <div class="col-sm-2 customcol">UnitOf<br />Measurement</div>
+                            <div class="col-sm-2 customcol">Note</div>
+                            <div class="col-sm-2 customcol">Actual <br />Value</div>
+
+                        </GridHeader>*@
+                            <GridRow>
+                                @*<div class="col-sm-2 customcol inv">PoE</div>
+                            <div class="col-sm-2 customcol"><a href="PieceOfEquipmentCreate/@context.PieceOfEquipmentID">@context.PieceOfEquipmentID</a></div>
+                            <div class="col-sm-2 customcol inv">WeightValue</div>
+                            <div class="col-sm-2 customcol">@context.WeightNominalValue</div>
+                            <div class="col-sm-2 customcol inv">UnitOfMeasurement</div>
+                            <div class="col-sm-2 customcol">@context?.UnitOfMeasure?.Abbreviation</div>
+                            <div class="col-sm-2 customcol inv">Note</div>
+                            <div class="col-sm-2 customcol">@context.Note</div>
+                            <div class="col-sm-2 customcol inv">Actual Value</div>
+                            <div class="col-sm-2 customcol">@context.WeightActualValue</div>*@
+                            </GridRow>
+
+                        </ResponsiveTable>
+                    </div>
+                    <div class="tab-pane fade" id="list-profile" role="tabpanel" aria-labelledby="list-profile-list">...</div>
+                    @*<div class="tab-pane fade" id="list-messages" role="tabpanel" aria-labelledby="list-messages-list">...</div>
+                <div class="tab-pane fade" id="list-settings" role="tabpanel" aria-labelledby="list-settings-list">...</div>*@
+                </div>
+           
+            </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-sm-12">
+        </div>
+    </div>
+}
+
+@code
+
+{
+
+}

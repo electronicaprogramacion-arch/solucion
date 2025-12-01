@@ -1,0 +1,103 @@
+@page "/POEWeightSetSearch"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base
+@using Blazor.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@inherits POEWeigtSets_SearchBase
+
+<CalibrationSaaS.Infraestructure.Blazor.Pages.Base.Search T="CalibrationSaaS.Domain.Aggregates.Entities.PieceOfEquipment"
+                                                          S="Application.Services.IPieceOfEquipmentService<CallContext>"
+                                                          D="CalibrationSaaS.Domain.Aggregates.Shared.Basic.AppState"
+                                                          FuncFilter="@FilterList"
+                                                          @ref="@searchComponent" PageSize="5">
+
+
+    
+
+
+
+    <GridHeader>
+        <th width="5%"></th>
+        @*<th>Equipment Number</th>*@
+        <th>Serial Number</th>
+        <th>Capacity</th>
+        <th>Status</th>
+        <th>Due Date</th>
+
+    </GridHeader>
+
+
+
+    <GridRow>
+
+
+        @*<td><NavLink class="btn btn-success btn-sm" href="@linkDetail">@item.UserID</NavLink></td>*@
+
+        <!--@if (context.DueDate < DateTime.Now)
+        {
+            classPieceOfEquipment = "table-danger";
+        }
+        else
+        {
+            classPieceOfEquipment = "table-success";
+        }-->
+
+        @*<div class="@classPieceOfEquipment">*@
+            @*<td>@context.EquipmentTemplateId</td>*@
+            <td>@context.SerialNumber</td>
+            <td>@context.Capacity</td>
+            <td>@context.Status</td>
+            <td>@context.DueDate.ToShortDateString()</td>
+        @*</div>*@
+    </GridRow>
+    <GridNew>
+
+        <SearchButtonComponent FormType="typeof(PieceOfEquipment_Create)" ID="0" Type="new">
+        </SearchButtonComponent>
+    </GridNew>
+
+
+    <GridSelect>
+        @*<div>
+            <button class="btn btn-primary btn-sm" @onclick=@(async () => await GetDetail(context)) @onclick:stopPropagation @onclick:preventDefault>@context.ManufacturerID</button>
+        </div>*@
+
+        <SearchButtonComponent FormType="typeof(PieceOfEquipment_Create)"
+                               ID="@context.PieceOfEquipmentID.ToString()"
+                               Tittle="Detail" Enabled="false"
+                               Type="search">
+        </SearchButtonComponent>
+    </GridSelect>
+    <GridEdit>
+        <td>
+          
+           
+            <a class="btn btn-success btn-sm" href="PieceOfEquipmentCreate/@context.PieceOfEquipmentID">New</a>
+        </td>
+    </GridEdit>
+    <GridDelete>
+        <td>
+            <div>
+                <button class="btn btn-danger btn-sm"
+                        @onclick=@(async () => await Delete(context)) @onclick:stopPropagation @onclick:preventDefault>
+                    Delete
+                </button>
+            </div>
+
+        </td>
+    </GridDelete>
+
+
+</CalibrationSaaS.Infraestructure.Blazor.Pages.Base.Search>
+
+@code {
+    string classPieceOfEquipment;
+
+
+
+
+}

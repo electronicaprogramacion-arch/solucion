@@ -1,0 +1,707 @@
+@inherits LayoutComponentBase
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calibrify - Login</title>
+    <base href="~/" />
+
+    <!-- Bootstrap CSS -->
+    <link href="css/sb-admin-2.css" rel="stylesheet">
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="lib/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+
+    <!-- Radzen CSS (minimal for login) -->
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/default-base.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+        }
+
+        .login-container {
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 35px 25px;
+            text-align: center;
+            position: relative;
+        }
+
+        .login-body {
+            padding: 35px 25px;
+        }
+
+        .brand-logo {
+            width: 55px;
+            height: 55px;
+            margin: 0 auto 12px;
+            border-radius: 50%;
+            background: white;
+            padding: 8px;
+            display: block;
+        }
+
+        .login-header h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .login-header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 300;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+
+
+        /* ===== MODERN LOGIN FORM STYLES ===== */
+        .modern-login-container {
+            width: 100%;
+        }
+
+        .login-section {
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .section-title .icon {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+            flex-shrink: 0;
+        }
+
+        .section-subtitle {
+            color: #718096;
+            font-size: 0.85rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .login-form {
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            gap: 8px;
+        }
+
+        .form-label .icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.6;
+            flex-shrink: 0;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .modern-input, .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .modern-input:focus, .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modern-input::placeholder, .form-control::placeholder {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        /* Validation Messages */
+        .field-validation {
+            color: #e53e3e;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .field-validation::before {
+            content: "⚠";
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .validation-summary {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .field-validation-error {
+            border-color: #e53e3e !important;
+            background: #fed7d7 !important;
+        }
+
+        /* Status Messages */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border: 1px solid;
+        }
+
+        .alert-danger {
+            background: #fed7d7;
+            border-color: #feb2b2;
+            color: #c53030;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            border-color: #9ae6b4;
+            color: #2f855a;
+        }
+
+        .alert-info {
+            background: #bee3f8;
+            border-color: #90cdf4;
+            color: #2b6cb0;
+        }
+
+
+
+        /* Button Styling */
+        .btn, .btn-login {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: none;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            gap: 8px;
+        }
+
+        .btn-primary, .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 25px 0 20px 0;
+        }
+
+        .btn-primary:hover, .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.25);
+            color: white;
+        }
+
+        .btn-icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        /* Helper Links */
+        .helper-links {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        /* Reset all styles for helper links (both buttons and NavLinks) */
+        .helper-link,
+        button.helper-link,
+        .helper-links button.helper-link,
+        .helper-links .helper-link,
+        .helper-links a.helper-link {
+            /* Reset all defaults */
+            all: unset !important;
+
+            /* Apply our custom styles */
+            color: #667eea !important;
+            font-size: 0.85rem !important;
+            margin: 0 8px !important;
+            transition: color 0.3s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            cursor: pointer !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+            text-decoration: none !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            outline: none !important;
+            line-height: 1.4 !important;
+            vertical-align: baseline !important;
+            font-weight: normal !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+            white-space: nowrap !important;
+        }
+
+        .helper-link:hover,
+        button.helper-link:hover,
+        .helper-links button.helper-link:hover,
+        .helper-links .helper-link:hover,
+        .helper-links a.helper-link:hover {
+            color: #764ba2 !important;
+            text-decoration: underline !important;
+            background: transparent !important;
+        }
+
+        .helper-link:focus,
+        button.helper-link:focus,
+        .helper-links button.helper-link:focus,
+        .helper-links .helper-link:focus,
+        .helper-links a.helper-link:focus {
+            outline: 2px solid #667eea !important;
+            outline-offset: 2px !important;
+            border-radius: 4px !important;
+            color: #667eea !important;
+            background: transparent !important;
+        }
+
+        .helper-link:active,
+        button.helper-link:active,
+        .helper-links button.helper-link:active,
+        .helper-links .helper-link:active,
+        .helper-links a.helper-link:active {
+            color: #764ba2 !important;
+            background: transparent !important;
+        }
+
+        .helper-link:visited,
+        button.helper-link:visited,
+        .helper-links button.helper-link:visited,
+        .helper-links .helper-link:visited,
+        .helper-links a.helper-link:visited {
+            color: #667eea !important;
+        }
+
+        .helper-link .icon,
+        button.helper-link .icon,
+        .helper-links button.helper-link .icon,
+        .helper-links .helper-link .icon,
+        .helper-links a.helper-link .icon,
+        .helper-link i,
+        button.helper-link i,
+        .helper-links button.helper-link i,
+        .helper-links .helper-link i,
+        .helper-links a.helper-link i {
+            width: 14px !important;
+            height: 14px !important;
+            flex-shrink: 0 !important;
+            margin-right: 5px !important;
+            color: inherit !important;
+        }
+
+
+
+        /* External Auth Section */
+        .external-auth-section {
+            margin-top: 20px;
+        }
+
+        .external-auth-wrapper {
+            margin-top: 15px;
+        }
+
+        /* ===== EXTERNAL LOGIN PICKER STYLES ===== */
+        .external-login-picker {
+            width: 100%;
+        }
+
+        .no-external-providers {
+            text-align: center;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .no-providers-icon {
+            width: 35px;
+            height: 35px;
+            margin: 0 auto 12px;
+            background: #cbd5e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a5568;
+            font-size: 1.2rem;
+        }
+
+        .no-providers-text {
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .no-providers-subtext {
+            color: #718096;
+            font-size: 0.85rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .external-login-form {
+            width: 100%;
+        }
+
+        .external-providers-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .external-provider-btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .external-provider-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: #cbd5e0;
+        }
+
+        .provider-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .provider-content {
+            flex: 1;
+            text-align: left;
+        }
+
+        .provider-name {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1rem;
+        }
+
+        .provider-subtitle {
+            display: block;
+            color: #718096;
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        .provider-arrow {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        /* Provider-specific styling */
+        .provider-google .provider-icon {
+            background: #ea4335;
+            color: white;
+        }
+
+        .provider-facebook .provider-icon {
+            background: #1877f2;
+            color: white;
+        }
+
+        .provider-microsoft .provider-icon {
+            background: #00a1f1;
+            color: white;
+        }
+
+        .provider-twitter .provider-icon {
+            background: #1da1f2;
+            color: white;
+        }
+
+        .provider-github .provider-icon {
+            background: #333;
+            color: white;
+        }
+
+        .provider-linkedin .provider-icon {
+            background: #0077b5;
+            color: white;
+        }
+
+        .provider-apple .provider-icon {
+            background: #000;
+            color: white;
+        }
+
+        .provider-amazon .provider-icon {
+            background: #ff9900;
+            color: white;
+        }
+
+        .provider-default .provider-icon {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Checkbox styling */
+        .checkbox-container, .remember-me-group {
+            display: flex;
+            align-items: center;
+            margin: 18px 0;
+        }
+
+        .checkbox-container input[type="checkbox"], .remember-me-checkbox {
+            margin-right: 10px;
+            transform: scale(1.1);
+            accent-color: #667eea;
+        }
+
+        .checkbox-container label, .remember-me-label {
+            font-size: 0.85rem;
+            color: #718096;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+
+        /* Loading state */
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Divider */
+        .divider, .auth-divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+            color: #a0aec0;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .divider::before, .auth-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e2e8f0;
+            z-index: 1;
+        }
+
+        .divider span, .divider-text {
+            background: white;
+            padding: 0 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Success indicators */
+        .success-indicator {
+            color: #38a169;
+            margin-left: 8px;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Design */
+        @@media (max-width: 480px) {
+            .login-container {
+                padding: 10px;
+            }
+
+            .login-card {
+                max-width: 100%;
+                margin: 0;
+            }
+
+            .login-header {
+                padding: 25px 20px;
+            }
+
+            .login-body {
+                padding: 25px 20px;
+            }
+
+            .login-header h3 {
+                font-size: 1.6rem;
+            }
+
+            .form-control, .modern-input {
+                padding: 11px 14px;
+                font-size: 0.9rem;
+            }
+
+            .btn, .btn-login {
+                padding: 12px 18px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @@media (max-width: 360px) {
+            .login-container {
+                padding: 5px;
+            }
+
+            .login-header {
+                padding: 20px 15px;
+            }
+
+            .login-body {
+                padding: 20px 15px;
+            }
+        }
+
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            z-index: 9999;
+            max-width: 200px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="img/logo/favicon.svg" alt="Calibrify" class="brand-logo" />
+                <h3>Calibrify</h3>
+                <p class="mb-0">Cloud Based Calibration Management</p>
+            </div>
+            <div class="login-body">
+                @Body
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Debug info -->
+    <div class="debug-info">
+        <div><strong>✅ Stable Login Layout Active</strong></div>
+        <div>Time: <span id="current-time"></span></div>
+        <div>Status: <span class="status-indicator">🟢 Stable & Secure</span></div>
+        <div>Layout: LoginLayout (Non-Radzen)</div>
+        <div>Version: 2.0 (Fixed)</div>
+    </div>
+
+ @*    <!-- Authentication System Status Monitor -->
+    <CalibrifyApp.Server.Components.Account.Shared.AuthSystemStatus /> *@
+
+    <!-- Minimal JavaScript -->
+    <script>
+        // Update time every second to show the page is alive
+        function updateTime() {
+            document.getElementById('current-time').textContent = new Date().toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Log that the stable layout is loaded
+        console.log('[LOGIN LAYOUT] Stable login layout loaded at', new Date().toLocaleTimeString());
+        console.log('[LOGIN LAYOUT] This layout should NOT be removed by Blazor updates');
+    </script>
+</body>
+</html>

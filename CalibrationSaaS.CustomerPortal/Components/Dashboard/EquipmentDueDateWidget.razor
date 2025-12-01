@@ -1,0 +1,293 @@
+@using CalibrationSaaS.CustomerPortal.Models.Equipment
+@using CalibrationSaaS.CustomerPortal.Models.ViewModels
+@using CalibrationSaaS.CustomerPortal.Services.Equipment
+@using CalibrationSaaS.CustomerPortal.Components.Equipment
+
+<RadzenCard Class="rz-p-4">
+    <RadzenStack Gap="1rem">
+        <!-- Header -->
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenText TextStyle="TextStyle.H6">Equipment Due Dates</RadzenText>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <RadzenButton Icon="refresh" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+                             Click="@LoadData" IsBusy="@isLoading" />
+                <RadzenButton Text="View All" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" 
+                             Click="@(() => Navigation.NavigateTo("/equipment/due-dates"))" />
+            </RadzenStack>
+        </RadzenStack>
+
+        @if (isLoading)
+        {
+            <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-4">
+                <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                <RadzenText TextStyle="TextStyle.Body2">Loading due dates...</RadzenText>
+            </RadzenStack>
+        }
+        else if (summary != null)
+        {
+            <!-- Quick Stats -->
+            <RadzenRow Gap="1rem">
+                <RadzenColumn Size="6">
+                    <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-danger-lighter) 0%, var(--rz-danger-light) 100%);">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="error" Style="font-size: 1.5rem; color: var(--rz-danger);" />
+                            <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0">@summary.OverdueEquipment</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Overdue</RadzenText>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+                <RadzenColumn Size="6">
+                    <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-warning-lighter) 0%, var(--rz-warning-light) 100%);">
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="warning" Style="font-size: 1.5rem; color: var(--rz-warning);" />
+                            <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0">@summary.ExpiringSoonEquipment</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Expiring Soon</RadzenText>
+                        </RadzenStack>
+                    </RadzenCard>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <!-- Due This Week/Month -->
+            <RadzenRow Gap="1rem">
+                <RadzenColumn Size="4">
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0" Style="color: var(--rz-info);">
+                            @summary.DueThisWeek
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">This Week</RadzenText>
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="4">
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0" Style="color: var(--rz-primary);">
+                            @summary.DueThisMonth
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">This Month</RadzenText>
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="4">
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0" Style="color: var(--rz-secondary);">
+                            @summary.DueNextMonth
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Next Month</RadzenText>
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <!-- Compliance Rate -->
+            <RadzenStack Gap="0.5rem">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                    <RadzenText TextStyle="TextStyle.Body2">Compliance Rate</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" Class="rz-font-weight-bold">
+                        @summary.ComplianceRate.ToString("F1")%
+                    </RadzenText>
+                </RadzenStack>
+                <RadzenProgressBar Value="@summary.ComplianceRate" Max="100" 
+                                  Style="@($"--rz-progressbar-color: {GetComplianceColor(summary.ComplianceRate)};")" />
+            </RadzenStack>
+
+            <!-- Next Due Equipment -->
+            @if (summary.NextDueDate.HasValue && !string.IsNullOrEmpty(summary.NextDueEquipment))
+            {
+                <RadzenCard Class="rz-p-3" Style="background-color: var(--rz-info-lighter);">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Next Due</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-font-weight-bold">
+                            @summary.NextDueEquipment
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">
+                            @summary.NextDueDate.Value.ToString("MMM dd, yyyy") 
+                            (@summary.DaysToNextDue day@(summary.DaysToNextDue == 1 ? "" : "s"))
+                        </RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            }
+
+            <!-- Overdue Equipment List -->
+            @if (summary.OverdueEquipmentList?.Any() == true)
+            {
+                <RadzenStack Gap="0.5rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-danger);">
+                            Overdue Equipment
+                        </RadzenText>
+                        @if (summary.OverdueEquipmentList.Count > maxDisplayItems)
+                        {
+                            <RadzenButton Text="@($"View All {summary.OverdueEquipmentList.Count}")"
+                                         ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
+                                         Click="@(() => NavigateToFiltered("overdue"))" />
+                        }
+                    </RadzenStack>
+
+                    <RadzenStack Gap="0.25rem">
+                        @foreach (var equipment in summary.OverdueEquipmentList.Take(maxDisplayItems))
+                        {
+                            <RadzenCard Class="rz-p-2" Style="border-left: 3px solid var(--rz-danger);">
+                                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                                    <RadzenStack Gap="0.125rem">
+                                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-font-weight-bold">
+                                            @equipment.Description
+                                        </RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                                            @equipment.SerialNumber
+                                        </RadzenText>
+                                    </RadzenStack>
+                                    <RadzenStack AlignItems="AlignItems.End" Gap="0.125rem">
+                                        <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-danger);">
+                                            @equipment.DaysOverdue day@(equipment.DaysOverdue == 1 ? "" : "s") overdue
+                                        </RadzenText>
+                                        <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall" 
+                                                     Click="@(() => ViewEquipmentDetails(equipment.EquipmentId))" />
+                                    </RadzenStack>
+                                </RadzenStack>
+                            </RadzenCard>
+                        }
+                    </RadzenStack>
+                </RadzenStack>
+            }
+
+            <!-- Upcoming Due Dates -->
+            @if (summary.UpcomingDueDates?.Any() == true)
+            {
+                <RadzenStack Gap="0.5rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                        <RadzenText TextStyle="TextStyle.Body2">Upcoming Due Dates</RadzenText>
+                        @if (summary.UpcomingDueDates.Count > maxDisplayItems)
+                        {
+                            <RadzenButton Text="@($"View All {summary.UpcomingDueDates.Count}")" 
+                                         ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall" 
+                                         Click="@(() => NavigateToFiltered("upcoming"))" />
+                        }
+                    </RadzenStack>
+                    
+                    <RadzenStack Gap="0.25rem">
+                        @foreach (var equipment in summary.UpcomingDueDates.Take(maxDisplayItems))
+                        {
+                            <RadzenCard Class="rz-p-2" Style="@($"border-left: 3px solid {GetStatusColor(equipment.DueStatus)};")">
+                                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                                    <RadzenStack Gap="0.125rem">
+                                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-font-weight-bold">
+                                            @equipment.Description
+                                        </RadzenText>
+                                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                                            @equipment.SerialNumber
+                                        </RadzenText>
+                                    </RadzenStack>
+                                    <RadzenStack AlignItems="AlignItems.End" Gap="0.125rem">
+                                        <RadzenText TextStyle="TextStyle.Caption">
+                                            @equipment.NextCalibrationDate?.ToString("MMM dd")
+                                        </RadzenText>
+                                        <DueDateStatusIndicator Equipment="@equipment" ShowIcon="true" ShowText="false" 
+                                                              ShowBadge="true" />
+                                    </RadzenStack>
+                                </RadzenStack>
+                            </RadzenCard>
+                        }
+                    </RadzenStack>
+                </RadzenStack>
+            }
+
+            <!-- Quick Actions -->
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.Center">
+                <RadzenButton Text="All Equipment" Icon="inventory" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+                             Click="@(() => Navigation.NavigateTo("/equipment/due-dates"))" />
+                <RadzenButton Text="Overdue" Icon="error" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" 
+                             Click="@(() => NavigateToFiltered("overdue"))" />
+                <RadzenButton Text="Expiring" Icon="warning" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" 
+                             Click="@(() => NavigateToFiltered("expiring"))" />
+                <RadzenButton Text="Calendar" Icon="event" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small" 
+                             Click="@(() => Navigation.NavigateTo("/equipment/due-dates?view=calendar"))" />
+            </RadzenStack>
+        }
+        else
+        {
+            <!-- No Data -->
+            <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-4">
+                <RadzenIcon Icon="event_busy" Style="font-size: 3rem; color: var(--rz-secondary);" />
+                <RadzenText TextStyle="TextStyle.H6" Class="rz-color-secondary">No Due Date Data</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">
+                    No equipment due date information available.
+                </RadzenText>
+            </RadzenStack>
+        }
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter] public int CustomerId { get; set; }
+    [Inject] private IEquipmentDueDateService DueDateService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private ILogger<EquipmentDueDateWidget> Logger { get; set; } = default!;
+
+    private DueDateDashboardSummary? summary;
+    private bool isLoading = false;
+    private readonly int maxDisplayItems = 3;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            summary = await DueDateService.GetDueDateSummaryAsync(CustomerId);
+
+            Logger.LogInformation("Loaded equipment due date summary for customer {CustomerId}", CustomerId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading equipment due date summary for customer {CustomerId}", CustomerId);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToFiltered(string filter)
+    {
+        var queryParams = filter switch
+        {
+            "overdue" => "?filter=overdue",
+            "expiring" => "?filter=expiring",
+            "upcoming" => "?sortBy=NextCalibrationDate&sortDirection=asc",
+            _ => ""
+        };
+
+        Navigation.NavigateTo($"/equipment/due-dates{queryParams}");
+    }
+
+    private void ViewEquipmentDetails(int equipmentId)
+    {
+        Navigation.NavigateTo($"/equipment/{equipmentId}");
+    }
+
+    private string GetComplianceColor(double complianceRate)
+    {
+        return complianceRate switch
+        {
+            >= 95 => "var(--rz-success)",
+            >= 85 => "var(--rz-warning)",
+            _ => "var(--rz-danger)"
+        };
+    }
+
+    private string GetStatusColor(DueDateStatus status)
+    {
+        return status switch
+        {
+            DueDateStatus.Current => "var(--rz-success)",
+            DueDateStatus.ExpiringSoon => "var(--rz-warning)",
+            DueDateStatus.Overdue => "var(--rz-danger)",
+            DueDateStatus.Unknown => "var(--rz-secondary)",
+            _ => "var(--rz-secondary)"
+        };
+    }
+}

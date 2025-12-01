@@ -1,0 +1,73 @@
+@page "/radzen-test"
+@using Radzen
+@using Radzen.Blazor
+
+<h3>Radzen Test Page</h3>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h4>Radzen DropDown Test</h4>
+            <RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="Radzen.AlignItems.Center" JustifyContent="Radzen.JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
+                <RadzenLabel Text="Select Values" Component="DropDownMultipleChips" />
+                <RadzenDropDown @bind-Value=@values Data=@keys TextProperty="@nameof(@key.Value)" ValueProperty="@nameof(@key.Key)" Name="DropDownMultipleChips"
+                    Multiple=true AllowClear=true Placeholder="Select products" Chips=true Style="width: 100%; max-width: 400px;" />
+            </RadzenStack>
+        </div>
+        <div class="col-md-6">
+            <h4>Selected Values</h4>
+            @if (values != null && values.Any())
+            {
+                <ul>
+                    @foreach (var value in values)
+                    {
+                        <li>@keys.FirstOrDefault(k => k.Key == value)?.Value</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p>No values selected</p>
+            }
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <h4>Other Radzen Components</h4>
+            <RadzenButton Text="Test Button" Click="@(() => ShowNotification())" />
+            <RadzenTextBox Placeholder="Test TextBox" @bind-Value="@testText" />
+        </div>
+    </div>
+</div>
+
+@code {
+    // Variables for Radzen DropDown
+    IEnumerable<int> values = new int[] { };
+    List<dynamic> keys = new List<dynamic>
+    {
+        new { Key = 1, Value = "Option 1" },
+        new { Key = 2, Value = "Option 2" },
+        new { Key = 3, Value = "Option 3" },
+        new { Key = 4, Value = "Option 4" }
+    };
+
+    // Dynamic object for key reference
+    dynamic key = new { Key = 0, Value = "" };
+    
+    string testText = "";
+
+    [Inject]
+    NotificationService NotificationService { get; set; }
+
+    void ShowNotification()
+    {
+        NotificationService.Notify(new NotificationMessage 
+        { 
+            Severity = NotificationSeverity.Success, 
+            Summary = "Success", 
+            Detail = "Radzen is working correctly!", 
+            Duration = 4000 
+        });
+    }
+}

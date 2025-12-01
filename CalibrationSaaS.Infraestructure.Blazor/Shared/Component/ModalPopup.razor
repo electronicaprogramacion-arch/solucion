@@ -1,0 +1,9 @@
+﻿@page "/ModalPopup"
+<h3>ModalPopup</h3>
+@inject IModalService modal
+
+<button @onclick="@(()=> modal.Show<Pages.Basics.Equipment_Search>("Modal Popup"))">VIEW</button>
+
+@code {
+
+}

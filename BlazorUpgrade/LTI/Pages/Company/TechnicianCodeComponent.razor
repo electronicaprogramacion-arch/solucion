@@ -1,0 +1,145 @@
+﻿
+@page "/techniciancode"
+@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using Helpers.Controls;
+@using Helpers.Controls.ValueObjects;
+
+
+<div style="min-height:100px">
+    <ResponsiveTable ItemsDataSource="@Group"
+                     PageSize="5"
+                     HasAction="true"
+                     TableItem="TechnicianCode"
+                     NewButtonText="Add New Code"
+                     Context="Entity"
+                     @ref="Grid"
+                     GridID="gridETemp"
+                     InLineEdit="false"
+                     RowEditClass=""
+                     RowNewClass=""
+                     EnabledSearch="true"
+                     EnabledModal="true"
+                     SelectOnly="false"
+                     SaveButtonSubmit="false"
+                     OnSave="@Submitted"
+                     OnUpdate="@SubmittedUP"
+                     PaginationFunction1="LoadData"
+                     DeleteAction="@Delete"
+                     Enabled="@Enabled"
+                     Component="@Component">
+      
+
+        <ChildContent>
+
+            <GridColumns>
+
+                <GridColumn TableItem="TechnicianCode" Field="@Grid.GetPropertyName(() => TechnicianCode.Code)" Title="Certification Number" DefaultSort="true" />
+
+                <GridColumn TableItem="TechnicianCode" Field="@Grid.GetPropertyName(() => TechnicianCode.StateID)" Title="State">
+
+                    <ResponsiveTemplate>
+
+                        @{
+                            var a = context as TechnicianCode;
+                            var b = a.StateID.GetState(AppState.States);
+                        }
+                        @b
+
+
+                    </ResponsiveTemplate>
+
+                </GridColumn>
+
+                <GridColumn TableItem="TechnicianCode" Field="@Grid.GetPropertyName(() => TechnicianCode.Certification.CertificationID)" Title="Certification Type">
+
+                    <ResponsiveTemplate>
+
+
+                        @{
+                            var a = context as TechnicianCode;
+
+                            var b = Certifications.Where(x => x.CertificationID == a.CertificationID).FirstOrDefault();
+                        }
+                        @b.Name
+
+
+
+                    </ResponsiveTemplate>
+                </GridColumn>
+            </GridColumns>
+
+        </ChildContent>
+
+        <GridRow>
+
+
+        </GridRow>
+
+        <GridEdit>
+          
+            <div class="row">
+                <div class="col-sm customcol">
+                    <TextInput @bind-Value="Entity.Code" Label="Certification Number" Validate="true" Type="@Types.number" LabelDown="LabelDown"
+                               ValidationFor="(()=>Entity.Code)" IsDisabled="!Enabled">
+
+                    </TextInput>
+                    @Grid.GetErrorMessage(nameof(Entity.Code))
+                </div>
+                <div class="col-sm">
+                    <label class="form-control-label">State</label>
+                    <Typeahead SearchMethod="@SearchState"
+                                                               Items="AppState.States"
+                                                               @bind-Value="@Entity.StateID"
+                                                               ConvertMethod="ConvertState"
+                                                               Placeholder="State" Disabled="!Enabled">
+                        <SelectedTemplate Context="StateID">
+                            @LookupState(StateID, @Entity)?.Name
+                        </SelectedTemplate>
+                        <ResultTemplate Context="state">
+                            @state.Name
+                        </ResultTemplate>
+                    </Typeahead>
+                    @Grid.GetErrorMessage(nameof(Entity.StateID))
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm customcol">
+                    <TextInput @bind-Value="Entity.CertificationID" Label="Certifications" Validate="false" Type="@Types.select" LabelDown="LabelDown"
+                               ValidationFor="(()=>Entity.CertificationID)" IsDisabled="!Enabled">
+                        @if (Certifications?.Count > 0)
+                        {
+                            @foreach (Certification item in Certifications)
+                            {
+                                var a = AppSecurity.EquipmentTypeWODList.Where(x => x.CalibrationTypeID == item.CalibrationTypeID).FirstOrDefault();
+
+                                if(item != null && !string.IsNullOrEmpty(item.Name) && a != null && !string.IsNullOrEmpty(a.Name))
+                                {
+                                    <option value="@item.CertificationID">@item.Name - @a.Name </option>
+                                }
+                               
+                            }
+                        }
+
+                    </TextInput>
+                    @Grid.GetErrorMessage(nameof(Entity.CertificationID))
+                </div>
+            </div>
+        </GridEdit>
+    </ResponsiveTable>
+</div>
+
+
+
+
+@code
+
+{
+
+   
+
+}

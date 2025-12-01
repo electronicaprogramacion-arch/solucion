@@ -1,0 +1,489 @@
+﻿
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+@inject ILogger<Weight_Create> Logger
+@using System.Linq;
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys 
+@using Helpers
+@namespace BlazorApp1.Blazor.Blazor.Shared.LTI
+@inherits Weight_CreateBase
+@if (LIST1 != null )
+{
+    @*<EditForm  EditContext="@EditContext">
+        <DataAnnotationsValidator />*@
+    <div class="row">
+        <div class="col-sm-12">
+            @if (IsForAccredited != true)
+            {
+            
+                <ResponsiveTable ItemsDataSource="@LIST1" PageSize="5" 
+                                 HasAction="true"
+                                 TableItem="WeightSet" 
+                                 @ref="RT" 
+                                 InLineEdit="true"
+                                 EnabledModal="false" 
+                                 Context="Entity" 
+                                 NewButtonText="Add Standard Range"
+                                 NewItemDefaultItem="DefaultItem"
+                                 DeleteAction ="Delete"
+                                 Component="@Component"
+                                 ColActionCSS="col-sm">
+                  
+
+
+                    <ChildContent>
+
+                        <GridColumns>
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.Reference)" DefaultSort="true" Title="Reference" />
+
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.WeightNominalValue)" DefaultSort="true" Title="Initial Value" />
+
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.WeightNominalValue2)" DefaultSort="true" Title="Final Value" />
+
+
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.UnitOfMeasure.Abbreviation)" Title="UoM">
+
+                                <ResponsiveTemplate>
+                                    @{ var entity = context as WeightSet;
+
+                                        entity.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList);
+
+                                        var a = entity.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList);
+
+                                        @a.Abbreviation;
+
+                                    }
+                                </ResponsiveTemplate>
+
+                            </GridColumn>
+                  
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.Class)" Title="Class" />
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.Note)" Title="Note" />
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.Resolution)" Title="Resolution" />
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.PieceOfEquipmentStatus)" Title="Status" />
+
+                        </GridColumns>
+
+
+                    </ChildContent>
+
+
+                    <GridRow>
+                        @*<div class="col-sm-2 customcol inv">WeightValue</div>
+                        <div class="col-sm-2 customcol">@Entity.WeightNominalValue</div>
+                        <div class="col-sm-2 customcol inv">UnitOfMeasurement</div>
+                        <div class="col-sm-2 customcol">@Entity.UnitOfMeasureID</div>
+                        <div class="col-sm-2 customcol inv">Note</div>
+                        <div class="col-sm-2 customcol">@Entity.Note</div>
+                        <div class="col-sm-2 customcol inv">PoEStatus</div>
+                        <div class="col-sm-2 customcol">@Entity.PieceOfEquipmentStatus</div>*@
+                    </GridRow>
+                
+                    <GridEdit>
+                        <div class="row" style="width:100%">
+                            <div class="col-sm-2 customcol inv">#Ref</div>
+                            <div class="col-sm-2 customcol">
+                                <TextInput @bind-Value="@Entity.Reference" Validate="false" IsDisabled="!Enabled" Label="Reference" LabelDown="false">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.Reference))
+                            </div>
+                            <div class="col-sm-2 customcol inv">Initial Value</div>
+                            <div class="col-sm-2 customcol">
+                                <TextInput @bind-Value="@Entity.WeightNominalValue"
+                                           Validate="false"
+                                           IsDisabled="!Enabled"
+                                           Label="Initial Value"
+                                           LabelDown="false"
+                                           Type=@Types.numberdecimal
+                                           StepResol="1"
+                                           DecimalRoundType="RoundType.Without"
+                                           EnableToastMessage="true"
+                                           ToastMessage="No decimals permited">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.WeightNominalValue))
+                            </div>
+                            <div class="col-sm-2 customcol inv">Final Value</div>
+                            <div class="col-sm-2 customcol">
+                                <TextInput @bind-Value="@Entity.WeightNominalValue2"
+                                           Validate="false"
+                                           IsDisabled="!Enabled"
+                                           Label="Final Value"
+                                           LabelDown="false"
+                                           Type=@Types.numberdecimal
+                                           StepResol="1"
+                                           DecimalRoundType="RoundType.Without"
+                                           EnableToastMessage="true"
+                                           ToastMessage="No decimals permited">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.WeightNominalValue2))
+                            </div>
+                            <div class="col-sm-2 customcol inv">UoM</div>
+                            <div class="col-sm-1 customcol">
+                               @*  <TextInput Label="UoM" @bind-Value="@Entity.UnitOfMeasureID"
+                                           Validate="false" Type="@Types.select" IsDisabled="!Enabled" LabelDown="false">
+                                    @foreach (UnitOfMeasure item in AppState.GetUnitOfMeasureByCalibrationType(POE.EquipmentTemplate))
+                                            {
+                                        <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                            }
+                                </TextInput> *@
+                                <TextInput @bind-Value="@Entity.UnitOfMeasureID"
+                                           LabelDown="LabelDown"
+                                           IsDisabled="!Enabled"
+                                           Label="UoM"
+                                           OnChangeControl="ChangeUOM"
+                                           ValidationFor="@(() => Entity.UnitOfMeasureID)"
+                                           Type="@Types.select">
+                                    @foreach (UnitOfMeasure item in AppState.GetUoMByEquipmentType(EquipmentTypeObject))
+                                    {
+                                        <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                    }
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.UnitOfMeasureID))
+
+
+                            </div>
+                            <div class="col-sm customcol inv">Class</div>
+                            <div class="col-sm-1 customcol">
+
+
+
+                                <TextInput Label="Class" @bind-Value="@Entity.Class"
+                                           Validate="false" Type="@Types.select" IsDisabled="!Enabled" LabelDown="false">
+                                    @*@foreach (UnitOfMeasure item in AppState.UnitofMeasureList)
+                {*@
+                                    <option value="0" selected>Selected</option>
+                                    <option value="0.5">0.5</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    @* } *@
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.Class))
+
+
+                            </div>
+                            <div class="col-sm customcol inv">Note</div>
+                            <div class="col-sm6 customcol">
+                                <TextInput @bind-Value="@Entity.Note" Validate="false" IsDisabled="!Enabled" Label="Note" LabelDown="false">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.Note))
+                            </div>
+                            <div class="col-sm customcol inv">Resolution</div>
+                            <div class="col-sm6 customcol">
+                                <TextInput @bind-Value="@Entity.Resolution" Validate="false" IsDisabled="!Enabled" Label="Resolution" LabelDown="false">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.Resolution))
+                            </div>
+                        </div>
+                            <div class="row" style="width:100%">
+                               
+                            </div>
+                            @{
+                                Entity.WeightActualValue = @Entity.WeightNominalValue;
+
+                            if (Entity.Divisor == 0)
+                            {
+                                Entity.Divisor = 1;
+                            }
+
+                            }
+                       
+                    </GridEdit>
+                </ResponsiveTable>
+            }
+            else
+            {
+       
+        <ResponsiveTable ItemsDataSource="@LIST1"
+                                                         PageSize="20"
+                                                         HasAction="true"
+                                                         TableItem="WeightSet"
+                                                         @ref="RT"
+                                                         RowEditClass=""
+                                                         RowNewClass=""
+                                                         InLineEdit=false
+                                                         Context="Entity"
+                                                         EnabledSearch="false"
+                                                         NewItemDefaultItem="DefaultItemAcr"
+                                                         EnabledModal="false"
+                                                         NewButtonText="Add Accredited Weight Set"
+                                                         Component="@Component"
+                                                         ColActionCSS="col-sm">
+
+
+            <ChildContent>
+
+                <GridColumns>
+                    <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.Reference)" DefaultSort="true" Title="Reference" />
+                    <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.WeightNominalValue)" DefaultSort="true" Title="Weight" />
+                    <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.WeightActualValue)" Title="Weight" />
+                   
+                    <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.UnitOfMeasure.Abbreviation)" Title="UoM">
+
+                        <ResponsiveTemplate>
+                            @{
+                                var entity = context as WeightSet;
+
+                                var a = entity.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList);
+
+                                @a.Abbreviation;
+
+                            }
+                        </ResponsiveTemplate>
+
+                    </GridColumn>
+                    <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.CalibrationUncertValue)" Title="Calibration Uncertainty" />
+                            <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.UnitOfMeasure.Abbreviation)" Title="UoMUncertainty">
+
+                                <ResponsiveTemplate>
+                                    @{
+                                        var entity = context as WeightSet;
+
+                                        var a = entity.UncertaintyUnitOfMeasureId.GetUoM(AppState.UnitofMeasureList);
+
+                                        @a.Abbreviation
+                                        ;
+
+                                    }
+                                </ResponsiveTemplate>
+
+                            </GridColumn>
+                    <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.Note)" Title="Note" />
+                   
+                        <GridColumn TableItem="WeightSet" Field="@RT.GetPropertyName(() => eqWeightSet.Resolution)" Title="Resolution" />
+                </GridColumns>
+
+
+            </ChildContent>
+
+            <GridRow>
+               
+            </GridRow>
+            <GridEdit>
+                <div class="row">
+                    <div class="col-md-12 mx-auto">
+                        <form>
+
+                            <div class="form-group row">
+                                <div class="col-sm-4">
+
+                                    <TextInput Label="#Ref" @bind-Value="@Entity.Reference"
+                                               Validate="false" ValidationFor="@(() => @Entity.Reference)" Type="@Types.text" IsDisabled="!Enabled">
+
+                                    </TextInput>
+                                    @RT.GetErrorMessage(nameof(Entity.Reference))
+
+
+                                </div>
+                                <div class="col-sm-4">
+
+                                    <TextInput Label="Weight Nominal Value" @bind-Value="@Entity.WeightNominalValue"
+                                               Validate="false" ValidationFor="@(() => @Entity.WeightNominalValue)" 
+                                               Type=@Types.numberdecimal
+                                               DecimalRoundType="RoundType.Normal"
+                                               IsDisabled="!Enabled">
+
+                                    </TextInput>
+                                    @RT.GetErrorMessage(nameof(Entity.WeightNominalValue))
+
+
+                                </div>
+                                <div class="col-sm-4">
+
+
+                                    <TextInput Label="Weight Actual Value" @bind-Value="@Entity.WeightActualValue"
+                                               Validate="false" ValidationFor="@(() => @Entity.WeightActualValue)" Type="@Types.number" IsDisabled="!Enabled">
+
+                                    </TextInput>
+                                    @RT.GetErrorMessage(nameof(Entity.WeightActualValue))
+
+
+                                </div>
+
+                                                            <div class="col-sm-2 customcol inv">Final Value</div>
+                            <div class="col-sm-2 customcol">
+                                <TextInput @bind-Value="@Entity.WeightNominalValue2"
+                                           Validate="false"
+                                           IsDisabled="!Enabled"
+                                           Label="Final Value"
+                                           LabelDown="false"
+                                           Type=@Types.numberdecimal
+                                           StepResol="1"
+                                           DecimalRoundType="RoundType.Without"
+                                           EnableToastMessage="true"
+                                           ToastMessage="No decimals permited">
+
+                                </TextInput>
+                                @RT.GetErrorMessage(nameof(Entity.WeightNominalValue2))
+                            </div>
+                              
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-2">
+
+
+
+                                            <TextInput @bind-Value="@Entity.UnitOfMeasureID"
+                                                       LabelDown="LabelDown"
+                                                       IsDisabled="!Enabled"
+                                                       Label="Unit Of Measure"
+                                                       OnChangeControl="ChangeUOM"
+                                                       ValidationFor="@(() => Entity.UnitOfMeasureID)"
+                                                       Type="@Types.select">
+                                                @foreach (UnitOfMeasure item in AppState.GetUoMByEquipmentType(EquipmentTypeObject))
+                                                {
+                                                    if (item.UnitOfMeasureID == Entity.UncertaintyUnitOfMeasureId)
+                                                    {
+                                                        <option value="@item.UnitOfMeasureID" selected>@item.Name</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                                    }
+                                                }
+                                            </TextInput>
+
+                                </div>
+                                <div class="col-sm-4">
+
+                                    <TextInput @bind-Value="@Entity.CalibrationUncertValue" Validate="false" IsDisabled="!Enabled" Label="Calibration Uncertainty Value">
+                                    </TextInput>
+                                    @RT.GetErrorMessage(nameof(Entity.CalibrationUncertValue))
+
+                              
+
+                                </div>
+                                <div class="col-sm-4">
+
+                                            <TextInput @bind-Value="@Entity.UncertaintyUnitOfMeasureId"
+                                                       LabelDown="LabelDown"
+                                                       IsDisabled="!Enabled"
+                                                       Label="Uncertainty Value Unit Of Measure"
+                                                       OnChangeControl="ChangeUOM"
+                                                       ValidationFor="@(() => Entity.UncertaintyUnitOfMeasureId)"
+                                                       Type="@Types.select">
+                                                @foreach (UnitOfMeasure item in AppState.GetUoMByEquipmentType(EquipmentTypeObject))
+                                                {
+                                                    if (item.UnitOfMeasureID == Entity.UncertaintyUnitOfMeasureId)
+                                                    {
+                                                        <option value="@item.UnitOfMeasureID" selected>@item.Name</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@item.UnitOfMeasureID">@item.Name</option>
+                                                    }
+                                                }
+                                            </TextInput>
+
+
+
+
+                                </div>
+                              
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-4">
+                                    <div class="custom-control custom-switch">
+
+                                        <TextInput Label="Divisor" @bind-Value="@Entity.Divisor"
+                                                   Validate="false" ValidationFor="@(() => @Entity.Divisor)" IsDisabled="!Enabled">
+
+                                        </TextInput>
+                                        @RT.GetErrorMessage(nameof(Entity.Divisor))
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+
+
+                                    <TextInput Label="Type" @bind-Value="@Entity.Type"
+                                               Validate="false" Type="@Types.select" IsDisabled="!Enabled">
+                                        @foreach (WeightType item in AppState2.WeightTypeList)
+                                                {
+                                            <option value="@item.WeightTypeID.ToString()">@item.Name</option>
+                                                }
+                                    </TextInput>
+                                    @RT.GetErrorMessage(nameof(Entity.Type))
+
+
+                                </div>
+                                <div class="col-sm-4">
+
+                                    <TextInput @bind-Value="@Entity.Distribution" Label="Distribution" Validate="false" Type="@Types.select" IsDisabled="!Enabled">
+                                        @foreach (WeightDistribution item in AppState2.WeightDistributionList)
+                                                {
+                                            <option value="@item.WeightDistributionID.ToString()">@item.Name</option>
+                                                }
+                                    </TextInput>
+                                    @RT.GetErrorMessage(nameof(Entity.Distribution))
+
+
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-4">
+                                   
+                                        <TextInput @bind-Value="@Entity.Note" Validate="true"  IsDisabled="!Enabled" Label="Note" ValidationFor="@(() => @Entity.Note)">
+                                        </TextInput>
+                                        @RT.GetErrorMessage(nameof(Entity.Note))
+                                   
+
+                                </div>
+                                <div class="col-sm-4">
+
+                                            <TextInput @bind-Value="@Entity.Resolution" Validate="true" IsDisabled="!Enabled" Label="Resolution" ValidationFor="@(() => @Entity.Resolution)">
+                                            </TextInput>
+                                            @RT.GetErrorMessage(nameof(Entity.Resolution))
+
+
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                        @{
+                            Entity.WeightActualValue = @Entity.WeightNominalValue;
+                            if (Entity.Divisor == 0)
+                            {
+                                 Entity.Divisor = 1;
+                            }
+                           
+                        }
+
+
+            </GridEdit>
+        </ResponsiveTable>
+
+            }
+
+
+        </div>
+    </div>
+
+}
+
+@code
+
+
+    {
+
+
+
+    public void ChangeUOM(ChangeEventArgs arg)
+    {
+        StateHasChanged();
+    }
+
+
+
+
+}

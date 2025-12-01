@@ -1,0 +1,302 @@
+﻿using CalibrationSaaS.Domain.Aggregates.Entities;
+using Helpers.Controls;
+using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
+using System.Text;
+
+namespace CalibrationSaaS.Domain.Aggregates.Shared
+{
+    public class AppStateCompany
+    {
+       
+
+        public event Action OnChange;
+
+
+        //public List<UnitOfMeasure> GetUnitOfMeasureByType(int typeID)
+        //{
+
+        //   return  UnitofMeasureList.Where(x => x.TypeID == typeID).ToList();
+
+        //}
+        //public void AddEquipmentType(EquipmentType eq)
+        //{
+        //    EquipmentTypes.Add(eq);
+        //}
+        public Dictionary<string, string> StatusListET { get; set; }
+        //public List<EquipmentType> EquipmentTypes { get; set; }
+
+        public List<ToleranceType> ToleranceList2 { get; set; }
+
+
+        public List<KeyValue2>  TYpeMicro { get; set; }
+
+
+        public AppStateCompany()
+        {
+            NotifyStateChanged();
+           
+            
+            UserTypes = new Dictionary<string, string>();
+            
+            SocialTypes = new Dictionary<string, string>();
+
+            PhoneNumberTypes = new Dictionary<string, string>();
+
+            CalibrationInterval = new Dictionary<int, string>();
+
+            CalibrationInterval.Add(1, "Custom");
+            CalibrationInterval.Add(2, "1 months");
+            CalibrationInterval.Add(3, "2 months");
+            CalibrationInterval.Add(4, "3 months");
+            CalibrationInterval.Add(5, "6 months");
+            CalibrationInterval.Add(6, "12 months");
+
+            //CalibrationInterval.Add(5, "45 day");
+            UserTypes.Add("1", "Technician");
+            UserTypes.Add("2", "Other");
+
+            //Cities.Add("1", "New York");
+            //Cities.Add("2", "Seattle");
+            //Countries.Add("1", "USA");
+            //Countries.Add("2", "Colombia");
+            SocialTypes.Add("1", "WebSite");
+            SocialTypes.Add("2", "Linkedin");
+            SocialTypes.Add("3", "Twitter");
+            SocialTypes.Add("4", "Facebook");
+            SocialTypes.Add("5", "Instagram");
+
+
+
+            
+            PhoneNumberTypes.Add("1", "Company PBX");
+            PhoneNumberTypes.Add("2", "Fax");
+            PhoneNumberTypes.Add("3", "Office");
+            PhoneNumberTypes.Add("4", "Cell Phone");
+
+            //UnitofMeasureList.Add(new UnitOfMeasure { Name = "Pounds", Abbreviation = "Pd", UnitOfMeasureID = 2 });
+
+            //UnitofMeasureList.Add(new UnitOfMeasure { Name = "Kilogramo", Abbreviation = "Kg", UnitOfMeasureID = 4 });
+            StatusListET = new Dictionary<string, string>();
+            StatusListET.Add(0.ToString(), "N/A");
+            StatusListET.Add(1.ToString(), "Approved");
+            StatusListET.Add(2.ToString(), "Created");
+            StatusListET.Add(3.ToString(), "Inactive");
+            StatusListET.Add(4.ToString(), "Rejected");
+
+            //EquipmentTypes = new List<EquipmentType>();
+
+             ToleranceList2 = new List<ToleranceType>();
+            //ToleranceList2.Add(new ToleranceType() { Key="1", Value="Resolution",CalibrationTypeId=1} );
+            // ToleranceList2.Add(new ToleranceType() { Key="2", Value="Percentage + Resolution",CalibrationTypeId=1} );
+            //ToleranceList2.Add(new ToleranceType() { Key="3", Value="HB44",CalibrationTypeId=1} );
+            // ToleranceList2.Add(new ToleranceType() { Key="1", Value="Resolution",CalibrationTypeId=2} );
+            // ToleranceList2.Add(new ToleranceType() { Key="2", Value="Percentage + Resolution",CalibrationTypeId=2} );
+
+
+            TYpeMicro = new List<KeyValue2>();
+            TYpeMicro.Add(new KeyValue2 { Key = 1, Value = "HV (Vicker)" });
+            TYpeMicro.Add(new KeyValue2 { Key = 2, Value = "HK (Knoop)" });
+
+
+
+        }
+        public Dictionary<string, string> StatusLists { get; set; }
+
+        public List<UnitOfMeasure> UnitofMeasureList { get; set; } = new List<UnitOfMeasure>();
+
+        public List<UnitOfMeasureType> UnitofMeasureTypeList { get; set; }
+
+        //public IReadOnlyCollection<UnitOfMeasure> UnitOfMeasures { get; } = new List<UnitOfMeasure>
+        //{
+
+        //     new UnitOfMeasure{ Name="Centigrades", Abbreviation="C", IsEnabled=true, Type="Temperature" }
+        //     ,
+        //      new UnitOfMeasure{Name="Farenheit", Abbreviation="F", IsEnabled=true, Type="Temperature" },
+
+        //       new UnitOfMeasure{ Name="Relative", Abbreviation="R", IsEnabled=true, Type="Humidity" }
+        //     ,
+        //      new UnitOfMeasure{Name="Absolute", Abbreviation="A", IsEnabled=true, Type="Humidity" },
+
+        //};
+        public List<UnitOfMeasure> GetUnitOfMeasureByCalibrationType(EquipmentTemplate EquipmentTemplate)
+        {
+            //if (EquipmentTemplate.EquipmentTypeObject != null )
+            //{
+            //    var b = UnitofMeasureList.Where(x => x.Type.CalibrationTypeID == EquipmentTemplate.EquipmentTypeObject.CalibrationTypeID).ToList();
+
+            //    return b;
+            //}
+
+            return UnitofMeasureList;
+
+        }
+
+
+        public Dictionary<int, string> CalibrationInterval { get; set; }
+
+
+        public Dictionary<string, string> UserTypes { get; set; }
+
+        //public IReadOnlyCollection<Rol> RolesList { get; set; } 
+        //    = new List<Rol>
+        //{
+        //      new  Rol(1, "admin"),
+        //      new Rol (2, "tech"),
+
+        //};
+
+
+
+        public IReadOnlyCollection<CityLocation> Cities { get; } = new List<CityLocation>
+        {
+            new CityLocation("WA - WASHINGTON", "WA"),
+            new CityLocation("STL - SAINT LOUIS", "STL"),
+          
+
+        };
+
+        public IReadOnlyCollection<CountryLocation> Countries { get; } = new List<CountryLocation>
+             {
+            new CountryLocation("USA - UNITED STATES", "USA")
+            //new CountryLocation("CO - COLOMBIA", "CO"),
+            //new CountryLocation("UK - UNITED KINGDOM", "UK"),
+            //new CountryLocation("AR - ARGENTINA", "AR"),
+            
+        };
+
+
+        public IReadOnlyCollection<Standard> Standards { get; } = new List<Standard>
+             {
+            new Standard("Rice Lake", 1,"120 Plus","J30019","1000 x 0.2 lb"),
+            new Standard("Rice Orange",2,"120 Plus","J3DRT019","1000 x 0.2 lb"),
+            new Standard("Rice Orange", 3,"120 Plus","J3DRT019","1000 x 0.2 lb"),
+            new Standard("Rice Orange", 4,"120 Plus","J3DRT019","1000 x 0.2 lb"),
+
+        };
+
+
+
+        public Dictionary<string, string> SocialTypes { get; set; }
+
+        public Dictionary<string, string> PhoneNumberTypes { get; set; }
+
+        public  IReadOnlyCollection<StateLocation> States { get; } = new List<StateLocation>
+        {
+            new StateLocation("AL - Alabama", "AL"),
+            new StateLocation("AK - Alaska", "AK"),
+            new StateLocation("AZ - Arizona", "AZ"),
+            new StateLocation("AR - Arkansas", "AR"),
+            new StateLocation("CA - California", "CA"),
+            new StateLocation("CO - Colorado", "CO"),
+            new StateLocation("CT - Connecticut", "CT"),
+            new StateLocation("DE - Delaware", "DE"),
+            new StateLocation("DC - District Of Columbia", "DC"),
+            new StateLocation("FL - Florida", "FL"),
+            new StateLocation("GA - Georgia", "GA"),
+            new StateLocation("HI - Hawaii", "HI"),
+            new StateLocation("ID - Idaho", "ID"),
+            new StateLocation("IL - Illinois", "IL"),
+            new StateLocation("IN - Indiana", "IN"),
+            new StateLocation("IA - Iowa", "IA"),
+            new StateLocation("KS - Kansas", "KS"),
+            new StateLocation("KY - Kentucky", "KY"),
+            new StateLocation("LA - Louisiana", "LA"),
+            new StateLocation("ME - Maine", "ME"),
+            new StateLocation("MD - Maryland", "MD"),
+            new StateLocation("MA - Massachusetts", "MA"),
+            new StateLocation("MI - Michigan", "MI"),
+            new StateLocation("MN - Minnesota", "MN"),
+            new StateLocation("MS - Mississippi", "MS"),
+            new StateLocation("MO - Missouri", "MO"),
+            new StateLocation("MT - Montana", "MT"),
+            new StateLocation("NE - Nebraska", "NE"),
+            new StateLocation("NV - Nevada", "NV"),
+            new StateLocation("NH - New Hampshire", "NH"),
+            new StateLocation("NJ - New Jersey", "NJ"),
+            new StateLocation("NM - New Mexico", "NM"),
+            new StateLocation("NY - New York", "NY"),
+            new StateLocation("NC - North Carolina", "NC"),
+            new StateLocation("ND - North Dakota", "ND"),
+            new StateLocation("OH - Ohio", "OH"),
+            new StateLocation("OK - Oklahoma", "OK"),
+            new StateLocation("OR - Oregon", "OR"),
+            new StateLocation("PA - Pennsylvania", "PA"),
+            new StateLocation("RI - Rhode Island", "RI"),
+            new StateLocation("SC - South Carolina", "SC"),
+            new StateLocation("SD - South Dakota", "SD"),
+            new StateLocation("TN - Tennessee", "TN"),
+            new StateLocation("TX - Texas", "TX"),
+            new StateLocation("UT - Utah", "UT"),
+            new StateLocation("VT - Vermont", "VT"),
+            new StateLocation("VA - Virginia", "VA"),
+            new StateLocation("WA - Washington", "WA"),
+            new StateLocation("WV - West Virginia", "WV"),
+            new StateLocation("WI - Wisconsin", "WI"),
+            new StateLocation("WY - Wyoming", "WY")
+        };
+
+        private void NotifyStateChanged() => OnChange?.Invoke();
+
+
+        public List<HistoryNavigation> HistoryNavigte = new List<HistoryNavigation>();
+
+        public void SetHistory(string url,object navigation,string _user)
+        {
+
+            HistoryNavigte.Add(new HistoryNavigation{ Route= url, Data= navigation, user= _user });
+        }
+
+        //public IReadOnlyCollection<Status> StatusList { get; } = new List<Status>
+        //{
+        //    new Status{ 
+        //    StatusId=1,
+        //    Name= "Ready for Calibration",
+        //    IsDefault=true,
+
+        //    },
+
+        //    new Status{
+        //          StatusId=2,
+        //    Name= "Technical Review",
+           
+
+        //    },
+
+        //     new Status{
+        //           StatusId=3,
+        //    Name= "Calibrated",
+            
+
+        //    },
+
+
+        //     new Status{
+        //           StatusId=4,
+        //    Name= "Quality Review",
+            
+
+        //    },
+
+
+        //};
+
+        }
+
+    public class HistoryNavigation
+    {
+        public string user { get; set; }
+
+        public string Route { get; set; }
+
+        public object Data { get; set; }
+
+
+    }
+
+    
+
+
+}

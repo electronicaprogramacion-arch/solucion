@@ -1,0 +1,523 @@
+@page "/{tenant}/work-orders"
+@using CalibrationSaaS.CustomerPortal.Models.WorkOrders
+@using CalibrationSaaS.CustomerPortal.Services.GrpcClients
+@using LocalWorkOrderDto = CalibrationSaaS.CustomerPortal.Models.WorkOrders.WorkOrderDto
+@using GrpcWorkOrderDto = CalibrationSaaS.CustomerPortal.Services.GrpcClients.WorkOrderDto
+@using Microsoft.AspNetCore.Components.Authorization
+@using Radzen
+@using Radzen.Blazor
+@inject IWorkOrderGrpcService WorkOrderGrpcService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NotificationService NotificationService
+@inject NavigationManager Navigation
+@inject ILogger<WorkOrders> Logger
+
+<PageTitle>Work Orders - CalibrationSaaS Customer Portal</PageTitle>
+
+<RadzenStack Gap="1.5rem">
+    <!-- Page Header -->
+    <RadzenCard Class="rz-p-4">
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.H4" Class="rz-mb-0">
+                    <RadzenIcon Icon="work" Class="rz-mr-2" />
+                    Work Orders
+                </RadzenText>
+                <RadzenText TextStyle="TextStyle.Body1" Class="rz-color-secondary">
+                    Track and manage your calibration work orders
+                </RadzenText>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <RadzenButton Icon="refresh" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium"
+                             Click="@LoadWorkOrders" IsBusy="@isLoading" Title="Refresh" />
+                <RadzenButton Icon="add" Text="New Work Order" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium"
+                             Click="@CreateWorkOrder" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+
+    <!-- Quick Stats -->
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-info-lighter) 0%, var(--rz-info-light) 100%);">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="pending" Style="font-size: 1.5rem; color: var(--rz-info);" />
+                    <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0">@pendingCount</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Pending</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-warning-lighter) 0%, var(--rz-warning-light) 100%);">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="schedule" Style="font-size: 1.5rem; color: var(--rz-warning);" />
+                    <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0">@scheduledCount</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Scheduled</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-primary-lighter) 0%, var(--rz-primary-light) 100%);">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="engineering" Style="font-size: 1.5rem; color: var(--rz-primary);" />
+                    <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0">@inProgressCount</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">In Progress</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Class="rz-text-align-center rz-p-3" Style="background: linear-gradient(135deg, var(--rz-success-lighter) 0%, var(--rz-success-light) 100%);">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="check_circle" Style="font-size: 1.5rem; color: var(--rz-success);" />
+                    <RadzenText TextStyle="TextStyle.H5" Class="rz-mb-0">@completedCount</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Completed</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <!-- Search and Filters -->
+    <RadzenCard Class="rz-p-4">
+        <RadzenStack Gap="1rem">
+            <RadzenText TextStyle="TextStyle.H6">Search & Filters</RadzenText>
+            <RadzenRow Gap="1rem">
+                <RadzenColumn Size="12" SizeMD="3">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenLabel Text="Work Order Number" />
+                        <RadzenTextBox @bind-Value="@searchText" Placeholder="WO number or equipment..."
+                                      @oninput="@((args) => OnSearchChanged(args.Value?.ToString()))" />
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="3">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenLabel Text="Status" />
+                        <RadzenDropDown @bind-Value="@selectedStatus" Data="@statusOptions" 
+                                       TextProperty="Text" ValueProperty="Value" AllowClear="true"
+                                       Placeholder="All Statuses" Change="@OnFilterChanged" />
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="3">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenLabel Text="Date From" />
+                        <RadzenDatePicker @bind-Value="@dateFrom" Placeholder="From Date" 
+                                         Change="@OnFilterChanged" DateFormat="MM/dd/yyyy" />
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="3">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenLabel Text="Date To" />
+                        <RadzenDatePicker @bind-Value="@dateTo" Placeholder="To Date" 
+                                         Change="@OnFilterChanged" DateFormat="MM/dd/yyyy" />
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenStack>
+    </RadzenCard>
+
+    <!-- Master-Detail Layout -->
+    <RadzenRow Gap="1rem">
+        <!-- Master View - Work Orders Grid -->
+        <RadzenColumn Size="12" SizeMD="8">
+            <RadzenCard Class="rz-p-4">
+                <RadzenStack Gap="1rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                        <RadzenText TextStyle="TextStyle.H6">
+                            Work Orders (@(totalCount))
+                        </RadzenText>
+                        <RadzenButton Icon="file_download" Text="Export" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small"
+                                     Click="@ExportWorkOrders" Disabled="@(!workOrders?.Any() == true)" />
+                    </RadzenStack>
+
+                    @if (isLoading)
+                    {
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-4">
+                            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Medium" />
+                            <RadzenText TextStyle="TextStyle.Body2">Loading work orders...</RadzenText>
+                        </RadzenStack>
+                    }
+                    else if (workOrders?.Any() == true)
+                    {
+                        <RadzenDataGrid @ref="workOrdersGrid" Data="@workOrders" TItem="LocalWorkOrderDto"
+                                       AllowPaging="true" PageSize="10" AllowSorting="true" AllowFiltering="false"
+                                       SelectionMode="DataGridSelectionMode.Single" @bind-Value="@selectedWorkOrders"
+                                       RowSelect="@OnWorkOrderSelected" Class="rz-datatable">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="LocalWorkOrderDto" Property="WorkOrderNumber" Title="WO Number" Width="120px">
+                                    <Template Context="workOrder">
+                                        <RadzenLink Text="@workOrder.WorkOrderNumber"
+                                                   Click="@(() => OnWorkOrderSelected(workOrder))" />
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="LocalWorkOrderDto" Property="CustomerName" Title="Customer" Width="150px" />
+                                <RadzenDataGridColumn TItem="LocalWorkOrderDto" Property="Description" Title="Description" />
+                                <RadzenDataGridColumn TItem="LocalWorkOrderDto" Property="ScheduledDate" Title="Scheduled" Width="120px">
+                                    <Template Context="workOrder">
+                                        @workOrder.ScheduledDate?.ToString("MM/dd/yyyy")
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="LocalWorkOrderDto" Property="Status" Title="Status" Width="120px">
+                                    <Template Context="workOrder">
+                                        <RadzenBadge BadgeStyle="@GetStatusBadgeStyle(workOrder.Status)" Text="@workOrder.Status" />
+                                    </Template>
+                                </RadzenDataGridColumn>
+
+                                <RadzenDataGridColumn TItem="LocalWorkOrderDto" Title="Actions" Width="120px" Sortable="false">
+                                    <Template Context="workOrder">
+                                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                            <RadzenButton Icon="visibility" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall"
+                                                         Click="@(() => OnWorkOrderSelected(workOrder))" Title="View Details" />
+                                            <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.ExtraSmall"
+                                                         Click="@(() => EditWorkOrder(workOrder.Id))" Title="Edit" />
+                                        </RadzenStack>
+                                    </Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    }
+                    else
+                    {
+                        <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-4">
+                            <RadzenIcon Icon="work" Style="font-size: 3rem; color: var(--rz-secondary);" />
+                            <RadzenText TextStyle="TextStyle.H6" Class="rz-color-secondary">No Work Orders Found</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary">
+                                @if (string.IsNullOrEmpty(searchText))
+                                {
+                                    <text>No work orders are available for your account.</text>
+                                }
+                                else
+                                {
+                                    <text>No work orders match your search criteria. Try adjusting your filters.</text>
+                                }
+                            </RadzenText>
+                            <RadzenButton Text="Create Work Order" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                                         Click="@CreateWorkOrder" />
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        <!-- Detail View - Work Order Details -->
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenCard Class="rz-p-4" Style="position: sticky; top: 1rem;">
+                @if (selectedWorkOrder != null)
+                {
+                    <RadzenStack Gap="1rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                            <RadzenText TextStyle="TextStyle.H6">Work Order Details</RadzenText>
+                            <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                         Click="@(() => selectedWorkOrder = null)" />
+                        </RadzenStack>
+
+                        <RadzenStack Gap="0.75rem">
+                            <div>
+                                <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Work Order Number</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body1" Class="rz-font-weight-bold">@selectedWorkOrder.WorkOrderNumber</RadzenText>
+                            </div>
+                            
+                            <div>
+                                <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Status</RadzenText>
+                                <RadzenBadge BadgeStyle="@GetStatusBadgeStyle(selectedWorkOrder.Status)" Text="@selectedWorkOrder.Status" />
+                            </div>
+
+                            <div>
+                                <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Customer</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body1">@selectedWorkOrder.CustomerName</RadzenText>
+                            </div>
+
+                            <div>
+                                <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Description</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body1">@selectedWorkOrder.Description</RadzenText>
+                            </div>
+
+                            @if (selectedWorkOrder.ScheduledDate.HasValue)
+                            {
+                                <div>
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Scheduled Date</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body1">@selectedWorkOrder.ScheduledDate?.ToString("MMMM dd, yyyy")</RadzenText>
+                                </div>
+                            }
+
+                            @if (selectedWorkOrder.CompletedDate.HasValue)
+                            {
+                                <div>
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Completed Date</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body1">@selectedWorkOrder.CompletedDate?.ToString("MMMM dd, yyyy")</RadzenText>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(selectedWorkOrder.Notes))
+                            {
+                                <div>
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Notes</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body2">@selectedWorkOrder.Notes</RadzenText>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(selectedWorkOrder.TechnicianName))
+                            {
+                                <div>
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">Technician</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Body1">@selectedWorkOrder.TechnicianName</RadzenText>
+                                </div>
+                            }
+                        </RadzenStack>
+
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenButton Text="Edit Work Order" Icon="edit" ButtonStyle="ButtonStyle.Primary"
+                                         Click="@(() => EditWorkOrder(selectedWorkOrder.Id))" />
+                            @if (selectedWorkOrder.Status == "Completed")
+                            {
+                                <RadzenButton Text="View Certificate" Icon="description" ButtonStyle="ButtonStyle.Success"
+                                             Click="@(() => ViewCertificate(selectedWorkOrder.Id))" />
+                            }
+                            <RadzenButton Text="View Timeline" Icon="timeline" ButtonStyle="ButtonStyle.Secondary"
+                                         Click="@(() => ViewTimeline(selectedWorkOrder.Id))" />
+                        </RadzenStack>
+                    </RadzenStack>
+                }
+                else
+                {
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-4">
+                        <RadzenIcon Icon="touch_app" Style="font-size: 2rem; color: var(--rz-secondary);" />
+                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-color-secondary rz-text-align-center">
+                            Select a work order from the list to view details
+                        </RadzenText>
+                    </RadzenStack>
+                }
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>
+
+<style>
+    .rz-datatable .rz-datatable-data tr:hover {
+        background-color: var(--rz-primary-lighter);
+        cursor: pointer;
+    }
+</style>
+
+@code {
+    [Parameter] public string? tenant { get; set; }
+
+    private List<LocalWorkOrderDto>? workOrders;
+    private LocalWorkOrderDto? selectedWorkOrder;
+    private IList<LocalWorkOrderDto>? selectedWorkOrders;
+    private RadzenDataGrid<LocalWorkOrderDto>? workOrdersGrid;
+
+    private bool isLoading = false;
+    private string searchText = "";
+    private string? selectedStatus;
+    private DateTime? dateFrom;
+    private DateTime? dateTo;
+    private int totalCount = 0;
+    private int customerId = 0;
+
+    // Quick stats
+    private int pendingCount = 0;
+    private int scheduledCount = 0;
+    private int inProgressCount = 0;
+    private int completedCount = 0;
+
+    private readonly List<StatusOption> statusOptions = new()
+    {
+        new StatusOption { Text = "Pending", Value = "Pending" },
+        new StatusOption { Text = "Scheduled", Value = "Scheduled" },
+        new StatusOption { Text = "In Progress", Value = "InProgress" },
+        new StatusOption { Text = "Completed", Value = "Completed" },
+        new StatusOption { Text = "Cancelled", Value = "Cancelled" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWorkOrders();
+    }
+
+    private async Task LoadWorkOrders()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                var customerIdValue = authState.User.GetCustomerId();
+                if (customerIdValue.HasValue)
+                {
+                    customerId = customerIdValue.Value;
+
+                    // Get work orders from gRPC service
+                    var result = await WorkOrderGrpcService.GetWorkOrdersAsync(
+                        customerId,
+                        tenant ?? "default",
+                        1,
+                        50,
+                        dateFrom,
+                        dateTo);
+
+                    if (result?.WorkOrders != null)
+                    {
+                        workOrders = result.WorkOrders.Select(ConvertToLocalDto).ToList();
+                        totalCount = result.WorkOrders.Count;
+
+                        // Apply client-side filtering for search text and status
+                        if (!string.IsNullOrWhiteSpace(searchText))
+                        {
+                            var searchTerm = searchText.ToLower();
+                            workOrders = workOrders.Where(wo =>
+                                wo.WorkOrderNumber.ToLower().Contains(searchTerm) ||
+                                (wo.CustomerName?.ToLower().Contains(searchTerm) ?? false) ||
+                                (wo.Description?.ToLower().Contains(searchTerm) ?? false) ||
+                                (wo.TechnicianName?.ToLower().Contains(searchTerm) ?? false)
+                            ).ToList();
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(selectedStatus))
+                        {
+                            workOrders = workOrders.Where(wo => wo.Status == selectedStatus).ToList();
+                        }
+
+                        // Calculate stats
+                        pendingCount = workOrders.Count(wo => wo.Status?.ToLower() == "pending");
+                        scheduledCount = workOrders.Count(wo => wo.Status?.ToLower() == "scheduled");
+                        inProgressCount = workOrders.Count(wo => wo.Status?.ToLower() == "in progress" || wo.Status?.ToLower() == "inprogress");
+                        completedCount = workOrders.Count(wo => wo.Status?.ToLower() == "completed");
+                    }
+                    else
+                    {
+                        workOrders = new List<LocalWorkOrderDto>();
+                        totalCount = 0;
+                        pendingCount = scheduledCount = inProgressCount = completedCount = 0;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading work orders");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error Loading Work Orders",
+                Detail = "Unable to load work orders. Please try again.",
+                Duration = 5000
+            });
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnSearchChanged(string? value)
+    {
+        searchText = value ?? "";
+        await LoadWorkOrders();
+    }
+
+    private async Task OnFilterChanged()
+    {
+        await LoadWorkOrders();
+    }
+
+    private void OnWorkOrderSelected(LocalWorkOrderDto workOrder)
+    {
+        selectedWorkOrder = workOrder;
+        StateHasChanged();
+    }
+
+    private void CreateWorkOrder()
+    {
+        Navigation.NavigateTo($"/{tenant}/work-orders/create");
+    }
+
+    private void EditWorkOrder(int workOrderId)
+    {
+        Navigation.NavigateTo($"/{tenant}/work-orders/edit/{workOrderId}");
+    }
+
+    private void ViewCertificate(int workOrderId)
+    {
+        Navigation.NavigateTo($"/{tenant}/certificates?workOrderId={workOrderId}");
+    }
+
+    private void ViewTimeline(int workOrderId)
+    {
+        Navigation.NavigateTo($"/{tenant}/work-orders/{workOrderId}/timeline");
+    }
+
+    private async Task ExportWorkOrders()
+    {
+        try
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Export Started",
+                Detail = "Preparing work orders for export...",
+                Duration = 3000
+            });
+            await Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting work orders");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Export Error",
+                Detail = "Unable to export work orders. Please try again.",
+                Duration = 5000
+            });
+        }
+    }
+
+    private BadgeStyle GetStatusBadgeStyle(string? status)
+    {
+        return status?.ToLower() switch
+        {
+            "pending" => BadgeStyle.Secondary,
+            "scheduled" => BadgeStyle.Warning,
+            "inprogress" => BadgeStyle.Primary,
+            "completed" => BadgeStyle.Success,
+            "cancelled" => BadgeStyle.Danger,
+            _ => BadgeStyle.Info
+        };
+    }
+
+
+
+
+
+    private class StatusOption
+    {
+        public string Text { get; set; } = "";
+        public string Value { get; set; } = "";
+    }
+
+    /// <summary>
+    /// Convert gRPC WorkOrderDto to local WorkOrderDto
+    /// </summary>
+    private LocalWorkOrderDto ConvertToLocalDto(GrpcWorkOrderDto grpcDto)
+    {
+        return new LocalWorkOrderDto
+        {
+            Id = grpcDto.WorkOrderId,
+            WorkOrderNumber = grpcDto.WorkOrderNumber ?? "",
+            Status = grpcDto.Status ?? "",
+            Priority = "Normal", // Default value since gRPC DTO doesn't have Priority
+            ScheduledDate = grpcDto.ScheduledDate,
+            CompletedDate = grpcDto.CompletedDate,
+            CreatedDate = grpcDto.CreatedDate,
+            TechnicianName = grpcDto.TechnicianName,
+            Notes = grpcDto.Notes,
+            WorkType = "Calibration", // Default value since gRPC DTO doesn't have WorkType
+            CustomerName = grpcDto.CustomerName ?? "",
+            Description = grpcDto.Description ?? ""
+        };
+    }
+
+}

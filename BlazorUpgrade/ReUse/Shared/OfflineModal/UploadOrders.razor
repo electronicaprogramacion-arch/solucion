@@ -1,0 +1,31 @@
+﻿<div class="simple-form">
+
+    <div class="form-group">
+        @*<label for="last-name">Upload completed orders to backoffice?</label>*@
+        <label for="last-name"> Do you want to switch to offline mode?</label>
+       
+    </div>
+
+    @*<a @onclick="SubmitForm" href="WODOff" class="btn btn-primary">Yes</a>*@
+    <a @onclick="SubmitForm" href="WODOff" class="btn btn-primary">Yes</a>
+    <button @onclick="Cancel" class="btn btn-secondary">No</button>
+</div>
+
+
+@code {
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+
+    async Task SubmitForm()
+    {
+       await  ModalInstance.CloseAsync(ModalResult.Ok($"Form was submitted successfully."));
+
+
+
+
+    }
+
+    async Task Cancel()
+    {
+       await  ModalInstance.CloseAsync();
+    }
+}

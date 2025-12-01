@@ -1,0 +1,2 @@
+﻿CREATE USER [Developer] WITHOUT LOGIN;
+

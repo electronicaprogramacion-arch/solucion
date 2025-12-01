@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<title>Stitch Design</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#1183d4",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101a22",
+            },
+            fontFamily: {
+              display: ["Inter"],
+            },
+            borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+          },
+        },
+      };
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="relative flex min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-gray-200 dark:border-gray-700 px-10 py-3">
+<div class="flex items-center gap-4 text-gray-900 dark:text-white">
+<div class="text-primary size-6">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path></svg>
+</div>
+<h2 class="text-lg font-bold">Calibrate</h2>
+</div>
+<div class="flex flex-1 justify-end gap-2">
+<nav class="hidden md:flex items-center gap-6 mr-4">
+<a class="text-sm font-medium hover:text-primary" href="#">Dashboard</a>
+<a class="text-sm font-medium text-primary" href="#">Equipment</a>
+<a class="text-sm font-medium hover:text-primary" href="#">Orders</a>
+<a class="text-sm font-medium hover:text-primary" href="#">Reports</a>
+<a class="text-sm font-medium hover:text-primary" href="#">Support</a>
+</nav>
+<button class="flex items-center justify-center rounded-full h-10 w-10 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800">
+<span class="material-symbols-outlined text-2xl"> notifications </span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCZoWkcvYYqC0_IXd-MC0hEVzwBGsIMkYOZqfZoIxe27GV88BxcKGa4gtxgItugWJ2CsyP2_Ftdjr5N7Kyd4TnxwiQ0tQsmByeRw0yhEfW4KiSmMt4F4Bc5N9E1M6VFnE_4dmvib5drzP-EZoxCDRJMCj5LCR4kBfp_FOOAuydqjlHKY3G5iVjdPBoT5lQv5FdZtouGnd-5fC59ehODfefrgFTdG8NzEgsRG0mHekM7_x1yGcMgNdgsrlRHCwI_Z2GOUD7nknayy0Vk");'></div>
+</div>
+</header>
+<main class="flex-1 px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl mx-auto">
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Equipment</h1>
+<button class="flex items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold shadow-sm hover:bg-primary/90">
+<span class="material-symbols-outlined mr-2 text-lg"> add </span>
+<span>Add Equipment</span>
+</button>
+</div>
+<div class="mb-6">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"> search </span>
+<input class="form-input w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 focus:ring-primary focus:border-primary h-12 pl-10 text-sm" placeholder="Search by equipment type, model, or serial number" value=""/>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 mb-6">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-1 rounded-lg bg-gray-200 dark:bg-gray-800 px-3 text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-700">
+<span>Equipment Type</span>
+<span class="material-symbols-outlined text-lg"> expand_more </span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-1 rounded-lg bg-gray-200 dark:bg-gray-800 px-3 text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-700">
+<span>Model</span>
+<span class="material-symbols-outlined text-lg"> expand_more </span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-1 rounded-lg bg-gray-200 dark:bg-gray-800 px-3 text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-700">
+<span>Date Range</span>
+<span class="material-symbols-outlined text-lg"> expand_more </span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-1 rounded-lg bg-gray-200 dark:bg-gray-800 px-3 text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-700">
+<span>Location</span>
+<span class="material-symbols-outlined text-lg"> expand_more </span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-1 rounded-lg bg-gray-200 dark:bg-gray-800 px-3 text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-700">
+<span>Department</span>
+<span class="material-symbols-outlined text-lg"> expand_more </span>
+</button>
+</div>
+<div class="flex justify-between items-center gap-2 mb-4">
+<div class="flex gap-2">
+<button class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800">
+<span class="material-symbols-outlined"> swap_vert </span>
+</button>
+<p class="text-sm font-medium self-center">Sort by Due Date</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center rounded-lg h-10 px-4 bg-gray-200 dark:bg-gray-800 text-sm font-bold shadow-sm hover:bg-gray-300 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined mr-2 text-lg"> picture_as_pdf </span>
+<span>PDF</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 px-4 bg-gray-200 dark:bg-gray-800 text-sm font-bold shadow-sm hover:bg-gray-300 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined mr-2 text-lg"> description </span>
+<span>Excel</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark">
+<table class="w-full min-w-[1200px]">
+<thead class="bg-gray-50 dark:bg-gray-900/50">
+<tr>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Equipment</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Model</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Serial No.</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Due Date</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Location</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Department</th>
+<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">Multimeter</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Model 123</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">SN12345</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2024-07-15</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Lab A</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Engineering</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"> Due Soon </span>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">Oscilloscope</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Model 456</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">SN67890</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2024-06-20</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Lab B</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Testing</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"> Overdue </span>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">Power Supply</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Model 789</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">SN11223</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2024-08-10</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Lab A</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Engineering</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"> Future </span>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">Signal Generator</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Model 101</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">SN33445</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2024-07-20</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Lab B</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Testing</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"> Due Soon </span>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">Spectrum Analyzer</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Model 202</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">SN55667</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2024-06-25</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Lab A</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Engineering</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"> Overdue </span>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">Logic Analyzer</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Model 303</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">SN77889</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">2024-08-15</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Lab B</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Testing</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"> Future </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+</body></html>

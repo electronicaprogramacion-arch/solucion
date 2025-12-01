@@ -1,0 +1,811 @@
+﻿@using CalibrationSaaS.Domain.Aggregates.Shared
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic
+@using Blazed.Controls
+@using CalibrationSaaS.Application.Services
+@using CalibrationSaaS.Domain.Aggregates.Querys;
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics.TestPoints;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics;
+@using DynamicExpressions;
+@using System;
+@using System.Linq;
+@using System.Collections.Generic;
+@using Microsoft.AspNetCore.Components.Web;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base;
+@using Blazored.Modal;
+@using Blazored.Modal.Services;
+@using System.Runtime.CompilerServices;
+@using Radzen.Blazor
+@namespace BlazorApp1.Blazor
+@inherits BlazorApp1.Blazor.CalibrationInstructionsRockBase;
+@inject ILogger<BlazorApp1.Blazor.CalibrationInstructionsRockBase> Logger
+
+@if (1 == 2) 
+{ 
+    <div>moll</div>
+}else
+@if (WorkOrderItemCreate != null && WorkOrderItemCreate.eq != null && editContext != null  && AppStateBasics.ToleranceList2 != null
+&& WorkOrderItemCreate.eq.PieceOfEquipment != null && WorkOrderItemCreate.eq.PieceOfEquipment.EquipmentTemplate != null)
+{
+
+    <EditForm Model="WorkOrderItemCreate.eq">
+        <DataAnnotationsValidator />
+
+        <div class="row">
+
+            <div class="col">
+                <div class="form-group" style="margin-top:0px;margin-bottom:0rem">
+                    @*<label class="form-control-label">Capacity</label>*@
+                    <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                        <Rules>
+                            <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                            </Rule>
+                            <RulesTemplate TValue="int?"
+                                           TTYPE="WorkOrderDetail" Context="Entity">
+                                <ValidConditionsTemplate>
+
+                                    <TextInput @bind-Value="@WorkOrderItemCreate.eq.PieceOfEquipment.Capacity" class="form-control" LabelDown="@LabelDown"
+                                               IsDisabled="!Enabled" ValidationFor="(()=>WorkOrderItemCreate.eq.PieceOfEquipment.Capacity)"
+                                               Label="Capacity">
+
+                                    </TextInput>
+                                </ValidConditionsTemplate>
+                                <InvalidConditionsTemplate>
+
+                                    <TextInput @bind-Value="@WorkOrderItemCreate.eq.PieceOfEquipment.Capacity" class="form-control" LabelDown="@LabelDown"
+                                               IsDisabled="true" ValidationFor="(()=>WorkOrderItemCreate.eq.PieceOfEquipment.Capacity)"
+                                               Label="Capacity">
+
+                                    </TextInput>
+                                </InvalidConditionsTemplate>
+                            </RulesTemplate>
+                        </Rules>
+                    </MultiComponent>
+                    @*<ValidationMessage For="@(()=>WorkOrderItemCreate.eq.PieceOfEquipment.Capacity)" />*@
+
+                </div>
+            </div>
+            <div class="col">
+                <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                    <Rules>
+                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                        </Rule>
+                        <RulesTemplate TValue="int?"
+                                       TTYPE="WorkOrderDetail" Context="Entity">
+                            <ValidConditionsTemplate>
+                                <TextInput @bind-Value="@WorkOrderItemCreate.eq.PieceOfEquipment.UnitOfMeasureID" Label="Unit Of Measurement" TValue="int?"
+                                           LabelDown="@LabelDown" IsDisabled="!Enabled" ValidationFor="(()=>WorkOrderItemCreate.eq.PieceOfEquipment.UnitOfMeasureID)">
+                                    @if (AppState.UnitofMeasureList != null)
+                                    {
+                                        @foreach (var item in AppState.GetUnitOfMeasureByCalibrationType(WorkOrderItemCreate.eq.PieceOfEquipment.EquipmentTemplate))
+                                        {
+                                            //string name = item.Name + " " + @item.LastName;
+
+                                            <option value="@item.UnitOfMeasureID">@item.Abbreviation - @item.Name</option>
+
+                                        }
+
+                                    }
+                                </TextInput>
+                            </ValidConditionsTemplate>
+                            <InvalidConditionsTemplate>
+                                <TextInput @bind-Value="@WorkOrderItemCreate.eq.PieceOfEquipment.UnitOfMeasureID" Label="Unit Of Measurement" TValue="int?"
+                                           LabelDown="@LabelDown" IsDisabled="true" ValidationFor="(()=>WorkOrderItemCreate.eq.PieceOfEquipment.UnitOfMeasureID)">
+                                    @if (AppState.UnitofMeasureList != null)
+                                    {
+                                        @foreach (var item in AppState.GetUnitOfMeasureByCalibrationType(WorkOrderItemCreate.eq.PieceOfEquipment.EquipmentTemplate))
+                                        {
+                                            //string name = item.Name + " " + @item.LastName;
+
+                                            <option value="@item.UnitOfMeasureID">@item.Abbreviation - @item.Name</option>
+
+                                        }
+
+                                    }
+                                </TextInput>
+                            </InvalidConditionsTemplate>
+                        </RulesTemplate>
+                    </Rules>
+                </MultiComponent>
+            </div>
+
+
+
+           
+                @if (Certifications != null && Certifications.Count > 0)
+                {
+                     <div class="col-sm">
+                    <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                        <Rules>
+                            <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                            </Rule>
+                            <RulesTemplate TValue="int?"
+                                           TTYPE="WorkOrderDetail" Context="Entity">
+                                <ValidConditionsTemplate>
+
+                                    <TextInput TValue="int?" Validate="true"
+                                               @bind-Value="WorkOrderItemCreate.eq.CertificationID"
+                                               Label="Method"
+                                               ValidationFor="@(() => WorkOrderItemCreate.eq.CertificationID)" OnChangeControl="@ChangeCalibrationType">
+
+
+                                        @if (Certifications?.Count > 0)
+                                        {
+                                            @foreach (var item in Certifications)
+                                            {
+                                                <option value="@item.ID" >@item.Name</option>
+                                            }
+                                        }
+
+                                    </TextInput>
+                                </ValidConditionsTemplate>
+                                <InvalidConditionsTemplate>
+
+                                    <TextInput TValue="int?" Validate="true"
+                                               @bind-Value="WorkOrderItemCreate.eq.CertificationID"
+                                               Label="Method"
+                                               ValidationFor="@(() => WorkOrderItemCreate.eq.CertificationID)"
+                                               IsDisabled="true">
+
+
+                                        @if (Certifications?.Count > 0)
+                                        {
+                                            @foreach (var item in Certifications)
+                                            {
+                                                <option value="@item.ID" >@item.Name</option>
+                                            }
+                                        }
+
+                                    </TextInput>
+                                </InvalidConditionsTemplate>
+                            </RulesTemplate>
+                        </Rules>
+                    </MultiComponent>
+                     </div>
+                }
+           
+
+            <div class="col-sm">
+                @if (WorkOrderItemCreate.eq != null)
+                {
+                    //Console.WriteLine("this is change");
+                    //Console.WriteLine(WorkOrderItemCreate.eq.CurrentStatus.StatusId);
+                    //Console.WriteLine(CurrentStatus.StatusId);
+
+                    <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                        <Rules>
+                            <Rule LambdaCondition="@(Querys.WODRules.RuleReadyForCalibrationAndContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                            </Rule>
+                            <RulesTemplate TValue="int?"
+                                           TTYPE="WorkOrderDetail" Context="Entity">
+                                <ValidConditionsTemplate>
+                                    <TextInput @bind-Value="@Entity.TechnicianID" ValidationFor="@(() => Entity.TechnicianID)"
+                                               Validate="false" Label="Assigned Technician">
+                                        @if (Entity.WorkOder != null && Entity.WorkOder.UserWorkOrders != null)
+                                        {
+                                            @foreach (var item in Entity.WorkOder.UserWorkOrders)
+                                            {
+                                                string name = item.User.Name + " " + @item?.User?.LastName;
+
+
+                                                <option value="@item.User.UserID">@name </option>
+                                            }
+
+
+
+                                        }
+                                        else
+                                        {
+                                            ShowTech = true;
+                                        }
+                                    </TextInput>
+                                </ValidConditionsTemplate>
+                                <InvalidConditionsTemplate>
+                                    <TextInput @bind-Value="@Entity.TechnicianID" ValidationFor="@(() => Entity.TechnicianID)" Type="@Types.ReadOnlySelect" Label="Assigned Technician">
+                                        @if (Entity.WorkOder != null && Entity.WorkOder.UserWorkOrders != null)
+                                        {
+                                            @foreach (var item in Entity.WorkOder.UserWorkOrders)
+                                            {
+                                                string name = item.User.Name + " " + @item.User.LastName;
+
+
+                                                <option value="@item.User.UserID">@name </option>
+                                            }
+                                        }
+                                    </TextInput>
+                                </InvalidConditionsTemplate>
+
+                            </RulesTemplate>
+                        </Rules>
+                    </MultiComponent>
+
+                }
+            </div>
+            @if (WorkOrderItemCreate.eq != null && WorkOrderItemCreate.eq.CertificationID.HasValue && WorkOrderItemCreate.eq.CertificationID.Value == 1)
+            {
+                @*<div class="col-sm">
+
+                <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                    <Rules>
+                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                        </Rule>
+                        <RulesTemplate TValue="int?"
+                                       TTYPE="WorkOrderDetail" Context="Entity">
+                            <ValidConditionsTemplate>
+                                <TextInput @bind-Value="@Entity.IncludeASTM" ValidationFor="@(() => Entity.IncludeASTM)" Type="@Types.Switch"
+                                           Validate="false" Label="Include ASTM">
+
+                                </TextInput>
+                            </ValidConditionsTemplate>
+                            <InvalidConditionsTemplate>
+                                <TextInput @bind-Value="@Entity.IncludeASTM" ValidationFor="@(() => Entity.IncludeASTM)" Type="@Types.Switch" IsDisabled="true"
+                                           Validate="false" Label="Include ASTM">
+
+                                </TextInput>
+                            </InvalidConditionsTemplate>
+
+                        </RulesTemplate>
+                    </Rules>
+                </MultiComponent>
+
+
+            </div>*@
+            }
+            @if (WorkOrderItemCreate.eq != null)
+            {
+                @*<div class="col-sm">
+
+                    <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                        <Rules>
+                            <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                            </Rule>
+                            <RulesTemplate TValue="int?"
+                                           TTYPE="WorkOrderDetail" Context="Entity">
+                                <ValidConditionsTemplate>
+                                    <TextInput @bind-Value="@Entity.IsUniversal" ValidationFor="@(() => Entity.IsUniversal)" Type="@Types.Switch"
+                                               Validate="false" Label="Is Universal" OnChangeControl="@ChangeCalibrationType">
+
+                                    </TextInput>
+                                </ValidConditionsTemplate>
+                                <InvalidConditionsTemplate>
+                                    <TextInput @bind-Value="@Entity.IsUniversal" ValidationFor="@(() => Entity.IsUniversal)" Type="@Types.Switch" IsDisabled="true"
+                                               Validate="false" Label="Is Universal">
+
+                                    </TextInput>
+                                </InvalidConditionsTemplate>
+
+                            </RulesTemplate>
+                        </Rules>
+                    </MultiComponent>
+                </div>*@
+            }
+               
+        </div>
+
+        <div class="form-row">
+
+
+        </div>
+        <div class="form-row">
+
+        </div>
+        <div class="form-row">
+            <div class="col-md">
+
+                <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                    <Rules>
+                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+                            <div>No rule applied</div>
+                        </Rule>
+                        <RulesTemplate TValue="int"
+                                       TTYPE="WorkOrderDetail" Context="Entity">
+
+                            <ValidConditionsTemplate>
+
+                                <TextInput @bind-Value="@Entity.CalibrationIntervalID" OnChangeControl="ChangeList" Label="Calibration Interval">
+
+                                    @foreach (KeyValuePair<int, string> item in AppState.CalibrationInterval)
+                                        {
+
+                                        <option value="@item.Key">@item.Value</option>
+
+                                        }
+                                </TextInput>
+
+
+                            </ValidConditionsTemplate>
+                            <InvalidConditionsTemplate>
+                                <TextInput @bind-Value="@Entity.CalibrationIntervalID" Type="@Types.ReadOnlySelect" Label="Calibration Interval">
+
+                                    @foreach (KeyValuePair<int, string> item in AppState.CalibrationInterval)
+                                        {
+
+                                        <option value="@item.Key">@item.Value</option>
+
+                                        }
+                                </TextInput>
+
+                            </InvalidConditionsTemplate>
+
+
+                        </RulesTemplate>
+
+
+
+                    </Rules>
+                </MultiComponent>
+            </div>
+            <div class="col-md">
+
+                <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                    <Rules>
+                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                        </Rule>
+                        <RulesTemplate TValue="DateTime"
+                                       TTYPE="WorkOrderDetail"
+                                       Context="Entity">
+
+
+                            <ValidConditionsTemplate>
+                                <TextInput TValue="DateTime?"
+                                           Type=@Types.datetime
+                                           @bind-Value="@WorkOrderItemCreate.eq.CalibrationDate" OnChangeControl="ChangeDate"
+                                           ValidationFor="@(() => WorkOrderItemCreate.eq.CalibrationDate)"
+                                           Label="Calibration Date">
+                                </TextInput>
+                            </ValidConditionsTemplate>
+                            <InvalidConditionsTemplate>
+                                <TextInput TValue="DateTime?"
+                                           Type=@Types.datetime
+                                           @bind-Value="@WorkOrderItemCreate.eq.CalibrationDate"
+                                           IsDisabled="true"
+                                           ValidationFor="@(() => WorkOrderItemCreate.eq.CalibrationDate)"
+                                           Label="Calibration Date">
+                                </TextInput>
+                            </InvalidConditionsTemplate>
+                        </RulesTemplate>
+                    </Rules>
+                </MultiComponent>
+
+                @BoundValue(WorkOrderItemCreate.eq)
+
+            </div>
+            <div class="col-md">
+
+                <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                    <Rules>
+                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewCustomDateStatus(Custom).Compile())" TTYPE="WorkOrderDetail">
+                            <div> la regla no se cumple</div>
+                        </Rule>
+                        <RulesTemplate TValue="DateTime"
+                                       TTYPE="WorkOrderDetail"
+                                       Context="Entity">
+
+                            <ValidConditionsTemplate>
+                                <TextInput TValue="DateTime?"
+                                           Label="Due Date"
+                                           Type=@Types.datetime
+                                           IsDisabled="false"
+                                           @bind-Value="@WorkOrderItemCreate.eq.CalibrationCustomDueDate"
+                                           ValidationFor="@(() => WorkOrderItemCreate.eq.CalibrationCustomDueDate)">
+                                </TextInput>
+                            </ValidConditionsTemplate>
+                            <InvalidConditionsTemplate>
+                                <TextInput TValue="DateTime?"
+                                           Label="Due Date"
+                                           Type=@Types.datetime
+                                           IsDisabled="true"
+                                           @bind-Value="@WorkOrderItemCreate.eq.CalibrationCustomDueDate"
+                                           ValidationFor="@(() => WorkOrderItemCreate.eq.CalibrationCustomDueDate)">
+                                </TextInput>
+                            </InvalidConditionsTemplate>
+
+                        </RulesTemplate>
+                    </Rules>
+                </MultiComponent>
+            </div>
+
+             <div class="col-sm">
+                    @if (WorkOrderItemCreate.eq != null)
+                    {
+                        <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                                <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                                </Rule>
+                                <RulesTemplate TValue="int?"
+                                               TTYPE="WorkOrderDetail" Context="Entity">
+                                    <ValidConditionsTemplate>
+                                        <TextInput TValue="bool?" @bind-Value="@Entity.EndOfMonth" ValidationFor="@(() => Entity.EndOfMonth)" Type="@Types.Switch"
+                                                   Validate="false" Label="End Of Month" OnChangeControl="@ChangeEndOfMonth">
+
+                                        </TextInput>
+                                    </ValidConditionsTemplate>
+                                    <InvalidConditionsTemplate>
+                                        <TextInput TValue="bool?" @bind-Value="@Entity.EndOfMonth" ValidationFor="@(() => Entity.EndOfMonth)" Type="@Types.Switch"
+                                                   Validate="false" Label="End Of Month">
+
+                                        </TextInput>
+                                    </InvalidConditionsTemplate>
+
+                                </RulesTemplate>
+                            </Rules>
+                        </MultiComponent>
+
+                       
+                            <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                            <Rules>
+                            <Rule LambdaCondition="@(Querys.WODRules.RuleIsAccreditedStatus().Compile())" TTYPE="WorkOrderDetail">
+
+                                </Rule>
+                                <RulesTemplate TValue="int?"
+                                               TTYPE="WorkOrderDetail" Context="Entity">
+                                    <ValidConditionsTemplate>
+                                    @if (WorkOrderItemCreate.eq.CurrentStatusID <= 2)
+                                    {
+                                        <TextInput TValue="bool?"
+                                        @bind-Value="@Entity.IsAccredited"
+                                        ValidationFor="@(() => Entity.IsAccredited)" 
+                                        Type="@Types.Switch"
+                                        IsDisabled ="false"
+                                        Validate="false" 
+                                        Label="Is Accredited">
+
+                                        </TextInput>
+                                    }
+                                    else
+                                    {
+                                        <TextInput TValue="bool?"
+                                                   @bind-Value="@Entity.IsAccredited"
+                                                   ValidationFor="@(() => Entity.IsAccredited)"
+                                                   Type="@Types.Switch"
+                                                   IsDisabled="true"
+                                                   Validate="false"
+                                                   Label="Is Accredited">
+
+                                        </TextInput>
+                                    }
+                                </ValidConditionsTemplate>
+                                    <InvalidConditionsTemplate>
+                                        <TextInput TValue="bool?" @bind-Value="@Entity.IsAccredited"
+                                        ValidationFor="@(() => Entity.IsAccredited)" 
+                                        Type="@Types.Switch"
+                                        IsDisabled ="true"
+                                                   Validate="false" 
+                                                   Label="Is Accredited">
+
+                                        </TextInput>
+                                    </InvalidConditionsTemplate>
+
+                            </RulesTemplate>
+                        </Rules>
+                    </MultiComponent>
+
+                    
+                        
+                }
+                </div>
+
+
+
+
+            @if (JsonConfigurationArray != null && JsonConfigurationArray == "Level3")
+            {
+
+
+                <div class="col-sm-4">
+                    <TextInput @bind-Value="WorkOrderItemCreate.eq.IsUSP41"
+                               IsDisabled="false"
+                               Label="Is USP-41?"
+                               LabelDown="@LabelDown"
+                               ValidationFor="(()=> WorkOrderItemCreate.eq.IsUSP41)"
+                               Type="@Types.Switch" OnChangeObjectControl="ChangeSwitch">
+
+                    </TextInput>
+
+                </div>
+
+            }
+
+        </div>
+        <div class="row" style="min-height:10px">
+        </div>
+
+
+        @if (EquipmentTypeObject?.HasTolerance==true)
+        {
+            <div class="row">
+
+                <div class="col">
+
+                    <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                        <Rules>
+                            <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+                                <div> la regla no se cumple</div>
+                            </Rule>
+                            <RulesTemplate TValue="DateTime"
+                                           TTYPE="WorkOrderDetail"
+                                           Context="Entity">
+
+                                <ValidConditionsTemplate>
+
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal1">
+                                        Tolerance Information
+                                    </button>
+                                </ValidConditionsTemplate>
+                                <InvalidConditionsTemplate>
+
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal1">
+                                        Tolerance Information
+                                    </button>
+                                </InvalidConditionsTemplate>
+                            </RulesTemplate>
+                        </Rules>
+                    </MultiComponent>
+
+                </div>
+                @if (WorkOrderItemCreate.eq != null && ToleranceTypeID == 3 && Customer == "Bitterman")
+            { 
+              
+
+                    <div class="col-sm-4">
+                        <TextInput @bind-Value="WorkOrderItemCreate.eq.IsComercial"
+                                   IsDisabled="!Enabled"
+                                   Label="Commercial?"
+                                   LabelDown="@LabelDown"
+                                   ValidationFor="(()=> WorkOrderItemCreate.eq.IsComercial)"
+                                   Type="@Types.Switch" OnChangeObjectControl="ChangeSwitch">
+
+                        </TextInput>
+
+                    </div>
+
+                    @if (!WorkOrderItemCreate.eq.IsComercial)
+                    {
+                        <div class="col-sm-4">
+                            <TextInput @bind-Value="WorkOrderItemCreate.eq.Multiplier"
+                                       IsDisabled="!Enabled"
+                                       Label="Multiplier"
+                                       LabelDown="@LabelDown"
+                                       ValidationFor="(()=> WorkOrderItemCreate.eq.Multiplier)"
+                                       Type="@Types.number">
+
+                            </TextInput>
+
+                        </div>
+                    }
+
+              
+                  }
+
+            </div>
+        }
+
+     
+
+
+
+
+        <div class="center">
+            <div class="modal fade bd-example-modal-lg" id="exampleModal1" data-bs-backdrop="false" tabindex="-1"
+                 role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" >
+                <div class="modal-dialog  modal-lg"  role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Resolution</h5>
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close" @onclick="@(async () => await CloseWindow())"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            @if (WorkOrderItemCreate.eq != null)
+                            {
+                                <CascadingValue Value="@WorkOrderItemCreate.eq.Tolerance" Name="CascadeTolerance">
+                                <MultiComponent Instance="WorkOrderItemCreate.eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                    <Rules>
+                                        <Rule LambdaCondition="@(Querys.WODRules.RuleContractReviewStatus().Compile())" TTYPE="WorkOrderDetail">
+                                            <div> la regla no se cumple</div>
+                                        </Rule>
+                                        <RulesTemplate TValue="DateTime"
+                                                       TTYPE="WorkOrderDetail"
+                                                       Context="Entity">
+                                            <ValidConditionsTemplate>
+                                                
+                                                <BlazorApp1.Blazor.Blazor.Pages.Basics.ResolutionComponent @ref="@ResolutionComponent"
+                                                                     Title="Resolution Component"
+                                                                     Type="1"
+                                                                     IsWOD="true"
+                                                                     Enabled="true"
+                                                                     Refresh="Refresh"
+                                                                     ToleranceList="AppState.ToleranceList2.Where(x=>EquipmentTypeObject.CalibrationTypeID > 0 && x.CalibrationTypeId==WorkOrderItemCreate.eq.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.CalibrationTypeID)"
+                                                                     >
+                                                </BlazorApp1.Blazor.Blazor.Pages.Basics.ResolutionComponent>
+                                              
+
+                                            </ValidConditionsTemplate>
+                                            <InvalidConditionsTemplate>
+                                                
+                                                    <BlazorApp1.Blazor.Blazor.Pages.Basics.ResolutionComponent @ref="@ResolutionComponent"
+                                                                         Title="Resolution Component"
+                                                                         Type="1"
+                                                                         IsWOD="true"
+                                                                         Enabled="false"
+                                                                         Refresh="Refresh"
+                                                                         ToleranceList="AppState.ToleranceList2.Where(x=>EquipmentTypeObject.CalibrationTypeID > 0 && x.CalibrationTypeId==WorkOrderItemCreate.eq.PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.CalibrationTypeID)">
+                                                    </BlazorApp1.Blazor.Blazor.Pages.Basics.ResolutionComponent>
+                                               
+                                            </InvalidConditionsTemplate>
+                                        </RulesTemplate>
+                                    </Rules>
+                                </MultiComponent>
+                                  </CascadingValue>
+                            }
+                        </div>
+    
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="@(async () => await CloseWindow())"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+                                Close
+                            </button>
+                            @*<button type="button" class="btn btn-primary">Save changes</button>*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                                <RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="Radzen.AlignItems.Center" JustifyContent="Radzen.JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
+                                <RadzenLabel Text="Test Point Groups" Component="DropDownMultipleChips" />
+                                <RadzenDropDown @bind-Value=@values Data=@keys TextProperty="Value" ValueProperty="Value" Name="DropDownMultipleChips"
+                                    Multiple=true AllowClear=true Placeholder="Select..." Chips=true Style="width: 100%; max-width: 400px;"
+                                    SelectAllText="Select All"
+                                    Disabled="@(WorkOrderItemCreate?.eq?.CurrentStatusID > 1)"
+                                    Change="@OnValuesChanged" />
+                            </RadzenStack>
+              </div>
+              <div class="col">
+                <RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="Radzen.JustifyContent.Center" Gap="0.5rem" class="rz-p-sm-12">
+                    <RadzenLabel Text="Select Composite WOD" Component="DropDownBindValue" />
+                    <RadzenDropDown @bind-Value="@selectedCompositeWodValue"
+                                    Data="@compositeWods"
+                                    TextProperty="Value"
+                                    ValueProperty="Key"
+                                    Style="width: 100%; max-width: 400px;"
+                                    Name="DropDownBindValue"
+                                    Placeholder="Select a Work Order Detail..."
+                                    Disabled="@(WorkOrderItemCreate?.eq?.CurrentStatusID > 1)"
+                                    Change="@OnCompositeWodChanged" />
+                </RadzenStack>
+            </div>
+        </div>
+    </EditForm>
+
+}
+
+@code {
+    [CascadingParameter(Name = "JsonConfigurationArray")]
+    public string JsonConfigurationArray { get; set; }
+
+    // Note: keys, values, and key variables are inherited from CalibrationInstructionsBase
+
+    private string selectedCompositeWodValue { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        // Log the received compositesIds for debugging
+        if (compositesIds != null && compositesIds.Count > 0)
+        {
+            Console.WriteLine($"CalibrationInstructionsRock received compositesIds with {compositesIds.Count} items: [{string.Join(", ", compositesIds)}]");
+        }
+        else
+        {
+            Console.WriteLine("CalibrationInstructionsRock: compositesIds is null or empty");
+        }
+
+        // Initialize selectedCompositeWodValue from WorkOrderItemCreate.eq.CompositeWodId
+        if (!string.IsNullOrEmpty(WorkOrderItemCreate?.eq?.CompositeWodId))
+        {
+            var compositeWodId = WorkOrderItemCreate.eq.CompositeWodId;
+
+            // If the value already has a prefix (WOD- or POE-), use it directly
+            if (compositeWodId.StartsWith("WOD-") || compositeWodId.StartsWith("POE-"))
+            {
+                // Check if this key exists in compositeWods
+                var matchingItem = compositeWods?.FirstOrDefault(x => x.Key == compositeWodId);
+                if (matchingItem != null)
+                {
+                    selectedCompositeWodValue = matchingItem.Key;
+                }
+                else
+                {
+                    selectedCompositeWodValue = compositeWodId;
+                }
+            }
+            else
+            {
+                // Legacy format: try to find it as a WorkOrderDetail or PieceOfEquipment
+                // First try to parse as integer for backward compatibility
+                if (int.TryParse(compositeWodId, out int numericId))
+                {
+                    // Try to find it as a WorkOrderDetail (WOD-{id})
+                    var matchingWod = compositeWods?.FirstOrDefault(x => x.Key == $"WOD-{numericId}");
+                    if (matchingWod != null)
+                    {
+                        selectedCompositeWodValue = matchingWod.Key;
+                    }
+                    else
+                    {
+                        // Try to find it as a PieceOfEquipment (POE-{id})
+                        var matchingPoe = compositeWods?.FirstOrDefault(x => x.Key == $"POE-{numericId}");
+                        if (matchingPoe != null)
+                        {
+                            selectedCompositeWodValue = matchingPoe.Key;
+                        }
+                        else
+                        {
+                            // Fallback: use the ID directly
+                            selectedCompositeWodValue = compositeWodId;
+                        }
+                    }
+                }
+                else
+                {
+                    // Not a numeric ID, use as-is
+                    selectedCompositeWodValue = compositeWodId;
+                }
+            }
+        }
+    }
+
+    private void OnCompositeWodChanged(object value)
+    {
+        try
+        {
+            if (value != null)
+            {
+                string selectedValue = value.ToString();
+                selectedCompositeWodValue = selectedValue;
+
+                // Store the complete value with prefix (WOD-{id} or POE-{id})
+                // CompositeWodId is now string, so we can store the prefixed value directly
+                WorkOrderItemCreate.eq.CompositeWodId = selectedValue;
+
+                if (selectedValue.StartsWith("WOD-"))
+                {
+                    Console.WriteLine($"CompositeWodId changed to WorkOrderDetail: {selectedValue}");
+                }
+                else if (selectedValue.StartsWith("POE-"))
+                {
+                    Console.WriteLine($"CompositeWodId changed to PieceOfEquipment: {selectedValue}");
+                }
+                else
+                {
+                    Console.WriteLine($"CompositeWodId changed to: {selectedValue}");
+                }
+
+                StateHasChanged();
+            }
+            else
+            {
+                WorkOrderItemCreate.eq.CompositeWodId = null;
+                selectedCompositeWodValue = null;
+                Console.WriteLine("CompositeWodId cleared");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in OnCompositeWodChanged: {ex.Message}");
+        }
+    }
+}

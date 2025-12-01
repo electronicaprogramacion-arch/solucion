@@ -1,0 +1,92 @@
+@using CalibrationSaaS.CustomerPortal.Models.Certificates
+
+<RadzenRow>
+    @if (Certificate.Temperature.HasValue)
+    {
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenCard Style="height: 100%;">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="thermostat" Style="font-size: 2rem; color: var(--rz-info);" />
+                    <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0">Temperature</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H4" Class="rz-color-info rz-mb-0">
+                        @Certificate.Temperature.Value.ToString("F1")°C
+                    </RadzenText>
+                    @if (Certificate.TemperatureRange != null)
+                    {
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                            Range: @Certificate.TemperatureRange
+                        </RadzenText>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    }
+
+    @if (Certificate.Humidity.HasValue)
+    {
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenCard Style="height: 100%;">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="water_drop" Style="font-size: 2rem; color: var(--rz-primary);" />
+                    <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0">Humidity</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H4" Class="rz-color-primary rz-mb-0">
+                        @Certificate.Humidity.Value.ToString("F1")%
+                    </RadzenText>
+                    @if (Certificate.HumidityRange != null)
+                    {
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                            Range: @Certificate.HumidityRange
+                        </RadzenText>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    }
+
+    @if (Certificate.Pressure.HasValue)
+    {
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenCard Style="height: 100%;">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="speed" Style="font-size: 2rem; color: var(--rz-warning);" />
+                    <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-0">Pressure</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H4" Class="rz-color-warning rz-mb-0">
+                        @Certificate.Pressure.Value.ToString("F1") @Certificate.PressureUnit
+                    </RadzenText>
+                    @if (Certificate.PressureRange != null)
+                    {
+                        <RadzenText TextStyle="TextStyle.Caption" Class="rz-color-secondary">
+                            Range: @Certificate.PressureRange
+                        </RadzenText>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    }
+</RadzenRow>
+
+@if (!Certificate.Temperature.HasValue && !Certificate.Humidity.HasValue && !Certificate.Pressure.HasValue)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Info" Icon="info" Title="No Environmental Data">
+        No environmental conditions were recorded for this calibration.
+    </RadzenAlert>
+}
+else
+{
+    <RadzenRow Style="margin-top: 1rem;">
+        <RadzenColumn Size="12">
+            <RadzenAlert AlertStyle="AlertStyle.Info" Icon="info" Title="Environmental Conditions">
+                Environmental conditions were monitored and recorded during the calibration process to ensure measurement accuracy and traceability.
+                @if (!string.IsNullOrEmpty(Certificate.EnvironmentalNotes))
+                {
+                    <br /><br />
+                    <strong>Notes:</strong> @Certificate.EnvironmentalNotes
+                }
+            </RadzenAlert>
+        </RadzenColumn>
+    </RadzenRow>
+}
+
+@code {
+    [Parameter] public CertificateDto Certificate { get; set; } = new();
+}

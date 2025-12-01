@@ -1,0 +1,24 @@
+{
+  "DatabasePerformance": {
+    "CommandTimeout": 120,
+    "ConnectionTimeout": 30,
+    "MaxRetryCount": 3,
+    "MaxRetryDelay": "00:00:30",
+    "EnableSensitiveDataLogging": false,
+    "EnableDetailedErrors": false,
+    "QuerySplittingBehavior": "SplitQuery",
+    "AddressSearch": {
+      "MaxPageSize": 50,
+      "DefaultPageSize": 20,
+      "EnableOptimizedQueries": true,
+      "UseAsNoTracking": true,
+      "PreFilterBeforeJoin": true
+    }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Microsoft.EntityFrameworkCore.Database.Command": "Warning",
+      "Microsoft.EntityFrameworkCore.Query": "Warning"
+    }
+  }
+}

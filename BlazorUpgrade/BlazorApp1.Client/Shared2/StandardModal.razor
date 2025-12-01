@@ -1,0 +1,111 @@
+﻿@inject IJSRuntime JSRuntime
+@inject ILogger<StandardModal> Logger
+<div class="modal fade bd-example-modal-lg" id="pageProcessModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="@BackDrop" data-keyboard="@KwyBoard">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">@Title</h5>
+                @if (ShowCloseElements)
+                {
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                }
+            </div>
+            <div class="modal-body">
+                @if (!ShowCloseElements)
+                {
+                    <div style="text-align:center;">
+                        <div class="lds-grid"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                        <br />
+                        <div class="contenedor-info" style="text-align:center">
+                            @Message
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card mb-3">
+                        <div class="row no-gutters">
+                            <div class="col-md-4">
+                                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;" src="img/undraw_happy_announcement_ac67.svg" alt="">
+                            </div>
+                            <div class="col-md-8">
+                                <div style="text-align:center;">
+                                    <div class="contenedor-info" style="text-align:center">
+                                        @Message
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                @if (ShowCloseElements)
+                {
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">@CloseButtonLabel</button>
+                    <a class="btn btn-primary" href="@NextProcessUrl" data-window="external" id="cmdNextProcess" @onclick="CloseModal">@NextProcessLabel</a>
+                    @*<a class="btn btn-primary" href="@NextProcessUrl" data-window="external" id="cmdNextProcess" @onclick="OnClickCallback">@NextProcessLabel</a>*@
+                    @*<a class="btn btn-primary" href="@NextProcessUrl" data-window="external" id="cmdNextProcess" onclick="closeModal(cmdNextProcess); return false;">@NextProcessLabel</a>*@
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code{
+    private string Title { get; set; }
+
+    private string Message { get; set; }
+
+    private string BackDrop { get; set; }
+
+    private string KwyBoard { get; set; }
+
+    private bool ShowCloseElements { get; set; }
+
+    private string CloseButtonLabel { get; set; } = "Cancel";
+
+    private string NextProcessUrl { get; set; } = "#";
+
+    private string NextProcessLabel { get; set; } = "Go Back";
+
+    //[Parameter]
+    //public EventCallback<MouseEventArgs> OnClickCallback { get; set; }
+
+    public async Task ShowModal(string tittle, string message, bool lockModal, bool lockModalFromKeyboars, string closeButtonLabel)
+    {
+        this.Title = tittle;
+        this.Message = message;
+        //https://getbootstrap.com/docs/4.5/components/modal/#static-backdrop
+        this.BackDrop = lockModal ? "static" : "true";
+        ShowCloseElements = !lockModalFromKeyboars;
+        this.KwyBoard = (!lockModalFromKeyboars).ToString().ToLower();
+        this.CloseButtonLabel = closeButtonLabel;
+
+        await JSRuntime.InvokeVoidAsync("showProcessModal", lockModal, ShowCloseElements, this.BackDrop);
+        StateHasChanged();
+    }
+
+    public void ShowResult(string tittle, string message, string nextProcessUrl, string nextProcessLabel)
+    {
+        this.Title = tittle;
+        this.Message = message;
+
+        this.NextProcessLabel = nextProcessLabel;
+        this.NextProcessUrl = nextProcessUrl;
+
+        this.BackDrop = "true";
+        this.KwyBoard = "true";
+        ShowCloseElements = true;
+
+        StateHasChanged();
+    }
+
+    public async Task CloseModal()
+    {
+        Logger.LogDebug("hello");
+        await JSRuntime.InvokeVoidAsync("closeProcessModal", null);
+    }
+}

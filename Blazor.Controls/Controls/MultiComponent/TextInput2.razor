@@ -1,0 +1,467 @@
+﻿@namespace Blazor.Controls
+@typeparam TValue
+@typeparam TInstance
+@inherits TextInput2Base<TValue, TInstance>
+
+
+
+@if (string.IsNullOrEmpty(Type) && ChildContent == null)
+{
+    Type = "text";
+}
+else
+if (string.IsNullOrEmpty(Type) && ChildContent != null)
+{
+    Type = "select";
+}
+
+@if (Type.ToLower().Trim() == "readonly")
+{
+    //Disabled = "disabled";
+}
+
+
+@if (string.IsNullOrEmpty(Id))
+{
+    Id = Guid.NewGuid().ToString();
+}
+
+@*@if (string.IsNullOrEmpty(CSSClass))
+    {
+        CSSClass = "form-control";
+    }*@
+
+@if (LabelDown)
+{
+    CSSClass = "mat-input";
+    LabelCSS = "mat-label";
+    DivCSS = "mat-div mat-div-sp";
+
+}
+
+@if (@ChildContent != null && string.IsNullOrEmpty(Type))
+{
+    Type = Types.select;
+}
+
+
+@switch (Type.ToLower().Trim())
+{
+    case Types.numberdecimallabel:
+
+
+        @if (string.IsNullOrEmpty(StepResol) || StepResol == "0")
+        {
+            StepResol = "any";
+        }
+
+        <div class="@DivCSS" style="margin-top:0px;margin-bottom:0rem">
+            @if (!string.IsNullOrWhiteSpace(Label))
+            {
+                <label class="@LabelCSS" for="@Id">@Label</label>
+            }
+            <input class="@CSSClass @CssClass @CssClassDecimal" id="@Id" @bind="@CurrentValue2" min="@Min.ToString()"
+                   @oninput="ChangeWindow" type="number" disabled="disabled" step="@StepResol"
+                   @onblur:preventDefault @onclick:stopPropagation="true" @onclick:preventDefault />
+
+            @GetErrorMessage(ErrorMessage)
+
+
+        </div>
+        break;
+
+    case Types.numberdecimal:
+
+
+        @if (string.IsNullOrEmpty(StepResol) || StepResol == "0")
+        {
+            StepResol = "any";
+        }
+
+        <div class="@DivCSS" style="margin-top:0px;margin-bottom:0rem">
+            @if (!string.IsNullOrWhiteSpace(Label))
+            {
+                <label class="@LabelCSS" for="@Id">@Label</label>
+            }
+            <input class="@CSSClass @CssClass @CssClassDecimal" id="@Id" @bind="@CurrentValue2"
+                   @oninput="ChangeWindow" type="number" disabled="@IsDisabled" step="@StepResol" @onblur:preventDefault @onclick:stopPropagation="true" @onclick:preventDefault />
+
+            @GetErrorMessage(ErrorMessage)
+
+
+        </div>
+        break;
+
+    case Types.number:
+
+
+
+        @if (string.IsNullOrEmpty(StepResol) || StepResol == "0")
+        {
+            StepResol = "any";
+        }
+        @*<div class="form-control-wrapper" style="margin-top:15px">@onkeypress:preventDefault*@
+        <div class="@DivCSS" style="margin-top:0px;margin-bottom:0rem">
+            @if (!string.IsNullOrWhiteSpace(Label))
+            {
+                <label class="@LabelCSS" for="@Id">@Label</label>
+            }
+            <input class="@CSSClass @CssClass" id="@Id" @bind="@CurrentValueAsString"
+                   @oninput="ChangeWindow" type=@Type.ToLower() disabled="@IsDisabled" step="@StepResol" @onblur:preventDefault @onclick:stopPropagation="true" @onclick:preventDefault />
+            @*@if (LabelDown)
+                {
+                    if (string.IsNullOrWhiteSpace(Label))
+                    {
+                        Label = "";
+                    }
+
+                    <label class="@LabelCSS" for="@Id">@Label</label>
+                }*@
+
+            @GetErrorMessage(ErrorMessage)
+
+            @*<div class="@CSSValidationMessage">
+
+
+                    @ErrorMessage
+
+                </div>*@
+        </div>
+        break;
+
+
+    case Types.PassWord:
+
+        @*<div class="form-control-wrapper" style="margin-top:15px">@onkeypress:preventDefault*@
+        <div class="form-group" style="margin-top:0px;margin-bottom:0rem">
+            @if (!string.IsNullOrWhiteSpace(Label))
+            {
+                <label class="@LabelCSS" for="@Id">@Label</label>
+            }
+            <input class="@CSSClass @CssClass" id="@Id" @bind="@CurrentValueAsString"
+                   @oninput="ChangeWindow" type=@Type.ToLower() disabled="@IsDisabled" />
+            @*@if (LabelDown)
+                {
+                    if (string.IsNullOrWhiteSpace(Label))
+                    {
+                        Label = "";
+                    }
+
+                    <label class="@LabelCSS" for="@Id">@Label</label>
+                }*@
+
+            @GetErrorMessage(ErrorMessage)
+
+            @*<div class="@CSSValidationMessage">
+
+
+                    @ErrorMessage
+
+                </div>*@
+        </div>
+        break;
+
+
+    case Types.text:
+
+        @*<div class="form-control-wrapper" style="margin-top:15px">@onkeypress:preventDefault*@
+        <div class="@DivCSS" style="margin-top:0px;margin-bottom:0rem">
+            @if (!string.IsNullOrWhiteSpace(ViewProperty.Display) && !string.IsNullOrWhiteSpace(Id))
+            {
+                <label class="@LabelCSS" for="@Id">@ViewProperty.Display</label>
+            }
+
+            <input class="@CSSClass @CssClass" id="@Id" @bind="@CurrentValue"
+                   type=@ViewProperty.ControlType disabled="@ViewProperty.IsDisabled" />
+            @*@if ( LabelDown)
+                {
+                    if (string.IsNullOrWhiteSpace(Label))
+                    {
+                        Label = "";
+                    }
+
+                    <label class="@LabelCSS" for="@Id">@Label</label>
+                }*@
+
+            @GetErrorMessage(ViewProperty.ErrorMesage)
+
+            @*<div class="@CSSValidationMessage">
+
+
+                    @ErrorMessage
+
+                </div>*@
+        </div>
+        break;
+
+
+    case Types.Button:
+
+       
+<div class="@DivCSS" style="margin-top:0px;margin-bottom:0rem">
+    @if (string.IsNullOrWhiteSpace(ViewProperty.Display))
+    {
+        ViewProperty.Display = "";
+    }
+
+    <input class="@CSSClass @CssClass" id="@Id" @bind="@CurrentValueModal"
+           type=@ViewProperty.ControlType disabled="@ViewProperty.IsDisabled" style="display:none" />
+
+    @{ 
+        //Console.WriteLine("antes de");
+    }
+
+    <SearchButtonComponent FormType="@FormType"
+                           Type="@TypeButton"
+                           Size="@FormSize"
+                           Text="@ViewProperty.Display"
+                           IsDisabled="@ViewProperty.IsDisabled"
+                           ModalResult="@modalresult">
+
+    </SearchButtonComponent>
+    @GetErrorMessage(ViewProperty.ErrorMesage)
+
+</div>
+        break;
+
+    case Types.Switch:
+
+        if (Model == null)
+        {
+            <div class="custom-control custom-switch" style="@Style">
+                <input type="checkbox" class="custom-control-input @CssClass" id="@Id" @oninput="ChangeWindow"
+                       disabled="@IsDisabled" @bind="@CurrentValue">
+                @if (!string.IsNullOrWhiteSpace(Label))
+                {
+                    <label class="custom-control-label" for="@Id">@Label</label>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input @CssClass" id="@Id" @oninput="ChangeObject"
+                       disabled="@IsDisabled" @bind="@CurrentValue">
+                @if (!string.IsNullOrWhiteSpace(Label))
+                {
+                    <label class="custom-control-label" for="@Id">@Label</label>
+                }
+            </div>
+
+        }
+        break;
+
+
+    case Types.ReadOnlySwitch:
+
+
+        <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input @CssClass" id="@Id" disabled value="@CurrentValueAsString">
+            @if (!string.IsNullOrWhiteSpace(Label))
+            {
+                <label class="custom-control-label" for="customSwitch2">@Label</label>
+            }
+        </div>
+
+        break;
+
+
+    case Types.checkbox:
+        <input class="form-check-input
+               @CssClass" type="checkbox" id="@Id"
+               @oninput="ChangeWindow"
+               value="@CurrentValueAsString">
+        break;
+
+
+    case Types.ReadOnlyText:
+        <div class="@DivCSS" style="margin-top:0px;margin-bottom:0rem">
+
+            @if (!string.IsNullOrWhiteSpace(Label) && !LabelDown)
+            {
+                <label class="@LabelCSS" for="@Id">@Label</label>
+            }
+            <label class="@CSSClass @CssClass">@CurrentValueAsString</label>
+            @*@if (!string.IsNullOrWhiteSpace(Label) && LabelDown)
+                {
+                    <label class="@LabelCSS" for="@Id">@Label</label>
+                }*@
+            @GetErrorMessage(ErrorMessage)
+        </div>
+        break;
+
+
+    case Types.label:
+
+        <label class="@CssClass">@CurrentValueAsString</label>
+
+        break;
+
+    case Types.select:
+
+        <div class="form-control-wrapper">
+            @if (!string.IsNullOrWhiteSpace(ViewProperty.Display))
+            {
+                <label class="@LabelCSS" for="@Id">@ViewProperty.Display</label>
+            }
+        <select class="@CSSClass @CssClass" id="@Id" @bind="CurrentValueAsString" disabled="@ViewProperty.IsDisabled" @oninput="ChangeWindow">
+            @*@if (ShowDefaultOption)
+        {
+        <option value="0" hidden disabled>- Please Select -</option>
+        }*@
+            @if (ViewProperty.SelectShowDefaultOption)
+            {
+                <option value="0" selected>- Please Select -</option>
+            }
+            @if (ViewProperty.Options != null)
+            {
+                foreach (var item in ViewProperty.Options)
+                {
+                  <option value="@item.Key" selected>@item.Value</option>
+                }
+            }
+
+
+            @*@ChildContent*@
+        </select>
+            @*@if (!string.IsNullOrWhiteSpace(Label) && LabelDown)
+                {
+                    <label class="@LabelCSS" for="@Id">@Label</label>
+                }*@
+            @GetErrorMessage(ErrorMessage)
+        </div>
+
+        break;
+
+
+    case Types.ReadOnlySelect:
+
+        <div class="form-control-wrapper">
+            @if (!string.IsNullOrWhiteSpace(Label))
+            {
+                <label class="@LabelCSS" for="@Id">@Label</label>}
+
+            <select class="form-control @CssClass" id="@Id" @bind="CurrentValueAsString" disabled>
+                @*@if (ShowDefaultOption)
+                    {
+                        <option value="0" hidden disabled>- Please Select -</option>
+                    }*@
+                @if (ShowDefaultOption)
+                {
+                    <option value="0" selected>- Please Select -</option>
+                }
+                @ChildContent
+            </select>
+            @GetErrorMessage(ErrorMessage)
+        </div>
+        break;
+
+    case Types.datetime:
+
+        <div class="@DivCSS">
+            @if (!IsDisabled)
+            {
+
+                @if (!string.IsNullOrWhiteSpace(Label))
+                {
+                    <label class="@LabelCSS" for="@Id">@Label</label>
+                }
+                @*<input class="form-control @CssClass" id="@Id" @bind="@CurrentValue"
+                    @oninput="ChangeWindow" type="datetime"  />*@
+                @*<InputDate @bind-Value="@CurrentValue" class="form-control @CssClass">
+                    </InputDate>*@
+                @*<DateTimePicker @bind-Value="@CurrentValue" placeholder="@Label" disabled="@IsDisabled" @oninput="ChangeObject"></DateTimePicker>*@
+                @if (OnChangeObjectControl.HasDelegate)
+                {
+                    <InputDate @bind-Value="@CurrentValue" @oninput="ChangeObject" class="form-control">
+                    </InputDate>
+                }
+                else
+                {
+                    <InputDate @bind-Value="@CurrentValue" @oninput="ChangeObject" class="form-control">
+                    </InputDate>
+                }
+
+                @GetErrorMessage(ErrorMessage)
+
+            }
+            else
+            {
+                @if (!string.IsNullOrWhiteSpace(Label))
+                {
+                    <label class="@LabelCSS" for="@Id">@Label</label>
+                }
+
+
+                <InputDate @bind-Value="@CurrentValue" disabled="disabled" class="form-control">
+                </InputDate>
+
+            }
+
+
+
+
+        </div>
+        break;
+
+    case Types.TextArea:
+        <div class="form-control-wrapper">
+            @if (!string.IsNullOrWhiteSpace(Label))
+            {
+                <label class="@LabelCSS" for="@Id">@Label</label>
+            }
+            <textarea class="@CSSClass @CssClass" id="@Id" @bind="@CurrentValueAsString" @oninput="ChangeWindow" disabled="@IsDisabled" />
+            @GetErrorMessage(ErrorMessage)
+        </div>
+        break;
+
+
+    case Types.ReadOnlyTextArea:
+        <div class="@DivCSS">
+            @if (!string.IsNullOrWhiteSpace(Label))
+            {
+                <label class="@LabelCSS" for="@Id">@Label</label>
+            }
+            <textarea class="@CSSClass @CssClass" id="@Id" @bind="@CurrentValueAsString" disabled />
+            @GetErrorMessage(ErrorMessage)
+        </div>
+        break;
+
+
+    case Types.NotBindigText:
+        <div class="@DivCSS">
+            @if (!string.IsNullOrWhiteSpace(Label))
+            {
+                <label class="@LabelCSS" for="@Id">@Label</label>
+            }
+
+            <input class="@CSSClass @CssClass" id="@Id" @oninput="ChangeWindow" />
+
+        </div>
+        break;
+
+
+
+
+
+    default:
+        <div>Not implemented control, please check with your administrator</div>
+        break;
+
+
+}
+
+@*<div class="group">
+        <input type="text" required>
+        <span class="highlight"></span>
+        <span class="bar"></span>
+        <label>Name</label>
+    </div>*@
+
+
+@code {
+
+
+
+
+}

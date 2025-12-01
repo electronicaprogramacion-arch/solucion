@@ -1,0 +1,45 @@
+﻿@namespace Blazor.Controls
+
+<div class="d-flex bd-highlight bg-white shadow" id="headermodal" style="height: 50px">
+    <div class="bd-highlight">
+        <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 5rem;"
+             src="img/undraw_launch_day_4e04.svg" alt="">
+    </div>
+    <div class="align-self-end p-2 bd-highlight">
+
+       @Title
+
+    </div>
+    <div class="p-2 bd-highlight"></div>
+</div>
+
+<div class="progress" style="display:none" id="progressBar">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div>
+</div>
+
+@if (ActionBar) 
+{ 
+<nav class="navbar sticky-top navbar-dark bg-light topBar" id="toolbarmodal" style=" background-color:#563d7c !important; min-height:50px !important;width:100%;z-index:0 !important">
+    @if (Enabled)
+    {
+        <button class="btn btn-sm btn-info shadow-sm"
+                type="submit" onclick="$('#executebutton').click();">
+            Save
+            <i class="fas fa-save fa-sm text-white-50"></i>
+        </button>
+    }
+</nav>
+}
+@code {
+
+    [Parameter]
+    public bool ActionBar { get; set; } = true;
+
+    [Parameter]
+    public bool Enabled { get; set; }
+
+    [Parameter]
+    public string  Title { get; set; }
+
+
+}

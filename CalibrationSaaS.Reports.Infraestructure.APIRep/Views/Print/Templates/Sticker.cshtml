@@ -1,0 +1,109 @@
+﻿@model Reports.Domain.ReportViewModels.Sticker
+
+@{
+    Layout = null;
+}
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Report LTI</title>
+
+    <style>
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+            font-size: 12px;
+            line-height: 24px;
+            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            color: #555;
+        }
+
+            .invoice-box table {
+                width: 100%;
+                line-height: inherit;
+                text-align: center;
+                border-collapse: collapse;
+                    border-spacing:unset;
+                    text-indent:unset;
+            }
+
+                .invoice-box table td {
+                    vertical-align: top;
+                }
+
+               
+                .invoice-box table tr.top table td.title {
+                    font-size: 45px;
+                    line-height: 45px;
+                    color: #333;
+                }
+
+                .invoice-box table tr.information table td {
+                    padding-bottom: 40px;
+                }
+
+                .invoice-box table tr.heading td {
+                    background: #eee;
+                    border: 1px solid #0c0c0c;
+                    font-weight: bold;
+                }
+                .table-header{
+                    text-align:left;
+                }
+    </style>
+</head>
+
+<body>
+
+    <table>
+        @*<tr>
+            <th>Name</th>
+            <th>Subject</th>
+            <th>Marks</th>
+        </tr>*@
+        <tr>
+            <td rowspan="5">
+                <img style="display: block; width: 150px; height: 150px;" src="@Model.ImageStr" alt="Url" />
+            </td>
+            <td>Model:</td>
+            <td>@Model.Model</td>
+        </tr>
+        <tr>
+            <td>Serial:</td>
+            <td>@Model.Serial</td>
+        </tr>
+        <tr>
+            <td>Calibration Date:</td>
+            <td>@Model.CalibrationDate</td>
+        </tr>
+        <tr>
+            <td>Calibration Due:</td>
+            <td>@Model.CalibrationDue</td>
+        </tr>
+        <tr>
+            <td>Tech:</td>
+            <td>@Model.Tech</td>
+        </tr>
+        @*<tr>
+            <td rowspan="2">Lary</td>
+            <td>Advanced Web</td>
+            <td>80</td>
+        </tr>
+        <tr>
+            <td>Operating Syatem</td>
+            <td>75</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td colspan="3">Total Average: 72.5</td>
+        </tr>*@
+    </table>
+
+
+
+</body>
+</html>

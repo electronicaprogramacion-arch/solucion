@@ -1,0 +1,11 @@
+﻿Weight ID,Weight Kit Serial Number,Nominal Value,Actual Value,Unit Of Measure,Uncertainty Value,Unit Of Measure Uncertainty Value,Divisor,Type,Distribution,Comments
+1,BT-STD-1,50,50.00001,lb,0.000215,lb,2,A,Rectangular,Test Comment
+2,BT-STD-1,50,50.00001,lb,0.000215,lb,2,A,Rectangular,
+3,BT-STD-1,50,50.00001,lb,0.000215,lb,2,A,Rectangular,Test Comment
+4,BT-STD-1,50,50.00001,lb,0.000215,lb,2,A,Rectangular,
+5,BT-STD-1,50,50.00001,lb,0.000215,lb,2,A,Rectangular,
+1,BT-STD-2,20,20.00001,kg,1.000102,mg,2,B,Normal,Test Comment
+2,BT-STD-2,20,20.00001,kg,1.000102,mg,2,B,Normal,
+3,BT-STD-2,20,20.00001,kg,1.000102,mg,2,B,Normal,
+4,BT-STD-2,20,20.00001,kg,1.000102,mg,2,B,Normal,
+5,BT-STD-2,20,20.00001,kg,1.000102,mg,2,B,Normal,Test Comment

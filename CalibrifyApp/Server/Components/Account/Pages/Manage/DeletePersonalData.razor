@@ -1,0 +1,106 @@
+﻿@page "/Account/Manage/PersonalData/Delete"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using CalibrifyApp.Server.Data
+@using CalibrifyApp.Server.Extensions
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityRedirectManager RedirectManager
+@inject IdentityUserAccessor UserAccessor
+
+<PageTitle>Delete Personal Data</PageTitle>
+
+<RadzenText TextStyle="TextStyle.H4" class="rz-mb-3">Delete Personal Data</RadzenText>
+<RadzenCard class="rz-p-4">
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Shade="Shade.Lighter" class="rz-mb-4">
+        <RadzenText TextStyle="TextStyle.Body1" class="rz-mb-0">
+            <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
+        </RadzenText>
+    </RadzenAlert>
+
+    <div>
+        <RadzenText TextStyle="TextStyle.H5" class="rz-mb-3">
+            @if (requirePassword)
+            {
+                <text>Would you like to delete the personal data we have about you?</text>
+            }
+            else
+            {
+                <text>Are you sure you want to delete your personal data?</text>
+            }
+        </RadzenText>
+
+        <RadzenRow>
+            <RadzenColumn Size="12" SizeMD="8" SizeLG="6">
+                <EditForm Model="Input" FormName="delete-personal-data" OnValidSubmit="OnValidSubmitAsync" method="post" @ref="form">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="rz-text-danger" role="alert" />
+
+                    @if (requirePassword)
+                    {
+                        <div class="rz-mb-3">
+                            <RadzenLabel Text="Password" Component="Input.Password" />
+                            <RadzenPassword @bind-Value="Input.Password" class="rz-display-block rz-width-100"
+                                           autocomplete="current-password" id="Input.Password" />
+                            <ValidationMessage For="() => Input.Password" class="rz-text-danger" />
+                        </div>
+                    }
+
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="Delete data and close my account"
+                                ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Large" class="rz-display-block rz-width-100" />
+                </EditForm>
+            </RadzenColumn>
+        </RadzenRow>
+    </div>
+</RadzenCard>
+
+@code {
+    private bool requirePassword;
+    private ApplicationUser user = default!;
+    private EditContext? editContext;
+    private EditForm? form;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new();
+        editContext = new EditContext(Input);
+
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        requirePassword = await UserManager.HasPasswordAsync(user);
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        if (requirePassword && !await UserManager.CheckPasswordAsync(user, Input.Password!))
+        {
+            editContext?.AddValidationMessage(editContext.Field(string.Empty), "Incorrect password.");
+            return;
+        }
+
+        var result = await UserManager.DeleteAsync(user);
+        var userId = await UserManager.GetUserIdAsync(user);
+
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException($"Unexpected error occurred deleting user.");
+        }
+
+        await SignInManager.SignOutAsync();
+
+        RedirectManager.RedirectTo("Account/DeletePersonalDataConfirmation");
+    }
+
+    private class InputModel
+    {
+        [DataType(DataType.Password)]
+        public string? Password { get; set; }
+    }
+}

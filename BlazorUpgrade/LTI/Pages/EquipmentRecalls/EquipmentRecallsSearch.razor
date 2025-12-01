@@ -1,0 +1,272 @@
+@page "/EquipmentRecalls"
+@using Blazed.Controls
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using Microsoft.AspNetCore.Authorization
+@inherits EquipmentRecallsSearchBase
+@attribute [Authorize(Policy = "HasAccess")]
+
+@{
+    EquipmentRecall recall = new EquipmentRecall();
+}
+
+<HeaderComponent Title="Equipment Recalls" ActionBar="false"></HeaderComponent>
+
+<div class="container-fluid">
+    <!-- Filter Section -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Filter Equipment Recalls</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Customer Filter -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="customerSelector">Customer</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" readonly value="@SelectedCustomerName" />
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" @onclick="OpenCustomerSelector">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                        @if (SelectedCustomer != null)
+                                        {
+                                            <button class="btn btn-outline-danger" type="button" @onclick="() => SelectCustomer(null)">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Initial Due Date Filter -->
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="initialDueDate">Initial Due Date</label>
+                                <input type="date" class="form-control" @bind="InitialDueDate" @bind:event="onchange" />
+                            </div>
+                        </div>
+
+                        <!-- Final Due Date Filter -->
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="finalDueDate">Final Due Date</label>
+                                <input type="date" class="form-control" @bind="FinalDueDate" @bind:event="onchange" />
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div class="d-flex flex-column">
+                                    <button class="btn btn-primary btn-sm mb-1" @onclick="SearchEquipmentRecalls">
+                                        <i class="fas fa-search"></i> Search
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" @onclick="ClearFilters">
+                                        <i class="fas fa-eraser"></i> Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Equipment</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@TotalRecalls</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tools fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Overdue Equipment</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@OverdueRecalls</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Export to Excel</div>
+                            <button class="btn btn-success btn-sm" @onclick="ExportToExcel">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </button>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-excel fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Equipment Recalls Grid -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <div>
+                        <h6 class="m-0 font-weight-bold text-primary">Equipment Due for Calibration</h6>
+                        @if (SelectedEquipmentRecalls.Any())
+                        {
+                            <span class="badge badge-info">@SelectedEquipmentRecalls.Count selected</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    <ResponsiveTable ItemsDataSource="@EquipmentRecalls"
+                                     PageSize="20"
+                                     HasAction="false"
+                                     HasEdit="false"
+                                     HasDelete="false"
+                                     HasNew="false"
+                                     HasSelect="true"
+                                     Context="Entity"
+                                     @ref="@Grid"
+                                     GridID="gridEquipmentRecalls"
+                                     InLineEdit="false"
+                                     RowEditClass=""
+                                     RowNewClass=""
+                                     TableItem="EquipmentRecall"
+                                     EnabledSearch="false"
+                                     EnabledModal="false"
+                                     SelectOnly="false"
+                                     SaveButtonSubmit="false"
+                                     ClientPagination="true"
+                                     DisabledRowHover="false"
+                                     Enabled="true"
+                                     Policy="HasAccess"
+                                     Component="@Component">
+
+                        <GridHeader>
+                            <div class="col-sm-1 customcol text-truncate">
+                                <label class="mb-0">
+                                    <input type="checkbox" checked="@SelectAll" @onchange="ToggleSelectAll" class="mr-1" />
+                                    Select All
+                                </label>
+                            </div>
+                            <div class="col-sm customcol text-truncate">ID</div>
+                            <div class="col-sm customcol text-truncate">Serial Number</div>
+                            <div class="col-sm customcol text-truncate">Description</div>
+                            <div class="col-sm customcol text-truncate">Customer</div>
+                            <div class="col-sm customcol text-truncate">Cal Date</div>
+                            <div class="col-sm customcol text-truncate">Due Date</div>
+                            <div class="col-sm customcol text-truncate">Days Until Due</div>
+                        </GridHeader>
+
+                        <ChildContent>
+                            <GridColumns>
+                                <GridColumn TableItem="EquipmentRecall" Title="" CSScol="col-sm-1 customcol text-truncate">
+                                    <ResponsiveTemplate Context="_context">
+                                        @{
+                                            var equipment = _context as EquipmentRecall;
+                                        }
+                                        <input type="checkbox" checked="@IsEquipmentSelected(equipment)" @onchange="@((args) => SelectEquipment(equipment, args))" />
+                                    </ResponsiveTemplate>
+                                </GridColumn>
+
+                                <GridColumn TableItem="EquipmentRecall" Field="@Grid.GetPropertyName(() => recall.PieceOfEquipmentID)" Title="ID" />
+
+                                <GridColumn TableItem="EquipmentRecall" Field="@Grid.GetPropertyName(() => recall.SerialNumber)" Title="Serial Number" />
+
+                                <GridColumn TableItem="EquipmentRecall" Field="@Grid.GetPropertyName(() => recall.Description)" Title="Description" />
+
+                                <GridColumn TableItem="EquipmentRecall" Field="@Grid.GetPropertyName(() => recall.CustomerName)" Title="Customer" />
+
+                                <GridColumn TableItem="EquipmentRecall" Field="@Grid.GetPropertyName(() => recall.CalibrationDate)" Title="Cal Date">
+                                    <ResponsiveTemplate>
+                                        @{
+                                            var recallItem = context as EquipmentRecall;
+                                        }
+                                        @recallItem.CalibrationDate.ToString("MM/dd/yyyy")
+                                    </ResponsiveTemplate>
+                                </GridColumn>
+
+                                <GridColumn TableItem="EquipmentRecall" Field="@Grid.GetPropertyName(() => recall.DueDate)" Title="Due Date">
+                                    <ResponsiveTemplate>
+                                        @{
+                                            var recallItem = context as EquipmentRecall;
+                                            var isOverdue = recallItem.DueDate < DateTime.Today;
+                                            var cssClass = isOverdue ? "text-danger font-weight-bold" : "";
+                                        }
+                                        <span class="@cssClass">@recallItem.DueDate.ToString("MM/dd/yyyy")</span>
+                                    </ResponsiveTemplate>
+                                </GridColumn>
+
+                                <GridColumn TableItem="EquipmentRecall" Title="Days Until Due">
+                                    <ResponsiveTemplate>
+                                        @{
+                                            var recallItem = context as EquipmentRecall;
+                                            var daysUntilDue = (recallItem.DueDate - DateTime.Today).Days;
+                                            var cssClass = daysUntilDue < 0 ? "text-danger font-weight-bold" :
+                                                          daysUntilDue <= 30 ? "text-warning font-weight-bold" : "";
+                                            var displayText = daysUntilDue < 0 ? $"Overdue by {Math.Abs(daysUntilDue)} days" : $"{daysUntilDue} days";
+                                        }
+                                        <span class="@cssClass">@displayText</span>
+                                    </ResponsiveTemplate>
+                                </GridColumn>
+                            </GridColumns>
+
+                        </ChildContent>
+
+                        <GridRow>
+                        </GridRow>
+
+                        <GridSelect>
+                            <!-- Checkboxes are now handled in the column template -->
+                        </GridSelect>
+
+                        <NewButton>
+                            <!-- No new button needed for recalls -->
+                        </NewButton>
+
+                        <EditButton>
+                            <!-- No edit button needed for recalls -->
+                        </EditButton>
+
+                        <GridFilter>
+                            <!-- Filters are handled in the top section -->
+                        </GridFilter>
+                    </ResponsiveTable>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+}

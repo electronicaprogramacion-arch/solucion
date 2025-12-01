@@ -1,0 +1,167 @@
+﻿using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+using CalibrationSaaS.Domain.BusinessExceptions;
+using CalibrationSaaS.Domain.Repositories;
+using Helpers.Controls.ValueObjects;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CalibrationSaaS.Application.UseCases
+{
+    public class CustomerUseCases
+    {
+        private readonly ICustomerRepository customerRepository;
+       
+
+
+        public CustomerUseCases(ICustomerRepository customerRepository)
+        {
+            this.customerRepository = customerRepository;
+         
+        }
+
+        //A DTO is also a Value Object, however a DTO has an integrity meaning you should not modify its properties while in a Value Object it is accepted.
+        public async Task<Customer> CreateCustomer(Customer customerDTO,bool isApi=false)
+        {
+
+            Customer doesCustomerExist = null;
+
+            if (isApi)
+            {
+
+                doesCustomerExist = await customerRepository.GetCustomerByName("", customerDTO.CustomID);
+
+
+            }
+
+            doesCustomerExist  = await this.customerRepository.GetCustomerByID(customerDTO);
+
+            
+
+            if (doesCustomerExist == null)
+            {
+                doesCustomerExist = await customerRepository.GetCustomerByName(customerDTO.Name);
+                if (doesCustomerExist != null && doesCustomerExist.Name.ToLower() == customerDTO.Name.ToLower())
+                {
+                    //throw new ExistingException("This Customer is already in");
+                }
+            }
+           
+            if (doesCustomerExist == null && !string.IsNullOrEmpty(customerDTO.CustomID))
+            {
+                doesCustomerExist = await customerRepository.GetCustomerByName(customerDTO.Name, customerDTO.CustomID);
+            }
+           
+            if (doesCustomerExist == null )
+            {
+                //throw new ExistingCustomerException("This Customer is already in", null, doesCustomerExist);
+
+                //doesCustomerExist = await customerRepository.GetCustomerByName(customerDTO.Name,customerDTO.CustomID);
+               
+
+                if (customerDTO.Aggregates != null)
+                {
+
+                 var msg=  await customerRepository.ValidateCustomer(customerDTO);
+
+
+
+                    if(msg!= "")
+                    {
+                        throw new ExistingException(msg);
+
+                    }
+
+                   
+
+                    }
+
+              
+
+
+            }
+            else
+            {
+
+                //doesCustomerExist = await customerRepository.GetCustomerByName(customerDTO.Name);
+                //if (doesCustomerExist != null && doesCustomerExist.Name.ToLower() == customerDTO.Name.ToLower() && customerDTO.CustomerID == 0)
+                //{
+                //    throw new ExistingCustomerException("This Customer is already in", null, doesCustomerExist);
+                //}
+                customerDTO.CustomerID = doesCustomerExist.CustomerID;
+
+                //customerDTO.Name =
+            }
+           
+
+
+            customerDTO = await this.customerRepository.InsertCustomer(customerDTO);
+
+            //await this.customerRepository.Save();
+            //_logger.LogInformation(string.Format("Customer successfully added: {0} Id: {1}", customerDTO.CustomerName, customerDTO.CustomerID));
+            return customerDTO;
+        }
+
+        public async Task<ResultSet<Customer>> GetCustomer(Pagination<Customer> Pagination)
+        {
+            return await customerRepository.GetCustomers(Pagination);
+        }
+
+        public async Task<Customer> DeleteCustomer(Customer customerDTO)
+        {
+            var result = await customerRepository.DeleteCustomer(customerDTO);
+            return result;
+        }
+
+        public async Task<Contact> DeleteContact(Contact DTO)
+        {
+            var result = await customerRepository.DeleteContact(DTO);
+            return result;
+        }
+
+
+
+        public async Task<Address> DeleteAddress(Address DTO)
+        {
+            var result = await customerRepository.DeleteAddress(DTO);
+            return result;
+        }
+
+        public async Task<PhoneNumber> DeletePhoneNumber(PhoneNumber DTO)
+        {
+            var result = await customerRepository.DeletePhone(DTO);
+            return result;
+        }
+        public async Task<Social> DeleteSocial(Social DTO)
+        {
+            var result = await customerRepository.DeleteSocial(DTO);
+            return result;
+        }
+
+        public async Task<Customer> GetCustomerById(Customer id)
+        {
+            var result = await customerRepository.GetCustomerByID(id);
+            return result;
+        }
+
+        public async Task<Customer> GetCustomerByName(string Name,string customname=null)
+        {
+            var result = await customerRepository.GetCustomerByName(Name, customname);
+            return result;
+        }
+
+        public async Task<Customer> UpdateCustomer(Customer customerDTO)
+        {
+             await customerRepository.UpdateCustomer(customerDTO);
+
+             await this.customerRepository.Save();
+            return customerDTO;
+
+
+        }
+    }
+}

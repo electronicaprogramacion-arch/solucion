@@ -1,0 +1,234 @@
+﻿@page "/TestCodeSearch"
+@using Blazed.Controls
+@inherits TestCode_SearchBase
+
+<div class="">
+    @*<div class="d-flex bd-highlight bg-white shadow" id="headermodal" style="height: 50px">
+            <div class="bd-highlight">
+                <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 5rem;"
+                     src="img/undraw_launch_day_4e04.svg" alt="">
+            </div>
+            <div class="align-self-end p-2 bd-highlight">
+
+                Manufacturer
+
+            </div>
+            <div class="p-2 bd-highlight"></div>
+        </div>
+
+
+        <nav class="navbar sticky-top navbar-dark bg-light topBar" id="toolbarmodal" style=" background-color:#563d7c !important; min-height:50px !important;width:100%">
+
+        </nav>*@
+
+    <HeaderComponent Title="Test Codes" ActionBar="false"></HeaderComponent>
+
+
+    @*<EditForm OnSubmit="FormSubmitted" EditContext="@CurrentEditContext">
+        <DataAnnotationsValidator />
+        <button class="btn btn-sm btn-info shadow-sm" id="executebutton"
+                type="submit" onclick="$('#progressBar').show()" style="display:none" @onkeypress:preventDefault>
+            Save
+            <i class="fas fa-save fa-sm text-white-50"></i>
+
+        </button>*@
+        <ResponsiveTable ItemsDataSource="@ListMan"
+                         PageSize="5"
+                         HasAction="true"
+                         Context="Entity"
+                         @ref="@Grid"
+                         GridID="gridMan"
+                         InLineEdit="false"
+                         RowEditClass=""
+                         RowNewClass=""
+                         TableItem="TestCode"
+                         EnabledSearch="true"
+                         editContext="@CurrentEditContext"
+                         EnabledModal="true"
+                         OnChangeWindow="ClearList"
+                         SelectOnly="@SelectOnly"
+                         SaveButtonSubmit="false"                        
+                         PaginationFunction1="LoadData"
+                        
+                         DeleteAction="Delete"
+                         
+                         Component="@Component"
+                         EnabledDrag="false">
+
+            @*<GridHeader>
+                <div class="col-sm-2 customcol"></div>
+                <div class="col-sm-3 customcol">Id</div>
+                <div class="col-sm-3 customcol">Name</div>
+                <div class="col-sm-3 customcol">Description</div>
+
+            </GridHeader>*@
+
+            <ChildContent>
+                <GridColumns>
+
+                    <GridColumn TableItem="TestCode" Field="@Grid.GetPropertyName(() => eq.TestCodeID)" DefaultSort="true" />
+                    <GridColumn TableItem="TestCode" Field="@Grid.GetPropertyName(() => eq.Code)" />
+                    <GridColumn TableItem="TestCode" Field="@Grid.GetPropertyName(() => eq.Description)" />
+                    <GridColumn TableItem="TestCode" Field="@Grid.GetPropertyName(() => eq.RangeMIn)" />
+                    <GridColumn TableItem="TestCode" Field="@Grid.GetPropertyName(() => eq.RangeMax)" />
+                    <GridColumn TableItem="TestCode" Field="@Grid.GetPropertyName(() => eq.Accredited)" />
+                    <GridColumn TableItem="TestCode" Field="@Grid.GetPropertyName(() => eq.UnitOfMeasureID)" Title="UoM">
+
+                        <ResponsiveTemplate Context="_context">
+
+                            @{
+                                UnitOfMeasure d;
+                                string h = "";
+                                var c = _context as TestCode;
+                                if (c.UnitOfMeasureID.HasValue)
+                                {
+                                    var result = c.UnitOfMeasureID;
+
+                                    //if (c.Capacity == 0 && c.EquipmentTemplate != null && c?.EquipmentTemplate?.EquipmentTypeID == 3)
+                                    //{
+                                    //    result = c.EquipmentTemplate.Capacity;
+                                    //}
+                                    //else if (c.EquipmentTemplate != null && c?.EquipmentTemplate?.EquipmentTypeID != 3)
+                                    //{
+                                    //    result = 0;
+                                    //}
+
+                                    d = c.UnitOfMeasureID.Value.GetUoM(AppState.UnitofMeasureList, result);
+                                    if (d != null && !string.IsNullOrEmpty(d?.Abbreviation))
+                                    {
+                                        h = d.Abbreviation;
+                                    }
+
+                                }
+                            }
+                            @h
+
+
+                        </ResponsiveTemplate>
+
+                    </GridColumn>
+
+                    <GridColumn TableItem="TestCode" Field="@Grid.GetPropertyName(() => eq.CalibrationTypeID)" Title="CalibrationType">
+                        <ResponsiveTemplate Context="_context">
+
+                            @{
+
+                                var d1 = _context as TestCode;
+                                var cert = AppSecurity.EquipmentTypeWODList.Where(x => x.CalibrationTypeID == d1.CalibrationTypeID).FirstOrDefault();
+
+
+                            }
+                            @if (cert != null)
+                            {
+                                @cert.Name
+                            }
+
+                        </ResponsiveTemplate>
+
+                    </GridColumn>
+
+
+                    <GridColumn TableItem="TestCode" Field="@Grid.GetPropertyName(() => eq.Procedure.Name)" Title="Procedure"/>
+                </GridColumns>
+            </ChildContent>
+
+            <GridRow>
+
+              
+            </GridRow>
+
+            @*<GridEdit>
+              <Manufacturer_Create EntityID="@Entity.ManufacturerID.ToString()"  EndExecute="@EndSave">
+
+              </Manufacturer_Create>
+            </GridEdit>*@
+
+            <GridSelect>
+
+                <button class="btn btn-sm btn-primary" id="_btnselect"
+                        @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+                    Select
+                </button>
+
+            </GridSelect>
+            <NewButton>
+              
+                <a class="btn btn-primary btn-sm" href="TestCode/0">new</a>
+            </NewButton>
+            <EditButton>
+               
+                <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                    <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton" href="TestCode/@Entity.TestCodeID">edit</a>
+                </div>
+            </EditButton>
+        </ResponsiveTable>
+    @*</EditForm>*@
+
+</div>
+
+
+
+@code {
+
+
+    //private Address AddresInstance = new Address() { StreetAddress1 = "sssss" };
+
+    public async Task EndSave(TestCode m)
+    {
+
+    }
+
+
+    void Close(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+            //searchComponent.List.Add((TestCode)a.Data);
+
+            StateHasChanged();
+        }
+
+    }
+
+    async Task CloseEdit(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        //if (a.Data != null)
+        //{
+        //    var yy = searchComponent.List.Where(x => x.ManufacturerID == x.ManufacturerID).FirstOrDefault();
+
+        //    searchComponent.List.Remove(yy);
+
+        //    searchComponent.List.Add((Manufacturer)a.Data);
+
+        //    StateHasChanged();
+        //}
+       
+        if (!a.Cancelled)
+        {
+            await Grid.SearchFunction(Grid.currentColumn);
+        }
+
+
+
+    }
+
+    async Task Select(object arg, TestCode entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+
+    }
+
+
+}

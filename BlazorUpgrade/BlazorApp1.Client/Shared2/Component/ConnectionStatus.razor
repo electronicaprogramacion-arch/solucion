@@ -1,0 +1,65 @@
+﻿@using Radzen
+@using Radzen.Blazor
+
+<div class="connection-status @StatusClass">
+    <RadzenIcon Icon="@StatusIcon" />
+    <span class="status-text">@StatusText</span>
+</div>
+
+@code {
+    [Parameter] public bool IsConnected { get; set; } = true;
+
+    private string StatusClass => IsConnected ? "connected" : "offline";
+    private string StatusText => IsConnected ? "Connected" : "Offline";
+    private string StatusIcon => IsConnected ? "wifi" : "wifi_off";
+}
+
+<style>
+    .connection-status {
+        display: flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+        .connection-status .status-text {
+            margin-left: 6px;
+        }
+
+    .connected {
+        background-color: rgba(52, 199, 89, 0.15);
+        color: #34c759;
+    }
+
+    .offline {
+        background-color: rgba(255, 149, 0, 0.15);
+        color: #ff9500;
+    }
+
+    /* Responsive styles */
+    @@media (max-width: 768px) {
+        .connection-status
+
+    {
+        padding: 4px 10px;
+        font-size: 13px;
+    }
+
+    }
+
+    @@media (max-width: 480px) {
+        .connection-status
+
+    {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+
+    .connection-status .status-text {
+        margin-left: 4px;
+    }
+
+    }
+</style>

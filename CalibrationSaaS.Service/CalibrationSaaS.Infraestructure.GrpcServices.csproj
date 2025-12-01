@@ -1,0 +1,188 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+	
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TypeScriptCompileOnSaveEnabled>False</TypeScriptCompileOnSaveEnabled>
+  </PropertyGroup>
+	
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TypeScriptCompileOnSaveEnabled>False</TypeScriptCompileOnSaveEnabled>
+  </PropertyGroup>
+	
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!--<UserSecretsId>b3c6862d-4c12-4f4c-b539-123c7ee9ddd0</UserSecretsId>-->
+    <OutputType>Exe</OutputType> <!-- Ensure this is set -->
+    <UserSecretsId>0c1bbde8-6a40-4f32-8938-0c6caba66f41</UserSecretsId>
+    <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>False</EnableNETAnalyzers>
+  </PropertyGroup>
+	
+  <ItemGroup>
+    <Compile Remove="Certificates\**" />
+    <Content Remove="Certificates\**" />
+    <EmbeddedResource Remove="Certificates\**" />
+    <None Remove="Certificates\**" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Compile Remove="Helpers\DataGenerator.cs" />
+    <Compile Remove="Migrations\20220826193731_inicial2000.cs" />
+    <Compile Remove="Migrations\20220826193731_inicial2000.Designer.cs" />
+    <Compile Remove="Migrations\20220827044152_inicial2002.cs" />
+    <Compile Remove="Migrations\20220827044152_inicial2002.Designer.cs" />
+    <Compile Remove="Migrations\20220830213152_inicial3000.cs" />
+    <Compile Remove="Migrations\20220830213152_inicial3000.Designer.cs" />
+    <Compile Remove="Migrations\20221102231317_inicial10000.cs" />
+    <Compile Remove="Migrations\20221102231317_inicial10000.Designer.cs" />
+    <Compile Remove="Migrations\20221108190936_inicial10001.cs" />
+    <Compile Remove="Migrations\20221108190936_inicial10001.Designer.cs" />
+    <Compile Remove="Migrations\20221108191429_inicial10002.cs" />
+    <Compile Remove="Migrations\20221108191429_inicial10002.Designer.cs" />
+    <Compile Remove="Migrations\20221111201535_10003.cs" />
+    <Compile Remove="Migrations\20221111201535_10003.Designer.cs" />
+    <Compile Remove="Migrations\20221123083230_3001.cs" />
+    <Compile Remove="Migrations\20221123083230_3001.Designer.cs" />
+    <Compile Remove="Migrations\20221128201259_3002.cs" />
+    <Compile Remove="Migrations\20221128201259_3002.Designer.cs" />
+    <Compile Remove="Migrations\20221128231902_3003.cs" />
+    <Compile Remove="Migrations\20221128231902_3003.Designer.cs" />
+    <Compile Remove="Migrations\20221129055222_inicial3003.cs" />
+    <Compile Remove="Migrations\20221129055222_inicial3003.Designer.cs" />
+    <Compile Remove="Migrations\20221129073943_inicial3005.cs" />
+    <Compile Remove="Migrations\20221129073943_inicial3005.Designer.cs" />
+    <Compile Remove="Migrations\20221129080118_inicial3009.cs" />
+    <Compile Remove="Migrations\20221129080118_inicial3009.Designer.cs" />
+    <Compile Remove="Migrations\20221129080909_inicial3010.cs" />
+    <Compile Remove="Migrations\20221129080909_inicial3010.Designer.cs" />
+    <Compile Remove="Migrations\20221129081318_inicial3011.cs" />
+    <Compile Remove="Migrations\20221129081318_inicial3011.Designer.cs" />
+    <Compile Remove="Migrations\20221214070621_inicial3012.cs" />
+    <Compile Remove="Migrations\20221214070621_inicial3012.Designer.cs" />
+    <Compile Remove="Migrations\20221214221431_inicial3013.cs" />
+    <Compile Remove="Migrations\20221214221431_inicial3013.Designer.cs" />
+    <Compile Remove="Migrations\20221229024330_inicial3014.cs" />
+    <Compile Remove="Migrations\20221229024330_inicial3014.Designer.cs" />
+    <Compile Remove="Migrations\20221229164458_inicial3015.cs" />
+    <Compile Remove="Migrations\20221229164458_inicial3015.Designer.cs" />
+    <Compile Remove="Migrations\20221230062311_inicial3016.cs" />
+    <Compile Remove="Migrations\20221230062311_inicial3016.Designer.cs" />
+    <Compile Remove="Migrations\20221230174139_inicial3017.cs" />
+    <Compile Remove="Migrations\20221230174139_inicial3017.Designer.cs" />
+    <Compile Remove="Migrations\20221230174537_inicial3018.cs" />
+    <Compile Remove="Migrations\20221230174537_inicial3018.Designer.cs" />
+    <Compile Remove="Migrations\20230106140849_inicial3020.cs" />
+    <Compile Remove="Migrations\20230106140849_inicial3020.Designer.cs" />
+    <Compile Remove="Migrations\20230120130217_inicial3021.cs" />
+    <Compile Remove="Migrations\20230120130217_inicial3021.Designer.cs" />
+    <Compile Remove="Migrations\20230120200654_inicial3022.cs" />
+    <Compile Remove="Migrations\20230120200654_inicial3022.Designer.cs" />
+    <Compile Remove="Migrations\20230127154809_inicial3030.cs" />
+    <Compile Remove="Migrations\20230127154809_inicial3030.Designer.cs" />
+    <Compile Remove="Migrations\20230130082440_inicial3121.cs" />
+    <Compile Remove="Migrations\20230130082440_inicial3121.Designer.cs" />
+    <Compile Remove="Migrations\20230130131036_inicial3122.cs" />
+    <Compile Remove="Migrations\20230130131036_inicial3122.Designer.cs" />
+    <Compile Remove="Migrations\20230130135817_inicial3123.cs" />
+    <Compile Remove="Migrations\20230130135817_inicial3123.Designer.cs" />
+    <Compile Remove="Migrations\20230131023636_inicial3124.cs" />
+    <Compile Remove="Migrations\20230131023636_inicial3124.Designer.cs" />
+    <Compile Remove="Migrations\20230131151205_inicial3125.cs" />
+    <Compile Remove="Migrations\20230131151205_inicial3125.Designer.cs" />
+    <Compile Remove="Migrations\20230131164118_inicial3126.cs" />
+    <Compile Remove="Migrations\20230131164118_inicial3126.Designer.cs" />
+    <Compile Remove="Migrations\20230131164845_inicial3127.cs" />
+    <Compile Remove="Migrations\20230131164845_inicial3127.Designer.cs" />
+    <Compile Remove="Migrations\20230201063222_inicial3027.cs" />
+    <Compile Remove="Migrations\20230201063222_inicial3027.Designer.cs" />
+    <Compile Remove="Migrations\20230201192306_inicial3128.cs" />
+    <Compile Remove="Migrations\20230201192306_inicial3128.Designer.cs" />
+    <Compile Remove="Migrations\20230208224753_inicial4100.cs" />
+    <Compile Remove="Migrations\20230208224753_inicial4100.Designer.cs" />
+    <Compile Remove="Migrations\20230209075006_inicial4101.cs" />
+    <Compile Remove="Migrations\20230209075006_inicial4101.Designer.cs" />
+    <Compile Remove="Migrations\20230209075308_inicial4102.cs" />
+    <Compile Remove="Migrations\20230209075308_inicial4102.Designer.cs" />
+    <Compile Remove="Migrations\20230216065639_inicial5000.cs" />
+    <Compile Remove="Migrations\20230216065639_inicial5000.Designer.cs" />
+    <Compile Remove="Migrations\20230216105631_inicial5001.cs" />
+    <Compile Remove="Migrations\20230216105631_inicial5001.Designer.cs" />
+    <Compile Remove="Migrations\20230307202911_inicial6001.cs" />
+    <Compile Remove="Migrations\20230307202911_inicial6001.Designer.cs" />
+    <Compile Remove="Migrations\20230309211443_inicial60002.cs" />
+    <Compile Remove="Migrations\20230309211443_inicial60002.Designer.cs" />
+    <Compile Remove="Migrations\20230309212635_inicial60003.cs" />
+    <Compile Remove="Migrations\20230309212635_inicial60003.Designer.cs" />
+    <Compile Remove="Migrations\20230405143601_inicial7001.cs" />
+    <Compile Remove="Migrations\20230405143601_inicial7001.Designer.cs" />
+    <Compile Remove="Migrations\20230607195035_inicial8000.cs" />
+    <Compile Remove="Migrations\20230607195035_inicial8000.Designer.cs" />
+    <Compile Remove="Migrations\20230607220142_inicial8001.cs" />
+    <Compile Remove="Migrations\20230607220142_inicial8001.Designer.cs" />
+    <Compile Remove="Services\CompanyServices.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+      <Protobuf Include="Protos\greet.proto" GrpcServices="Server" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Core" Version="1.50.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
+    <PackageReference Include="BlazorInputFile" Version="0.2.0" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+    <PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.71.0" />
+    <PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
+    <PackageReference Include="Grpc.Core" Version="2.46.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="6.0.36" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.3" />
+    <PackageReference Include="Microsoft.Azure.Storage.Common" Version="11.2.3" />
+    <PackageReference Include="Microsoft.Azure.Storage.File" Version="11.2.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.0" />
+    <PackageReference Include="Microsoft.WindowsAzure.ConfigurationManager" Version="3.2.3" />
+    <PackageReference Include="PdfSharpCore" Version="1.3.67" />
+    <PackageReference Include="protobuf-net.Core" Version="3.2.56" />
+    <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.2.2" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0" />
+    <!-- Audit.NET packages for audit logging -->
+    <PackageReference Include="Audit.NET" Version="31.2.0" />
+    <PackageReference Include="Audit.NET.SqlServer" Version="31.2.0" />
+    <PackageReference Include="Audit.EntityFramework.Core" Version="31.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CalibrationSaaS.Application.Services\CalibrationSaaS.Application.Services.csproj" />
+    <ProjectReference Include="..\CalibrationSaaS.Application.UseCases\CalibrationSaaS.Application.UseCases.csproj" />
+    <ProjectReference Include="..\CalibrationSaaS.Data.EntityFramework\CalibrationSaaS.Infraestructure.EntityFramework.csproj" />
+    <ProjectReference Include="..\CalibrationSaaS.Models\CalibrationSaaS.Domain.Aggregates.csproj" />
+    <ProjectReference Include="..\Helpers\Helpers.csproj" />
+    <ProjectReference Include="..\IdentityClient\IdentityClient\IdentityClient.csproj" />
+    <ProjectReference Include="..\Reports.Domain.ReportViewModels\Reports.Domain.ReportViewModels.csproj" />
+    <ProjectReference Include="..\ServerContext\ServerContext.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Version\CurrentVersion.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Certificate\" />
+    <Folder Include="ServicesDummies\" />
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1development_1json__JsonSchema="https://docs.renovatebot.com/renovate-schema.json" appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
+
+</Project>

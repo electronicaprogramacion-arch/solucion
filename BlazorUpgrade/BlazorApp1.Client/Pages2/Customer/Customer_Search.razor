@@ -1,0 +1,187 @@
+﻿@page "/CustomerSearch"
+@namespace BlazorApp1.Blazor.Pages.Customer
+@inherits BlazorApp1.Blazor.Pages.Customer.Customer_SearchBase
+
+@using Blazed.Controls
+@using Blazored.Modal.Services
+@using BlazorApp1.Blazor.Blazor.Pages.Customer
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@using CalibrationSaaS.Domain.Aggregates.Entities
+
+
+
+
+
+@* @rendermode @(new InteractiveServerRenderMode(prerender: false)) *@
+<HeaderComponent Title="Customer" ActionBar="false"></HeaderComponent>
+
+<ResponsiveTable ItemsDataSource="@ListCustomer"
+                 PageSize="paginaSize"
+                 HasAction="true"
+                 Context="Entity"
+                 @ref="@Grid"
+                 GridID="gridPoe"
+                 InLineEdit="false"
+                 RowEditClass=""
+                 RowNewClass=""
+                 TableItem="CalibrationSaaS.Domain.Aggregates.Entities.Customer"
+                 EnabledSearch="true"
+                 editContext="@CurrentEditContext"
+                 EnabledModal="false"
+                 OnChangeWindow="ClearList"
+                 SelectOnly="@SelectOnly"
+                 SaveButtonSubmit="false"
+                 PaginationFunction1="LoadData"
+                
+                 DeleteAction="Delete"
+                 Component="@Component">
+
+    <ChildContent>
+
+        <GridColumns>
+
+               
+                     @if(showEbms == true)
+                       {
+                    <GridColumn TableItem="Customer" Field="@Grid.GetPropertyName(() => eq.CustomID)" Title="EBMS ID" CSScol="col-sm-2 customcol" />
+                       }
+                    <GridColumn TableItem="Customer" Field="@Grid.GetPropertyName(() => eq.CustomerID)" Title="ID" CSScol="col-sm-2 customcol" />
+
+
+            <GridColumn TableItem="Customer" Field="@Grid.GetPropertyName(() => eq.Name)" DefaultSort="true" />
+
+
+           @*  <GridColumn TableItem="Customer" Field="@Grid.GetPropertyName(() => eq.Description)" /> *@
+
+
+
+        </GridColumns>
+
+
+
+    </ChildContent>
+
+    @*<GridHeader>
+            <div class="col-sm customcol"></div>
+            <div class="col-sm customcol">Serial Number</div>
+            <div class="col-sm customcol">Model</div>
+            <div class="col-sm customcol">Customer</div>
+            <div class="col-sm customcol">Capacity</div>
+            <div class="col-sm customcol">Status</div>
+            <div class="col-sm customcol">Due Date</div>
+        </GridHeader>*@
+
+    <GridRow>
+
+
+
+        @*<div class="col-sm customcol inv">SerialNumber</div>
+            <div class="col-sm customcol">@Format(@Entity.SerialNumber)</div>
+            <div class="col-sm customcol inv">EquipmentTemplate</div>
+            <div class="col-sm customcol">@Format(@Entity.EquipmentTemplate.Model)</div>
+            <div class="col-sm customcol inv">Customer</div>
+            <div class="col-sm customcol">@Format(@Entity.Customer.Name)</div>
+            <div class="col-sm customcol inv">Capacity</div>
+            <div class="col-sm customcol">@Format(@Entity.Capacity)</div>
+            <div class="col-sm customcol inv">Status</div>
+            <div class="col-sm customcol">@Format(@Entity.Status)</div>
+            <div class="col-sm customcol inv">DueDate</div>
+            <div class="col-sm customcol">@Format(@Entity.DueDate)</div>*@
+
+
+
+    </GridRow>
+
+
+    <GridSelect>
+
+        <button class="btn btn-sm btn-primary" id="_btnselect"
+                @onclick=@(async (arg) => await Select(arg, @Entity)) @onclick:stopPropagation @onclick:preventDefault>
+            select
+        </button>
+
+    </GridSelect>
+    <NewButton>
+        <a class="btn btn-primary btn-sm" href="Customer/0">
+            <span>new 
+            @*<i class="fas fa-plus fa-sm"></i>*@
+            </span>
+        </a>
+    </NewButton>
+    <EditButton>
+
+
+        <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+            <a class="d-sm-inline-block btn btn-sm btn-primary shadow-sm editButton" href="Customer/@Entity.CustomerID">
+
+                <span>edit <i class="fas fa-pen fa-sm"></i></span>
+            </a>
+        </div>
+
+    </EditButton>
+   
+</ResponsiveTable>
+
+@code
+{
+
+
+    void Close(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+            //searchComponent.List.Add((Customer)a.Data);
+
+            StateHasChanged();
+        }
+
+    }
+
+    void CloseEdit(ChangeEventArgs arg)
+    {
+        var a = (ModalResult)arg.Value;
+
+        if (a.Data != null)
+        {
+            //var yy = searchComponent.List.Where(x => x.CustomerID == x.CustomerID).FirstOrDefault();
+
+            //searchComponent.List.Remove(yy);
+
+            //searchComponent.List.Add((Customer)a.Data);
+
+            StateHasChanged();
+        }
+
+    }
+
+    async Task Select(object arg, CalibrationSaaS.Domain.Aggregates.Entities.Customer entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+    public void ClearList(EventArgs arg)
+    {
+
+    }
+
+    async Task Select(object arg, PieceOfEquipment entity)
+    {
+
+        await CloseModal(entity);
+
+
+
+    }
+
+}
+
+
+
+
+

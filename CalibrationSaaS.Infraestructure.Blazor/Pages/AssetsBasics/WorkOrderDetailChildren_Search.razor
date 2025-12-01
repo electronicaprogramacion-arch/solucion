@@ -1,0 +1,323 @@
+﻿@using Blazed.Controls
+@namespace CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+@inherits WorkOrderDetailChildren_SearchBase
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Order
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+
+@inject ILogger<WorkOrderDetailChildren_Search> Logger
+@*<EditForm style="margin:10px" OnValidSubmit="Submit" Model="@eq" Context="CurrenEditContext">
+    <DataAnnotationsValidator />*@
+@if ( _listWorkOrderDetail != null && _listWorkOrderDetail.Count > 0)
+{
+
+
+    //Console.WriteLine(_listWorkOrderDetail.Count);
+    <EditForm style="margin:10px" OnSubmit="Submit" EditContext="@CurrentEditContext">
+        <DataAnnotationsValidator />
+
+        <ResponsiveTable ItemsDataSource="@_listWorkOrderDetail.ToList()"
+        PageSize="10"
+        HasAction="true"
+        Context="Entity"
+        @ref="@Grid"
+        GridID="gridWorkOrderDetail"
+        RowEditClass=""
+        RowNewClass=""
+        InLineEdit=false
+        TableItem="WorkOrderDetail"
+        EnabledSearch="false"
+        editContext="@CurrentEditContext"
+        OnChangeWindow="ClearList"
+        HasEdit="true"
+        DeleteAction="Delete"
+        Component="@Component"
+        HasNew="false">
+
+
+
+            <ChildContent>
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailUserID)" DefaultSort="true" Title="ID" />
+
+                @*<GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.WorkOrderDetailID)" DefaultSort="true" Title="ID" />*@
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.PieceOfEquipmentID)" Title="PoE ID" />
+
+                @if (eq?.PieceOfEquipment?.EquipmentTemplate?.Manufacturer1 != null)
+                {
+                    <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.EquipmentTemplate.Manufacturer1.Name)" Title="Manufacturer" />
+                }
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.EquipmentTemplate.Model)" Title="Model" />
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.SerialNumber)" Title="Serial" />
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.Capacity)" Title="Capacity">
+
+                    <ResponsiveTemplate Context="_context">
+
+                        @{
+                            UnitOfMeasure d;
+                            string h = "";
+                            var d1 = _context as WorkOrderDetail;
+
+                            var c = d1.PieceOfEquipment;
+
+                            if (c.UnitOfMeasureID.HasValue)
+                            {
+                                d = c.UnitOfMeasureID.Value.GetUoM(AppState.UnitofMeasureList, c.Capacity);
+                                if (d != null && !string.IsNullOrEmpty(d?.CapacityFull))
+                                {
+                                    h = d.CapacityFull;
+                                }
+
+                            }
+                        }
+                        @h
+
+
+                    </ResponsiveTemplate>
+                </GridColumn>
+                @*<GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.Capacity)" Title="Capacity">
+
+                    <ResponsiveTemplate Context="_context">
+
+                        @{
+                            UnitOfMeasure d;
+                            string h = "";
+                            var d1 = _context as WorkOrderDetail;
+
+                            var c = d1.PieceOfEquipment;
+
+                            if (c.UnitOfMeasureID.HasValue)
+                            {
+                                d = c.UnitOfMeasureID.Value.GetUoM(AppState.UnitofMeasureList, c.Capacity);
+                                if (d != null && !string.IsNullOrEmpty(d?.CapacityFull))
+                                {
+                                    h = d.CapacityFull;
+                                }
+
+                            }
+                        }
+                        @h
+
+
+                    </ResponsiveTemplate>
+
+                </GridColumn>*@
+
+                @*<GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.CalibrationType.Name)" Title="Type" />*@
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.CalibrationDate)" Format="{0:MM/dd/yy}" Title="Calibration Date">
+
+
+
+                </GridColumn>
+
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipment.DueDate)" Format="{0:MM/dd/yy}" Title="Due Date">
+
+
+
+                </GridColumn>
+
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.CurrentStatus.Name)" Title="Status"></GridColumn>
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.CalibrationType.Name)" Title="CalibrationType">
+                    <ResponsiveTemplate Context="_context">
+
+                        @{
+
+                            var d1 = _context as WorkOrderDetail;
+                            var cert = AppSecurity.EquipmentTypeWODList.Where(x => x.CalibrationTypeID == d1.CalibrationTypeID).FirstOrDefault();
+
+
+                        }
+                        @if (cert != null)
+                        {
+                            @cert.Name
+                        }
+
+                    </ResponsiveTemplate>
+
+                </GridColumn>
+
+
+                <GridColumn TableItem="WorkOrderDetail" Field="@Grid.GetPropertyName(() => eq.CalibrationType.Name)" Title="Certification">
+                    <ResponsiveTemplate Context="_context">
+
+                        @{
+
+                            var d1 = _context as WorkOrderDetail;
+                            var cert = AppSecurity.CertificationList.Where(x => x.CalibrationTypeID == d1.CalibrationTypeID && x.ID==d1.CertificationID).FirstOrDefault();
+
+
+                        }
+                        @if (cert != null)
+                        {
+                            @cert.Name
+                        }
+
+                    </ResponsiveTemplate>
+
+                </GridColumn>
+
+
+
+            </ChildContent>
+
+
+
+
+            <GridRow>
+
+
+            </GridRow>
+
+
+            <EditButton>
+                @*   <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton"
+                   type="button" data-dismiss="modal" href="WorkOrderItem/@Entity?.WorkOrderDetailID.ToString()">
+                    <span aria-hidden="true">View Detail</span>
+                </a> *@
+
+                <div class="row">
+
+                    <div class="col">
+
+                        @{
+
+                            parameters = new ModalParameters();
+                            // parameters.Add("HasChilds", false);
+                            // // parameters.Add("ParentID", );
+                            // parameters.Add("CustomerId", Entity.CustomerId.ToString());
+                            // parameters.Add("Customer", Entity.Customer);
+                            parameters.Add("IsModal",true);
+                            // parameters.Add("CustomerName", Entity.Customer.Name);
+                            parameters.Add("Enabled",true);
+                            parameters.Add("Component", Component);
+
+                            //
+                          }
+
+                        <SearchButtonComponent FormType="typeof(WorkOrderItemCreate)"
+                                           ID="@Entity.WorkOrderDetailID.ToString()" Type="search"
+                                                           Size="@ModalSize.MediumWindow"
+                                                           Text="Edit"
+                                                           Enabled="true"
+                                                           AllWidth="true"
+                                                           Parameters="@parameters"
+                                                           CloseWindow="CloseAddChild">
+
+                                    </SearchButtonComponent>
+                        </div>
+                </div>
+
+
+            </EditButton>
+
+        </ResponsiveTable>
+    </EditForm>
+}
+
+@*</EditForm>*@
+
+@code
+{
+
+
+
+
+
+    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //eq = Grid.currentEdit;
+        //CurrentEditContext = Grid.editContext;&& _listWorkOrderDetail.Count != WorkOrder_Create._listWorkOrderDetail.Count
+        //if (WorkOrder_Create != null )
+        //{
+
+        //    _listWorkOrderDetail = WorkOrder_Create._listWorkOrderDetail.ToList();
+        //    //foreach (var item in _listWorkOrderDetail)
+        //    //{
+        //    //    Grid.SaveNewItem(item); //Add(item);
+        //    //}
+        //    Grid.ItemsDataSource = _listWorkOrderDetail;
+        //}
+
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        //editContex = new EditContext(user);
+
+        await base.OnInitializedAsync();
+       
+
+
+    }
+
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        return base.OnParametersSetAsync();
+    }
+
+
+
+    public string _strroles { get; set; }
+
+    //IList<Rol> result= GetRoles(_strroles)
+
+
+
+    protected async Task Submit(EditContext editContext)
+    {
+
+    }
+
+
+    public void ClearList(EventArgs arg)
+    {
+        List.Clear();
+
+    }
+
+    public async void Show(List<WorkOrderDetail> group)
+    {
+        if (Grid != null && group != null)
+        {
+            _listWorkOrderDetail = group;
+
+
+            //gger.LogDebug(group.Count().ToString());
+
+            //foreach (var item in group)
+            //{
+            //    await Grid.SaveNewItem(item); //Add(item);
+            //}
+
+            //Grid.Items = group;
+            StateHasChanged();
+            //Logger.LogDebug(RT.ItemsDataSource.Count());
+        }
+
+
+    }
+
+
+
+}
+
+

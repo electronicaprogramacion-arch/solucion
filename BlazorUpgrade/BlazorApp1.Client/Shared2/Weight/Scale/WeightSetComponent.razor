@@ -1,0 +1,147 @@
+﻿@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+@using CalibrationSaaS.Domain.Aggregates.Entities;
+@using CalibrationSaaS.Domain.Aggregates.ValueObjects; 
+@namespace BlazorApp1.Blazor.LTI.Scale
+@inherits WeightSetComponent_Base
+
+
+
+
+   
+@*@{ 
+    Group = lstWeightSet;
+}*@
+
+
+@if (Group != null || 1==1)
+{
+    
+    GroupWeights(Group);
+
+   
+
+
+    <div class="row">
+        <div class="col">
+          
+               
+             </div>
+        
+       
+    </div>
+    <div class="row" style="margin-top:-0px">
+        <div class="col">
+
+            <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane fade show active" id="list-home" role="tabpanel" aria-labelledby="list-home-list">
+                   
+                    @{
+
+                        if (Group != null)
+                        {
+                            Group= Group.DistinctBy(x => x.WeightSetID).ToList();
+                        }
+                    }
+
+
+                    @*<div>scale</div>*@
+                    <ResponsiveTable ItemsDataSource="@Group"
+                                     PageSize="20" 
+                                     HasAction="false"
+                                     HasSelect="false" 
+                                     HasEdit="false"
+                                     EnabledSearch="false"
+                                     HasDelete="true"
+                                     TableItem="CalibrationSaaS.Domain.Aggregates.Entities.WeightSet"
+                                     Context="Entity"
+                                     editContext="@CurrentEditContext"
+                                     @ref="Grid"
+                                     FilterByObject="Filter33"
+                                     Component="@Component"
+                                     DeleteAction="Delete"
+                                     IsVisibleNew="true">
+
+                        <ChildContent>
+
+                            <GridColumns>
+                                <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.PieceOfEquipmentID)" Title="ID"  />
+                                <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.Reference)" Title="#Ref" />
+                                <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.WeightNominalValue)" Title="Nominal Weight" DefaultSort="true" />
+                                <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.WeightActualValue)" Title="Actual Weight" />
+                                <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.UnitOfMeasure.Abbreviation)" Title="UoM"  />
+                                <GridColumn TableItem="WeightSet" Field="@Grid.GetPropertyName(() => DefultTestPoint.Note)" Title="Note" />
+
+
+                            </GridColumns>
+
+                        </ChildContent>
+                        <NewButton>
+                            @if (Group2 != null)
+                            {
+                                <div class="btn-group btn-group-sm" style="margin-bottom:-2px">
+                                    @foreach (var item2 in Group2)
+                                    {//list-group-item list-group-item-action
+                                        @*  <div class="col-3"> *@
+                                        <button class="btn btn-success" style="margin-right:4px" @onclick="@(async () => await CancelItem(item2))"
+                                        @onclick:stopPropagation @onclick:preventDefault id="list-home-list" data-toggle="list" href="#list-home" role="tab" aria-controls="home">
+                                            @item2.PieceOfEquipmentID
+
+                                        </button>
+                                        @*   </div> *@
+                              }
+
+                                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                                  Click="@(async () => Grid.Reload())"
+                                                   Text="Refresh" />
+
+                                </div>
+                            }
+                            <div class="col-sm-12 customcol" style="display:none">
+                                <div class="row">
+
+                                    <div class="col-sm-4 customcol">
+                                        <button class="btn btn-sm btn-primary shadow-sm editButton"
+                                                id="@("btnClearWeightset" + ID + "")" @onclick=@(async () => await ClearWeightSet())
+                                        @onclick:stopPropagation @onclick:preventDefault>
+                                            Add Standard
+                                        </button>
+                                        <button class="btn btn-sm btn-primary shadow-sm editButton"
+                                                id="@("btnSetWeightset" + ID + "")" @onclick=@(async () => await SelectWeightSet())
+                                        @onclick:stopPropagation @onclick:preventDefault>
+                                            Add Standard
+                                        </button>
+                                    </div>
+                                    <div class="col-sm-4 customcol" style="display:none">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input " id="checkAccredited"
+                                            @oninput="ChangeCheckBox">
+
+                                            <label class="custom-control-label" for="checkAccredited">Accredited</label>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </NewButton>
+                
+                        <GridRow>
+                      
+                        </GridRow>
+
+                    </ResponsiveTable>
+                </div>
+                <div class="tab-pane fade" id="list-profile" role="tabpanel" aria-labelledby="list-profile-list">...</div>
+     
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+        </div>
+    </div>
+}

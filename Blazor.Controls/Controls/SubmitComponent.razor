@@ -1,0 +1,14 @@
+﻿@namespace Blazor.Controls
+<button class="btn btn-sm btn-info shadow-sm" id="@ID"
+            type="submit"  style="display:none" @onkeypress:preventDefault>
+        Save
+        <i class="fas fa-save fa-sm text-white-50"></i>
+    </button>
+
+@code {
+
+    [Parameter]
+    public string ID { get; set; } = "executebutton";
+
+
+}

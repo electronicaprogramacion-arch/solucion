@@ -1,0 +1,86 @@
+﻿@page "/CustomerDetails"
+@inject ILogger<Customer_Details> Logger;
+@inject IToastService toastService;
+
+<h1>Customer Details</h1>
+
+<div class="card mb-3">
+    <div class="row no-gutters">
+        <div class="col-md-4">
+            <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;" src="/img/undraw_reviewed_docs_neeb.svg" alt="">
+        </div>
+        <div class="col-md-8">
+            <form class="needs-validation" style="margin:20px" novalidate>
+                <div class="form-row" disabled>
+                    <div class="col-md-4 mb-3">
+                        <label for="validationTooltip01">First name</label>
+                        <input type="text" class="form-control" id="validationTooltip01" placeholder="First name" value="Kim" required>
+                        <div class="valid-tooltip">
+                            Looks good!
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="validationTooltip02">Last name</label>
+                        <input type="text" class="form-control" id="validationTooltip02" placeholder="Last name" value="Merlo" required>
+                        <div class="valid-tooltip">
+                            Looks good!
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="validationTooltipUsername">Username</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="validationTooltipUsernamePrepend">
+                                    <i class="fas fa-mail-forward fa-sm text-white-50"></i>
+                                </span>
+                            </div>
+                            <input type="text" class="form-control" id="validationTooltipUsername" placeholder="Username" aria-describedby="validationTooltipUsernamePrepend" value="kim@merlo.me" required>
+                            <div class="invalid-tooltip">
+                                Please choose a unique and valid username.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-6 mb-3">
+                        <label for="validationTooltip03">City</label>
+                        <input type="text" class="form-control" id="validationTooltip03" placeholder="City" value="Big Town" required>
+                        <div class="invalid-tooltip">
+                            Please provide a valid city.
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="validationTooltip04">State</label>
+                        <input type="text" class="form-control" id="validationTooltip04" placeholder="State" value="NJ" required>
+                        <div class="invalid-tooltip">
+                            Please provide a valid state.
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="validationTooltip05">Zip</label>
+                        <input type="text" class="form-control" id="validationTooltip05" placeholder="Zip" value="12345" required>
+                        <div class="invalid-tooltip">
+                            Please provide a valid zip.
+                        </div>
+                    </div>
+                </div>
+
+                <NavLink class="btn btn-primary" href="CustomerEdit">Edit Contact</NavLink>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<button class="btn btn-info" @onclick="@(() => toastService.ShowInfo("I'm an INFO message"))">Info Toast</button>
+<button class="btn btn-success" @onclick="@(() => toastService.ShowSuccess("I'm a SUCCESS message with a custom title", "Congratulations!"))">Success Toast</button>
+<button class="btn btn-warning" @onclick="@(() => toastService.ShowWarning("I'm a WARNING message"))">Warning Toast</button>
+<button class="btn btn-danger" @onclick="@(() => toastService.ShowError("I'm an ERROR message"))">Error Toast</button>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        //Logger.LogDebug("hey");
+        
+    }
+}

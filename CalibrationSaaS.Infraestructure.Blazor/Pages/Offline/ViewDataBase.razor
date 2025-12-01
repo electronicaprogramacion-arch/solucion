@@ -1,0 +1,161 @@
+﻿@page "/View"
+@inherits FComponentBase
+@using static SQLite.SQLite3;
+@using CalibrationSaaS.Infraestructure.Blazor.Services.Offline.Sqlite;
+@using SqliteWasmHelper;
+
+ <div class="row">
+     <div class="col">
+        <FluentAccordion ActiveId="@activeId" OnAccordionItemChange="HandleOnAccordionItemChange" ExpandMode="AccordionExpandMode.Single">
+            <FluentAccordionItem Class="acco1">
+                <HeadingTemplate>
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left" data-toggle="collapse" type="button"
+                                data-target="#collapseBasicInformation"
+                                aria-expanded="true"
+                                aria-controls="collapseBasicInformation"
+                        @onclick:stopPropagation @onclick:preventDefault>
+                            Storage Operations
+                        </button>
+                    </h2>
+                </HeadingTemplate>
+                <ChildContent>
+                    <div class="row">
+                        <div class="col-12">
+                            <LoadConfiguration ShowDelete="true"></LoadConfiguration>
+                        </div>
+
+                    </div>
+                </ChildContent>
+            </FluentAccordionItem>
+            <FluentAccordionItem Class="acco1">
+                <HeadingTemplate>
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left" data-toggle="collapse" type="button"
+                                data-target="#collapseBasicInformation"
+                                aria-expanded="true"
+                                aria-controls="collapseBasicInformation"
+                        @onclick:stopPropagation @onclick:preventDefault>
+                            Database Viewer
+                        </button>
+                    </h2>
+                </HeadingTemplate>
+                <ChildContent>
+                    <div class="row">
+                        <div class="col">
+                        </div>
+                        <div class="col">
+                            <h5>Database Viewer</h5>
+                        </div>
+                        <div class="col">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12" style="min-height:560px">
+
+                            <iframe width="100%" height="90%" src="ViewDatabase.html" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </ChildContent>
+            </FluentAccordionItem>
+            <FluentAccordionItem Class="acco2">
+                <HeadingTemplate>
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left" data-toggle="collapse" type="button"
+                                data-target="#collapseBasicInformation"
+                                aria-expanded="true"
+                                aria-controls="collapseBasicInformation"
+                        @onclick:stopPropagation @onclick:preventDefault>
+                            SQL EXECUTE
+                        </button>
+                    </h2>
+                </HeadingTemplate>
+                <ChildContent>
+                   
+                    <div class="row">
+                        <div class="col-12">
+                            <LoadConfiguration IsSQLExcecute="true"></LoadConfiguration>
+                        </div>
+                    </div>
+                </ChildContent>
+            </FluentAccordionItem>
+
+        </FluentAccordion>
+</div>
+</div>
+ 
+
+
+
+
+@code {
+
+
+  
+    string activeId = "accordion-1";
+    public bool OpenAditional { get; set; }
+    FluentAccordionItem? changed;
+    private void HandleOnAccordionItemChange(FluentAccordionItem item)
+    {
+        changed = item;
+        if (changed.Class == "acco7" && !OpenAditional)
+        {
+            OpenAditional = true;
+        }
+        else
+        {
+            OpenAditional = false;
+        }
+    }
+    // [Inject]
+    // public Func<dynamic, Application.Services.ISampleService2<CallContext>> OffLineClient { get; set; }
+    // [Inject]
+    // public ISqliteWasmDbContextFactory<CalibrationSaaSDBContextOff2> DbFactory { get; set; }
+    // [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.Basic.AppState AppStateBasics { get; set; }
+    // [Inject] public CalibrationSaaS.Domain.Aggregates.Shared.AppStateCompany AppState { get; set; }
+    // public async Task DeleteDataBase()
+    // {
+    //     var loadpa = await ConfirmAsync("Delete Data in Offline Database");
+
+    //     await ShowProgress();
+
+    //     if (loadpa)
+    //     {
+    //         //await DatabaseService.deleteDatabaseAsync();
+
+    //         //await DatabaseService.InitDatabaseAsync();
+
+    //         //await OffLineClient(DbFactory).InitializeAsync();
+
+    //         await OffLineClient(DbFactory).DeleteDatabase();
+
+
+    //         //await LoadParametrics(Technician);
+    //     }
+
+    //     await CloseProgress();
+
+    // }
+  
+
+    // public void DeleteCache()
+    // {
+    //     AppStateBasics.UnitofMeasureList = null;
+    //     AppState.UnitofMeasureList = null;
+
+    //     AppState.UnitofMeasureTypeList = null;
+    //     AppStateBasics.UnitofMeasureTypeList = null;
+
+    //     AppSecurity.RolesList = null;
+    //     AppSecurity.Permissions = null;
+    //     AppSecurity.UserList = null;
+    //     AppSecurity.CertificationList = null;
+    //     AppSecurity.CalibrtionTypeList = null;
+    //     AppSecurity.EquipmentTypeWODList = null;
+    //     AppState.ToleranceList2 = null;
+    //     AppStateBasics.ToleranceList2 = null;
+    //     AppSecurity.AlreadyLoad = false;
+
+
+    // }
+}

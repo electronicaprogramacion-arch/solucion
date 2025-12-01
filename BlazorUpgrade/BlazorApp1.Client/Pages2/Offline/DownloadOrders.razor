@@ -1,0 +1,84 @@
+﻿@using Blazed.Controls
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using CalibrationSaaS.Infraestructure.Blazor
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@namespace BlazorApp1.Blazor.Pages.Offline
+@inherits KavokuComponentBase<int>
+@rendermode InteractiveAuto
+
+
+<div class="simple-form">
+
+    <div class="form-group">
+        <label for="last-name"> Do you want to switch to online mode?</label>
+    </div>
+
+    @*<button @onclick="SubmitForm" class="btn btn-primary">Yes</button>*@
+   @* <a @onclick="SubmitForm" class="btn btn-primary" @onclick:stopPropagation @onclick:preventDefault>Yes</a>*@
+
+    <button class="btn btn-primary" id="@("yesno")"
+            @onclick=@(async () => await SubmitForm()) @onclick:stopPropagation @onclick:preventDefault>
+        Yes
+    </button>
+
+
+    <button @onclick="Cancel" class="btn btn-secondary">No</button>
+</div>
+
+
+@code {
+
+    public async Task<string> CurrentUserName()
+    {
+        var user = (await stateTask).User;
+
+        //var u = context.User.Identity.Name;
+        //var ed = await AuthorizationService.AuthorizeAsync(user, null, Policy);
+        return user.Identity.Name;
+    }
+
+
+    [Inject]
+    public NavigationManager Navigation { get; set; }
+    [CascadingParameter] BlazoredModalInstance ModalInstance { get; set; }
+    [Inject]
+    public CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity { get; set; }
+    async Task SubmitForm()
+    {
+        // var cu = await CurrentUserName();
+
+        // if (string.IsNullOrEmpty(cu))
+        // {
+        //     Navigation.NavigateTo($"authentication/login?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
+        // }
+
+        // AppSecurity.IsNotGrpc = false;
+        // var b1 = await JSRuntime.InvokeAsync<BrowserDimension>("getDimensions");
+        // ConnectionStatusService.ConnectedChangeStatus(b1.Online, b1.Install, AppSecurity.IsNotGrpc);
+        await ModalInstance.CloseAsync(ModalResult.Ok($"Form was submitted successfully."));
+
+
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (Component != null && !string.IsNullOrEmpty(Component.Group))
+        {
+            Component.Group = Component.Group.Replace("tech.HasView", "");
+        }
+        if (string.IsNullOrEmpty(Component.Group))
+        {
+            Component.Group = "";
+        }
+
+        Component.Group = Component.Group + "tech,job.HasView,job.HasEdit,job.HasSave";
+    }
+
+    async Task Cancel()
+    {
+        await ModalInstance.CancelAsync();
+    }
+}

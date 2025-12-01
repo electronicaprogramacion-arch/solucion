@@ -1,0 +1,2714 @@
+﻿@using System.ComponentModel.DataAnnotations;
+@using System;
+@using System.Linq;
+@using System.Reflection;
+@using System.Collections.Generic
+@using System.Linq.Expressions
+@using Blazed.Controls
+@using System.Collections;
+@using Microsoft.AspNetCore.Components;
+
+@using System.Timers;
+
+@using DynamicExpressions
+@using Microsoft.AspNetCore.Authorization;
+@typeparam TableItem
+@inherits Blazed.Controls.ControlComponentBase
+
+
+@using Helpers.Controls;
+@using Helpers.Controls.ValueObjects;
+@implements IDisposable
+@namespace Blazed.Controls.Table
+
+
+
+
+<CascadingValue Value="@this">
+
+    @{
+
+
+        var isinrole = false;
+        if (!string.IsNullOrEmpty(Roles))
+        {
+            isinrole = IsInRole().ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+
+        var HasFullacess = false;
+        if (!string.IsNullOrEmpty(Policy))
+        {
+            HasFullacess = IsInPolicy(Policies.HasFullAccess).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+
+
+        if (!HasFullacess)
+        {
+            var HasView = false;
+            if (!string.IsNullOrEmpty(Policy))
+            {
+                HasView = IsInPolicy(Policies.HasView).ConfigureAwait(false).GetAwaiter().GetResult();
+            }
+
+            if (!HasView && !ReportView)
+            {
+                <div>You don’t have permission to view this resource.</div>
+                return;
+            }
+            
+
+            if (HasView)
+            {
+                if (!HasNew.HasValue)
+                {
+                    HasNew = IsInPolicy(Policies.HasNew).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+
+                if (!HasEdit.HasValue)
+                {
+                    HasEdit = IsInPolicy(Policies.HasEdit).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+
+                if (!HasEdit.Value && GridEdit == null && EditButton != null)
+                {
+                    HasEdit = true;
+                }
+
+
+                if (!HasDelete.HasValue)
+                {
+                    HasDelete = IsInPolicy(Policies.HasDelete).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+
+                if (!HasSelect.HasValue)
+                {
+                    HasSelect = IsInPolicy(Policies.HasSelect).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+                if (!HasSave.HasValue)
+                {
+                    HasSave = IsInPolicy(Policies.HasSave).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
+            }
+        }
+        else
+        {
+            if (!HasNew.HasValue)
+            {
+                HasNew = true;
+            }
+            if (!HasEdit.HasValue)
+            {
+                HasEdit = true;
+            }
+            if (!HasDelete.HasValue)
+            {
+                HasDelete = true;
+            }
+            if (!HasSave.HasValue)
+            {
+                HasSave = true;
+            }
+
+
+
+            if (!HasSelect.HasValue && GridEdit == null && EditButton != null)
+            {
+                HasSelect = false;
+            }
+            else if (!HasSelect.HasValue)
+            {
+                HasSelect = true;
+            }
+
+
+        }
+
+
+        if (!HasNew.HasValue)
+        {
+            HasNew = false;
+        }
+        if (!HasEdit.HasValue)
+        {
+            HasEdit = false;
+        }
+        if (!HasDelete.HasValue)
+        {
+            HasDelete = false;
+        }
+        if (!HasSelect.HasValue)
+        {
+            HasSelect = false;
+        }
+        if (!HasSave.HasValue)
+        {
+            HasSave = false;
+        }
+
+        //if (LabelHeader)
+        //{
+        //    ShowControl = false;
+        //    ShowLabel = true;
+                //}
+
+
+    }
+
+    @if (!AutoGenerateColumn)
+    {
+        @ChildContent
+    }
+    
+
+
+    @if (SelectOnly && (HasSelect.Value == true || HasEdit.Value == true))
+    {
+        HasDelete = false;
+        HasAction = true;
+        HasEdit = false;
+        HasSelect = true;
+        HasNew = false;
+        HasSave = false;
+        HasCancelButton = false;
+        
+
+    }
+   
+
+
+
+    @if (!isinrole && !string.IsNullOrEmpty(Roles))
+    {
+        HasDelete = false;
+    }
+    @if (!isinrole && !string.IsNullOrEmpty(Roles))
+    {
+        HasEdit = false;
+    }
+    @if (!isinrole && !string.IsNullOrEmpty(Roles))
+    {
+        HasNew = false;
+    }
+
+
+
+
+
+    @if (HasDelete == false && HasEdit == false && HasSelect == false)
+    {
+        HasAction = false;
+    }
+
+    @if (HasDelete == true || HasEdit == true || HasSelect == true)
+    {
+        HasAction = true;
+    }
+
+    @if (EnabledDrag)
+    {
+        <style>
+
+            /*add this to avoid flickering*/
+            .plk-dd-inprogess > * {
+                pointer-events: none;
+            }
+
+            /*dropzone style style*/
+            .plk-dd-dropzone {
+                min-height: 50px;
+            }
+
+            /*drag drop styles*/
+
+            .plk-dd-spacing {
+                height: 10px;
+            }
+
+            .plk-dd-spacing-dragged-over {
+                padding: 25px;
+            }
+
+            .plk-dd-dragged-over {
+                background-color: lightgray;
+                opacity: 0.6;
+                animation: blinker 1s linear infinite;
+            }
+
+                .plk-dd-dragged-over > div {
+                    background-color: lightgray;
+                    opacity: 0.6;
+                    animation: blinker 1s linear infinite;
+                }
+
+            .plk-dd-dragged-over-denied {
+                background-color: red;
+                opacity: 0.6;
+                animation: blinker 1s linear infinite;
+            }
+
+            .plk-dd-in-transit {
+                opacity: 0;
+            }
+
+                .plk-dd-in-transit > div {
+                    opacity: 0;
+                }
+
+            @@keyframes blinker {
+                50% {
+                    opacity: 0;
+                }
+            }
+
+            .blink_me {
+                animation: blinker 1s linear infinite;
+            }
+
+            /*for flex demo*/
+
+            .plk-flex .plk-dd-spacing {
+                width: 20px;
+                height: auto;
+            }
+
+            .plk-flex .plk-dd-dragged-over {
+                background-color: lightgray;
+                opacity: 0.6;
+                animation: blinker 1s linear infinite;
+            }
+
+                .plk-flex .plk-dd-dragged-over > div {
+                    background-color: lightgray;
+                    opacity: 0.9;
+                    animation: blinker 1s linear infinite;
+                }
+
+            .plk-flex .plk-dd-in-transit {
+                background-color: orangered;
+            }
+
+                .plk-flex .plk-dd-in-transit > div {
+                    background-color: orangered;
+                }
+
+            .plk-dd-noselect {
+                -webkit-touch-callout: none; /* iOS Safari */
+                -webkit-user-select: none; /* Safari */
+                -khtml-user-select: none; /* Konqueror HTML */
+                -moz-user-select: none; /* Old versions of Firefox */
+                -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently
+                                              supported by Chrome, Edge, Opera and Firefox */
+            }
+        </style>
+
+
+    }
+
+    <style>
+
+        @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+
+            .gridContainer {
+                max-height: 500px;
+                overflow-y: scroll;
+            }
+        }
+    </style>
+    <style type="text/css">
+        .h-divider {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            height: 1px;
+            width: 100%;
+            border-top: 1px solid gray;
+        }
+
+        .grid-striped .row:nth-of-type(odd) {
+            background-color: rgba(0,0,0,.05);
+        }
+    </style>
+
+    @if (!InLineEdit && (HasNew.HasValue && HasNew.Value && IsNew || CurrentEditIndex > -1) || DisabledRowHover)
+    {
+        <style>
+
+
+            .grid-row div:hover {
+                color: #858796;
+                background-color: transparent !important;
+            }
+        </style>
+    }
+
+
+    @if (IsNew || CurrentEditIndex > -1)
+    {
+        <style>
+            .new :hover {
+                color: #858796;
+                background-color: transparent !important;
+            }
+
+            .new div:hover {
+                color: #858796;
+                background-color: transparent !important;
+            }
+        </style>
+    }
+
+
+    @{
+
+        GetDimensions().ConfigureAwait(true).GetAwaiter();
+
+    }
+   
+
+
+
+
+    @if(ReportView)
+    {
+        HasAction=false;
+        HasDelete=false;
+        HasSelect=false;
+        ShowSearch=false;
+        EnabledSearch = false;
+        HasNew=false;
+        NewButton = null;
+        GridFilter = null;
+        ReportHeader=true;
+        ReportTitle=true;
+        ReportParams = true;
+        ReportCSS = true;
+      
+
+    }
+
+    @if(ReportCSS)
+    {
+    var rc = RowClass + " bg-white ";
+    RowClass = rc;
+    HeaderRowClass = HeaderRowClass + " bg-white text-dark";
+    }
+
+    <div id="@OverlayContainerID" class="@OverlayContainerID" style="height:100%">
+
+
+
+        @if (OnlySearch)
+        {
+            <RadzenDataGrid Data="@ItemsDataSource"
+                            AllowFiltering=true ColumnWidth="300px"
+                            AllowColumnResize="true"
+                            AllowAlternatingRows="false"
+                            AllowSorting="true"
+                            PageSize="@pageSize"
+                            AllowPaging="true"
+                            PagerHorizontalAlign="HorizontalAlign.Right"
+                            ShowPagingSummary="true"
+                            LoadData="@LoadDataForGrid"
+                            Count="@totalCount"
+                            TItem="TableItem"
+                            IsLoading="@isLoading"
+                            FilterMode="FilterMode.Advanced"
+                            LogicalFilterOperator="LogicalFilterOperator.Or"
+                            PageSizeOptions="@pageSizeOptions"
+                            PageSizeText="Items per page:"
+                            RowHover="true"
+                            PageSizeChanged="@OnPageSizeChange"
+                            class="manufacturer-grid rz-datatable-hoverable-rows"
+                            Style="cursor: pointer;">
+                <HeaderTemplate>
+                    @if ((Items == null || Items?.Count() == 0) || !EnabledSearch && ForceNEwButton)
+                    {
+                        <div class="@AloneNewButtonCSS">
+
+                            @if (HasNew.Value && !ShowSearch)
+                            {
+
+                                @if (NewButton == null)
+                                {
+                                    <button class="@NewButtonCSS" id="@(GridID + "_btnNew")" Click=@(async () => await NewItem()) disabled="@IsDisable">
+                                        @NewButtonText
+                                    </button>
+                                }
+                                else
+                                {
+                                    @NewButton
+
+                                }
+
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        ShowSearch = true;
+                    }
+
+                    @if ((CurrentEditIndex == -1 && !IsNew && ItemsDataSource != null && ItemsDataSource?.Count() > 0)
+                                    || (ShowSearch == true && ItemsDataSource != null && CurrentEditIndex == -1 && !IsNew)
+                                    || ForceNEwButton)
+                    {
+                        string visiblenew = "";
+
+                        if (!IsVisibleNew)
+                        {
+                            visiblenew = "display:none";
+                        }
+
+                        <nav class="navbar navbar-expand-lg navbar-light bg-light" style="padding-bottom:0px;@visiblenew">
+
+
+                            <div class="row" style="width:100%">
+
+                                <div style="float:left;width:30%" class="col">
+                                    @if (HasNew.Value)
+                                    {
+
+
+                                        @if (NewButton == null)
+                                        {
+                                            <div class="@AloneNewButtonCSS">
+                                                <RadzenButton class="@NewButtonCSS" id="@(GridID + "_btnNew")" disabled="@IsDisable"
+                                                              Click=@(async () => await NewItem())>
+                                                    @NewButtonText
+                                                </RadzenButton>
+                                            </div>
+                                        }
+
+                                        else
+                                        {
+                                            <div class="@AloneNewButtonCSS">
+                                                @NewButton
+                                            </div>
+                                        }
+
+
+                                    }
+                                </div>
+                                @if (EnabledSearch)
+                                {
+                                    <div style="float:right; width: 70%" class="col">
+                                        <div class="form-inline my-2 my-lg-0" style="float:right">
+
+                                            @if (GridFilter != null) // && Filter !=null)
+                                            {
+                                                <RadzenButton class="btn btn-link" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent"
+                                                              aria-controls="navbarToggleExternalContent" aria-expanded="false" Click=@(async () => await EnabledAdvancedSearch()) aria-label="Toggle navigation">
+                                                    Advanced Search
+                                                </RadzenButton>
+                                            }
+
+                                            @if (!ActiveAdvancedSearch)
+                                            {
+                                                if (VisibleSearch)
+                                                {
+
+
+
+                                                    <div class="nav-item dropdown no-arrow d-sm-none">
+                                                        <a class="nav-link dropdown-toggle" href="#" id="searchDropdownGrid" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                            <i class="fas fa-search fa-fw"></i>
+                                                        </a>
+
+                                                        <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in" aria-labelledby="searchDropdown" style="width:600%">
+                                                            <form class="form-inline mr-auto w-100 navbar-search">
+                                                                <div class="input-group">
+                                                                    <input type="text"
+                                                                           @bind-value="SearchTerm" @ref="searchE" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm, arg))
+                                                                           class="form-control bg-light border-0 small" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2">
+                                                                    <div class="input-group-append">
+                                                                        <RadzenButton class="btn btn-primary" type="button"
+                                                                                      id="@(GridID + "_btnSearch")"
+                                                                                      disabled="@IsDisable"
+                                                                                      Click=@(async () => await SearchFunction())>
+                                                                            <i class="fas fa-search fa-sm"></i>
+                                                                        </RadzenButton>
+                                                                    </div>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+
+                                                    <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                                                        <div class="input-group mb-3">
+                                                            <input @bind-value="SearchTerm" @ref="searchE" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm, arg))
+                                                                   class="form-control mr-sm-2" type="search" placeholder="Please enter a keyword." aria-label="Search" />
+
+
+                                                            <div class="input-group-append">
+                                                                <RadzenButton class="d-sm-inline-block btn btn-sm btn-success shadow-sm"
+                                                                              id="@(GridID + "_btnSearch")"
+                                                                              disabled="@IsDisable"
+                                                                              Click=@(async () => await SearchFunction())>
+                                                                    Search
+                                                                </RadzenButton>
+                                                            </div>
+
+                                                        </div>
+                                                    </form>
+
+
+                                                }
+                                                else
+                                                {
+                                                    <div class="input-group mb-3" style="display:none">
+
+
+                                                        <input @bind-value="SearchTerm" @ref="searchE" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm, arg))
+                                                               class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" />
+
+
+                                                        <div class="input-group-append">
+                                                            <RadzenButton class="d-sm-inline-block btn btn-sm btn-success shadow-sm" id="@(GridID + "_btnSearch")" disabled="@IsDisable"
+                                                                          Click=@(async () => await SearchFunction())>
+                                                                Search
+                                                            </RadzenButton>
+                                                        </div>
+                                                    </div>
+                                                }
+
+
+                                            }
+
+
+
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                        </nav>
+                        <div class="xxcollapse" id="navbarToggleExternalContentxxx">
+
+                            @if (GridFilter != null && ModalFilter)//&& Filter != null)
+                            {
+
+
+                            }
+                            @if (GridFilter != null && !ModalFilter && ActiveAdvancedSearch)//&& Filter != null)
+                            {
+
+                                <div class="p-4" style="width:100%">
+                                    try
+                                    {
+                                    <EditForm Model="Filter">
+                                        @GridFilter(Filter)
+                                    </EditForm>
+                                    }
+                                    catch (Exception ex)
+                                    {
+
+                                    }
+                                </div>
+                            }
+                            @if (ActiveAdvancedSearch)
+                            {
+                                <div class="p-4" style="width:100%">
+                                    <div class="form-row">
+
+                                        <div class="col-sm" style="width:50%">
+                                            @*  <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent"
+                                    aria-controls="navbarToggleExternalContent" aria-expanded="false" @onclick=@(async () => await EnabledAdvancedSearch()) aria-label="Toggle navigation" Click:stopPropagation @onclick:preventDefault>
+                                Close Advanced...
+                            </button> *@
+
+                                            <RadzenButton class="btn btn-link" type="button"
+                                                          Click=@(async () => await EnabledAdvancedSearch()) aria-label="Toggle navigation">
+                                                Close Advanced...
+                                            </RadzenButton>
+                                        </div>
+                                        <div class="col-sm" style="text-align:right;width:50%">
+                                            <RadzenButton class="btn btn-sm btn-success shadow-sm my-2 my-sm-0" id="@(GridID + "_btnSearchFilter")" disabled="@IsDisable"
+                                                          Click=@(async () => await SearchFunction())>
+                                                Search
+                                            </RadzenButton>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+
+                            }
+
+
+
+                        </div>
+
+
+                    }
+
+                </HeaderTemplate>
+                <Columns>
+
+
+                    @if (Columns != null && Columns?.Count > 0)
+                    {
+                        if ((HasAction))
+                        {
+
+                            <RadzenDataGridColumn TItem="TableItem" Width="150px" TextAlign="TextAlign.Center" Filterable="false" Sortable="false">
+                                <Template Context="data">
+                                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small"
+                                                  Click="@(() => NavigateToEdit(data))" Text="Edit" />
+
+                                </Template>
+                            </RadzenDataGridColumn>
+
+
+                        }
+
+                        @foreach (GridColumn<TableItem> column in Columns)
+                        {
+
+
+                            if (column.IsVisble)
+                            {
+                                var _ColumnName = column.Title;
+
+
+                                if (string.IsNullOrEmpty(_ColumnName))
+                                {
+                                    _ColumnName = GetField(column.Field).SplitCamelCase();
+
+                                }
+                                Type t = GetFieldType<TableItem>(column.Field);
+                                var prop = @PropertyAccess.GetDynamicPropertyExpression(column.Key, t);
+
+
+
+                                <RadzenDataGridColumn TItem="TableItem" Property="column.Field" Title="_ColumnName">
+
+                                </RadzenDataGridColumn>
+
+
+                            }
+
+
+
+                        }
+
+                        if ((HasAction && EnabledSearch && HasDelete.Value))
+                        {
+                            <RadzenDataGridColumn TItem="TableItem" Width="150px" TextAlign="TextAlign.Center" Filterable="false" Sortable="false">
+                                <Template Context="data">
+                                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small"
+                                                  Click="@(() => NavigateToEdit(data))" Text="Delete" />
+
+                                </Template>
+                            </RadzenDataGridColumn>
+                        }
+
+                    }
+
+
+
+                </Columns>
+            </RadzenDataGrid>
+
+            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Visible="VisibleOverlay" />
+        
+        
+        }
+        else
+        {
+            
+
+    
+        int conteo = 1;
+
+        if (!LabelHeader)
+        {
+            conteo = 1;
+        }
+        else
+        {
+            //ShowLabel = true;
+            //ShowControl = false;
+        }
+
+        @if (!Enabled)
+        {
+            IsDisable = true;
+        }
+    
+
+
+    @for (int you = 1; you < 1; you++)
+    {
+            string maxhe = "100%";
+            if (LabelHeader && you == 0)
+        {
+            ShowLabel = true;
+            ShowControl = false;
+        }
+            if (Scrollable)
+            {
+                GridClass = GridClass + " " + " overflow-auto " + " h-75 ";
+                maxhe = "600px";
+            }
+
+        <div class="@(CSSWidth + GridClass)" id="@GridID" style="max-height:@maxhe">
+
+
+                @* header  *@
+            @if (((CurrentEditIndex == -1 && !IsNew) || InLineEdit) && ShowHeader)
+            {
+                @if (ReportView && Report != null && Report?.Parameters?.Count > 0)
+                {
+                        @if(ReportTitle){
+                            <div id="gridParameter" class="row bg-transparent border-0">
+                                <div class="col-1">
+                                    @DateTime.Now.ToShortDateString()
+                                </div>
+
+                                <div class="col text-center">
+                                    <h4>@Report.Title</h4>
+                                </div>
+                                <div class="col-1">
+                                    Total
+                                </div>
+
+                            </div>
+                        }
+
+                        @if (ReportParams)
+                        {
+                            object par1Name = "";
+                            object par2Name = "";
+                            object par3Name = "";
+                            object par4Name = "";
+                            object par5Name = "";
+                            <div id="gridParameter" class="row bg-transparent border-top  border-dark">
+                                <div class="col font-weight-bold">
+                                    @if (Report?.Parameters?.Count > 0)
+                                    {
+                                        par1Name = Report.Parameters.ElementAtOrDefault(0).Name;
+                                        if (par1Name == null)
+                                        {
+                                            par1Name = "";
+                                        }
+                                    }
+                                    @par1Name.ToString()
+                                </div>
+                                <div class="col font-weight-bold">
+                                    @if (Report?.Parameters?.Count > 1)
+                                    {
+                                        par2Name = Report.Parameters.ElementAtOrDefault(1).Name;
+                                        if (par2Name == null)
+                                        {
+                                            par2Name = "";
+                                        }
+                                    }
+                                    @par2Name.ToString();
+                                </div>
+
+                                <div class="col font-weight-bold">
+                                    @if (Report?.Parameters?.Count > 2)
+                                    {
+                                        par3Name = Report.Parameters.ElementAtOrDefault(2).Name;
+                                        if (par3Name == null)
+                                        {
+                                            par3Name = "";
+                                        }
+                                    }
+                                    @par3Name.ToString()
+                                </div>
+                                <div class="col font-weight-bold">
+                                    @if (Report?.Parameters?.Count > 3)
+                                    {
+                                        par4Name = Report.Parameters.ElementAtOrDefault(3).Name;
+                                        if (par4Name == null)
+                                        {
+                                            par4Name = "";
+                                        }
+                                    }
+                                    @par4Name.ToString()
+                                </div>
+                                <div class="col font-weight-bold">
+                                    @if (Report?.Parameters?.Count > 4)
+                                    {
+                                        par5Name = Report.Parameters.ElementAtOrDefault(4).Name;
+                                        if (par5Name == null)
+                                        {
+                                            par5Name = "";
+                                        }
+                                    }
+                                    @par5Name.ToString()
+                                </div>
+                            </div>
+
+
+
+                            object par1 = "";
+                            object par2 = "";
+                            object par3 = "";
+                            object par4 = "";
+                            object par5 = "";
+                            <div id="gridParameter" class="row bg-transparent  border-bottom border-dark">
+                                <div class="col">
+                                    @if (Report?.Parameters?.Count > 0)
+                                    {
+                                        par1 = Report.Parameters.ElementAtOrDefault(0).Value;
+
+                                        if (par1 == null)
+                                        {
+                                            par1 = "";
+                                        }
+
+                                    }
+                                    @par1.ToString()
+                                </div>
+                                <div class="col">
+                                    @if (Report?.Parameters?.Count > 1)
+                                    {
+                                        par2 = Report.Parameters.ElementAtOrDefault(1).Value;
+
+                                        if (par2 == null)
+                                        {
+                                            par2 = "";
+                                        }
+                                    }
+                                    @par2.ToString()
+                                </div>
+
+                                <div class="col">
+                                    @if (Report?.Parameters?.Count > 2)
+                                    {
+                                        par3 = Report.Parameters.ElementAtOrDefault(2).Value;
+                                        if (par3 == null)
+                                        {
+                                            par3 = "";
+                                        }
+                                    }
+                                    @par3.ToString()
+                                </div>
+                                <div class="col">
+                                    @if (Report?.Parameters?.Count > 3)
+                                    {
+                                        par4 = Report.Parameters.ElementAtOrDefault(3).Value;
+                                        if (par4 == null)
+                                        {
+                                            par4 = "";
+                                        }
+                                    }
+                                    @par4.ToString()
+                                </div>
+                                @*  <div class="col">
+                @if (Report?.Parameters?.Count > 4)
+                {
+                par5 = Report.Parameters.ElementAtOrDefault(4).Value;
+                }
+                @par5.ToString();
+                </div> *@
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col font-weight-bold">
+                                            Begin Date
+                                        </div>
+                                        <div class="col">
+                                            @{
+                                                var bd = "";
+                                                if (Report?.BeginDate.HasValue == true)
+                                                {
+                                                    bd = Report.BeginDate.Value.ToShortDateString();
+                                                }
+
+                                            }
+                                            @bd.ToString()
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col font-weight-bold">
+                                            End Date
+                                        </div>
+                                        <div class="col">
+                                            @{
+                                                var bd2 = "";
+                                                if (Report?.EndDate.HasValue == true)
+                                                {
+                                                    bd2 = Report.EndDate.Value.ToShortDateString();
+                                                }
+
+                                            }
+                                            @bd2.ToString()
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        }
+                        
+
+
+
+                    @if(ReportHeader && Report != null && Report?.Header != null)
+                    {
+                            object h1Name = "";
+                            object h2Name = "";
+                            object h3Name = "";
+                            object h4Name = "";
+                           
+
+                            <div id="gridheaderTitle" class="row bg-transparent border-top border-dark">
+                                <div class="col font-weight-bold">
+
+                                    @if (Report?.Header?.Columns.Count > 0 && Items?.Count > 0)
+                                    {
+                                        h1Name = Report.Header.Columns.ElementAtOrDefault(0).Title;
+                                        if (h1Name == null)
+                                        {
+                                            h1Name = "";
+                                        }
+                                    }
+                                    @h1Name.ToString()
+                                </div>
+                                <div class="col font-weight-bold">
+                                    @if (Report?.Header?.Columns.Count > 1 && Items?.Count > 0)
+                                    {
+
+
+                                        h2Name = Report.Header.Columns.ElementAtOrDefault(1).Title;
+                                        if (h2Name == null)
+                                        {
+                                            h2Name = "";
+                                        }
+
+                                    }
+                                    @h2Name.ToString()
+                                </div>
+                                <div class="col font-weight-bold">
+                                    @if (Report?.Header?.Columns.Count > 2 && Items?.Count > 0)
+                                    {
+                                        h3Name = Report.Header.Columns.ElementAtOrDefault(2).Title;
+
+                                        if (h3Name == null)
+                                        {
+                                            h3Name = "";
+                                        }
+
+                                    }
+                                    @h3Name.ToString()
+                                </div>
+                                <div class="col font-weight-bold">
+                                    @if (Report?.Header?.Columns.Count > 3 && Items?.Count > 0)
+                                    {
+                                        h4Name = Report.Header.Columns.ElementAtOrDefault(3).Title;
+                                        if (h4Name == null)
+                                        {
+                                            h4Name = "";
+                                        }
+                                    }
+                                    @h4Name.ToString()
+                                </div>
+                            </div>
+
+                            @if (string.IsNullOrEmpty(Report?.Header?.Query))
+                            {
+                                object h1 = "";
+                                object h2 = "";
+                                object h3 = "";
+                                object h4 = "";
+                                string prop = "";
+                                if (!string.IsNullOrEmpty(Report.Header.PropertyName))
+                                {
+                                    prop = Report.Header.PropertyName + ".";
+                                }
+
+                                <div id="gridheader" class="row bg-transparent border-bottom border-dark">
+                                    <div class="col">
+
+                                        @if (Report?.Header?.Columns.Count > 0 && Items?.Count > 0)
+                                        {
+                                            h1 = Helpers.DynamicHelper.GetPropertyValue(Items.ElementAtOrDefault(0), prop + Report.Header.Columns.ElementAtOrDefault(0).Field);
+                                            if (h1 == null)
+                                            {
+                                                h1 = "";
+                                            }
+                                        }
+                                        @h1.ToString()
+                                    </div>
+                                    <div class="col">
+                                        @if (Report?.Header?.Columns.Count > 1 && Items?.Count > 0)
+                                        {
+
+
+                                            h2 = Helpers.DynamicHelper.GetPropertyValue(Items.ElementAtOrDefault(0), prop + Report.Header.Columns.ElementAtOrDefault(1).Field);
+                                            if (h2 == null)
+                                            {
+                                                h2 = "";
+                                            }
+
+                                        }
+                                        @h2.ToString()
+                                    </div>
+                                    <div class="col">
+                                        @if (Report?.Header?.Columns.Count > 2 && Items?.Count > 0)
+                                        {
+                                            h3 = Helpers.DynamicHelper.GetPropertyValue(Items.ElementAtOrDefault(0), prop + Report.Header.Columns.ElementAtOrDefault(2).Field);
+
+                                            if (h3 == null)
+                                            {
+                                                h3 = "";
+                                            }
+
+                                        }
+                                        @h3.ToString()
+                                    </div>
+                                    <div class="col">
+                                        @if (Report?.Header?.Columns.Count > 3 && Items?.Count > 0)
+                                        {
+                                            h4 = Helpers.DynamicHelper.GetPropertyValue(Items.ElementAtOrDefault(0), prop + Report.Header.Columns.ElementAtOrDefault(3).Field);
+                                            if (h4 == null)
+                                            {
+                                                h4 = "";
+                                            }
+                                        }
+                                        @h4.ToString()
+                                    </div>
+
+                                </div>
+                            }
+
+                        @if (!string.IsNullOrEmpty(Report?.Header?.Query) && CurrentResult != null && !string.IsNullOrEmpty(CurrentResult.HeaderJSON))
+                            {
+                                object h1 = "";
+                                object h2 = "";
+                                object h3 = "";
+                                object h4 = "";
+                                string prop = "";
+
+
+                                var hItem = Helpers.DynamicHelper.GetInstance(CurrentResult.HeadeClassName);
+
+                                hItem = Helpers.DynamicHelper.convertJSON(hItem, CurrentResult.HeaderJSON);
+
+                                @* if (!string.IsNullOrEmpty(Report.Header.PropertyName))
+                                {
+                                    prop = Report.Header.PropertyName + ".";
+                                } *@
+
+                                <div id="gridheader" class="row bg-transparent border-bottom border-dark">
+                                    <div class="col">
+
+                                        @if (Report?.Header?.Columns.Count > 0 && hItem != null)
+                                        {
+                                            h1 = Helpers.DynamicHelper.GetPropertyValue(hItem, prop + Report.Header.Columns.ElementAtOrDefault(0).Field);
+                                            if (h1 == null)
+                                            {
+                                                h1 = "";
+                                            }
+                                        }
+                                        @h1.ToString()
+                                    </div>
+                                    <div class="col">
+                                        @if (Report?.Header?.Columns.Count > 1 && hItem != null)
+                                        {
+
+
+                                            h2 = Helpers.DynamicHelper.GetPropertyValue(hItem, prop + Report.Header.Columns.ElementAtOrDefault(1).Field);
+                                            if (h2 == null)
+                                            {
+                                                h2 = "";
+                                            }
+
+                                        }
+                                        @h2.ToString()
+                                    </div>
+                                    <div class="col">
+                                        @if (Report?.Header?.Columns.Count > 2 && hItem != null)
+                                        {
+                                            h3 = Helpers.DynamicHelper.GetPropertyValue(hItem, prop + Report.Header.Columns.ElementAtOrDefault(2).Field);
+
+                                            if (h3 == null)
+                                            {
+                                                h3 = "";
+                                            }
+
+                                        }
+                                        @h3.ToString()
+                                    </div>
+                                    <div class="col">
+                                        @if (Report?.Header?.Columns.Count > 3 && hItem != null)
+                                        {
+                                            h4 = Helpers.DynamicHelper.GetPropertyValue(hItem, prop + Report.Header.Columns.ElementAtOrDefault(3).Field);
+                                            if (h4 == null)
+                                            {
+                                                h4 = "";
+                                            }
+                                        }
+                                        @h4.ToString()
+                                    </div>
+
+                                </div>
+                            }
+
+                          
+                    }
+                    
+                }
+                
+
+                <div class="@HeaderRowClass" style="@HeaderStyle">
+                    @if ((HasAction && !EnabledSearch && Items != null && Items.Count() > 0 && !IsNew))
+                    {
+
+                    }
+
+                    @if (GridHeader != null && Items != null)
+                    {
+
+                        @GridHeader
+
+
+                    }
+
+
+                    else if (GridHeader == null && Items != null && !IsNew && CurrentEditIndex < 0)
+                    {
+
+                        if (Columns != null && Columns?.Count > 0)
+                        {
+                            if ((HasAction))
+                            {
+
+                                <div class="@ColActionHeaderCSS">
+                                </div>
+
+
+                            }
+                            //Console.WriteLine("Columns " + Columns.Count); Header Grid
+                            
+
+                            if ((HasAction && EnabledSearch && HasDelete.Value))
+                            {
+                                <div class="@ColActionHeaderCSS"></div>
+                            }
+
+                        }
+                        else if (GridHeader2 != null && LabelHeader && ItemsDataSource != null && ItemList?.Count > 0)
+                        {
+
+
+                            if (GridSelect2 != null)
+                            {
+                                <div class="@ColActionCSS">
+                                    <div class="btn-group">
+                                        <!--!-->
+                                        <!--!-->
+                                        <div class="row" rt="TYTT">
+                                            <!--!-->
+                                            <div class="btnWidth buttonLin">
+                                                <!--!-->
+
+                                            </div><!--!-->
+                                            <!-- </div>!-->
+                                            <!--!-->
+
+                                        </div><!--!-->
+                                        <div class="form-group inv" style="margin-top:0rem;margin-bottom:0rem">
+                                                <RadzenButton class="d-sm-inline-block btn btn-sm btn-danger shadow-sm editButton">
+                                                <!--!--><span>
+                                                    delete
+                                                    <i class="fas fa-remove fa-sm"></i>
+                                                </span>
+                                            </RadzenButton>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            @GridHeader2(ItemList.ElementAtOrDefault(0))
+
+                            if ((HasAction && HasDelete.Value))
+                            {
+                                <div class="btnWidth noinv">
+                                </div>
+                            }
+                            if ((HasAction && HasDuplicate.Value))
+                            {
+                                <div class="btnWidth noinv">
+                                </div>
+                            }
+
+
+
+                        }
+
+                    }
+                </div>
+            }
+
+            @* codigo de la grilla  *@
+            @if (ItemsDataSource != null)
+            {
+
+                @if (IsNew)
+                {
+                    <div class="@RowNewClass">
+
+
+                        @if (HasAction)
+                        {
+                            @if (!InLineEdit)
+                            {
+
+                                @if (!HasCancelButton && !EnableShowModal)
+                                {
+                                    <div class="modal-header">
+
+                                        <RadzenButton class="close" type="button" data-dismiss="modal" aria-label="Close" style="text-align:right"
+                                        Click="@(async () => await CancelItem("" + "" + ""))"
+                                        >
+                                            <span aria-hidden="true">×</span>
+                                        </RadzenButton>
+
+                                    </div>
+
+                                }
+
+
+                                <div class="form" style="width:100%">
+                                    <div class="@ColFormActionCSS">
+
+                                        <nav class="navbar sticky-top navbar-dark bg-light topBar" id="toolbarmodalGrid" style=" background-color:#563d7c !important; min-height:50px !important;width:100%;z-index:0 !important">
+
+                                            <div class="btn-group">
+
+                                                @if (HasNew.Value && HasSave.Value)
+                                                    @if (SaveButtonSubmit)
+                                                    {
+                                                        <RadzenButton class="@SaveButtonCSS" Click=@(async () => await SaveNewItem())>
+                                                            save
+                                                            <i class="fas fa-save fa-sm text-white-50"></i>
+
+                                                        </RadzenButton>
+                                                    }
+                                                    else
+                                                    {
+                                                        <RadzenButton class="@SaveButtonCSS" Click=@(async () => await SaveNewItem())
+                                                        >
+                                                            save
+                                                            <i class="fas fa-save fa-sm text-white-50"></i>
+                                                        </RadzenButton>
+                                                    }
+
+
+                                                @if (HasCancelButton)
+                                                {
+                                                    <RadzenButton class="@CancelButtonCSS" Click="@(async () => await CancelItem("" + "" + ""))"
+                                                    >
+                                                        cancel
+                                                        <i class="fas fa-remove fa-sm text-white-50"></i>
+                                                    </RadzenButton>
+                                                }
+
+
+
+                                            </div>
+
+                                        </nav>
+
+
+
+                                    </div>
+                                </div>
+                            }
+
+                            else
+                            {
+                                <div class="@ColActionCSS">
+                                    <div class="btn-group">
+
+                                        @if (HasNew.Value && HasSave.Value)
+                                            @if (SaveButtonSubmit)
+                                            {
+                                                <RadzenButton class="@SaveButtonCSS"
+                                                Click=@(async () => await SaveNewItem()) >
+                                                    save
+                                                    <i class="fas fa-save fa-sm text-white-50"></i>
+                                                </RadzenButton>
+                                            }
+                                            else
+                                            {
+                                                <RadzenButton class="@SaveButtonCSS"
+                                                Click=@(async () => await SaveNewItem()) >
+                                                    save
+                                                    <i class="fas fa-save fa-sm text-white-50"></i>
+                                                </RadzenButton>
+                                            }
+
+
+                                        <RadzenButton class="@CancelButtonCSS"
+                                        Click="@(async () => await CancelNew("" + "" + ""))"
+                                        >
+                                            cancel
+                                            <i class="fas fa-remove fa-sm text-white-50"></i>
+                                        </RadzenButton>
+                                    </div>
+                                </div>
+                            }
+                        }
+
+
+                        @if (currentEdit != null)
+                        {
+                            currentEdit = DefaultNew;
+
+                            editContext = new EditContext(DefaultNew);
+                            editContext.AddDataAnnotationsValidation();
+                            editContext.OnFieldChanged += EditContext_OnFieldChanged;
+
+                        }
+
+
+                        @if (GridNew == null)
+                        {
+                           
+                            @GridEdit(DefaultNew)
+                           
+                        }
+                        else if (GridNew != null)
+                        {
+                            @GridNew(DefaultNew)
+                        }
+                        else
+                        {
+                            <div>Not implement</div>
+                        }
+
+
+
+                        @if (!InLineEdit && CurrentEditIndex > -1 && FootAction)
+                        {
+                            <div class="@ColFormActionCSS">
+                                <div class="btn-group">
+                                    @if (HasNew.Value && HasSave.Value)
+                                        @if (SaveButtonSubmit)
+                                        {
+                                            <RadzenButton class="@SaveFormButtonCSS" Click=@(async () => await SaveNewItem()) type="submit">
+                                                save
+                                                <i class="fas fa-save fa-sm text-white-50"></i>
+                                            </RadzenButton>
+                                        }
+                                        else
+                                        {
+                                            <RadzenButton class="@SaveFormButtonCSS" Click=@(async () => await SaveNewItem())
+                                            >
+                                                save
+                                                <i class="fas fa-save fa-sm text-white-50"></i>
+                                            </RadzenButton>
+                                        }
+
+                                    @if (HasCancelButton)
+                                    {
+                                        <RadzenButton class="@CancelFormButtonCSS" style="width:60%;float:right"
+                                        Click="@(async () => await CancelItem("" + "" + ""))"
+                                        >
+                                            cancel  <i class="fas fa-remove fa-sm text-white-50"></i>
+                                        </RadzenButton>
+                                    }
+                                    else
+                                    {
+
+
+
+                                    }
+
+
+                                </div>
+
+                            </div>
+                        }
+
+
+                    </div>
+
+                }
+                @if (1 == 1 && you == 1)
+                {
+                    //if (LabelHeader)
+                    //{
+                    //    ShowControl = true;
+                    //    ShowLabel = false;
+                    //}
+                    int i = 0;
+
+                    <div id="@(ID + "_drag")" class="@GetClassesForDropzone()"
+                    @ondragover:preventDefault
+                    @ondragover="()=> { }"
+                    @ondragenter:preventDefault
+                    @ondragenter="()=> { }"
+                    @ondrop="()=>OnDrop()"
+                    @ondrop:preventDefault
+                         ondragstart="event.dataTransfer.setData('text', event.target.id);"
+                    @ondrop:stopPropagation
+                    @ondragenter:stopPropagation
+                    @ondragend:stopPropagation
+                    @ondragover:stopPropagation
+                    @ondragleave:stopPropagation
+                    @ondragstart:stopPropagation>
+
+
+                                @if (VisibleOverlay)
+                                {
+                                   
+                                    <div class="row">
+                                        <div class="col">
+
+                                        </div>
+                                    <div class="col d-flex justify-content-center">
+                                           @*  <FluentProgressRing>
+
+                                            </FluentProgressRing> *@
+                                            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                                        </div>
+                                    <div class="col">
+                                    </div>
+                                    </div>
+                                }
+
+                        @foreach (var CurrentRenderRow2 in ItemList)
+                        {
+
+                            //if (LabelHeader)
+                            //{
+                            //    ShowControl = true;
+                            //    ShowLabel = false;
+                            //}
+
+
+
+                            CurrentRenderRow = ItemList.ElementAtOrDefault(i);
+                            OriginalCurrentRenderRow = ItemList.ElementAtOrDefault(i);
+                            CurrentRenderIndexRow = i;
+                            TotalRenderRow = ItemList.Count();
+
+                            var inde = "Index-" + i.ToString();
+
+
+                            if (EnabledDrag && ItemList.IndexOf(CurrentRenderRow2) == 0 && MaxItems == null || MaxItems > 1)
+                            {
+                                <div @ondrop="()=>OnDropItemOnSpacing(0)"
+                                @ondrop:stopPropagation
+                                @ondragenter="()=>DragDropService.ActiveSpacerId =  0"
+                                @ondragleave="()=>DragDropService.ActiveSpacerId = null"
+                                     class="@GetClassesForSpacing(0)">
+                                </div>
+                            }
+
+
+
+
+                            <div draggable="@IsItemDragable(CurrentRenderRow2)"
+                            @ondragstart="()=>OnDragStart(CurrentRenderRow2)"
+                            @ondragend="()=>OnDragEnd()"
+                            @ondragenter="()=>OnDragEnter(CurrentRenderRow2)"
+                            @ondragleave="()=>OnDragLeave()"
+                                 class="@GetClassesForDraggable(CurrentRenderRow2)
+             @CheckIfItemIsInTransit(CurrentRenderRow2)
+             @CheckIfItemIsDragTarget(CurrentRenderRow2)
+             @CheckIfDragOperationIsInProgess()
+             @CheckIfDraggable(CurrentRenderRow2)">
+
+
+                                @if (CurrentEditIndex > -1 && i == CurrentEditIndex)
+                                {
+                                    <div class=@RowEditClass>
+
+                                        @if (HasAction)
+                                        {
+
+                                            @if (!InLineEdit)
+                                            {
+
+
+                                                @if (!HasCancelButton && !EnableShowModal)
+                                                {
+                                                    <div class="modal-header">
+
+                                                        <RadzenButton class="close" type="button" data-dismiss="modal" aria-label="Close" style="text-align:right"
+                                                        Click="@(async () => await CancelItem("" + "" + ""))"
+                                                        >
+                                                            <span aria-hidden="true">×</span>
+                                                        </RadzenButton>
+
+                                                    </div>
+
+                                                }
+
+                                                <div class="@ColFormActionCSS">
+
+
+                                                    <nav class="navbar sticky-top navbar-dark bg-light topBar" id="toolbarmodal" style=" background-color:#563d7c !important; min-height:50px !important;width:100%;z-index:0 !important">
+                                                        <div class="btn-group">
+                                                            @if (HasEdit.Value && HasSave.Value)
+                                                                @if (SaveButtonSubmit)
+                                                                {
+                                                                    <RadzenButton class="@SaveButtonCSS"
+                                                                    @ref="myComponents[i]" Click="@(async () => await SaveItem("" + inde + ""))" type="submit">
+                                                                        @ActionText
+                                                                        <i class="fas fa-save fa-sm text-white-50"></i>
+                                                                    </RadzenButton>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <RadzenButton class="@SaveButtonCSS"
+                                                                    @ref="myComponents[i]" Click="@(async () => await SaveItem("" + inde + ""))" >
+                                                                        @ActionText
+                                                                        <i class="fas fa-save fa-sm text-white-50"></i>
+                                                                    </RadzenButton>
+
+                                                                }
+                                                            @if (HasCancelButton)
+                                                            {
+                                                                <RadzenButton class="@CancelButtonCSS" @ref="myComponents[i]" Click="@(async () => await CancelItem("" + inde + ""))" >
+                                                                    cancel
+                                                                </RadzenButton>
+                                                            }
+                                                            else
+                                                            {
+
+                                                            }
+
+                                                        </div>
+
+                                                    </nav>
+
+
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="@ColActionCSS">
+                                                    <div class="btn-group">
+                                                        @if (HasEdit.Value && HasSave.Value)
+                                                            @if (SaveButtonSubmit)
+                                                            {
+                                                                <RadzenButton class="@SaveButtonCSS" @ref="myComponents[i]" Click="@(async () => await SaveItem("" + inde + ""))" type="submit">
+                                                                    save
+                                                                    <i class="fas fa-save fa-sm text-white-50"></i>
+                                                                </RadzenButton>
+                                                            }
+                                                            else
+                                                            {
+                                                                <RadzenButton class="@SaveButtonCSS" @ref="myComponents[i]" Click="@(async () => await SaveItem("" + inde + ""))"
+                                                                >
+                                                                    save
+                                                                    <i class="fas fa-save fa-sm text-white-50"></i>
+                                                                </RadzenButton>
+                                                            }
+
+                                                        <RadzenButton class="@CancelButtonCSS" @ref="myComponents[i]" Click="@(async () => await CancelItem("" + inde + ""))"
+                                                        >
+                                                            cancel
+                                                            <i class="fas fa-remove fa-sm text-white-50"></i>
+                                                        </RadzenButton>
+                                                    </div>
+                                                </div>
+
+
+                                            }
+
+
+                                        }
+
+
+                                        @if (currentEdit != null)
+                                        {
+                                            currentEdit = ItemList.ElementAt(i);
+
+                                            editContext = new EditContext(ItemList.ElementAt(i));
+                                            editContext.AddDataAnnotationsValidation();
+                                            editContext.OnFieldChanged += EditContext_OnFieldChanged;
+
+
+                                        }
+
+                                        @if (GridEdit != null && ItemList?.ElementAtOrDefault(i) != null)
+                                        {
+                                            //try
+                                            //{
+                                            @GridEdit(ItemList.ElementAt(i))
+                                            @*}
+                    catch (Exception exi)
+                    {
+                    <div>@exi.Message</div>
+                    }*@
+
+
+                                        }
+
+
+                                        @if (!InLineEdit && CurrentEditIndex > -1 && FootAction)
+                                        {
+                                            <div class="btn-group">
+                                                @if (HasEdit.Value && HasSave.Value)
+                                                    @if (SaveButtonSubmit)
+                                                    {
+                                                        <RadzenButton class="@SaveButtonCSS"
+                                                        @ref="myComponents[i]" Click="@(async () => await SaveItem("" + inde + ""))" type="submit">
+                                                            @ActionText
+                                                            <i class="fas fa-save fa-sm text-white-50"></i>
+                                                        </RadzenButton>
+                                                    }
+                                                    else
+                                                    {
+                                                        <RadzenButton class="@SaveButtonCSS"
+                                                        @ref="myComponents[i]" Click="@(async () => await SaveItem("" + inde + ""))" >
+                                                            @ActionText
+                                                            <i class="fas fa-save fa-sm text-white-50"></i>
+                                                        </RadzenButton>
+                                                    }
+
+
+
+                                                <RadzenButton class="@CancelButtonCSS" @ref="myComponents[i]" Click="@(async () => await CancelItem("" + inde + ""))" >
+                                                    cancel
+                                                    <i class="fas fa-remove fa-sm text-white-50"></i>
+                                                </RadzenButton>
+                                            </div>
+                                        }
+
+
+
+
+                                    </div>
+
+
+
+
+                                }
+                                else
+                                {
+
+
+                                    if (!InLineEdit && CurrentEditIndex == -1 && !IsNew || InLineEdit)
+                                    {
+                                        @if (RowExecute != null)
+                                        {
+
+
+                                            CurrentRenderRow = RowExecute(ItemList.ElementAtOrDefault(i));
+
+                                            CurrentRowIndex = i;
+
+                                        }
+                                        else
+                                        {
+                                            CurrentRenderRow = ItemList.ElementAtOrDefault(i);
+                                        }
+
+                                        <div class="@RowClass">
+
+                                            @if (HasAction)
+                                            {
+                                                //CurrentEditIndex = i;
+
+
+                                                <div class="@ColActionCSS">
+                                                    <div class="@("btn-group " + AlingActionCSS)">
+                                                        @if (RowExecute != null)
+                                                        {
+
+                                                            CurrentSelect = CurrentRenderRow;
+
+                                                        }
+                                                        else
+                                                        {
+
+                                                            CurrentSelect = ItemList.ElementAtOrDefault(i);
+
+
+                                                        }
+
+                                                        @if (GridSelect != null && HasSelect.Value)
+                                                        {
+
+
+                                                            @if (RowExecute != null)
+                                                            {
+
+                                                                CurrentSelect = CurrentRenderRow;
+                                                                @GridSelect(CurrentRenderRow)
+                                                            }
+                                                            else
+                                                            {
+
+                                                                CurrentSelect = ItemList.ElementAtOrDefault(i);
+
+                                                                @GridSelect(ItemList.ElementAtOrDefault(i))
+                                                            }
+
+
+                                                        }
+                                                        @if (GridSelect2 != null && HasSelect.Value)
+                                                        {
+                                                            CurrentSelectIndex = i;
+                                                            SelectRow Currentse = new SelectRow();
+
+                                                            @if (ItemList != null && RowExecute != null && CurrentRenderRow != null && Currentse != null && Currentse.Entity != null)
+                                                            {
+                                                                Currentse.Entity = CurrentRenderRow;
+                                                                Currentse.Position = i;
+                                                                CurrentSelect = CurrentRenderRow;
+                                                                @GridSelect2(Currentse)
+                                                            }
+                                                            else if (ItemList != null)
+                                                            {
+                                                                Currentse.Entity = ItemList.ElementAtOrDefault(i);
+                                                                Currentse.Position = i;
+                                                                CurrentSelect = ItemList.ElementAtOrDefault(i);
+                                                                @GridSelect2(Currentse)
+                                                            }
+
+
+                                                        }
+
+
+                                                        @if (HasEdit.Value && EditButton == null)
+                                                        {
+                                                            <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                                                                <RadzenButton class="@EditButtonCSS" Click="@(async () => await EditItem("" + inde + ""))"  disabled="@IsDisable">
+                                                                    <span>edit <i class="fas fa-pen fa-sm"></i></span>
+                                                                </RadzenButton>
+                                                            </div>
+
+                                                        }
+                                                        else if (HasEdit.Value && EditButton != null)
+                                                        {
+
+                                                            @if (RowExecute != null)
+                                                            {
+                                                                @EditButton(CurrentRenderRow)
+                                                                ;
+                                                            }
+                                                            else
+                                                            {
+                                                                @EditButton(ItemList.ElementAtOrDefault(i))
+                                                            }
+
+                                                        }
+
+
+
+
+                                                        @*@if (HasDelete.Value)
+                            {
+                            var iy3 = ItemList.ElementAtOrDefault(i);
+
+                            <div class="form-group inv" style="margin-top:0rem;margin-bottom:0rem">
+                            <button class="@DeleteButtonCSS" @onclick="@(async () => await DeleteItem(iy3))" @onclick:stopPropagation @onclick:preventDefault disabled="@IsDisable">
+                            <span>
+                            delete
+                            <i class="fas fa-remove fa-sm"></i>
+                            </span>
+                            </button>
+                            </div>
+
+                            }*@
+
+                                                        @if (ActionBeginRow && HasAction && HasDelete.HasValue && HasDelete.Value)
+                                                        {
+
+
+
+
+                                                            var iy2 = ItemList.ElementAtOrDefault(i);
+
+
+                                                            <div class="col-sm linearityCol inv noedit"></div>
+
+                                                            @if (IsDisable)
+                                                            {
+                                                                <div class="@ColButtonActionCSS noinv">
+                                                                    <a class="btn btn-sm btn-secondary shadow-sm customlink"
+                                                                       id="@("btnDelete"+i.ToString())"  disabled="@(IsDisable)">
+                                                                        Delete
+                                                                    </a>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="@ColButtonActionCSS noinv">
+                                                                    <a class="btn btn-sm btn-danger shadow-sm customlink"
+                                                                       id="@("btnDelete"+i.ToString())" @onclick=@(async () => await DeleteItem(iy2))
+                                                                     disabled="@(IsDisable)">
+                                                                        Delete
+                                                                    </a>
+                                                                </div>
+                                                            }
+                                                            
+
+                                                            @*<div class="@ColActionCSS noinv">
+                            <div class="btn-group">
+
+
+
+                            <div class="form-group" style="margin-top:0rem;margin-bottom:0rem">
+                            <button class="@DeleteButtonCSS" @onclick="@(async () => await DeleteItem(iy2))" @onclick:stopPropagation @onclick:preventDefault disabled="@IsDisable">
+                            <span>
+                            Delete
+                            <i class="fas fa-remove fa-sm"></i>
+                            </span>
+                            </button>
+                            </div>
+                            </div>
+                            </div>*@
+
+                                                        }
+                                                        @if (ActionBeginRow && HasAction && HasDuplicate.HasValue && HasDuplicate.Value)
+                                                        {
+
+
+
+                                                            var iy2 = ItemList.ElementAtOrDefault(i);
+
+
+                                                            <div class="col-sm linearityCol inv noedit"></div>
+                                                            <div class="@ColButtonActionCSS noinv">
+                                                                @if(IsDisable)
+                                                                {
+                                                                    <a class="btn btn-sm btn-secondary shadow-sm customlink"
+                                                                       id="@("btnDuplicate"+i.ToString())"  disabled="@(IsDisable)">
+                                                                        Duplicate
+                                                                    </a>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <a class="btn btn-sm btn-danger shadow-sm customlink"
+                                                                       id="@("btnDuplicate"+i.ToString())" @onclick=@(async () => await DuplicateItem(iy2,inde))
+                                                                     disabled="@(IsDisable)">
+                                                                        Duplicate
+                                                                    </a>
+                                                                }
+                                                              
+                                                            </div>
+
+                                                        }
+
+                                                    </div>
+                                                </div>
+
+                                            }
+
+                                            @if (GridRow != null && ItemList != null && ItemList.ElementAtOrDefault(i) != null)
+                                            {
+                                                if (Columns != null && Columns?.Count > 0)
+                                                {
+                                                    @foreach (GridColumn<TableItem> column in Columns)
+                                                    {
+
+                                                        if (column.IsVisble)
+                                                        {
+
+                                                            if (ReportCSS && !column.CSScol.Contains("border-white"))
+                                                            {
+                                                                var colcss = column.CSScol + " border border-white ";
+
+                                                                column.CSScol = colcss;
+                                                            }
+
+                                                            var ColumnTitle = column.Title;
+                                                            if (ColumnTitle == null && !string.IsNullOrEmpty(column.Field))
+                                                            {
+                                                                var apos = column.Field.Split('.');
+
+                                                                ColumnTitle = apos[apos.Length - 1];
+                                                            }
+
+
+
+                                                            if (column.Template == null && column.ResponsiveTemplate == null && !string.IsNullOrEmpty(column.Field))
+                                                            {
+
+
+                                                                var value = Helpers.DynamicHelper.GetPropertyValue(CurrentRenderRow, column.Field);
+
+                                                                object? key = null;
+                                                                if (!string.IsNullOrEmpty(column.Key))
+                                                                {
+                                                                    key = Helpers.DynamicHelper.GetPropertyValue(CurrentRenderRow, column.Key);
+                                                                }
+                                                                else
+                                                                {
+                                                                    key = value;
+                                                                }
+
+
+                                                                @if (!string.IsNullOrEmpty(@ColumnTitle))
+                                                                {
+                                                                    <div class="col-sm customcol inv">@ColumnTitle</div>
+                                                                }
+
+
+                                                                if (column.IsToolTip && !string.IsNullOrEmpty(column.ToolTipField))
+                                                                {
+
+                                                                    var valueTool = Helpers.DynamicHelper.GetPropertyValue(CurrentRenderRow, column.ToolTipField);
+
+                                                                    if (valueTool != null)
+                                                                    {
+                                                                        <div class="@column.CSScol">
+                                                                            @if (!string.IsNullOrEmpty(valueTool.ToString()))
+                                                                            {
+                                                                                <Blazed.Controls.TooltipComponent Text="@valueTool.ToString()">
+                                                                                    @(string.IsNullOrEmpty(column.Format) ? value : string.Format(column.Format, value))
+                                                                                </Blazed.Controls.TooltipComponent>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                @(string.IsNullOrEmpty(column.Format) ? value : string.Format(column.Format, value))
+                                                                            }
+
+                                                                           @*  @(string.IsNullOrEmpty(column.Format) ? value : string.Format(column.Format, value))
+                                                                            <FluentTooltip Anchor="delay2" HideTooltipOnCursorLeave="true" Position=TooltipPosition.Bottom Delay=200>
+                                                                                @valueTool.ToString()
+                                                                                </FluentTooltip> *@
+                                                                        </div>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        @*<div class="@column.CSScol">@(string.IsNullOrEmpty(column.Format) ? value : string.Format(column.Format, value))</div>*@
+                                                                        if (column.CustomColumn != null)
+                                                                        {
+                                                                            column.PropertyValue = value;
+
+                                                                            @column.CustomColumn.Invoke(column,value,key)
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            @Div(value, column.Format, column.CSScol)
+                                                                        }
+
+                                                                        
+
+                                                                    }
+
+
+
+
+                                                                }
+                                                                else
+                                                                {
+
+                                                                <div class="@column.CSScol">
+                                                                    
+                                                                    @switch (column?.ControlType?.ToLower())
+                                                                    {
+                                                                        case "navlink":
+
+                                                                            @NavLink(column.Value, value, column.Format, column.CSScol,key)
+
+                                                                            break;
+
+
+                                                                        case "link":
+
+                                                                            @Link(column.Value, value, column.Format, column.CSScol,key)
+
+                                                                            break;
+
+                                                                        default:
+
+                                                                            if(column.CustomColumn != null)
+                                                                            {
+                                                                                column.PropertyValue=value;
+
+                                                                                @column.CustomColumn.Invoke(column,value,key)
+                                                                                
+
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                @Div(value, column.Format, column.CSScol)
+                                                                            }
+
+                                                                       
+                                                                            break;
+
+                                                                    }
+
+                                                                    </div>
+
+
+                                                                }
+
+
+
+
+
+
+                                                            }
+                                                            else if (column.Template == null && column.Value != null)
+                                                            {
+
+
+                                                                if (!string.IsNullOrEmpty(column.ControlType) && !string.IsNullOrEmpty(column.Field))
+                                                                {
+
+                                                                    var value = Helpers.DynamicHelper.GetPropertyValue(CurrentRenderRow, column.Field);
+
+                                                                    <div class="col-sm customcol inv">@(string.IsNullOrEmpty(column.Title) ? "" : column.Title)</div>
+                                                                    <div class="@column.CSScol">
+                                                                        <a href="@(column.Value.ToString() + value.ToString())">
+                                                                            @value.ToString()
+                                                                        </a>
+                                                                    </div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div class="col-sm customcol inv">@(string.IsNullOrEmpty(column.Title) ? "" : column.Title)</div>
+                                                                    <div class="@column.CSScol">@column.Value.ToString()</div>
+                                                                }
+
+
+
+
+
+
+                                                            }
+
+
+
+
+                                                            else if (column.Template != null)
+                                                            {
+
+                                                                @column.Template(CurrentRenderRow)
+
+                                                            }
+                                                            else if (column.ResponsiveTemplate != null)
+                                                            {
+                                                                @if (!string.IsNullOrEmpty(@ColumnTitle))
+                                                                {
+                                                                    <div class="col-sm customcol inv">@(@ColumnTitle)</div>
+                                                                }
+
+                                                                <div class="@column.CSScol">@column.ResponsiveTemplate(CurrentRenderRow)</div>
+                                                            }
+
+
+                                                        }
+
+
+                                                    }
+                                                }
+                                                else if (GridCard != null && ItemList?.ElementAtOrDefault(i) != null && Width < 568)
+                                                {
+                                                    //try
+                                                    //{
+                                                    @GridCard(CurrentRenderRow)
+                                                    @*}
+                    catch (Exception ex)
+                    {
+                    <div>@ex.Message</div>
+                    }*@
+                                                }
+                                                else if (GridRow != null && ItemList?.ElementAtOrDefault(i) != null)
+                                                {
+
+                                                    @GridRow(CurrentRenderRow)
+
+                                                    if (RowAfterRender != null)
+                                                    {
+                                                        RowAfterRender(CurrentRenderRow);
+                                                    }
+
+
+                                                }
+
+
+                                            }
+
+                                            @if (!ActionBeginRow && HasAction && HasDelete.HasValue && HasDelete.Value)
+                                            {
+
+
+
+
+                                                var iy2 = ItemList.ElementAtOrDefault(i);
+
+
+                                                <div class="col-sm linearityCol inv noedit"></div>
+                                                <div class="@ColActionCSS noinv">
+                                                    @if (IsDisable)
+                                                    {
+                                                        <a class="btn btn-sm btn-secondary shadow-sm customlink"
+                                                           id="@("btnDelete"+i.ToString())" @onclick=@(async () => await DeleteItem(iy2))
+                                                         disabled="@(IsDisable)">
+                                                            Delete
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <a class="btn btn-sm btn-danger shadow-sm customlink"
+                                                           id="@("btnDelete"+i.ToString())" @onclick=@(async () => await DeleteItem(iy2))
+                                                         disabled="@(IsDisable)">
+                                                            Delete
+                                                        </a>
+                                                    }
+                                                   
+                                                </div>
+
+
+
+
+
+                                            }
+                                            @if (!ActionBeginRow && HasAction && HasDuplicate.HasValue && HasDuplicate.Value)
+                                            {
+
+
+
+                                                var iy2 = ItemList.ElementAtOrDefault(i);
+
+
+                                                <div class="col-sm linearityCol inv noedit"></div>
+                                                <div class="@ColActionCSS noinv">
+
+                                                    @if(IsDisable){
+                                                        <a class="btn btn-sm btn-secondary shadow-sm customlink"
+                                                           id="@("btnDuplicate"+i.ToString())"  disabled="@(IsDisable)">
+                                                            Duplicate
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <a class="btn btn-sm btn-danger shadow-sm customlink"
+                                                           id="@("btnDuplicate"+i.ToString())" @onclick=@(async () => await DuplicateItem(iy2,inde))
+                                                         disabled="@(IsDisable)">
+                                                            Duplicate
+                                                        </a>
+                                                    }
+                                                    
+                                                </div>
+
+                                            }
+
+                                        </div>
+                                    }
+
+
+
+                                }
+
+                            </div>
+
+                            @if (EnabledDrag && MaxItems == null || MaxItems > 1)
+                            {
+                                <div @ondrop="()=>OnDropItemOnSpacing(ItemList.IndexOf(CurrentRenderRow2)+1)"
+                                @ondrop:stopPropagation
+                                @ondragenter="()=>DragDropService.ActiveSpacerId = ItemList.IndexOf(CurrentRenderRow2)+1"
+                                @ondragleave="()=>DragDropService.ActiveSpacerId = null"
+                                     class="@CheckIfDragOperationIsInProgess()
+                @GetClassesForSpacing(ItemList.IndexOf(CurrentRenderRow2)+1)">
+                                </div>
+                            }
+                            i++;
+                        }
+
+
+
+
+
+                    </div>
+
+                }
+                else
+                {
+
+                }
+
+
+                @if (!string.IsNullOrEmpty(ClientDefaultSortField) && (!IsDragAndDrop))
+                {
+                    Items = Sort_List<TableItem>(ClientDefaultSortDirection, ClientDefaultSortField, Items);
+                    if (Items != null && Items.Count > 0)
+                    {
+                        ItemList = Items.Skip((1 - 1) * PageSize).Take(PageSize).ToList();
+
+                    }
+                    else if (Items != null && Items.Count == 0)
+                    {
+
+                    }
+                }
+
+
+
+
+
+            }
+
+        </div>
+    }
+
+
+    <div class="footer" id="gridfooter">
+
+    @if (CurrentResult != null && (PaginationFunction1 != null
+    && !IsNew && CurrentEditIndex == -1
+            && !ClientPagination || InLineEdit && PaginationFunction1 != null && !ClientPagination) )
+    {
+
+        if (CurrentResult.Count > TotalRows && !HasTotalRows)
+        {
+            TotalRows = CurrentResult.Count;
+        }
+       
+       @if (OnePagePagination)
+        {
+        PaginasTotales = 1;
+        
+        }
+
+                Console.WriteLine("Change pagination");
+
+                @if (PaginationView)
+                {
+                    <Pagination PaginaActual="PaginaActual" PaginasTotales="PaginasTotales" PaginaSeleccionada="PageSelected" TotalRows="TotalRows"></Pagination>
+                }
+                else
+                {
+
+                <div class="col" id="paginationTotal">
+
+                </div>
+                }
+
+            }
+    else
+
+    if ((ItemsDataSource != null && ItemsDataSource.Count() > 0) || (Items != null && Items.Count() > 0) && InLineEdit
+    || InLineEdit && !IsNew && CurrentEditIndex == -1 || ClientPagination)
+    {
+
+
+
+        @if (Items.Count() > PageSize)
+        {
+           
+
+                <ul class="pagination">
+                    @if (!OnlyNextPrevious)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => SetPagerSize(b))
+                            >&laquo;</a>
+                        </li>
+                    }
+
+                    <li class="page-item">
+                        <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => NavigateToPage(p))
+                        >Previous</a>
+                    </li>
+
+                    @if (startPage < 1)
+                    {
+                        startPage = 1;
+                    }
+                    @if (!OnlyNextPrevious)
+                    {
+                        @for (int i = startPage; i <= endPage; i++)
+                        {
+                            var currentPage = i;
+                            <li class="page-item">
+                                <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => updateList(currentPage))
+                                >
+                                    @currentPage
+                                </a>
+                            </li>
+                        }
+                    }
+
+                    <li class="page-item">
+                        <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => NavigateToPage("next"))
+                        >Next</a>
+                    </li>
+
+                    @if (!OnlyNextPrevious)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="#" tabindex="-1" @onclick=@(async () => SetPagerSize("forward"))
+                            >&raquo;</a>
+                        </li>
+                        <li class="page-item noinv">
+                            <span class="pagebutton btn btn-link disabled">Page @curPage of @totalPages</span>
+                        </li>
+                    }
+                </ul>
+
+
+           @*  </div> *@
+
+        }
+
+    }
+
+    @if (ValidationMessages != null && ValidationMessages.Count > 0)
+    {
+        foreach (var uu in ValidationMessages)
+        {
+            if (uu.Value != null && !string.IsNullOrEmpty(uu.Value) && InLineEdit)
+            {
+                <div class="row">
+                    <div class="col">
+                     <div class="validation-message" style="display:block !important">@uu.Key : @uu.Value</div>
+                    </div>
+                </div>
+               
+
+            }
+
+            else
+    if (uu.Value != null && !string.IsNullOrEmpty(uu.Value) && !InLineEdit)
+            {
+                //ShowError(uu.Value).ConfigureAwait(false).GetAwaiter().GetResult();
+            }
+        }
+        if (!string.IsNullOrEmpty(ValidationMessages.FirstOrDefault().Value))
+        {
+             <div class="row">
+                    <div class="col">
+            <div class="validation-message" style="display:block !important">error validation</div>
+                    </div>
+                </div>
+
+        }
+
+    }
+
+    @if (!string.IsNullOrEmpty(MessageResult))
+    {
+            <div class="row">
+                <div class="col">
+        <div class="alert alert-primary" role="alert">
+            @MessageResult
+        </div>
+          </div>
+                </div>
+               
+
+
+    }
+
+
+    <input @bind-value="SearchTerm2" @bind-value:event="oninput" @onkeyup=@((arg) => KeyEvent("Name", SearchTerm2,arg))
+           class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" style="width:0px;border:0px;height:0px;max-height:0px" />
+
+    </div>
+        }
+      
+
+
+    @{
+        endload = true;
+    }
+    @* </FluentOverlay> *@
+    </div>
+
+</CascadingValue>
+
+
+
+@code {
+
+
+    //public bool endload { get; set; }
+     [Parameter] public bool HasTotalRows { get; set; } 
+    
+    [Parameter]
+    public bool OnePagePagination { get; set; }
+
+    RenderFragment Link(object Path, object value, string Format, string CSScol, object Key)
+    {
+        return@<div class="@CSScol"><NavLink href="@(@Path + @"" + Key)" @onclick=@(async () => HandleClick(@Path + @"" + Key))>
+        <div class="@CSScol">@(string.IsNullOrEmpty(Format) ? value : string.Format(Format, value))</div>
+        </NavLink>
+    </div>
+    ;
+
+    }
+
+    RenderFragment NavLink(object Path, object value, string Format, string CSScol, object Key)
+    {
+        return@<NavLink href="@(@Path + @"" + Key)">
+        <div class="@CSScol">@(string.IsNullOrEmpty(Format) ? value : string.Format(Format, value))</div>
+        </NavLink>;
+
+    }
+
+    RenderFragment Div(object value, string Format, string CSScol)
+    {
+        return @<div class="@CSScol">@(string.IsNullOrEmpty(Format) ? value : string.Format(Format, value))</div>;
+    }
+
+
+    public async Task PageSelected(int pagina)
+    {
+
+        try
+        {
+            //await ShowProgress();
+
+            GridColumn<TableItem> col = new GridColumn<TableItem>();
+
+            foreach (GridColumn<TableItem> item2 in this.Columns)
+            {
+                if (SortColumn == item2.Field)
+                {
+                    col = item2;
+                    col.SortDescending = sortAscending;
+                }
+            }
+
+            PaginaActual = pagina;
+
+
+
+            Pagination<TableItem> pag = new Pagination<TableItem>()
+                    {
+                        Page = pagina,
+                        Show = PageSize,
+
+                        Filter = SearchTerm,
+                        ColumnName = SortColumn,
+                        SortingAscending = col.SortDescending,
+                        Object = Filter,
+                        ReportView=Report
+                       
+
+                    };
+            if (ActiveAdvancedSearch)
+            {
+                pag.Filter = "";
+            }
+
+            if (PaginationMethod != null)
+            {
+                PaginationMethod(pagina, PageSize);
+            }
+            else if (PaginationFunction1 != null)
+            {
+
+                //if (_ResultState.Value.IsLoading)
+                //{
+                //    await ShowProgress();
+                //}
+                //else if (_ResultState.Value.HasCurrentErrors)
+                //{
+                ////error
+                //}
+                //        if (!(_ResultState.Value.CurrentTodos is null) && _ResultState.Value.CurrentTodos.Any())
+                //{
+
+                //        //carga
+                //}
+
+
+                pag.SaveCache = false;
+
+
+                //CurrentResult = null;
+
+                ResultSet<TableItem> resultitems = await ExecuteServiceWithBlock(PaginationFunction1, pag, Component);
+
+                
+
+
+                await LoadData(pagina, resultitems);
+
+
+            }
+            if (currentColumn == null)
+            {
+                currentColumn = new GridColumn<TableItem>();
+            }
+
+            currentColumn.SortDescending = !sortAscending;
+            currentColumn.Field = SortColumn;
+            currentColumn.PageNumber = pagina;
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            //await CloseProgress();
+
+
+        }
+
+    }
+
+
+
+
+
+
+
+
+    public class OnChangeWindowEventArgs
+    {
+        public object itemShown;
+    }
+
+
+
+
+
+
+
+
+
+    //bool _SelectOnly;
+
+
+
+
+
+
+
+
+
+
+
+    public virtual async Task<IEnumerable<TableItem>> FilterList()
+    {
+        //Logger.LogDebug("FilterList");
+        if (FuncFilter != null)
+        {
+
+
+            var result = await FuncFilter(SearchTerm);
+
+            var ItemList = result.Skip((curPage - 1) * PageSize).Take(PageSize);
+            totalPages = (int)Math.Ceiling(result.Count() / (decimal)PageSize);
+
+            SetPagerSize("forward");
+
+
+            return ItemList;
+        }
+        else
+        {
+
+            throw new NotImplementedException();
+            //Logger.LogDebug("2-FilterList");
+            //return Items.Where(i => i.Name.ToLower().Contains(SearchTerm.ToLower())).ToList();
+        }
+
+
+        //return List.Where(i => i.Name.ToLower().Contains(SearchTerm.ToLower())).ToList();
+
+    }
+
+    public virtual async Task<IEnumerable<TableItem>> FilterList(TableItem item)
+    {
+        //Logger.LogDebug("FilterList");
+        if (FilterByObject != null)
+        {
+
+
+            var result = await FilterByObject(item);
+
+            var ItemList2 = result.Skip((curPage - 1) * PageSize).Take(PageSize);
+            totalPages = (int)Math.Ceiling(result.Count() / (decimal)PageSize);
+
+            SetPagerSize("forward");
+
+            ItemList = ItemList2.ToList();
+            return ItemList;
+        }
+        else
+        {
+
+            throw new NotImplementedException();
+            //Logger.LogDebug("2-FilterList");
+            //return Items.Where(i => i.Name.ToLower().Contains(SearchTerm.ToLower())).ToList();
+        }
+
+
+        //return List.Where(i => i.Name.ToLower().Contains(SearchTerm.ToLower())).ToList();
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public RenderFragment RenderSwitch(SwitchItem Wod)
+    {
+
+        return
+    @< TextInput Label = "@Wod.Label"
+                        TValue = "bool"
+                        Validate = "false"
+                        @bind - Value = "@Wod.Value" Type = "@Types.Switch" Model = "Wod" OnChangeObjectControl = "ChangeSwitch" >
+    </ TextInput >;
+
+    }
+
+    public RenderFragment RenderSearch()
+    {
+
+        return@< input @bind - value = "@SearchTerm" @onkeyup = "Keyev"
+                      class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" />
+    ;
+
+    }
+
+
+
+
+
+
+
+    @*RenderFragment Table()
+    {
+
+    return @<Modal Enabled="@EnableShowModal">
+        <CloseButton>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close"
+                    @onclick="@(async () => await CancelItem("" + "" + ""))"
+                    @onclick:stopPropagation @onclick:preventDefault>
+
+                <span aria-hidden="true">×</span>
+            </button>
+        </CloseButton>
+
+
+    </Modal>;
+
+
+
+    }*@
+
+
+
+}
+
+

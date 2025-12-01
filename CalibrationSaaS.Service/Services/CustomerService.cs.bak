@@ -1,0 +1,106 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+using CalibrationSaaS.Application.Services;
+using CalibrationSaaS.Application.UseCases;
+using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+using CalibrationSaaS.Domain.BusinessExceptions.Customer;
+using CalibrationSaaS.Infraestructure.Grpc.Helpers;
+using Grpc.Core;
+using Microsoft.Extensions.Logging;
+using ProtoBuf.Grpc;
+using Helpers.Controls;
+using Helpers.Controls.ValueObjects;
+namespace CalibrationSaaS.Infraestructure.Grpc.Services
+{
+    public class CustomerService : ICustomerService<CallContext>
+    {
+        private readonly CustomerUseCases customerLogic;
+        private readonly ValidatorHelper modelValidator;
+        private readonly ILogger _logger;
+
+        public CustomerService(CustomerUseCases customerLogic, ILogger<CustomerService> logger, ValidatorHelper modelValidator)
+        {
+            this.customerLogic = customerLogic;
+            this._logger = logger;
+            this.modelValidator = modelValidator;
+        }
+
+        public async ValueTask<Customer> CreateCustomer(Customer customerDTO, CallContext context = default)
+        {
+            var result = await customerLogic.CreateCustomer(customerDTO);
+            return result;   
+
+        }
+
+             
+        public async ValueTask<Customer> DeleteCustomer(Customer customerDTO, CallContext context)
+        {
+            var result = await customerLogic.DeleteCustomer(customerDTO);
+            return customerDTO;
+        }
+
+        public async ValueTask<Address> DeleteAddress(Address DTO, CallContext context)
+        {
+            var result = await customerLogic.DeleteAddress(DTO);
+            return result;
+        }
+
+        public async ValueTask<Contact> DeleteContact(Contact DTO, CallContext context)
+        {
+            var result = await customerLogic.DeleteContact(DTO);
+            return result;
+        }
+        public async ValueTask<PhoneNumber> DeletePhone(PhoneNumber DTO, CallContext context)
+        {
+            var result = await customerLogic.DeletePhoneNumber(DTO);
+            return result;
+        }
+
+        public async ValueTask<Social> DeleteSocial(Social DTO, CallContext context)
+        {
+            var result = await customerLogic.DeleteSocial(DTO);
+            return result;
+        }
+
+
+        public async ValueTask<Customer> UpdateCustomer(Customer customerDTO, CallContext context)
+        {
+          var result = await customerLogic.UpdateCustomer(customerDTO);
+            return result;
+
+        }
+
+        public async ValueTask<ResultSet<Customer>> GetCustomers(Pagination<Customer> Pagination, CallContext context)
+        {
+            var result = await customerLogic.GetCustomer(Pagination);
+            return result;//new CustomerResultSet { Customers = result.ToList() };
+        }
+
+        public async ValueTask<Customer> GetCustomersByID(Customer customerDTO, CallContext context)
+        {
+            var result = await customerLogic.GetCustomerById(customerDTO);
+            return result;
+        }
+
+        
+
+        ValueTask<Customer> ICustomerService<CallContext>.UpdateCustomer(Customer customerDTO, CallContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ValueTask<Address> GetAddressesByIDAsync(Address Address, CallContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ValueTask<ICollection<Address>> GetAddressesAsync(CallContext context)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

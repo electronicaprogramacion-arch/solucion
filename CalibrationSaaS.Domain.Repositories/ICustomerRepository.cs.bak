@@ -1,0 +1,46 @@
+﻿using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+using Helpers.Controls.ValueObjects;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CalibrationSaaS.Domain.Repositories
+{
+    public interface ICustomerRepository
+    {
+        #region "Customer"
+        Task<Customer> InsertCustomer(Customer newCustomer);
+
+        Task<ResultSet<Customer>> GetCustomers(Pagination<Customer> Pagination);
+
+        Task<Customer> GetCustomerByID(Customer id);
+
+        Task<Customer> GetCustomerByName(string name,string customname=null);
+
+        Task<Customer> DeleteCustomer(Customer customerDTO);
+
+        Task<Customer> UpdateCustomer(Customer customerDTO);
+       
+        Task<bool> Save();
+        #endregion
+
+        #region "User"
+        void InsertUser(User userDTO);
+
+
+        #endregion
+
+        #region "Address"
+       
+        #endregion
+        Task<string> ValidateCustomer(Customer customerDTO);
+
+        Task<Address> DeleteAddress(Address DTO);
+        Task<Contact> DeleteContact(Contact DTO);
+        Task<PhoneNumber> DeletePhone(PhoneNumber DTO);
+        Task<Social> DeleteSocial(Social DTO);
+
+    }
+}

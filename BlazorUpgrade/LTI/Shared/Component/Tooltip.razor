@@ -1,0 +1,52 @@
+﻿@page "/Tooltip"
+
+<style>
+    tooltip-wrapper {
+        position: relative;
+        display: inline-block;
+        /* border-bottom: 1px dotted black; */
+        cursor: help;
+        width:100%;
+    }
+
+    span {
+        visibility: hidden;
+        position: absolute;
+        width: 100%;
+        bottom: 100%;
+        left: 50%;
+        margin-left: -60px;
+        background-color: #363636;
+        color: #fff;
+        text-align: center;
+        padding: 5px 0;
+        border-radius: 6px;
+        z-index: 1;
+        font-size: 12px;
+    }
+
+        span::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+
+    .tooltip-wrapper:hover span {
+        visibility: visible;
+    }
+</style>
+
+<div class="tooltip-wrapper">
+    <span>@Text</span>
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public string Text { get; set; }
+}

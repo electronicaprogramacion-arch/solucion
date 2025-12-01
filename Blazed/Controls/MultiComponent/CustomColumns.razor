@@ -1,0 +1,70 @@
+﻿@namespace Blazed.Controls
+@* @typeparam TableItem where TableItem : class,new() *@
+@if (Type == 1)
+{
+    <RadzenTableCell Style="@Style">
+        <CascadingValue Value="@this">
+            @ChildContent
+        </CascadingValue>
+    </RadzenTableCell>
+}
+@if (Type == 2)
+{
+    <RadzenTableHeaderCell Style="@Style">
+        <CascadingValue Value="@this">
+            @ChildContent
+        </CascadingValue>
+    </RadzenTableHeaderCell>
+}
+@if (Type == 3)
+{
+   @*  <GridColumn TableItem="TableItem">
+       <ResponsiveTemplate>
+        
+        <CascadingValue Value="@this">
+            @ChildContent
+        </CascadingValue>
+       </ResponsiveTemplate>
+    </GridColumn> *@
+   @*  <RadzenDataGridColumn Width="160px" Title="Edit" TItem="TableItem">
+         
+        <Template Context="option">
+            <CascadingValue Value="@this">
+                @ChildContent
+            </CascadingValue>
+
+        </Template>
+                                    
+                                
+   </RadzenDataGridColumn> *@
+
+    @*  <RadzenDataGridColumn Width="160px"  Title="Edit">
+                                    <Template Context="data"> *@
+
+
+}
+
+
+
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+
+    [Parameter]
+    public IDictionary<string, object> Parameters { get; set; }
+
+    [Parameter]
+    public int Type { get; set; } = 1;
+
+    [Parameter]
+    public string Style { get; set; }
+
+
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    
+
+}

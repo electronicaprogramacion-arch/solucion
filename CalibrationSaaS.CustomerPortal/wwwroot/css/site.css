@@ -1,0 +1,1197 @@
+/* CalibrationSaaS Customer Portal - Enhanced Radzen Theme */
+
+:root {
+    /* Primary Brand Colors - Aligned with Radzen Material Theme */
+    --primary-color: #667eea;
+    --primary-dark: #5a6fd8;
+    --secondary-color: #764ba2;
+    --accent-color: #ff6b6b;
+
+    /* Status Colors - Enhanced for better UX */
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
+    --danger-color: #f44336;
+    --info-color: #2196f3;
+
+    /* Neutral Colors */
+    --light-color: #fafafa;
+    --dark-color: #212121;
+    --border-color: #e0e0e0;
+    --text-muted: #757575;
+
+    /* Layout Variables */
+    --sidebar-width: 280px;
+    --header-height: 64px;
+    --content-padding: 24px;
+    --card-border-radius: 8px;
+    --button-border-radius: 4px;
+
+    /* Shadows for Material Design */
+    --shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    --shadow-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+    --shadow-4: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    --shadow-5: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+}
+
+/* Global Styles - Enhanced for Radzen Integration */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--dark-color);
+    background-color: #f6f7f8;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enhanced Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    color: var(--dark-color);
+}
+
+h1 { font-size: 2.125rem; font-weight: 300; }
+h2 { font-size: 1.5rem; font-weight: 400; }
+h3 { font-size: 1.25rem; font-weight: 500; }
+h4 { font-size: 1.125rem; font-weight: 500; }
+h5 { font-size: 1rem; font-weight: 500; }
+h6 { font-size: 0.875rem; font-weight: 500; }
+
+/* Enhanced Color Utilities */
+.text-primary { color: var(--primary-color) !important; }
+.text-secondary { color: var(--secondary-color) !important; }
+.text-success { color: var(--success-color) !important; }
+.text-warning { color: var(--warning-color) !important; }
+.text-danger { color: var(--danger-color) !important; }
+.text-info { color: var(--info-color) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-accent { color: var(--accent-color) !important; }
+
+/* Buttons */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #6a4c93 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Cards */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: var(--light-color);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+}
+
+/* Forms */
+.form-control {
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+/* Tables */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table th {
+    background-color: var(--light-color);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(102, 126, 234, 0.05);
+}
+
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.25rem;
+}
+
+.badge-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.badge-warning {
+    background-color: var(--warning-color);
+    color: #212529;
+}
+
+.badge-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.badge-info {
+    background-color: var(--info-color);
+    color: white;
+}
+
+.badge-secondary {
+    background-color: var(--text-muted);
+    color: white;
+}
+
+/* Alerts */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left-color: var(--success-color);
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left-color: var(--warning-color);
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left-color: var(--danger-color);
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left-color: var(--info-color);
+}
+
+/* Loading States */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-spinner {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Utility Classes */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.border-radius-lg {
+    border-radius: 0.5rem;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.shadow {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-lg {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+    .d-md-none {
+        display: none !important;
+    }
+
+    .d-md-block {
+        display: block !important;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Print Styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+
+    .page-break-before {
+        page-break-before: always;
+    }
+
+    .page-break-after {
+        page-break-after: always;
+    }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Focus States for Accessibility */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .btn-primary {
+        background: #000;
+        border-color: #000;
+    }
+
+    .text-muted {
+        color: #000 !important;
+    }
+}
+
+/* Enhanced Dashboard Styles */
+.dashboard-metric-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    box-shadow: var(--shadow-1);
+    background: white;
+}
+
+.dashboard-metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-3);
+}
+
+.dashboard-welcome-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    border: none;
+    box-shadow: var(--shadow-2);
+}
+
+.dashboard-compliance-bar {
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: var(--border-color);
+}
+
+.dashboard-quick-action-btn {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+    border-radius: var(--button-border-radius);
+    transition: all 0.2s ease-in-out;
+}
+
+.dashboard-quick-action-btn:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-2);
+}
+
+/* Responsive Dashboard Adjustments */
+@media (max-width: 768px) {
+    .dashboard-metric-card {
+        margin-bottom: 1rem;
+    }
+
+    .dashboard-welcome-card .rz-stack {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+}
+
+/* Enhanced Card Styles */
+.rz-card {
+    border-radius: var(--card-border-radius);
+    border: 1px solid var(--border-color);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.rz-card:hover {
+    box-shadow: var(--shadow-2);
+}
+
+/* Enhanced Button Styles */
+.rz-button {
+    border-radius: var(--button-border-radius);
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.rz-button:hover {
+    transform: translateY(-1px);
+}
+
+/* Enhanced Progress Bar */
+.rz-progressbar {
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+/* Enhanced Data Grid */
+.rz-datatable {
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-1);
+}
+
+.rz-datatable-header {
+    background: linear-gradient(135deg, var(--light-color) 0%, #f0f0f0 100%);
+    font-weight: 600;
+}
+
+.rz-datatable-data tr:hover {
+    background-color: rgba(102, 126, 234, 0.05);
+}
+
+/* Loading States */
+.rz-progressbar-circular {
+    color: var(--primary-color);
+}
+
+/* Enhanced Spacing */
+.rz-p-4 {
+    padding: var(--content-padding) !important;
+}
+
+.rz-mb-4 {
+    margin-bottom: var(--content-padding) !important;
+}
+
+.rz-mt-4 {
+    margin-top: var(--content-padding) !important;
+}
+
+/* Enhanced Responsive Design for MainLayout */
+@media (max-width: 1024px) {
+    .rz-sidebar {
+        width: 240px;
+    }
+
+    .rz-body {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .rz-sidebar {
+        position: fixed;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 280px;
+        height: 100vh;
+        top: 0;
+        left: 0;
+        z-index: 1001;
+    }
+
+    .rz-sidebar.rz-sidebar-expanded {
+        transform: translateX(0);
+    }
+
+    .rz-body {
+        padding: 12px;
+        margin-left: 0 !important;
+    }
+
+    .rz-header .rz-stack {
+        padding: 0 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .rz-header .rz-stack {
+        padding: 0 12px;
+    }
+
+    .rz-body {
+        padding: 8px;
+    }
+}
+
+/* Stitch Dashboard Layout - Exact Match */
+.stitch-layout {
+    display: flex;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    background-color: #f6f7f8;
+    color: #1e293b;
+}
+
+.stitch-sidebar {
+    width: 256px;
+    flex-shrink: 0;
+    background: white;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+}
+
+.stitch-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    margin-bottom: 24px;
+}
+
+.stitch-logo {
+    background-color: rgba(17, 131, 212, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 140px;
+    min-height: 80px;
+}
+
+.tenant-logo {
+    max-width: 120px;
+    max-height: 60px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Login page logo container */
+.login-logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    min-height: 60px;
+}
+
+/* Header Styles */
+.stitch-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.stitch-header {
+    background-color: white;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--shadow-1);
+    z-index: 10;
+}
+
+.stitch-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.stitch-header-left {
+    flex: 1;
+}
+
+.stitch-header-right {
+    display: flex;
+    align-items: center;
+}
+
+.stitch-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.stitch-user-details {
+    text-align: right;
+    line-height: 1.3;
+}
+
+.stitch-user-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--dark-color);
+}
+
+.stitch-user-email {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.stitch-user-company {
+    font-size: 12px;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.stitch-user-loading {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.stitch-logout-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stitch-logout-btn:hover {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    color: white;
+}
+
+.stitch-brand-text {
+    font-weight: 700;
+    font-size: 18px;
+    color: #1e293b;
+}
+
+.stitch-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-grow: 1;
+}
+
+.stitch-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.stitch-nav-item:hover {
+    background-color: rgba(17, 131, 212, 0.1);
+}
+
+.stitch-nav-item.active {
+    background-color: #1183d4;
+    color: white;
+    font-weight: 600;
+}
+
+.stitch-nav-bottom {
+    margin-top: auto;
+}
+
+.stitch-nav-button {
+    font-family: inherit;
+}
+
+.stitch-main {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+    background-color: #f6f7f8;
+}
+
+.stitch-login-prompt {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f6f7f8;
+}
+
+.stitch-login-card {
+    max-width: 400px;
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 32px;
+    text-align: center;
+}
+
+.stitch-login-btn {
+    width: 100%;
+    background-color: #1183d4;
+    color: white;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.stitch-login-btn:hover {
+    background-color: #0f6bb3;
+}
+
+/* Stitch Dashboard Content Styles */
+.stitch-header {
+    margin-bottom: 32px;
+}
+
+.stitch-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+}
+
+.stitch-header p {
+    color: #64748b;
+    margin: 0;
+    font-size: 16px;
+}
+
+.stitch-section {
+    margin-bottom: 32px;
+}
+
+.stitch-section h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 16px 0;
+}
+
+.stitch-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.stitch-btn-primary {
+    background-color: #1183d4;
+    color: white;
+    font-weight: 500;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.stitch-btn-primary:hover {
+    background-color: #0f6bb3;
+}
+
+.stitch-btn-secondary {
+    background-color: white;
+    color: #1183d4;
+    font-weight: 500;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stitch-btn-secondary:hover {
+    background-color: #f8fafc;
+    border-color: #1183d4;
+}
+
+.stitch-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.stitch-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+}
+
+.stitch-card-label {
+    color: #64748b;
+    font-size: 14px;
+    margin: 0 0 8px 0;
+}
+
+.stitch-card-value {
+    color: #1e293b;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Stitch Search and Table Styles */
+.stitch-search-header {
+    margin-bottom: 24px;
+}
+
+.stitch-search-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+@media (min-width: 768px) {
+    .stitch-search-controls {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.stitch-search-field {
+    flex: 1;
+    min-width: 300px;
+}
+
+.stitch-filter-controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.stitch-input {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    color: #1e293b;
+    transition: border-color 0.2s ease;
+}
+
+.stitch-input:focus {
+    outline: none;
+    border-color: #1183d4;
+    box-shadow: 0 0 0 3px rgba(17, 131, 212, 0.1);
+}
+
+.stitch-select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    color: #1e293b;
+    cursor: pointer;
+}
+
+.stitch-table-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.stitch-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stitch-table th {
+    background: #f8fafc;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.stitch-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.stitch-table tr:hover {
+    background: #f8fafc;
+}
+
+.stitch-cell-primary {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.stitch-cell-secondary {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.stitch-link {
+    color: #1183d4;
+    text-decoration: none;
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.stitch-link:hover {
+    color: #0f6bb3;
+    text-decoration: underline;
+}
+
+.stitch-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.stitch-loading {
+    text-align: center;
+    padding: 48px 24px;
+    color: #64748b;
+}
+
+.stitch-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.stitch-empty-state h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 8px 0;
+}
+
+.stitch-empty-state p {
+    color: #64748b;
+    margin: 0 0 16px 0;
+}
+
+
+/* Form Input Styles for Login Mockup */
+.form-input {
+    width: 100%;
+    border-radius: 0.25rem;
+    border: 0;
+    background-color: #E5E7EB;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #1F2937;
+    transition: all 0.3s ease;
+}
+
+.form-input::placeholder {
+    color: #6B7280;
+}
+
+.form-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #1183d4;
+}
+
+/* Dark mode form input */
+.dark .form-input {
+    background-color: #1F2937;
+    color: #f6f7f8;
+}
+
+.dark .form-input::placeholder {
+    color: #9CA3AF;
+}
+
+.dark .form-input:focus {
+    box-shadow: 0 0 0 2px rgba(17, 131, 212, 0.8);
+}
+
+
+
+
+/* Pagination Styles */
+.stitch-pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border-color);
+    background-color: #ffffff;
+    border-radius: 0 0 var(--card-border-radius) var(--card-border-radius);
+}
+
+.stitch-pagination-info {
+    display: flex;
+    align-items: center;
+}
+
+.stitch-pagination-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.stitch-pagination-controls {
+    display: flex;
+    align-items: center;
+}
+
+/* Enhanced Radzen Pager Styling */
+.stitch-pager .rz-paginator {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.stitch-pager .rz-paginator-page,
+.stitch-pager .rz-paginator-prev,
+.stitch-pager .rz-paginator-next,
+.stitch-pager .rz-paginator-first,
+.stitch-pager .rz-paginator-last {
+    min-width: 40px;
+    height: 40px;
+    margin: 0 2px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--button-border-radius);
+    background-color: #ffffff;
+    color: var(--dark-color);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stitch-pager .rz-paginator-page:hover,
+.stitch-pager .rz-paginator-prev:hover,
+.stitch-pager .rz-paginator-next:hover,
+.stitch-pager .rz-paginator-first:hover,
+.stitch-pager .rz-paginator-last:hover {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-2);
+}
+
+.stitch-pager .rz-paginator-page.rz-state-active {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-1);
+}
+
+.stitch-pager .rz-paginator-page.rz-state-disabled,
+.stitch-pager .rz-paginator-prev.rz-state-disabled,
+.stitch-pager .rz-paginator-next.rz-state-disabled,
+.stitch-pager .rz-paginator-first.rz-state-disabled,
+.stitch-pager .rz-paginator-last.rz-state-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+    color: var(--text-muted);
+}
+
+.stitch-pager .rz-paginator-page.rz-state-disabled:hover,
+.stitch-pager .rz-paginator-prev.rz-state-disabled:hover,
+.stitch-pager .rz-paginator-next.rz-state-disabled:hover,
+.stitch-pager .rz-paginator-first.rz-state-disabled:hover,
+.stitch-pager .rz-paginator-last.rz-state-disabled:hover {
+    background-color: #f5f5f5;
+    color: var(--text-muted);
+    border-color: var(--border-color);
+    transform: none;
+    box-shadow: none;
+}
+
+/* Responsive Pagination */
+@media (max-width: 768px) {
+    .stitch-pagination-container {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+
+    .stitch-pagination-text {
+        font-size: 13px;
+    }
+
+    .stitch-pager .rz-paginator-page,
+    .stitch-pager .rz-paginator-prev,
+    .stitch-pager .rz-paginator-next,
+    .stitch-pager .rz-paginator-first,
+    .stitch-pager .rz-paginator-last {
+        min-width: 36px;
+        height: 36px;
+        font-size: 13px;
+    }
+}
+
+/* Dark mode pagination */
+.dark .stitch-pagination-container {
+    background-color: #1F2937;
+    border-top-color: #374151;
+}
+
+.dark .stitch-pagination-text {
+    color: #9CA3AF;
+}
+
+.dark .stitch-pager .rz-paginator-page,
+.dark .stitch-pager .rz-paginator-prev,
+.dark .stitch-pager .rz-paginator-next,
+.dark .stitch-pager .rz-paginator-first,
+.dark .stitch-pager .rz-paginator-last {
+    background-color: #374151;
+    color: #f6f7f8;
+    border-color: #4B5563;
+}
+
+.dark .stitch-pager .rz-paginator-page:hover,
+.dark .stitch-pager .rz-paginator-prev:hover,
+.dark .stitch-pager .rz-paginator-next:hover,
+.dark .stitch-pager .rz-paginator-first:hover,
+.dark .stitch-pager .rz-paginator-last:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.dark .stitch-pager .rz-paginator-page.rz-state-disabled,
+.dark .stitch-pager .rz-paginator-prev.rz-state-disabled,
+.dark .stitch-pager .rz-paginator-next.rz-state-disabled,
+.dark .stitch-pager .rz-paginator-first.rz-state-disabled,
+.dark .stitch-pager .rz-paginator-last.rz-state-disabled {
+    background-color: #1F2937;
+    color: #6B7280;
+    border-color: #374151;
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

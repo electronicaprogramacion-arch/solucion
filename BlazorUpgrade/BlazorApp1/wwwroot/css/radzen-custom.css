@@ -1,0 +1,25 @@
+/* Custom styles for Radzen components */
+
+/* Row hover effect for Radzen DataGrid */
+.rz-datatable-hoverable-rows .rz-datatable-row:hover,
+.rz-grid-table tr:hover,
+.rz-grid-table tr:hover td,
+.rz-data-row:hover,
+.rz-datatable-row:hover,
+.rz-datatable-data tr:hover {
+    background-color: var(--rz-secondary-lighter) !important;
+    cursor: pointer;
+}
+
+/* Target the specific row classes */
+.rz-grid-table .rz-grid-row:hover,
+.rz-grid-table .rz-grid-row-odd:hover,
+.rz-grid-table .rz-grid-row-even:hover {
+    background-color: var(--rz-secondary-lighter) !important;
+    cursor: pointer;
+}
+
+/* Target all cells in a row */
+.rz-grid-table tr:hover > td {
+    background-color: var(--rz-secondary-lighter) !important;
+}

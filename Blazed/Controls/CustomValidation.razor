@@ -1,0 +1,46 @@
+﻿@using System.Linq.Expressions
+@namespace Blazed.Controls
+@typeparam TValue
+@implements IDisposable
+<h3>validacion</h3>
+
+@Message
+
+@code {
+
+
+    [Parameter]
+    public EditContext EditContext { get; set; }
+
+    [Parameter] public Expression<Func<TValue>> For { get; set; }
+    [Parameter] public string Class { get; set; }
+
+    private FieldIdentifier _fieldIdentifier;
+
+    public string Message { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _fieldIdentifier = FieldIdentifier.Create(For);
+
+        List<string> list = new List<string>();
+
+        string Message = "";
+
+        @foreach (var message in EditContext.GetValidationMessages(_fieldIdentifier))
+        {
+            Message += message + " ";
+        }
+
+        EditContext.OnValidationStateChanged += HandleValidationStateChanged;
+
+
+    }
+
+    private void HandleValidationStateChanged(object o, ValidationStateChangedEventArgs args) => StateHasChanged();
+
+    public void Dispose()
+    {
+        EditContext.OnValidationStateChanged -= HandleValidationStateChanged;
+    }
+}

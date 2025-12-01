@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "strict": true,
+    "strictNullChecks": true,
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "node"
+  },
+  "include": [
+    "wwwroot/**/*"
+  ],
+  "files": [
+    "wwwroot/blazor.d.ts"
+  ]
+}

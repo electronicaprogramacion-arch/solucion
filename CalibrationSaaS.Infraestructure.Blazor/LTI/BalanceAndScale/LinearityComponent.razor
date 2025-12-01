@@ -1,0 +1,1080 @@
+﻿@page "/linearitycom/{EntityID}"
+@using Blazed.Controls
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@using CalibrationSaaS.Domain.Aggregates.Shared;
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.AssetsBasics
+@using CalibrationSaaS.Infraestructure.Blazor.Helper
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@using CalibrationSaaS.Domain.Aggregates.Interfaces
+@using CalibrationSaaS.Domain.Aggregates.Querys
+@inherits LinearityComponentBase
+@namespace CalibrationSaaS.Infraestructure.Blazor.LTI
+@using WeightSetComponent = CalibrationSaaS.Infraestructure.Blazor.LTI.Scale.WeightSetComponent;
+<style>
+
+    .grid-row1.headerRow {
+        height: 55% !important;
+    }
+
+
+
+    .noedit {
+    }
+
+    .btnWidth {
+        width: 75px
+    }
+
+
+    .secondGrid {
+        /*padding-left: 70px*/
+    }
+
+
+    @@media only screen and (min-device-width : 320px) and (max-device-width : 568px) { /* Aquí van los estilos */
+        /*  .editcolumn {
+        }
+
+        .container, .container-fluid {
+            padding-left: 0rem;
+            padding-right: 0rem;
+        }
+
+        .container-fluid {
+            width: 100%;
+            padding-right: 0rem;
+            padding-left: 0rem;
+            margin-right: auto;
+            margin-left: auto;
+        }*/
+    }
+</style>
+<div class="" style="min-height:600px;overflow:auto;padding-left:5px;width:100%;overflow-y:scroll">
+
+    @if (ShowGrid && WorkOrderItemCreate.eq != null && LIST != null )
+{
+
+
+    <div style="display:none">
+        WeightSets :   @Description
+        @if (WeightSetList2 != null)
+        {
+            <div class="" style="max-height:300px;overflow:auto;width:100%">
+
+                <CalibrationSaaS.Infraestructure.Blazor.LTI.Scale.WeightSetComponent @ref="@WeightSetComponent" lstWeightSet="WeightSetList2" ChangeAdd="ChangeDescripcion">
+
+                </CalibrationSaaS.Infraestructure.Blazor.LTI.Scale.WeightSetComponent>
+            </div>
+        }
+    </div>
+
+
+
+        @if (WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate != null)
+    {
+
+            if (WorkOrderItemCreate.eq == null
+            || WorkOrderItemCreate.eq?.PieceOfEquipment == null
+            || WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate == null
+            || WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups == null
+            || WorkOrderItemCreate.eq?.PieceOfEquipment?.EquipmentTemplate?.TestGroups?.ElementAtOrDefault(0)?.TestPoints?.Count == 0
+            || WorkOrderItemCreate.eq.IsAccredited == false
+           )
+        {
+            EnableSetPoints = false;
+        }
+        else
+        {
+            EnableSetPoints = true;
+        }
+
+
+    }
+
+
+        <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);@Visibility">
+            <div class="row" style="width:100%,display:flex;flex-dirección:columna;justify-content: center;">
+                <div class="col">
+                </div>
+                <div class="col">
+                    <p><em>Loading...</em></p>
+                    <FluentProgressRing></FluentProgressRing>
+
+                </div>
+                <div class="col">
+                </div>
+
+
+            </div>
+        </div>
+
+        <div style="@Visibility2">
+            @if (1 == 1)
+            {
+                var tem = LIST;
+                string sortField = "";
+
+                //@Grid.GetPropertyName(() => PieceOfEquipment.EquipmentTemplate.EquipmentTypeObject.Name)
+
+                <ResponsiveTable ItemsDataSource="LIST"
+                                 PageSize="20" HasAction="true" HasSelect="true"
+                                 HasDelete="false"
+                                 HasEdit="false"
+                                 HasNew="true"
+                                 @ref="@RT"
+                                 Context="ITEM"
+                                 TableItem="Domain.Aggregates.Entities.Linearity"
+                                 ForceNEwButton="false"
+                                 ClientPagination="true"
+                                 DisabledRowHover="true"
+                                 InLineEdit="false"
+                                 ColActionHeaderCSS="col-sm-2"
+                                 EnabledSearch="false"
+                                 ClientDefaultSortField="@SortField"
+                                 ClientDefaultSortDirection="asc"
+                                 RowExecute="@RowChange"
+                                 Component="@Component"
+                                 RowAfterRender="@RowAfterRender"
+                                 AfterAction="@TaskAfterSave"
+                                 ColActionCSS="btnWidth"
+                                 EnabledDrag="true">
+
+                    <NewButton>
+                        <div class="row" style="width:100%">
+                            @if (1 == 2)
+                            {
+                                <div class="col">
+
+                                    <label>
+                                        As Found Multiplier
+                                    </label>
+                                    <input id="textMultiplerFound" disabled="!@Enabled" @bind-value="@TextMultiplerFound" type="number" />
+
+
+                                </div>
+                                <div class="col">
+                                    <label>
+                                        As Left Multiplier
+                                    </label>
+                                    <input id="textMultiplerLeft" disabled="!@Enabled" @bind-value="@TextMultiplerLeft" type="number" />
+                                </div>
+                            }
+                            @* <div class="col">
+                    <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth" disabled="@(!Enabled)" @onclick=@(async () => await Calculate()) @onclick:stopPropagation @onclick:preventDefault
+                    aria-expanded="false" aria-controls="collapseTwo">
+                    Calculate
+                    </button>
+                    </div> *@
+
+                            <div class="col">
+                                @*@if (!EnableSetPoints && Enabled && 1 == 2)
+                        {
+                        <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth  marginButton" onclick="$('#btnTestPoints').click()" @onclick:stopPropagation @onclick:preventDefault
+                        aria-expanded="false" aria-controls="collapseTwo">
+                        Add TestPoints
+                        </button>
+                        }
+                        else
+                        {
+                        <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth marginButton" disabled="" @onclick:stopPropagation @onclick:preventDefault
+                        aria-expanded="false" aria-controls="collapseTwo">
+                        Add TestPoints
+                        </button>
+                        }*@
+
+                            </div>
+                            <div class="col">
+                                <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth marginButton" disabled="@(!Enabled)" @onclick=@(async () => await Assing()) @onclick:stopPropagation @onclick:preventDefault
+                                        aria-expanded="false" aria-controls="collapseTwo">
+                                    Assign Weights Automatically
+                                </button>
+
+                                <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm allWidth marginButton" disabled="@(!Enabled)" @onclick=@(async () => await CopyAsFoundToAsLeft()) @onclick:stopPropagation @onclick:preventDefault
+                                        aria-expanded="false" aria-controls="collapseTwo">
+                                   Copy AsFound to AsLeft
+                                </button>
+                            </div>
+                            <div class="col">
+                                <div class="input-group mb-3">
+                                    <input id="txtName" @bind-value="@TextNewValue" type="number" class="form-control" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                                    <div class="input-group-append">
+                                        <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled="@(!Enabled)" @onclick=@(async() => await AddNewItem()) @onclick:stopPropagation @onclick:preventDefault
+                                                aria-expanded="false" aria-controls="collapseTwo">
+                                            Add Tespoint
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            @*<div class="row">
+
+                    <div class="col">
+                    <div class="col" style="width:40%;float:left">
+                    <input id="txtName" @bind-value="@TextNewValue" type="number" style="width:80%;margin-left:3px" />
+                    </div>
+                    <div class="col" style="width:60%;float:left">
+
+                    <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm marginButton" disabled="@(!Enabled)" @onclick=@(async () => await RT.SaveNewItem(DefaultNew())) @onclick:stopPropagation @onclick:preventDefault
+                    aria-expanded="false" aria-controls="collapseTwo">
+                    <span>
+                    New Linearity
+                    <i class="fas fa-plus fa-sm"></i>
+                    </span>
+
+                    </button>
+                    </div>
+                    </div>
+                    </div>*@
+
+                        </div>
+                    </NewButton>
+
+                    <GridHeader>
+                        <div class="form-row" style="width:100%">
+                            @if (1 == 1 || EnableWeightSet && Enabled || WorkOrderItemCreate.eq != null
+                           && WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == true && Enabled)
+                            {
+                                <div class="btnWidth"></div>
+                            }
+                            <form class="col-sm linearityCol">
+                                <div class="form-row">
+                                    <div class="col linearityCol">
+                                        <div class="row">
+                                            @if(Tenant=="Bitterman")
+                                            {
+                                                <div class="col-sm-2 linearityCol">Description</div>
+                                            }
+                                            
+                                            <div class="col-sm-2 linearityCol">Weight</div>
+                                            <div class="col-sm-2 linearityCol">Weight<br />Applied</div>
+                                            <div class="col-sm-2 linearityCol">Resolution</div>
+                                            <div class="col-sm-1 linearityCol" style="width:50%">UOM</div>
+                                            <div class="col-sm-2 linearityCol">Low<br /> Tolerance</div>
+
+
+
+
+                                            @if (1 == 2)
+                                            {
+                                                <div class="col-sm-1 linearityCol">Max Tolerance<br />As Left</div>
+                                                <div class="col-sm-1 linearityCol">Max Tolerance<br />As Left</div>
+                                                <div class="col-sm-1 linearityCol">Min Tolerance<br />As Left</div>
+                                                <div class="col-sm-1 linearityCol">Min Tolerance<br />As Left</div>
+                                            }
+
+
+                                        </div>
+                                    </div>
+                                    <div class="col linearityCol" style="left:-30px">
+                                        <div class="row">
+                                            <div class="col-sm-2 linearityCol secondGrid">High<br />Tolerance</div>
+                                            <div class="col-sm-2 linearityCol secondGrid">As Found</div>
+                                            <div class="col-sm-1 linearityCol secondGrid">Results</div>
+                                            <div class="col-sm-2 linearityCol secondGrid">As Left</div>
+
+                                            @*<div class="col-sm-1 linearityCol secondGrid" style="width:50%">UOM</div>*@
+                                            @if (WorkOrderItemCreate.eq.IsComercial)
+                                            {
+                                                <div class="col-sm-1 linearityCol secondGrid">Min Tolerance<br />As Left</div>
+
+
+                                                <div class="col-sm-1 linearityCol secondGrid">Max Tolerance<br />As Left</div>
+                                            }
+                                            <div class="col-sm-1 linearityCol secondGrid">Test Result</div>
+
+                                            @if (WorkOrderItemCreate.eq != null && WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == true)
+                                            {
+                                                <div class="col-sm-2 linearityCol secondGrid">Uncertainty</div>
+                                            }
+                                            <div class="col-sm linearityCol secondGrid" style="font-size:7px"></div>
+                                            @if (WorkOrderItemCreate.eq != null && WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == true)
+                                            {
+                                                <div class="col-sm linearityCol secondGrid" style="font-size:7px"></div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                    </GridHeader>
+
+                    <GridSelect2 Context="select">
+
+                        @{
+                            var a = new ResponsiveTable<Linearity>.SelectRow();
+                            if (select != null)
+                            {
+                                a = select as ResponsiveTable<Linearity>.SelectRow;
+                            }
+                            var color = "primary";
+
+                            var color2 = "";
+
+                            var en = true;
+                        }
+
+
+                        @if ((a?.Entity?.WeightSets != null && a?.Entity?.WeightSets?.Count > 0))
+                        {
+                            color = "success";
+                        }
+                        else
+                        @if (a?.Entity?.Standards != null && (a?.Entity?.Standards?.Count > 0))
+                        {
+                            color2 = "success";
+                        }
+                        else
+                        {
+                            color2 = "primary";
+                        }
+
+                        @if (!string.IsNullOrEmpty(color2))
+                        {
+                            color = color2;
+                        }
+
+                        <div class="row" rt="TTT">
+                            @if (!Enabled || !EnableWeightSet)
+                            {
+                                <div class="btnWidth buttonLin">
+                                    <button class="btn btn-sm btn-@color shadow-sm editButton" disabled
+                                            id="setw"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+                                        Weight
+                                    </button>
+                                </div>
+                            }
+                            else if (a != null && a.Entity != null && WorkOrderItemCreate.eq != null && EnableWeightSet && Enabled
+                            || a != null && a.Entity != null && WorkOrderItemCreate.eq != null && WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == true && Enabled)
+                            {
+                                <div class="btnWidth buttonLin">
+                                    <button class="btn btn-sm btn-@color shadow-sm editButton"
+                                            id="setw" @onclick=@(async () => await SelectWeight(a.Entity,a.Position))
+                                    @onclick:stopPropagation @onclick:preventDefault>
+                                        Weight
+                                    </button>
+                                </div>
+                            }
+                            @if (select != null && RT != null && a != null && a?.Entity != null)
+                            {
+                                <div class="col inv buttonLin">
+                                    <button class="btn btn-sm btn-primary shadow-sm editButton"
+                                            id="setw" @onclick=@(async () => await SelectReport(@a.Entity.TestPoint.TestPointID, @a.Entity.WorkOrderDetailId))
+                                    @onclick:stopPropagation @onclick:preventDefault>
+                                        Report
+                                    </button>
+
+                                </div>
+                            }
+
+
+                        </div>
+                    </GridSelect2>
+
+                    <GridEdit>
+                        <EditForm Model="@ITEM" style="width:100%">
+                            <div class="form-row" style="width:100%">
+                                <div class="col-sm">
+                                    <div class="row">
+
+                                        @if (ITEM?.TestPoint != null)
+                                        {
+
+                                            <div class="col-sm linearityCol editcolumn">
+                                                <TextInput @bind-Value="@ITEM.TestPoint.NominalTestPoit"
+                                                           CSSClass="inputgrid"
+                                                           Type=@Types.number
+                                                           TValue="double"
+                                                           ValidationFor="@(()=> @ITEM.TestPoint.NominalTestPoit)"
+                                                           IsDisabled="!Enabled"
+                                                           Label="Nominal Weight">
+                                                </TextInput>
+                                            </div>
+
+                                        }
+
+
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </EditForm>
+                    </GridEdit>
+                    <GridCard>
+                        @if (ITEM != null && ITEM.BasicCalibrationResult != null && ITEM.TestPoint != null && ITEM?.TestPoint?.UnitOfMeasurementID > 0)
+                        {
+                            <EditForm Model="@ITEM" class="col">
+                                <div class="form-row" style="width:100%">
+                                    <div class="col-sm">
+                                        <div class="row">
+
+                                            <div class="row">
+                                                <div class="col-sm-1 linearityCol inv noedit">Weight</div>
+
+                                                <div class="col-sm-1 linearityCol inv noedit">Weight Applied</div>
+
+                                                <div class="col-sm-1 linearityCol inv noedit">UOM</div>
+
+
+                                                <div class="col-sm-1 linearityCol inv">Descr.</div>
+
+                                                <div class="col-sm-1 linearityCol clearBoth">@ITEM?.TestPoint?.NominalTestPoit</div>
+
+                                                <div class="col-sm-2 linearityCol editcolumn">
+
+                                                    @if (WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == false && Enabled)
+                                                    {
+                                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.WeightApplied"
+                                                                   LabelDown="true"
+                                                                   Type=@Types.number
+                                                                   TValue="double"
+                                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.WeightApplied)"
+                                                                   IsDisabled="!Enabled" OnChangeControl="@(async (arg) => await ChangeControl(arg,ITEM))">
+                                                        </TextInput>
+                                                    }
+                                                    else
+                                                    {
+                                                        <TextInput @bind-Value="@ITEM.BasicCalibrationResult.WeightApplied"
+                                                                   LabelDown="true"
+                                                                   Type=@Types.number
+                                                                   TValue="double"
+                                                                   ValidationFor="@(()=> @ITEM.BasicCalibrationResult.WeightApplied)"
+                                                                   IsDisabled="true" OnChangeControl="@(async (arg) => await ChangeControl(arg,ITEM))">
+                                                        </TextInput>
+                                                    }
+
+                                                </div>
+
+
+                                                <div class="col-sm-1 linearityCol">@ITEM?.TestPoint?.UnitOfMeasurementID.GetUoM(AppState.UnitofMeasureList).Abbreviation</div>
+
+                                                <div class="col-sm linearityCol">@ITEM?.TestPoint?.Description</div>
+
+
+
+                                            </div>
+
+                                            <div class="row clearBoth">
+
+
+                                                <div class="col-sm-1 linearityCol inv editcolumn">AsFound</div>
+
+                                                <div class="col-sm-1 linearityCol inv noedit">Low Tol.</div>
+                                                <div class="col-sm-1 linearityCol  inv noedit">Up Tol.</div>
+                                                <div class="col-sm-1 linearityCol   inv noedit">Result</div>
+
+                                                <div class="col-sm-2 linearityCol editcolumn">
+
+                                                    <TextInput @bind-Value="@ITEM.BasicCalibrationResult.AsFound"
+                                                               CSSClass="inputgrid"
+                                                               Type=@Types.number
+                                                               Validate="false"
+                                                               ValidationFor="@(()=> @ITEM.BasicCalibrationResult.AsFound)"
+                                                               TValue="double"
+                                                               IsDisabled="!Enabled">
+                                                    </TextInput>
+                                                </div>
+
+                                                <div class="col-sm-1 linearityCol noedit">@ITEM?.MinTolerance</div>
+
+
+
+                                                <div class="col-sm-1 linearityCol noedit">@ITEM?.MaxTolerance</div>
+                                                @if (1 == 2)
+                                                {
+                                                    <div class="col-sm-1 linearityCol inv">Tolerance AsFound</div>
+                                                    <div class="col-sm-1 linearityCol">@ITEM?.MinToleranceAsLeft</div>
+                                                    <div class="col-sm-1 linearityCol inv">Tolerance AsLeft</div>
+                                                    <div class="col-sm-1 linearityCol">@ITEM?.MaxToleranceAsLeft</div>
+                                                }
+
+
+                                                <div class="col-sm-1 linearityCol noedit">@ITEM?.BasicCalibrationResult?.InToleranceFound</div>
+
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="" style="display:block">
+                                        <div class="row">
+
+                                            <div class="row">
+
+
+
+
+                                                <div class="col-sm-1 linearityCol inv editcolumn">AsLeft</div>
+
+                                                <div class="col-sm-1 linearityCol inv noedit">UOM</div>
+
+
+                                                <div class="col-sm-1 linearityCol   inv noedit">Result</div>
+
+
+                                                <div class="col-sm-1 linearityCol inv noedit">Resolution</div>
+
+                                                <div class="col-sm-2 linearityCol editcolumn">
+
+
+                                                    <TextInput @bind-Value="@ITEM.BasicCalibrationResult.AsLeft"
+                                                               CSSClass="inputgrid"
+                                                               Type=@Types.number
+                                                               Validate="false"
+                                                               ValidationFor="@(()=> @ITEM.BasicCalibrationResult.AsLeft)"
+                                                               TValue="double"
+                                                               IsDisabled="!Enabled">
+                                                    </TextInput>
+
+
+                                                </div>
+
+
+
+
+                                                <div class="col-sm-1 linearityCol noedit">@ITEM?.TestPoint?.UnitOfMeasurementOutID.GetUoM(AppState.UnitofMeasureList).Abbreviation</div>
+
+                                                <div class="col-sm-1 linearityCol noedit">@ITEM?.BasicCalibrationResult?.InToleranceLeft</div>
+
+                                              @*   <div class="col-sm-2 linearityCol noedit">@ITEM?.TestPoint.Resolution</div> *@
+
+                                                <div class="col-sm-2 linearityCol noedit">@WorkOrderItemCreate?.eq?.Tolerance?.Resolution</div>
+                                            </div>
+
+
+
+
+                                            <div class="row">
+
+                                                <div class="col-sm-1 linearityCol inv noedit">Uncertainty</div>
+                                                @if (WorkOrderItemCreate.eq.IsComercial)
+                                                {
+
+                                                    <div class="col-sm-1 linearityCol inv">Min Tolerance AsFound</div>
+
+                                                    <div class="col-sm-1 linearityCol inv">Max Tolerance AsLeft</div>
+
+                                                }
+                                                @if(@ITEM?.BasicCalibrationResult?.UncertaintyNew != null && @ITEM?.BasicCalibrationResult?.UncertaintyNew !=0)
+                                                {
+                                                    <div class="col-sm-2 linearityCol noedit">
+                                                       @*  @($"{ITEM?.BasicCalibrationResult?.UncertaintyNew} *") *@
+                                                        @ITEM?.BasicCalibrationResult?.UncertaintyNew
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="col-sm-2 linearityCol noedit">@ITEM?.TotalUncertainty</div>
+                                                }
+                                               
+                                                @if (WorkOrderItemCreate.eq.IsComercial)
+                                                {
+
+                                                    @*<div class="col-sm-1 linearityCol inv">Min Tolerance AsFound</div>*@
+                                                    <div class="col-sm-1 linearityCol">@ITEM?.MinTolerance</div>
+                                                    @*<div class="col-sm-1 linearityCol inv">Max Tolerance AsLeft</div>*@
+                                                    <div class="col-sm-1 linearityCol">@ITEM?.MaxTolerance</div>
+                                                }
+                                            </div>
+
+
+                                            <div class="row" style="display:none">
+                                                <div class="col-sm-1 linearityCol inv noedit"></div>
+                                                <div class="col-sm linearityCol noedit">
+                                                    <button class="btn btn-sm btn-warning shadow-sm"
+                                                            id="" @onclick=@(async () => await RT.DeleteItem(ITEM))
+                                                    @onclick:stopPropagation @onclick:preventDefault disabled="@(!Enabled)">
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                                <div class="col-sm linearityCol noedit">
+                                                    <a href="GetReportByTestPoint/@ITEM?.TestPoint.TestPointID" class="d-sm-inline-block btn btn-sm btn-info shadow-sm btn-icon-split buttonsep">
+                                                        <span class="icon text-white-50"><i class="fas fa-file-download fa-sm text-white-50"></i></span>Report
+                                                    </a>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @BoudValues(ITEM)
+                            </EditForm>
+                        }
+                    </GridCard>
+
+                    <GridRow>
+                        @if (ITEM != null && ITEM?.BasicCalibrationResult != null && ITEM?.TestPoint != null && ITEM?.TestPoint?.UnitOfMeasurementID > 0)
+                        {
+                            <EditForm Model="@ITEM" class="col">
+                                <div class="form-row" style="width:100%">
+                                    <div class="col-sm">
+                                        <div class="row">
+
+
+                                            @if (Tenant == "Bitterman")
+                                            {
+                                                  <div class="col-sm-2 linearityCol inv">Description</div>
+
+                                            <div class="col-sm-2 linearityCol">
+                                                <Blazed.Controls.TooltipComponent Text="@ITEM.TestPoint.Description">
+
+
+                                                    <TextInput @bind-Value="@ITEM.TestPoint.Description"
+                                                               Type=@Types.text
+                                                               Validate="false"
+                                                               ValidationFor="@(()=> ITEM.TestPoint.Description)"
+                                                               TValue="string"
+                                                               IsDisabled="!Enabled"
+                                                               CSSClass="inputgrid"
+                                                               Id="@("DescriptionTexbox_" + ITEM.SequenceID.ToString())">
+                                                    </TextInput>
+                                                    @* <FluentTooltip Anchor="delay2" HideTooltipOnCursorLeave="true" Position=Microsoft.FluentUI.AspNetCore.Components.TooltipPosition.Bottom Delay=200>@ITEM.TestPoint.Description</FluentTooltip> *@
+                                                </Blazed.Controls.TooltipComponent>
+                                            </div>
+                                       
+
+                                            }
+
+                                          
+                                            <div class="col-sm-1 linearityCol inv noedit">Weight</div>
+
+                                            <div class="col-sm-2 linearityCol">
+                                                @*@ITEM?.TestPoint?.NominalTestPoit*@
+                                                <TextInput @bind-Value="@ITEM.TestPoint.NominalTestPoit"
+                                                           CSSClass="@("inputgridNoBorder")"
+                                                           Type=@Types.numberdecimal
+                                                           Validate="false"
+                                                           ValidationFor="@(()=> ITEM.TestPoint.NominalTestPoit)"
+                                                           TValue="double"
+                                                           IsDisabled="true"
+                                                           StepResol="@WorkOrderItemCreate?.eq?.Tolerance?.Resolution.ToString()" @* "@ITEM.TestPoint.Resolution.ToString()" *@
+                                                           DecimalNumbers="@ITEM.TestPoint.DecimalNumber"
+                                                           DecimalRoundType="RoundType.RoundToResolution">
+                                                </TextInput>
+
+                                            </div>
+
+
+                                            <div class="col-sm-1 linearityCol inv noedit">Weight Applied</div>
+                                            <div class="col-sm-2 linearityCol editcolumn">
+
+
+
+
+                                                @if (WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == false && Enabled)
+                                                {
+                                                    <TextInput @bind-Value="@ITEM.BasicCalibrationResult.WeightApplied"
+                                                               CSSClass="inputgrid"
+                                                               Type=@Types.numberdecimal
+                                                               TValue="double"
+                                                               ValidationFor="@(()=> @ITEM.BasicCalibrationResult.WeightApplied)"
+                                                               IsDisabled="!Enabled"
+                                                               OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                               StepResol="@WorkOrderItemCreate?.eq?.Tolerance?.Resolution.ToString()" @* "@ITEM.TestPoint.Resolution.ToString()" *@
+                                                               DecimalNumbers="@ITEM.TestPoint.DecimalNumber"
+                                                               DecimalRoundType="RoundType.RoundToResolution"
+                                                               Id="@("WeightAppliedTexbox_" + ITEM.SequenceID.ToString())"
+                                                               EnableToastMessage="true"
+                                                               ToastMessage=@("in Linearity (Weight Applied) the typed value {0} was rounded to {1}")>
+                                                    </TextInput>
+                                                }
+                                                else
+                                                {
+                                                    <TextInput @bind-Value="@ITEM.BasicCalibrationResult.WeightApplied"
+                                                               CSSClass="inputgrid"
+                                                               Type=@Types.numberdecimal
+                                                               TValue="double"
+                                                               ValidationFor="@(()=> @ITEM.BasicCalibrationResult.WeightApplied)"
+                                                               IsDisabled="true"
+                                                               OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,true))"
+                                                               StepResol= "@WorkOrderItemCreate?.eq?.Tolerance?.Resolution.ToString()"
+                                                               DecimalNumbers="@ITEM.TestPoint.DecimalNumber"
+                                                               DecimalRoundType="RoundType.RoundToResolution">
+                                                    </TextInput>
+                                                }
+
+                                            </div>
+                                            <div class="col-sm-1 linearityCol inv noedit">Resolution</div>
+                                           <div class="col-sm-2 linearityCol noedit">
+
+                                               @* @WorkOrderItemCreate?.eq?.Tolerance?.ResolutionValue *@
+
+                                               @*  <TextInput @bind-Value="@ITEM.BasicCalibrationResult.Resolution"
+                                                           CSSClass="@("inputgridNoBorder")"
+                                                           Type=@Types.numberdecimal
+                                                           Validate="false"
+                                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.Resolution)"
+                                                           TValue="double"
+                                                           IsDisabled="!Enabled"
+                                                           StepResol="@ITEM.BasicCalibrationResult.Resolution.ToString()"
+                                                           DecimalNumbers="@ITEM.BasicCalibrationResult.DecimalNumber"
+                                                           DecimalRoundType="RoundType.Ceiling"
+                                                           Id="@(LTILogic.GetCalibrationSubTypeStr(WorkOrderItemCreate.eq, 1).ToString()
+                                                             + "ResolutionTexbox_" + ITEM.SequenceID.ToString())"
+                                                           ShowControl="RT.GetShowControl()"
+                                                           ShowLabel="RT.GetShowlabel()"
+                                                           Label="Resolution">
+                                                </TextInput> *@
+
+
+                                                <TextInput @bind-Value="@ITEM.TestPoint.Resolution"
+                                                           CSSClass="inputgrid"
+                                                           Type=@Types.number
+                                                           TValue="double"
+                                                           ValidationFor="@(()=> @ITEM.TestPoint.Resolution)"
+                                                           IsDisabled="!Enabled"
+                                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM,false))"
+                                                          
+                                                           Id="@("ResolutionTexbox_" + ITEM.SequenceID.ToString())"
+                                                           EnableToastMessage="true"
+                                                           ToastMessage=@("in Linearity (Resolution) the typed value {0} was rounded to {1}")>
+                                                </TextInput>
+                                               
+                                           </div>
+
+                                            <div class="col-sm-1 linearityCol inv noedit">UOM</div>
+                                            <div class="col-sm-1 linearityCol" style="width:50%">@ITEM?.TestPoint?.UnitOfMeasurementID.GetUoM(AppState.UnitofMeasureList).Abbreviation</div>
+
+                                            <div class="col-sm-1 linearityCol inv noedit">LowTolerance</div>
+                                            <div class="col-sm-2 linearityCol noedit">
+                                                @*@ITEM?.MinTolerance*@
+
+                                                <TextInput @bind-Value="@ITEM.MinTolerance"
+                                                           CSSClass="@("inputgridNoBorder")"
+                                                           Type=@Types.number
+                                                           Validate="false"
+                                                           ValidationFor="@(()=> @ITEM.MinTolerance)"
+                                                           TValue="double"
+                                                           IsDisabled="true"
+                                                           StepResol="@ITEM.TestPoint.Resolution.ToString()"
+                                                           DecimalNumbers="@ITEM.TestPoint.DecimalNumber"
+                                                           DecimalRoundType="RoundType.Floor">
+                                                </TextInput>
+
+
+
+                                            </div>
+
+
+
+
+
+
+                                            @if (1 == 2)
+                                            {
+                                                <div class="col-sm-1 linearityCol inv">Tolerance AsFound</div>
+                                                @*  <div class="col-sm-1 linearityCol">@ITEM?.MinToleranceAsLeft</div> *@
+                                                <div class="col-sm-1 linearityCol">@ITEM?.MinTolerance</div>
+                                                <div class="col-sm-1 linearityCol inv">Tolerance AsLeft</div>
+                                                @*  <div class="col-sm-1 linearityCol">@ITEM?.MaxToleranceAsLeft</div> *@
+                                                <div class="col-sm-1 linearityCol">@ITEM?.MaxTolerance</div>
+                                            }
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm" style="left:-30px">
+                                        <div class="row">
+                                            <div class="col-sm-1 linearityCol  inv noedit">UpTolerance</div>
+                                            <div class="col-sm-2 linearityCol noedit">
+                                                @*@ITEM?.MaxTolerance*@
+                                                <TextInput @bind-Value="@ITEM.MaxTolerance"
+                                                           CSSClass="@("inputgridNoBorder")"
+                                                           Type=@Types.number
+                                                           Validate="false"
+                                                           ValidationFor="@(()=> @ITEM.MaxTolerance)"
+                                                           TValue="double"
+                                                           IsDisabled="true"
+                                                           StepResol="@ITEM.TestPoint.Resolution.ToString()"
+                                                           DecimalNumbers="@ITEM.TestPoint.DecimalNumber"
+                                                           DecimalRoundType="RoundType.Ceiling">
+                                                </TextInput>
+                                            </div>
+                                            <div class="col-sm-1 linearityCol inv editcolumn">AsFound</div>
+                                            <div class="col-sm-2 linearityCol editcolumn secondGrid">
+
+
+
+                                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.AsFound"
+                                                           CSSClass="@("inputgrid")"
+                                                           Type=@Types.numberdecimal
+                                                           Validate="false"
+                                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.AsFound)"
+                                                           TValue="double"
+                                                           IsDisabled="!Enabled"
+                                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM))"
+                                                           StepResol="@ITEM.TestPoint.Resolution.ToString()"
+                                                           DecimalNumbers="@ITEM.TestPoint.DecimalNumber"
+                                                           Id="@("asFoundTexbox_" + ITEM.SequenceID.ToString())"
+                                                           DecimalRoundType="RoundType.RoundToResolution"
+                                                           EnableToastMessage="true"
+                                                           IsValid="@(GetClass(@ITEM.BasicCalibrationResult, 1))"
+                                                           ToastMessage=@("in Linearity (As Found) the typed value {0} was rounded to {1}")>
+                                                </TextInput>
+                                            </div>
+                                            <div class="col-sm-1 linearityCol   inv noedit">Result</div>
+                                            <div class="col-sm-1 linearityCol noedit secondGrid">@ITEM?.BasicCalibrationResult?.InToleranceFound</div>
+
+
+                                            <div class="col-sm-1 linearityCol inv editcolumn">AsLeft</div>
+                                            <div class="col-sm-2 linearityCol editcolumn secondGrid">
+
+
+                                                <TextInput @bind-Value="@ITEM.BasicCalibrationResult.AsLeft"
+                                                           CSSClass="@("inputgrid")"
+                                                           Type=@Types.numberdecimal
+                                                           Validate="false"
+                                                           ValidationFor="@(()=> @ITEM.BasicCalibrationResult.AsLeft)"
+                                                           TValue="double"
+                                                           IsDisabled="!Enabled"
+                                                           OnChangeControl="@(async (arg) => await ChangeControl2(arg,ITEM))"
+                                                           StepResol="@ITEM.TestPoint.Resolution.ToString()"
+                                                           DecimalNumbers="@ITEM.TestPoint.DecimalNumber"
+                                                           DecimalRoundType="RoundType.RoundToResolution"
+                                                           Id="@("asLeftTexbox_" + ITEM.SequenceID.ToString())"
+                                                           EnableToastMessage="true"
+                                                           IsValid="@(GetClass(@ITEM.BasicCalibrationResult, 2))"
+                                                           ToastMessage=@("in Linearity (As Left) the typed value {0} was rounded to {1}")>
+                                                </TextInput>
+
+
+                                            </div>
+
+
+
+                                            @*<div class="col-sm-1 linearityCol inv noedit">UOM</div>
+                                <div class="col-sm-1 linearityCol noedit secondGrid" style="width:50%">@ITEM?.TestPoint?.UnitOfMeasurementOutID.GetUoM(AppState.UnitofMeasureList).Abbreviation</div>*@
+                                            @if (WorkOrderItemCreate.eq.IsComercial)
+                                            {
+
+                                                <div class="col-sm-1 linearityCol inv">Min Tolerance AsFound</div>
+                                                @*   <div class="col-sm-1 linearityCol">@ITEM?.MinToleranceAsLeft</div> *@
+                                                <div class="col-sm-1 linearityCol">@ITEM?.MinTolerance</div>
+                                                <div class="col-sm-1 linearityCol inv">Max Tolerance AsLeft</div>
+                                                @*  <div class="col-sm-1 linearityCol">@ITEM?.MaxToleranceAsLeft</div> *@
+                                                <div class="col-sm-1 linearityCol">@ITEM?.MaxTolerance</div>
+                                            }
+                                            <div class="col-sm-1 linearityCol   inv noedit">Result</div>
+                                            <div class="col-sm-1 linearityCol noedit secondGrid">@ITEM?.BasicCalibrationResult?.InToleranceLeft</div>
+
+
+                                            @if (WorkOrderItemCreate.eq != null && WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == true)
+                                            {
+                                                <div class="col-sm-1 linearityCol inv noedit">Uncertainty</div>
+                                                @if (@ITEM?.BasicCalibrationResult?.UncertaintyNew != null && @ITEM?.BasicCalibrationResult?.UncertaintyNew != 0)
+                                                { 
+                                                    <div class="col-sm-1 linearityCol noedit secondGrid">@ITEM?.BasicCalibrationResult.UncertaintyNew</div>
+                                                }
+                                                else
+                                                {
+                                                <div class="col-sm-1 linearityCol noedit secondGrid">@ITEM?.TotalUncertainty</div>
+                                                }
+                                               
+                                                
+                                            }
+
+
+                                            <div class="col-sm-1 linearityCol inv noedit"></div>
+                                            <div class="col-sm-1 linearityCol noedit secondGrid">
+                                                <a class="btn btn-sm btn-danger shadow-sm customlink"
+                                                   id="" @onclick=@(async () => await RT.DeleteItem(ITEM))
+                                                @onclick:stopPropagation @onclick:preventDefault disabled="@(!Enabled)">
+                                                    Delete
+                                                </a>
+                                            </div>
+                                            @if (ITEM?.TestPoint != null && ITEM.WorkOrderDetailId > 0 && WorkOrderItemCreate.eq != null
+                                           && WorkOrderItemCreate.eq.IsAccredited.HasValue && WorkOrderItemCreate.eq.IsAccredited.Value == true)
+                                            {
+                                                <div class="btnWidth buttonLin">
+
+                                                    <a href="@(url +  "/api/print/LTIUncertaintyBudgetScale?id=" + ITEM.WorkOrderDetailId + "&seq=" + ITEM.SequenceID)" class="btn btn-sm btn-secondary shadow-sm customlink" target="_blank">Report</a>
+
+                                                </div>
+
+                                            }
+
+                                        </div>
+                                    </div>
+                                </div>
+                                @BoudValues(ITEM)
+                            </EditForm>
+                        }
+                    </GridRow>
+
+                </ResponsiveTable>
+            }
+
+       </div>
+        
+    
+
+
+
+}
+else
+{
+    <div style="position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);">
+        <div class="row" style="width:100%,display:flex;flex-dirección:columna;justify-content: center;">
+            <div class="col">
+            </div>
+            <div class="col">
+                <p><em>Loading...</em></p>
+                <FluentProgressRing></FluentProgressRing>
+
+            </div>
+            <div class="col">
+            </div>
+
+
+        </div>
+    </div>
+}
+
+</div>
+
+@code {
+
+    async Task newitem(EventArgs obj)
+    {
+
+    }
+    public bool GetClass(BasicCalibrationResult obj, int run1)
+    {
+
+        // double nominal = testPoint;
+        //  double run = run1;
+        //  int? toleranceType = WorkOrderItemCreate.eq.Tolerance.ToleranceTypeID;
+        //  double toleranceLow = 0;
+        //  double toleranceMax = 0;
+        bool result = true;
+        if (run1 == 1)
+        {
+            if (!string.IsNullOrEmpty(obj.InToleranceFound) &&  obj.InToleranceFound == "Pass")
+                result = true;
+            else
+                result = false;
+        }
+        else
+        { 
+            if (!string.IsNullOrEmpty(obj.InToleranceFound) && obj.InToleranceLeft == "Pass")
+                result = true;
+            else
+                result = false;
+        }
+
+        // if (toleranceType == 1)
+        // {
+        //     toleranceLow = ResolutionTolerance(WorkOrderItemCreate.eq.Resolution, 1, nominal);
+        //     toleranceMax = ResolutionTolerance(WorkOrderItemCreate.eq.Resolution, 2, nominal);
+        // }
+        // else if (toleranceType == 2)
+        // {
+        //     toleranceLow = PercentageResolutionTolerance(WorkOrderItemCreate.eq.Tolerance.AccuracyPercentage, WorkOrderItemCreate.eq.Resolution, 1, nominal);
+        //     toleranceMax = PercentageResolutionTolerance(WorkOrderItemCreate.eq.Tolerance.AccuracyPercentage, WorkOrderItemCreate.eq.Resolution, 2, nominal);
+        // }
+        // else if (toleranceType == 4)
+        // {
+        //     toleranceLow = Percentage(WorkOrderItemCreate.eq.Tolerance.AccuracyPercentage, 1, nominal);
+        //     toleranceMax = Percentage(WorkOrderItemCreate.eq.Tolerance.AccuracyPercentage, 2, nominal);
+        // }
+        // else if (toleranceType == 3)
+        // { 
+        //     toleranceLow = Percentage(WorkOrderItemCreate.eq.Tolerance.AccuracyPercentage, 1, nominal);
+        //     toleranceMax = Percentage(WorkOrderItemCreate.eq.Tolerance.AccuracyPercentage, 2, nominal);
+        // }
+
+        // if (run >= toleranceLow && run <= toleranceMax)
+        // {
+        //     return true;
+        // }
+        // else
+        // {
+        //     return false;
+        // }
+
+        return result;
+
+    }
+
+    private double Percentage(double tolerance, int ToleranceRange, double testpoint)
+    {
+        double Accuracy = tolerance;
+        double toleranceLow = 0;
+
+        double TestPoint = testpoint;
+        if (ToleranceRange == 1)
+            toleranceLow = TestPoint - (TestPoint * Accuracy) / 100;
+        else
+            toleranceLow = TestPoint + (TestPoint * Accuracy) / 100;
+
+
+
+
+        return toleranceLow;
+    }
+    private double PercentageResolutionTolerance(double tolerance, double resol, int ToleranceRange, double testpoint)
+    {
+        double toleranceLow;
+        double Accuracy = tolerance;
+        double resolution = resol;
+        double TestPoint;
+
+
+        TestPoint = testpoint;
+
+
+        if (ToleranceRange == 1)
+            toleranceLow = TestPoint - (((TestPoint * Accuracy) / 100) + resolution);
+        else
+            toleranceLow = TestPoint + (((TestPoint * Accuracy) / 100) + resolution);
+
+        return toleranceLow;
+    }
+
+    //Resolution
+    private double ResolutionTolerance(double tolerance, int ToleranceRange, double testpoint)
+    {
+        double resolution = tolerance;
+        double toleranceLow;
+
+
+        double TestPoint = testpoint;
+        if (ToleranceRange == 1)
+            toleranceLow = TestPoint - resolution;
+        else
+            toleranceLow = TestPoint + resolution;
+        return toleranceLow;
+    }
+
+    //public string GetInvalidClass(double a,double b)
+    //{
+    //    var valid = 0d;
+    //    if (b != 0)
+    //    {
+    //        valid = (a % b);
+    //    }
+    //    else
+    //    {
+    //        return "";
+    //    }
+    //    var c = true;
+    //    if(Math.Abs(valid) > 0)
+    //    {
+    //        c=  Math.Abs(valid % 1) <= (Double.Epsilon * 100);
+    //    }
+
+    //    var cssinvalid = "";
+    //    if (valid != 0 && !c )
+    //    {
+    //        cssinvalid = "inputinvalid";
+    //    }
+    //    return cssinvalid;
+    //}
+
+
+}

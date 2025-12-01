@@ -1,0 +1,531 @@
+@page "/login"
+@attribute [AllowAnonymous]
+
+@page "/{__tenant__}/login"
+@using CalibrationSaaS.CustomerPortal.Models.Authentication
+@using CalibrationSaaS.CustomerPortal.Services.Authentication
+@using CalibrationSaaS.CustomerPortal.Services.MultiTenancy
+@using Finbuckle.MultiTenant
+@inject ICustomerAuthenticationService AuthService
+@inject ITenantService TenantService
+@inject IMultiTenantContextAccessor MultiTenantContextAccessor
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject ILogger<Login> Logger
+@layout LoginLayout
+
+<PageTitle>Login - ThermoTemp</PageTitle>
+
+<style>
+  body {
+    background-color: #f6f7f8 !important;
+    background-image: none !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  }
+  body::before, body::after { content: none !important; display: none !important; }
+  /* Constrain any inline SVG logo to prevent oversized rendering */
+  header a svg { width: 32px !important; height: 32px !important; display: block !important; position: static !important; }
+  header a .h-8.w-8 { width: 32px !important; height: 32px !important; }
+
+  /* Form input styling to match mockup */
+  .form-input {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background-color: white;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .form-input::placeholder {
+    color: #9ca3af;
+  }
+  /* Page layout fallback (no Tailwind) */
+  #login-page { min-height: 100vh; display: flex; flex-direction: column; background-color: #f6f7f8; }
+  #login-page header { position: absolute; top: 24px; left: 24px; right: auto; padding: 0; }
+  #login-page header a { display: flex; align-items: center; gap: 12px; color: #111827; text-decoration: none; }
+  #login-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  #login-card { width: 100%; max-width: 560px; background: #ffffff; padding: 40px; border-radius: 10px; box-shadow: 0 1px 2px rgba(16,24,40,0.06), 0 1px 3px rgba(16,24,40,0.1); border: 1px solid #e5e7eb; }
+  #login-card .header { text-align: center; margin-bottom: 24px; }
+  #login-card h1 { font-size: 32px; font-weight: 700; line-height: 1.25; color: #111827; margin: 0 0 8px 0; }
+  #login-card p.subtitle { color: #6b7280; font-size: 14px; margin-top: 8px; }
+  #login-card .field { margin-top: 20px; }
+  #login-card label { display: block; font-size: 13px; font-weight: 600; color: #1f2937; margin-bottom: 8px; }
+  #login-card .actions { margin-top: 20px; }
+  #login-card .actions > * + * { margin-top: 12px; }
+  #login-card .btn-primary { width: 100%; background: #1677ff; border: 1px solid #1677ff; color: #ffffff; font-weight: 600; border-radius: 8px; padding: 12px 16px; cursor: pointer; font-size: 16px; }
+  #login-card .btn-primary:hover { background: #1369e6; }
+  #login-card .btn-secondary { width: 100%; background: #ffffff; border: 1px solid #d1d5db; color: #374151; font-weight: 600; border-radius: 8px; padding: 12px 16px; cursor: pointer; font-size: 16px; }
+  #login-card .btn-secondary:hover { background: #f9fafb; }
+  #login-card .btn-primary:disabled, #login-card .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+  #login-card .code-input { text-align: center; font-size: 24px; font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace; letter-spacing: 0.3em; }
+  #login-card .footer-note { text-align: center; color: #6b7280; font-size: 12px; margin-top: 24px; }
+  #login-card .footer-note a { color: #1677ff; text-decoration: none; }
+  #login-card .footer-note a:hover { text-decoration: underline; }
+  /* Alert styles */
+  .alert { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border:1px solid #fecaca; background:#fef2f2; border-radius:8px; margin-top:12px; }
+  .alert .icon { color:#dc2626; font-size:20px; line-height:1; margin-top:2px; }
+  .alert .title { font-weight:600; color:#991b1b; margin-bottom:2px; }
+  .alert .message { color:#7f1d1d; font-size:14px; }
+  .alert .attempts { margin-left:6px; color:#7f1d1d; font-weight:600; }
+
+</style>
+
+<div id="login-page">
+    <!-- Header -->
+    <header class="absolute top-0 left-0 right-0 z-10 p-6 sm:p-8">
+        <a class="flex items-center gap-3" href="#">
+            <div class="login-logo-container text-primary">
+                @if (!string.IsNullOrEmpty(tenantLogoUrl))
+                {
+                    <img src="@tenantLogoUrl" alt="@tenantCompanyName Logo" class="tenant-logo" />
+                }
+                else
+                {
+                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M42.1739 20.1739L27.8261 5.82609C29.1366 7.13663 28.3989 10.1876 26.2002 13.7654C24.8538 15.9564 22.9595 18.3449 20.6522 20.6522C18.3449 22.9595 15.9564 24.8538 13.7654 26.2002C10.1876 28.3989 7.13663 29.1366 5.82609 27.8261L20.1739 42.1739C21.4845 43.4845 24.5355 42.7467 28.1133 40.548C30.3042 39.2016 32.6927 37.3073 35 35C37.3073 32.6927 39.2016 30.3042 40.548 28.1133C42.7467 24.5355 43.4845 21.4845 42.1739 20.1739Z" fill="currentColor"></path>
+                        <path clip-rule="evenodd" d="M7.24189 26.4066C7.31369 26.4411 7.64204 26.5637 8.52504 26.3738C9.59462 26.1438 11.0343 25.5311 12.7183 24.4963C14.7583 23.2426 17.0256 21.4503 19.238 19.238C21.4503 17.0256 23.2426 14.7583 24.4963 12.7183C25.5311 11.0343 26.1438 9.59463 26.3738 8.52504C26.5637 7.64204 26.4411 7.31369 26.4066 7.24189C26.345 7.21246 26.143 7.14535 25.6664 7.1918C24.9745 7.25925 23.9954 7.5498 22.7699 8.14278C20.3369 9.32007 17.3369 11.4915 14.4142 14.4142C11.4915 17.3369 9.32007 20.3369 8.14278 22.7699C7.5498 23.9954 7.25925 24.9745 7.1918 25.6664C7.14534 26.143 7.21246 26.345 7.24189 26.4066ZM29.9001 10.7285C29.4519 12.0322 28.7617 13.4172 27.9042 14.8126C26.465 17.1544 24.4686 19.6641 22.0664 22.0664C19.6641 24.4686 17.1544 26.465 14.8126 27.9042C13.4172 28.7617 12.0322 29.4519 10.7285 29.9001L21.5754 40.747C21.6001 40.7606 21.8995 40.931 22.8729 40.7217C23.9424 40.4916 25.3821 39.879 27.0661 38.8441C29.1062 37.5904 31.3734 35.7982 33.5858 33.5858C35.7982 31.3734 37.5904 29.1062 38.8441 27.0661C39.879 25.3821 40.4916 23.9425 40.7216 22.8729C40.931 21.8995 40.7606 21.6001 40.747 21.5754L29.9001 10.7285ZM29.2403 4.41187L43.5881 18.7597C44.9757 20.1473 44.9743 22.1235 44.6322 23.7139C44.2714 25.3919 43.4158 27.2666 42.252 29.1604C40.8128 31.5022 38.8165 34.012 36.4142 36.4142C34.012 38.8165 31.5022 40.8128 29.1604 42.252C27.2666 43.4158 25.3919 44.2714 23.7139 44.6322C22.1235 44.9743 20.1473 44.9757 18.7597 43.5881L4.41187 29.2403C3.29027 28.1187 3.08209 26.5973 3.21067 25.2783C3.34099 23.9415 3.8369 22.4852 4.54214 21.0277C5.96129 18.0948 8.43335 14.7382 11.5858 11.5858C14.7382 8.43335 18.0948 5.9613 21.0277 4.54214C22.4852 3.8369 23.9415 3.34099 25.2783 3.21067C26.5973 3.08209 28.1187 3.29028 29.2403 4.41187Z" fill="currentColor" fill-rule="evenodd"></path>
+                    </svg>
+                }
+            </div>
+            @* Demo: Hide company name text, show only logo *@
+        </a>
+    </header>
+
+    <!-- Main Content -->
+    <main id="login-main">
+        <div id="login-card">
+            <div class="header">
+                <h1 class="text-3xl font-bold tracking-tight text-[#1F2937] dark:text-background-light">Sign in to your account</h1>
+                <p class="subtitle">A verification code will be sent to your email.</p>
+            </div>
+
+            @if (!showTwoFactor)
+            {
+                <!-- Email Login Form -->
+                <EditForm Model="@loginRequest" OnValidSubmit="@HandleLoginAsync" class="space-y-6">
+                    <DataAnnotationsValidator />
+
+                    <div class="field">
+                        <label class="block text-sm font-medium text-[#1F2937] dark:text-background-light" for="email">Email Address</label>
+                        <div class="mt-2">
+                            <InputText @bind-Value="loginRequest.Email"
+                                       class="form-input"
+                                       id="email"
+                                       placeholder="you@example.com"
+                                       autocomplete="email"
+                                       disabled="@isLoading" />
+                        </div>
+                        <ValidationMessage For="@(() => loginRequest.Email)" class="text-red-500 text-sm mt-1" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-error" role="alert">
+                            <span class="icon material-symbols-outlined">error</span>
+                            <div class="content">
+                                <div class="title">There was a problem</div>
+                                <div class="message">@errorMessage</div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="actions">
+                        <button type="submit" class="btn-primary" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="20" height="20" style="margin-right:8px;">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"></circle>
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" opacity="0.75"></path>
+                                </svg>
+                                <span>Sending verification code...</span>
+                            }
+                            else
+                            {
+                                <span>Continue with Email</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            }
+            else
+            {
+                <!-- Two-Factor Verification Form -->
+                <EditForm Model="@twoFactorRequest" OnValidSubmit="@HandleTwoFactorAsync" class="space-y-6">
+                    <DataAnnotationsValidator />
+
+                    <div class="text-center">
+                        <span class="material-symbols-outlined text-primary text-4xl mb-4 block">mail</span>
+                        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Verification Code Required</h4>
+                        <p class="text-gray-600 dark:text-gray-400">A 6-digit verification code has been generated for:</p>
+                        <p class="font-semibold text-gray-900 dark:text-white">@loginRequest.Email</p>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">The code will expire in @expirationMinutes minutes.</p>
+                        <p class="text-blue-600 dark:text-blue-400 text-xs mt-2">
+                            <span class="material-symbols-outlined text-sm mr-1">info</span>
+                            Demo Mode: Check the console logs for the verification code
+                        </p>
+                    </div>
+
+                    <div class="field">
+                        <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Verification Code</label>
+                        <InputText @bind-Value="twoFactorRequest.Code"
+                                   class="form-input code-input"
+                                   id="code"
+                                   placeholder="000000"
+                                   maxlength="6"
+                                   autocomplete="one-time-code"
+                                   disabled="@isLoading" />
+                        <ValidationMessage For="@(() => twoFactorRequest.Code)" class="text-red-500 text-sm mt-1" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-error" role="alert">
+                            <span class="icon material-symbols-outlined">error</span>
+                            <div class="content">
+                                <div class="title">Invalid verification code</div>
+                                <div class="message">@errorMessage
+                                    @if (remainingAttempts.HasValue && remainingAttempts > 0)
+                                    {
+                                        <span class="attempts">@remainingAttempts attempts remaining</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="actions space-y-3">
+                        <button type="submit" class="btn-primary" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" width="20" height="20" style="margin-right:8px;">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"></circle>
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" opacity="0.75"></path>
+                                </svg>
+                                <span>Verifying...</span>
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined mr-2">check</span>
+                                <span>Verify Code</span>
+                            }
+                        </button>
+
+                        <button type="button" class="btn-secondary" @onclick="@BackToEmailAsync" disabled="@isLoading">
+                            <span class="material-symbols-outlined mr-2">arrow_back</span>
+                            Back to Email
+                        </button>
+                    </div>
+
+                    @if (canResendCode)
+                    {
+                        <div class="field text-center">
+                            <button type="button" class="text-primary hover:text-blue-700 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto" @onclick="@ResendCodeAsync" disabled="@isLoading">
+                                <span class="material-symbols-outlined mr-1 text-sm">refresh</span>
+                                Resend Code
+                            </button>
+                        </div>
+                    }
+                    else if (resendCountdown > 0)
+                    {
+                        <div class="field text-center">
+                            <span class="text-gray-500 dark:text-gray-400 text-sm">
+                                Resend available in @resendCountdown seconds
+                            </span>
+                        </div>
+                    }
+                </EditForm>
+            }
+
+            <p class="footer-note">
+                <img src="/Calibrify.svg" alt="Calibrify" style="height:24px;vertical-align:middle;margin-right:10px;">
+                Powered by Calibrify
+            </p>
+        </div>
+    </main>
+</div>
+
+@code {
+    [Parameter] public string? __tenant__ { get; set; }
+
+    private LoginRequest loginRequest = new();
+    private TwoFactorRequest twoFactorRequest = new();
+    private bool showTwoFactor = false;
+    private bool isLoading = false;
+    private string errorMessage = string.Empty;
+    private int? remainingAttempts;
+    private int expirationMinutes = 10;
+    private bool canResendCode = false;
+    private int resendCountdown = 0;
+    private Timer? resendTimer;
+    private string? generatedVerificationCode;
+    private string tenantLogoUrl = "/logos/calibrationco/logo.svg";
+    private string tenantCompanyName = "Kavoku";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Debug: Log tenant information
+        Logger.LogInformation($"Login page initialized with Tenant parameter: {__tenant__}");
+
+        // Load tenant information
+        await LoadTenantInfoAsync();
+
+        // Check if user is already authenticated
+        if (await AuthService.IsAuthenticatedAsync())
+        {
+            Navigation.NavigateTo("/", true);
+        }
+    }
+
+    private async Task LoadTenantInfoAsync()
+    {
+        try
+        {
+            Logger.LogInformation("🔍 Loading tenant info for login page. Tenant parameter: {Tenant}", __tenant__);
+
+            var tenantContext = MultiTenantContextAccessor.MultiTenantContext;
+            Logger.LogInformation("🔍 Tenant context available: {HasContext}", tenantContext != null);
+
+            if (tenantContext?.TenantInfo != null)
+            {
+                var tenantInfo = tenantContext.TenantInfo as CalibrationSaaS.CustomerPortal.Models.MultiTenancy.TenantInfo;
+                if (tenantInfo != null)
+                {
+                    tenantCompanyName = tenantInfo.CompanyName ?? "Kavoku";
+                    tenantLogoUrl = tenantInfo.LogoUrl ?? "/logos/calibrationco/logo.svg";
+                    Logger.LogInformation("✅ Loaded tenant from context: {Company}, Logo: {Logo}", tenantCompanyName, tenantLogoUrl);
+                }
+            }
+            else
+            {
+                // Demo: If no tenant parameter, default to kavoku
+                var tenantIdentifier = !string.IsNullOrEmpty(__tenant__) ? __tenant__ : "kavoku";
+                Logger.LogInformation("🔄 Loading tenant via service: {Tenant}", tenantIdentifier);
+
+                var tenantInfo = await TenantService.GetTenantAsync(tenantIdentifier);
+                if (tenantInfo != null)
+                {
+                    tenantCompanyName = tenantInfo.CompanyName ?? "Kavoku";
+                    tenantLogoUrl = tenantInfo.LogoUrl ?? "/logos/calibrationco/logo.svg";
+                    Logger.LogInformation("✅ Loaded tenant from service: {Company}, Logo: {Logo}", tenantCompanyName, tenantLogoUrl);
+                }
+                else
+                {
+                    Logger.LogWarning("⚠️ TenantService returned null for: {Tenant}", tenantIdentifier);
+                    // Demo: Keep Kavoku defaults
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "❌ Error loading tenant information, using Kavoku defaults");
+            tenantCompanyName = "Kavoku";
+            tenantLogoUrl = "/logos/calibrationco/logo.svg";
+        }
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            // Set request metadata
+            loginRequest.IpAddress = await GetClientIpAsync();
+            loginRequest.UserAgent = await GetUserAgentAsync();
+
+            var result = await AuthService.InitiateLoginAsync(loginRequest);
+
+            if (result.Success && result.RequiresTwoFactor)
+            {
+                // Setup two-factor form
+                twoFactorRequest.Email = loginRequest.Email;
+                twoFactorRequest.IpAddress = loginRequest.IpAddress;
+                twoFactorRequest.UserAgent = loginRequest.UserAgent;
+
+                // Extract verification code from result message (for testing)
+                if (result.Message?.Contains("Verification code generated:") == true)
+                {
+                    var parts = result.Message.Split("Verification code generated:");
+                    if (parts.Length > 1)
+                    {
+                        generatedVerificationCode = parts[1].Trim();
+                        Logger.LogInformation("🎯 Extracted verification code for display: {Code}", generatedVerificationCode);
+                    }
+                }
+
+                showTwoFactor = true;
+                expirationMinutes = (int)(result.CodeExpiresAt?.Subtract(DateTime.UtcNow).TotalMinutes ?? 10);
+
+                // Start resend countdown
+                StartResendCountdown();
+
+                await JSRuntime.InvokeVoidAsync("focusElement", "code");
+            }
+            else if (!result.Success)
+            {
+                errorMessage = result.Message;
+                remainingAttempts = result.RemainingAttempts;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during login attempt for email: {Email}", loginRequest.Email);
+            errorMessage = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleTwoFactorAsync()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            var result = await AuthService.VerifyTwoFactorCodeAsync(twoFactorRequest);
+
+            if (result.Success)
+            {
+                // Wait a moment to ensure session is fully created before navigation
+                await Task.Delay(100);
+
+                // Redirect to dashboard
+                Navigation.NavigateTo("/", true);
+            }
+            else
+            {
+                errorMessage = result.Message;
+                remainingAttempts = result.RemainingAttempts;
+
+                // Clear the code field for retry
+                twoFactorRequest.Code = string.Empty;
+                await JSRuntime.InvokeVoidAsync("focusElement", "code");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during 2FA verification for email: {Email}", twoFactorRequest.Email);
+            errorMessage = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task BackToEmailAsync()
+    {
+        showTwoFactor = false;
+        twoFactorRequest = new();
+        errorMessage = string.Empty;
+        remainingAttempts = null;
+        StopResendCountdown();
+
+        await JSRuntime.InvokeVoidAsync("focusElement", "email");
+    }
+
+    private async Task ResendCodeAsync()
+    {
+        if (!canResendCode) return;
+
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            var result = await AuthService.InitiateLoginAsync(loginRequest);
+
+            if (result.Success)
+            {
+                StartResendCountdown();
+                await JSRuntime.InvokeVoidAsync("showToast", "Success", "Verification code sent!", "success");
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error resending 2FA code for email: {Email}", twoFactorRequest.Email);
+            errorMessage = "Failed to resend code. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void StartResendCountdown()
+    {
+        canResendCode = false;
+        resendCountdown = 60; // 60 seconds countdown
+
+        resendTimer = new Timer(async _ =>
+        {
+            resendCountdown--;
+            if (resendCountdown <= 0)
+            {
+                canResendCode = true;
+                StopResendCountdown();
+            }
+            await InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+    }
+
+    private void StopResendCountdown()
+    {
+        resendTimer?.Dispose();
+        resendTimer = null;
+        resendCountdown = 0;
+    }
+
+    private async Task<string> GetClientIpAsync()
+    {
+        try
+        {
+            return await JSRuntime.InvokeAsync<string>("getClientIP");
+        }
+        catch
+        {
+            return "Unknown";
+        }
+    }
+
+    private async Task<string> GetUserAgentAsync()
+    {
+        try
+        {
+            return await JSRuntime.InvokeAsync<string>("getUserAgent");
+        }
+        catch
+        {
+            return "Unknown";
+        }
+    }
+
+    public void Dispose()
+    {
+        StopResendCountdown();
+    }
+}

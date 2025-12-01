@@ -1,0 +1,138 @@
+@using CalibrationSaaS.CustomerPortal.Models.Certificates
+
+<RadzenDataGrid Data="@Results" TItem="CalibrationResultDto" 
+              AllowSorting="true" AllowFiltering="false" AllowPaging="false"
+              GridLines="DataGridGridLines.Both" Style="height: 400px;">
+    <Columns>
+        <RadzenDataGridColumn TItem="CalibrationResultDto" Property="TestPoint" 
+                            Title="Test Point" Width="120px" />
+
+        <RadzenDataGridColumn TItem="CalibrationResultDto" Property="NominalValue" 
+                            Title="Nominal" Width="120px">
+            <Template Context="result">
+                @if (result.NominalValue.HasValue)
+                {
+                    <text>@result.NominalValue.Value.ToString("F4") @result.Unit</text>
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="CalibrationResultDto" Property="AsFoundValue" 
+                            Title="As Found" Width="120px">
+            <Template Context="result">
+                @if (result.AsFoundValue.HasValue)
+                {
+                    <text>@result.AsFoundValue.Value.ToString("F4") @result.Unit</text>
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="CalibrationResultDto" Property="AsLeftValue" 
+                            Title="As Left" Width="120px">
+            <Template Context="result">
+                @if (result.AsLeftValue.HasValue)
+                {
+                    <text>@result.AsLeftValue.Value.ToString("F4") @result.Unit</text>
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="CalibrationResultDto" Property="Tolerance" 
+                            Title="Tolerance" Width="120px">
+            <Template Context="result">
+                @if (result.Tolerance.HasValue)
+                {
+                    <text>±@result.Tolerance.Value.ToString("F4") @result.Unit</text>
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="CalibrationResultDto" Property="Error" 
+                            Title="Error" Width="120px">
+            <Template Context="result">
+                @if (result.Error.HasValue)
+                {
+                    <text>@result.Error.Value.ToString("F4") @result.Unit</text>
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="CalibrationResultDto" Property="Uncertainty" 
+                            Title="Uncertainty" Width="120px">
+            <Template Context="result">
+                @if (result.Uncertainty.HasValue)
+                {
+                    <text>±@result.Uncertainty.Value.ToString("F4") @result.Unit</text>
+                }
+                else
+                {
+                    <text>N/A</text>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="CalibrationResultDto" Property="IsInTolerance" 
+                            Title="Status" Width="100px">
+            <Template Context="result">
+                @if (result.IsInTolerance.HasValue)
+                {
+                    <RadzenIcon Icon="@(result.IsInTolerance.Value ? "check_circle" : "error")" 
+                              Style="@($"color: var(--rz-{(result.IsInTolerance.Value ? "success" : "danger")});")" />
+                }
+                else
+                {
+                    <RadzenIcon Icon="help" Style="color: var(--rz-secondary);" />
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        @if (Results.Any(r => !string.IsNullOrEmpty(r.Comments)))
+        {
+            <RadzenDataGridColumn TItem="CalibrationResultDto" Property="Comments" 
+                                Title="Comments" Width="200px">
+                <Template Context="result">
+                    @if (!string.IsNullOrEmpty(result.Comments))
+                    {
+                        <RadzenTooltip Text="@result.Comments">
+                            <RadzenText TextStyle="TextStyle.Body2" 
+                                      Style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                @result.Comments
+                            </RadzenText>
+                        </RadzenTooltip>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+        }
+    </Columns>
+</RadzenDataGrid>
+
+@if (!Results.Any())
+{
+    <RadzenAlert AlertStyle="AlertStyle.Info" Icon="info" Title="No Calibration Results">
+        No calibration results are available for this certificate.
+    </RadzenAlert>
+}
+
+@code {
+    [Parameter] public List<CalibrationResultDto> Results { get; set; } = new();
+}

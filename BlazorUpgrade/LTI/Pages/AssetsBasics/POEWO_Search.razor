@@ -1,0 +1,321 @@
+@page "/POEWOSearch"
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
+@using CalibrationSaaS.Infraestructure.Blazor.Shared.Component
+@using CalibrationSaaS.Domain.Aggregates.Shared
+@using System.Reflection
+@using System.Linq.Expressions
+@using CalibrationSaaS.Infraestructure.Blazor.Pages.Base
+@using Blazed.Controls
+@using CalibrationSaaS.Domain.Aggregates.Querys 
+@inherits POEWO_SearchBase
+
+
+<ResponsiveTable ItemsDataSource="@_pieceOfEquipmentsDueDate"
+                 PageSize="10"
+                 HasAction="false"   
+                 HasDelete="false"
+                 HasEdit="false"
+                 HasSelect="false"
+                 HasNew="true"
+                 Context="Entity"
+                 @ref="@Grid"
+                 GridID="gridPoe"
+                 InLineEdit="false"
+                 RowEditClass=""
+                 RowNewClass=""
+                 TableItem="PieceOfEquipment"
+                 EnabledSearch="true"
+                 editContext="@CurrentEditContext"
+                 EnabledModal="false" 
+                 SaveButtonSubmit="false"
+                 PaginationFunction1="LoadData"                 
+                 DeleteAction="Delete"
+                 Component="@Component"
+                 CheckList="_pieceOfEquipmentsFiltered">
+
+    <ChildContent>
+
+        <GridColumns>
+
+
+            <GridColumn TableItem="PieceOfEquipment" Title=" "
+                        Field="@Grid.GetPropertyName(() => eq.PieceOfEquipmentID)" CSScol="col-sm-1 customcol">
+                <ResponsiveTemplate>
+                    @{
+                        bool ch = false;
+                        bool dis = false;
+                        var entity = context as PieceOfEquipment;
+                        if (_pieceOfEquipmentsFiltered != null && _pieceOfEquipmentsFiltered.Count > 0 && entity != null)
+                        {
+                            var a = _pieceOfEquipmentsFiltered.Where(x => x.PieceOfEquipmentID == entity.PieceOfEquipmentID).ToList();
+
+                            if (a != null && a?.Count > 0)
+                            {
+                                ch = true;
+                            }
+                        }
+
+                        var aaa = Parameter1.Where(x => x.PieceOfEquipmentId == entity.PieceOfEquipmentID).FirstOrDefault();
+                        if (aaa != null)
+                        {
+                            dis = true;
+                        }
+
+
+
+                    }
+                    @if (ch)
+                    {
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" value="@entity.PieceOfEquipmentID" checked="checked" disabled="@dis"
+                                   id="switch-@entity.PieceOfEquipmentID" @onclick="@(async () => await addToListPoE(entity.PieceOfEquipmentID))">
+
+                            <label class="custom-control-label" for="switch-@entity.PieceOfEquipmentID"></label>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" value="@entity.PieceOfEquipmentID" disabled="@dis"
+                                   id="switch-@entity.PieceOfEquipmentID" @onclick="@(async () => await addToListPoE(entity.PieceOfEquipmentID))">
+
+                            <label class="custom-control-label" for="switch-@entity.PieceOfEquipmentID"></label>
+
+                        </div>
+
+                    }
+
+
+                </ResponsiveTemplate>
+            </GridColumn>
+
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.PieceOfEquipmentID)" Title="ID" />
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.SerialNumber)" />
+
+            <GridColumn TableItem="PieceOfEquipment" Title="@nameof(eq.EquipmentTemplate.Model)"
+                        Field="@Grid.GetPropertyName(() => eq.EquipmentTemplate.Model)">
+                <ResponsiveTemplate>
+                    @{ var entity = context as PieceOfEquipment;
+
+                        @Format(entity.EquipmentTemplate.Model)
+
+                    }
+                </ResponsiveTemplate>
+            </GridColumn>
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Customer.Name)" Title="Customer" />
+
+            @*<GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Capacity)" />*@
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.UnitOfMeasureID)" Title="Capacity">
+
+                <ResponsiveTemplate Context="POE">
+
+                    @{
+
+                        string s = "";
+
+                        var a = POE as PieceOfEquipment;
+
+                        var b = a.UnitOfMeasureID.GetUoM(AppState.UnitofMeasureList, a.Capacity);
+
+                        if (b != null)
+                        {
+                            s = b.CapacityFull;
+                        }
+
+                    }
+                    @s
+
+
+                </ResponsiveTemplate>
+
+            </GridColumn>
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.Status)">
+                <ResponsiveTemplate>
+                    @{
+                        var a = context as PieceOfEquipment;
+
+                        var b = a.Status.GetStatus(AppState.StatusListET);
+                    }
+                    @b
+                </ResponsiveTemplate>
+            </GridColumn>
+
+            <GridColumn TableItem="PieceOfEquipment" Field="@Grid.GetPropertyName(() => eq.DueDate)" Format="{0:MM/dd/yy}" DefaultSort="true" />
+
+        </GridColumns>
+
+
+
+    </ChildContent>
+
+
+    <GridRow>
+
+
+    </GridRow>
+   
+    <NewButton>
+
+        <div class="row">
+            <div class="col-1">
+                @if (selectState)
+                {
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" checked="checked"
+                               id="switch-all" @onclick="@(async () => await SelectAll())">
+
+                        <label class="custom-control-label" for="switch-all"></label>
+
+                    </div>
+                }
+                else
+                {
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input"
+                               id="switch-all" @onclick="@(async () => await SelectAll())">
+
+                        <label class="custom-control-label" for="switch-all"></label>
+
+                    </div>
+
+                }
+
+
+            </div>
+            <div class="col">
+                <button class="btn btn-primary" @onclick=@(async () => await ReturnModal())>Select</button>
+            </div>
+
+        </div>
+      
+
+       
+    </NewButton>
+    @*<EditButton>
+        <a class="btn btn-sm btn-primary shadow-sm btn-sm editButton" href="PieceOfEquipmentCreate/@Entity.PieceOfEquipmentID">Edit</a>
+
+    </EditButton>*@
+
+</ResponsiveTable>
+
+@*<CalibrationSaaS.Infraestructure.Blazor.Pages.Base.Search T="CalibrationSaaS.Domain.Aggregates.Entities.PieceOfEquipment"
+                                                          S="Application.Services.IPieceOfEquipmentService<CallContext>"
+                                                          D="CalibrationSaaS.Domain.Aggregates.Shared.Basic.AppState"
+                                                          FuncFilter="@FilterList"
+                                                          @ref="@searchComponent" PageSize="5" HasNewButton="true">
+    <GridHeader>
+        <th width="5%">ID</th>
+        <th>Equipment Number</th>
+        <th>Serial Number</th>
+        <th>Capacity</th>
+        <th>Status</th>
+        <th>Due Date</th>
+        <th></th>
+
+    </GridHeader>
+
+    <GridModalSelection>
+       <div></div>
+    </GridModalSelection>
+
+
+    <GridRow >
+
+
+        @if (context.DueDate < DateTime.Now)
+    {
+        classPieceOfEquipment = "table-danger";
+    }
+    else
+    {
+        classPieceOfEquipment = "table-success";
+    }
+      
+             <td class="@classPieceOfEquipment">@context.PieceOfEquipmentID</td>
+            <td class="@classPieceOfEquipment">@context.SerialNumber</td>
+            <td class="@classPieceOfEquipment">@context.Capacity</td>
+            <td class="@classPieceOfEquipment">@context.Status</td>
+            <td class="@classPieceOfEquipment">@context.DueDate</td>
+            <td class="@classPieceOfEquipment">
+                
+                <div class="col-sm">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" value="@context.PieceOfEquipmentID"
+                               id="switch-@context.PieceOfEquipmentID" @onclick="@(async () => await addToListPoE(context.PieceOfEquipmentID))">
+
+                        <label class="custom-control-label" for="switch-@context.PieceOfEquipmentID"></label>
+
+                    </div>
+                </div>
+            </td>
+         
+    </GridRow>
+    <GridNew>
+        <button class="btn btn-primary" @onclick=@(async () => await ReturnModal())>Select</button>
+      
+    </GridNew>
+
+
+    <GridSelect>
+     
+       
+    </GridSelect>
+    <GridEdit>
+        <td>
+         
+           
+            <a class="btn btn-success btn-sm" href="PieceOfEquipmentCreate/@context.PieceOfEquipmentID">New</a>
+        </td>
+    </GridEdit>
+    <GridDelete>
+        <td>
+            <div>
+                <button class="btn btn-danger btn-sm"
+                        @onclick=@(async () => await Delete(context)) @onclick:stopPropagation @onclick:preventDefault>
+                    Delete
+                </button>
+            </div>
+
+        </td>
+    </GridDelete>
+
+
+</CalibrationSaaS.Infraestructure.Blazor.Pages.Base.Search>*@
+
+@code {
+    string classPieceOfEquipment;
+
+    //public async Task ReturnModal()
+    //{
+    //    await BlazoredModal.Close(ModalResult.Ok(_pieceOfEquipmentsFiltered));
+    //}
+
+
+    //public async Task addToListPoE(int ID)
+    //{
+    //    PieceOfEquipment _poe = new PieceOfEquipment();
+    //    if (_pieceOfEquipmentsDueDate != null)
+    //    {
+    //        var listPoe = _pieceOfEquipmentsDueDate.Where(x => x.PieceOfEquipmentID == ID).FirstOrDefault();
+
+    //        _poe = new PieceOfEquipment()
+    //        {
+    //            PieceOfEquipmentID = ID,
+    //            SerialNumber = listPoe.SerialNumber
+    //        };
+
+
+    //        _pieceOfEquipmentsFiltered.Add(_poe);
+    //    }
+    //    //await BlazoredModal.Close(ModalResult.Ok(searchComponent.Detail));
+
+    //}
+
+
+}

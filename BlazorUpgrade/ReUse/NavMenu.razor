@@ -1,0 +1,68 @@
+﻿<!-- Sidebar -->
+@using Blazed.Controls
+@using Radzen
+
+@inherits NavMenu_Base
+@inject ILogger<NavMenu> Logger;
+
+<RadzenPanelMenu>
+    <RadzenPanelMenuItem Text="Dashboard" Path="" Icon="dashboard" />
+
+    @if (Customer?.ToLower() == "lti")
+    {
+        <RadzenPanelMenuItem Text="Backlog" Path="BackLog/0" Icon="assignment" />
+    }
+
+    @if (CanShow && ConnectionStatusService.GetCurrentStatus())
+    {
+        <RadzenPanelMenuItem Text="Basics"  Icon="settings">
+            @if (isdemo == "false")
+            {
+                <RadzenPanelMenuItem Text="Equipment Type" Path="EquipmentType" Icon="category" />
+            }
+            <RadzenPanelMenuItem Text="Manufacturer" Path="ManufacturerSearch" Icon="business" />
+            <RadzenPanelMenuItem Text="Equipment Template" Path="EquipmentTemplateSearch" Icon="description" />
+            <RadzenPanelMenuItem Text="CMC Values" Path="CalibrationTypeDetail" Icon="tune" />
+            <RadzenPanelMenuItem Text="Test Codes" Path="TestCodeSearch" Icon="code" />
+            <RadzenPanelMenuItem Text="Procedure" Path="ProcedureSearch" Icon="receipt_long" />
+        </RadzenPanelMenuItem>
+
+        <RadzenPanelMenuItem Text="Company"  Icon="business_center">
+            <RadzenPanelMenuItem Text="Technicians" Path="UserSearch" Icon="engineering" />
+        </RadzenPanelMenuItem>
+        <RadzenPanelMenuItem Text="Customer"  Icon="people">
+            <RadzenPanelMenuItem Text="Customer" Path="CustomerSearch" Icon="person_search" />
+        </RadzenPanelMenuItem>
+    }
+
+    <RadzenPanelMenuItem Text="Assets"  Icon="inventory">
+        <RadzenPanelMenuItem Text="Piece Of Equipment" Path="PieceOfEquipmentSearch" Icon="build" />
+        @if (ConnectionStatusService.GetCurrentStatus())
+        {
+            <RadzenPanelMenuItem Text="Weight Set CSV" Path="weightCreateCSV" Icon="file_upload" />
+        }
+    </RadzenPanelMenuItem>
+    <RadzenPanelMenuItem Text="Orders"  Icon="shopping_cart">
+        <RadzenPanelMenuItem Text="Work Order" Path="WorkOrderSearchNew" Icon="assignment_turned_in" />
+    </RadzenPanelMenuItem>
+    @if (!ConnectionStatusService.GetCurrentStatus())
+    {
+        <RadzenPanelMenuItem Text="Offline"  Icon="cloud_off">
+            <RadzenPanelMenuItem Text="Download Wod" Path="WODOff/0" Icon="download" />
+            <RadzenPanelMenuItem Text="Upload Wod" Path="WODOff2/1" Icon="upload" />
+        </RadzenPanelMenuItem>
+    }
+
+    <RadzenPanelMenuItem Text="Settings"  Icon="settings">
+        @if (ConnectionStatusService.GetCurrentStatus())
+        {
+            <RadzenPanelMenuItem Text="Roles and Permissions" Path="SecurityCreate" Icon="security" />
+            <RadzenPanelMenuItem Text="Storage Options" Path="View" Icon="storage" />
+        }
+    </RadzenPanelMenuItem>
+
+    <RadzenPanelMenuItem Text="Examples"  Icon="code">
+        <RadzenPanelMenuItem Text="Radzen Table" Path="radzen-table-example" Icon="table_chart" />
+        <RadzenPanelMenuItem Text="Radzen Table with Columns" Path="radzen-table-with-columns-example" Icon="view_column" />
+    </RadzenPanelMenuItem>
+</RadzenPanelMenu>

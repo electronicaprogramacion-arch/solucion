@@ -1,0 +1,246 @@
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components
+@using Radzen
+@using Radzen.Blazor
+@inject IJSRuntime JSRuntime
+
+<div class="json-viewer-container">
+    <div class="json-viewer-header">
+        <h5>@Title</h5>
+        <div class="json-viewer-actions">
+            <RadzenButton ButtonType="Radzen.ButtonType.Button"
+                          Icon="content_copy"
+                          Text="Copy"
+                          ButtonStyle="ButtonStyle.Light"
+                          Size="ButtonSize.Small"
+                          Click="@CopyToClipboard" />
+            <RadzenButton ButtonType="Radzen.ButtonType.Button"
+                          Icon="download"
+                          Text="Download"
+                          ButtonStyle="ButtonStyle.Light"
+                          Size="ButtonSize.Small"
+                          Click="@DownloadJson" />
+        </div>
+    </div>
+    
+    <div class="json-viewer-content">
+        @if (!string.IsNullOrEmpty(JsonData))
+        {
+            <pre class="json-formatted" id="json-content">@FormattedJson</pre>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                No data available to display.
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .json-viewer-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .json-viewer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 15px;
+    }
+
+    .json-viewer-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .json-viewer-content {
+        flex: 1;
+        overflow: auto;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+    }
+
+    .json-formatted {
+        background-color: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 15px;
+        margin: 0;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 13px;
+        line-height: 1.4;
+        color: #495057;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .json-formatted .json-key {
+        color: #0066cc;
+        font-weight: bold;
+    }
+
+    .json-formatted .json-string {
+        color: #009900;
+    }
+
+    .json-formatted .json-number {
+        color: #cc6600;
+    }
+
+    .json-formatted .json-boolean {
+        color: #cc0066;
+        font-weight: bold;
+    }
+
+    .json-formatted .json-null {
+        color: #999999;
+        font-style: italic;
+    }
+
+    .alert {
+        padding: 12px 16px;
+        margin: 0;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+
+    .alert-warning {
+        color: #856404;
+        background-color: #fff3cd;
+        border-color: #ffeaa7;
+    }
+
+    .alert i {
+        margin-right: 8px;
+    }
+</style>
+
+@code {
+    [Parameter] public string Title { get; set; } = "JSON Viewer";
+    [Parameter] public string JsonData { get; set; }
+
+    private string FormattedJson => FormatJson(JsonData);
+
+    private string FormatJson(string json)
+    {
+        if (string.IsNullOrEmpty(json))
+            return string.Empty;
+
+        try
+        {
+            // Parse and re-serialize to ensure proper formatting
+            var jsonDocument = JsonDocument.Parse(json);
+            return JsonSerializer.Serialize(jsonDocument, new JsonSerializerOptions 
+            { 
+                WriteIndented = true 
+            });
+        }
+        catch (JsonException)
+        {
+            // If parsing fails, return the original string
+            return json;
+        }
+    }
+
+    private async Task CopyToClipboard()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", FormattedJson);
+            // TODO: Show success toast
+        }
+        catch (Exception)
+        {
+            // Fallback for older browsers
+            await JSRuntime.InvokeVoidAsync("copyToClipboardFallback", FormattedJson);
+        }
+    }
+
+    private async Task DownloadJson()
+    {
+        try
+        {
+            var fileName = $"audit_log_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+            var content = FormattedJson;
+            
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, content, "application/json");
+        }
+        catch (Exception ex)
+        {
+            // TODO: Show error message
+            Console.WriteLine($"Error downloading file: {ex.Message}");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Add syntax highlighting if needed
+            await JSRuntime.InvokeVoidAsync("highlightJson");
+        }
+    }
+}
+
+<script>
+    window.copyToClipboardFallback = (text) => {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+    };
+
+    window.downloadFile = (filename, content, contentType) => {
+        const blob = new Blob([content], { type: contentType });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    };
+
+    window.highlightJson = () => {
+        // Simple JSON syntax highlighting
+        const jsonContent = document.getElementById('json-content');
+        if (jsonContent) {
+            let html = jsonContent.innerHTML;
+
+            // Highlight strings
+            html = html.replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, '<span class="json-string">"$1"</span>');
+
+            // Highlight numbers
+            html = html.replace(/\b(-?\d+\.?\d*)\b/g, '<span class="json-number">$1</span>');
+
+            // Highlight booleans
+            html = html.replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>');
+
+            // Highlight null
+            html = html.replace(/\bnull\b/g, '<span class="json-null">null</span>');
+
+            // Highlight keys (property names)
+            html = html.replace(/(<span class="json-string">)"([^"]+)"(<\/span>)(\s*:)/g, '<span class="json-key">"$2"</span>$4');
+
+            jsonContent.innerHTML = html;
+        }
+    };
+</script>

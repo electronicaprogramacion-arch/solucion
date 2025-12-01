@@ -1,0 +1,198 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+@* Performance Monitor Component for Blazor Pages *@
+
+@code {
+    [Parameter] public string PageName { get; set; } = "";
+    [Parameter] public bool EnableDetailedTracking { get; set; } = true;
+    [Parameter] public bool ShowPerformanceOverlay { get; set; } = false;
+    
+    private string? trackingId;
+    private DateTime pageLoadStart;
+    private bool isDisposed = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        pageLoadStart = DateTime.UtcNow;
+        
+        if (EnableDetailedTracking)
+        {
+            try
+            {
+                trackingId = await JSRuntime.InvokeAsync<string>("startPerformanceTracking", PageName);
+                await LogPerformance("PAGE_INIT", $"Page initialization started: {PageName}", 0);
+            }
+            catch (Exception ex)
+            {
+                //Console.WriteLine($"Performance tracking initialization failed: {ex.Message}");
+            }
+        }
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && EnableDetailedTracking)
+        {
+            try
+            {
+                var renderTime = (DateTime.UtcNow - pageLoadStart).TotalMilliseconds;
+                await LogPerformance("PAGE_RENDER", $"First render completed: {PageName}", renderTime);
+                
+                if (!string.IsNullOrEmpty(trackingId))
+                {
+                    var totalTime = await JSRuntime.InvokeAsync<double>("endPerformanceTracking", trackingId, $"Page load: {PageName}");
+                    //Console.WriteLine($"🎯 Page {PageName} total load time: {totalTime:F2}ms");
+                }
+            }
+            catch (Exception ex)
+            {
+                //Console.WriteLine($"Performance tracking render failed: {ex.Message}");
+            }
+        }
+    }
+    
+    public async Task TrackOperation(string operationName, Func<Task> operation)
+    {
+        if (!EnableDetailedTracking) 
+        {
+            await operation();
+            return;
+        }
+        
+        var startTime = DateTime.UtcNow;
+        string? operationTrackingId = null;
+        
+        try
+        {
+            operationTrackingId = await JSRuntime.InvokeAsync<string>("startPerformanceTracking", operationName);
+            await operation();
+        }
+        catch (Exception ex)
+        {
+            var errorTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
+            await LogPerformance("OPERATION_ERROR", $"Operation failed: {operationName}", errorTime, new { error = ex.Message });
+            throw;
+        }
+        finally
+        {
+            if (!string.IsNullOrEmpty(operationTrackingId))
+            {
+                try
+                {
+                    var duration = await JSRuntime.InvokeAsync<double>("endPerformanceTracking", operationTrackingId, operationName);
+                    //Console.WriteLine($"⚡ Operation {operationName} completed in {duration:F2}ms");
+                }
+                catch (Exception ex)
+                {
+                    //Console.WriteLine($"Failed to end performance tracking for {operationName}: {ex.Message}");
+                }
+            }
+        }
+    }
+    
+    public async Task<T> TrackOperation<T>(string operationName, Func<Task<T>> operation)
+    {
+        if (!EnableDetailedTracking) 
+        {
+            return await operation();
+        }
+        
+        var startTime = DateTime.UtcNow;
+        string? operationTrackingId = null;
+        
+        try
+        {
+            operationTrackingId = await JSRuntime.InvokeAsync<string>("startPerformanceTracking", operationName);
+            var result = await operation();
+            return result;
+        }
+        catch (Exception ex)
+        {
+            var errorTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
+            await LogPerformance("OPERATION_ERROR", $"Operation failed: {operationName}", errorTime, new { error = ex.Message });
+            throw;
+        }
+        finally
+        {
+            if (!string.IsNullOrEmpty(operationTrackingId))
+            {
+                try
+                {
+                    var duration = await JSRuntime.InvokeAsync<double>("endPerformanceTracking", operationTrackingId, operationName);
+                    //Console.WriteLine($"⚡ Operation {operationName} completed in {duration:F2}ms");
+                }
+                catch (Exception ex)
+                {
+                    //Console.WriteLine($"Failed to end performance tracking for {operationName}: {ex.Message}");
+                }
+            }
+        }
+    }
+    
+    public async Task LogPerformance(string type, string description, double duration, object? metadata = null)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("trackPerformance", type, description, duration);
+            
+            // Also log to console for immediate visibility
+            var color = GetLogColor(duration);
+            //Console.WriteLine($"⏱️ {type}: {description} - {duration:F2}ms");
+        }
+        catch (Exception ex)
+        {
+            //Console.WriteLine($"Failed to log performance: {ex.Message}");
+        }
+    }
+    
+    private string GetLogColor(double duration)
+    {
+        if (duration < 100) return "green";
+        if (duration < 500) return "orange";
+        if (duration < 1000) return "red";
+        return "darkred";
+    }
+    
+    public void Dispose()
+    {
+        if (!isDisposed)
+        {
+            isDisposed = true;
+            
+            if (EnableDetailedTracking && !string.IsNullOrEmpty(trackingId))
+            {
+                try
+                {
+                    // Note: We can't await in Dispose, so we fire and forget
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await JSRuntime.InvokeAsync<double>("endPerformanceTracking", trackingId, $"Page dispose: {PageName}");
+                        }
+                        catch (Exception ex)
+                        {
+                            //Console.WriteLine($"Failed to end tracking on dispose: {ex.Message}");
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    //Console.WriteLine($"Failed to dispose performance tracking: {ex.Message}");
+                }
+            }
+        }
+    }
+}
+
+@if (ShowPerformanceOverlay)
+{
+    <div style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; z-index: 9999;">
+        <div>📊 Performance Monitor</div>
+        <div>Page: @PageName</div>
+        <div>Load Time: @((DateTime.UtcNow - pageLoadStart).TotalMilliseconds.ToString("F0"))ms</div>
+        <div style="font-size: 10px; margin-top: 5px;">Check console for details</div>
+    </div>
+}

@@ -1,0 +1,177 @@
+﻿@typeparam ITem
+@inject ILogger Logger
+
+@using System.Reflection;
+
+<div class="modal fade bd-example-modal-lg" id="detailView" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">@Title</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card mb-3">
+                    <div class="row no-gutters">
+                        <div class="col-md-4">
+                            <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;"
+                                 src="@Format(ImageUrl)" alt="">
+                        </div>
+                        <div class="col-md-8">
+                            <h3> @Header</h3>
+                            <div class="row">
+                                <div class="col-md-8 mx-auto">
+                                    <form>
+
+                                        @foreach (var item in Properties)
+                                        {
+                                            //Logger.LogDebug(PropertyTypes[item.Key].ToLower());
+                                            //Logger.LogDebug(item.Key.Substring(item.Key.Length - 2));
+
+                                            @if (PropertyTypes[item.Key].ToLower() == "string" && item.Key.Substring(item.Key.Length - 2) != "ID")
+                                            {
+                                                <div class="form-group row">
+
+                                                    <div class="col-sm-12">
+                                                        <label style="font-weight:bold">
+                                                            @Format(item.Key):
+                                                            <label style="font-weight:normal">@Format(item.Value)</label>
+                                                        </label>
+
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+
+                                        @foreach (var item in Properties)
+                                        {
+                                            @if (PropertyTypes[item.Key].ToLower() == "boolean")
+                                            {
+                                                <div class="form-row">
+                                                    <div class="col-md-3 mb-3">
+                                                        <div class="custom-control custom-switch">
+                                                            <input type="checkbox" value="@item.Value" placeholder="@item.Key" class="custom-control-input" id="customSwitch1" disabled="disabled" />
+                                                            <label class="custom-control-label" for="customSwitch1">@item.Key</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+
+
+
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+
+            </div>
+            <div class="modal-footer">
+
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code
+
+
+{
+
+    [Inject] IJSRuntime JSRuntime { get; set; }
+
+    [Parameter]
+    public string ImageUrl { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public ITem Detail { get; set; }
+
+    [Parameter]
+    public RenderFragment<ITem> Content { get; set; }
+
+    [Parameter]
+    public RenderFragment Header { get; set; }
+
+
+    [Parameter]
+    public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
+
+    [Parameter]
+    public Dictionary<string, string> PropertyTypes { get; set; } = new Dictionary<string, string>();
+
+
+    public async Task ShowModal(ITem _detail)
+
+
+    {
+        Detail = _detail;
+
+
+        Properties = Detail.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+        .ToDictionary(prop => prop.Name, prop => prop.GetValue(Detail, null));
+
+
+        PropertyTypes = Detail.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+       .ToDictionary(prop => prop.Name, prop => prop.PropertyType.Name);
+
+
+
+
+
+        await JSRuntime.InvokeVoidAsync("showModal", "detailView");
+        StateHasChanged();
+    }
+
+    public async Task ShowModal()
+    {
+        Properties = Detail.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+        .ToDictionary(prop => prop.Name, prop => prop.GetValue(Detail, null));
+
+
+        PropertyTypes = Detail.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public)
+       .ToDictionary(prop => prop.Name, prop => prop.PropertyType.Name);
+
+
+
+
+
+        await JSRuntime.InvokeVoidAsync("showModal", "detailView");
+        StateHasChanged();
+    }
+
+    public object Format(object value)
+    {
+
+        return value ??= "";
+    }
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        //var propertyInfo = myObject.GetType().GetProperty(nameOfProperty);
+        //var value = propertyInfo.GetValue(myObject, null);
+
+
+    }
+
+}
