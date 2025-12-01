@@ -12,6 +12,7 @@ namespace CalibrationSaaS.Domain.Aggregates.Entities
     {
 
 
+
         [DataMember(Order = 1)]
         public string Author { get; set; }
 
