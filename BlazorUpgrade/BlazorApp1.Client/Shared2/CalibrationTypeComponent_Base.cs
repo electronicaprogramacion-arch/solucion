@@ -1,36 +1,36 @@
-﻿using Blazor.IndexedDB.Framework;
-using Blazed.Controls;
+﻿using Blazed.Controls;
+using Blazed.Controls.MultiComponent;
+using Blazed.Controls.Toast;
+using Blazor.IndexedDB.Framework;
+using Blazored.Modal;
+using Blazored.Modal.Services;
 using CalibrationSaaS.Domain.Aggregates.Entities;
+using CalibrationSaaS.Domain.Aggregates.Interfaces;
 using CalibrationSaaS.Domain.Aggregates.Shared;
 using CalibrationSaaS.Domain.Aggregates.Shared.Basic;
+using CalibrationSaaS.Infraestructure.Blazor;
 using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics;
 using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics.TestPoints;
+using CalibrationSaaS.Infraestructure.Blazor.Pages.Order;
 using CalibrationSaaS.Infraestructure.Blazor.Services;
+using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
+using Helpers;
+using Helpers.Controls;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using ProtoBuf.Grpc;
+using Radzen.Blazor;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Blazed.Controls.Toast;
 using System.Linq;
-using CalibrationSaaS.Infraestructure.Blazor.Pages.Order;
-using Modal = Blazed.Controls.Modal;
-using Google.Protobuf.WellKnownTypes;
-using Type = System.Type;
 using System.Security.Cryptography.X509Certificates;
-using CalibrationSaaS.Domain.Aggregates.Interfaces;
-using Helpers.Controls;
-using Grpc.Core;
-using Helpers;
-using Blazored.Modal;
-using Blazed.Controls.MultiComponent;
-using Blazored.Modal.Services;
-
 using System.Text.Json;
-using CalibrationSaaS.Infraestructure.Blazor;
+using System.Threading.Tasks;
+using Modal = Blazed.Controls.Modal;
+using Type = System.Type;
 
 
 namespace BlazorApp1.Blazor.Shared
@@ -47,6 +47,10 @@ namespace BlazorApp1.Blazor.Shared
 
     {
 
+
+
+        public RadzenTabs tabs;
+        public int selectedIndex = 0;
 
         [Parameter]
         public bool? RuleValue { get; set; }
@@ -669,8 +673,7 @@ namespace BlazorApp1.Blazor.Shared
 
                
                
-            }
-                
+            }                
                 
         
         

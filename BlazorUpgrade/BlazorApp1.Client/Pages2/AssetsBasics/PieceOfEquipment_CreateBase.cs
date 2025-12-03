@@ -1,22 +1,26 @@
 using Blazed.Controls;
 using Blazed.Controls.Toast;
 using Blazor.IndexedDB.Framework;
+using BlazorApp1.Blazor.Blazor.LTI.Rockwell;
+using BlazorApp1.Blazor.Blazor.Pages.AssetsBasics;
+using BlazorApp1.Blazor.Pages.Layout;
+using BlazorApp1.Blazor.Shared;
+using BlazorApp1.Client.Pages.AssetsBasics;
 using Blazored.Modal;
 using Blazored.Modal.Services;
-
-
 using CalibrationSaaS.Domain.Aggregates.Entities;
 using CalibrationSaaS.Domain.Aggregates.Interfaces;
 using CalibrationSaaS.Domain.Aggregates.ValueObjects;
 using CalibrationSaaS.Infraestructure.Blazor;
-using BlazorApp1.Blazor.Blazor.Pages.AssetsBasics;
-
+using CalibrationSaaS.Infraestructure.Blazor.Components;
+using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics;
 using CalibrationSaaS.Infraestructure.Blazor.Services;
 using Grpc.Core;
 using Helpers;
 using Helpers.Controls.ValueObjects;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using ProtoBuf.Grpc;
@@ -28,17 +32,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
-
-
-
-using BlazorApp1.Client.Pages.AssetsBasics;
-using BlazorApp1.Blazor.Shared;
-using CalibrationSaaS.Infraestructure.Blazor.Pages.Basics;
-
-using BlazorApp1.Blazor.Blazor.LTI.Rockwell;
-using CalibrationSaaS.Infraestructure.Blazor.Components;
 
 
 namespace BlazorApp1.Client.Pages.AssetsBasics
@@ -196,6 +190,9 @@ namespace BlazorApp1.Client.Pages.AssetsBasics
 
         }
 
+
+        [CascadingParameter]
+        public MainLayout MainLayout { get; set; }
         PieceOfEquipmentGRPC poegrpc;
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -231,6 +228,13 @@ namespace BlazorApp1.Client.Pages.AssetsBasics
             }
 
             await base.OnAfterRenderAsync(firstRender);
+
+
+            if (firstRender && MainLayout != null)
+            {
+                MainLayout.SetSubMenuContent(HeaderForm(TypeName, Enabled, Enabled));
+            }
+
 
         }
 

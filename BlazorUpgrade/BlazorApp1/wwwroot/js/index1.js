@@ -370,6 +370,7 @@ function fixedDecimal(navId, ndecimal) {
             try {
 
                 setFocus();
+                closeProgressBar(id);
             }
             catch (e) {
 
@@ -435,19 +436,28 @@ function fixedDecimal(navId, ndecimal) {
                 setTimeout(function () {
                     try {
 
-
+                        
                         $('#' + id).show();
+                        $('#' + id + "ActionBar").hide();
 
-
+                        
                         //jsShowWindowLoad('Loading', focus);
                     } catch (e) {
 
                     }
                 }, 20);
             };
-        window.closeProgressBar = (id) => {
-            $('#' + id).hide();
-            //document.getElementById(id).style.display = 'none';
+window.closeProgressBar = (id) => {
+    setTimeout(function () {
+    try {
+        $('#' + id).hide();
+        $('#' + id + "ActionBar").show();
+
+    } catch(e) {
+
+    }
+    }, 20);
+            
         };
 
 

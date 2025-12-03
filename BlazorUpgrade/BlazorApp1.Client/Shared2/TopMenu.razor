@@ -34,15 +34,18 @@
 
 
 <JavaScriptInteropHandler OnInitialized="HandleJsInteropInitialized">
+     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
     <div class="header-content">
-        <div class="header-left">
+        <div class="row" style="width:100%">
+            
+        <div class="header-left col">
            @*  <RadzenSidebarToggle Click="@HandleSidebarToggleClick"></RadzenSidebarToggle> *@
             <div class="logo-container">
-                <BlazorApp1.Client.Shared2.Component.Logo TypeString="LTILogo"></BlazorApp1.Client.Shared2.Component.Logo>
+                @* <BlazorApp1.Client.Shared2.Component.Logo TypeString="LTILogo"></BlazorApp1.Client.Shared2.Component.Logo> *@
             </div>
         </div>
 
-        <div class="header-center">
+        <div class="header-center col-3">
             <RadzenTextBox @bind-Value="SearchTerm" @ref="textBoxRef"
                            @onkeyup="@(args => KeyEvent("Name", SearchTerm, args))"
                            Placeholder="Please enter a keyword." />
@@ -53,7 +56,7 @@
             </div>
         </div>
 
-        <div class="header-right">
+        <div class="header-right col">
             @if (1 == 1 || IsInstalled == true || !ConnectionStatusService.GetCurrentStatus())
             {
                 <div class="connection-status @(ConnectionStatusService.GetCurrentStatus() ? "connected" : "offline")" @onclick="ToggleState">
@@ -78,15 +81,29 @@
             <div style="cursor: pointer; display: flex; align-items: center; padding: 4px;" @onclick="HandleSettingsClick">
                 <RadzenIcon Icon="settings" Style="font-size: 24px;" />
             </div>
-            <BlazorApp1.Client.Shared2.Component.UserAccountCard></BlazorApp1.Client.Shared2.Component.UserAccountCard>
-            
+                    <BlazorApp1.Client.Shared2.Component.UserAccountCard></BlazorApp1.Client.Shared2.Component.UserAccountCard>
+        </div>
+        
         </div>
     </div>
+    </RadzenStack>
+    @if (HeaderContent != null)
+    {
+        <div class="row">
+            <div class="col">
+                @HeaderContent
+            </div>
+
+        </div>
+    }
 </JavaScriptInteropHandler>
 
 @code {
 
 
+    [Parameter]
+    // SubMenu Content
+    public RenderFragment HeaderContent { get; set; }
 
     public IJSRuntime  jsr { get; set; }
 

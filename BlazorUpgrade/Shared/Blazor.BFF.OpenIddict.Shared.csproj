@@ -53,17 +53,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Blazed\Blazed.csproj" />
-		<ProjectReference Include="..\..\CalibrationSaaS.Application.Services\CalibrationSaaS.Application.Services.csproj" />
-		<ProjectReference Include="..\..\CalibrationSaaS.Models\CalibrationSaaS.Domain.Aggregates.csproj" />
-		<ProjectReference Include="..\..\Blazored.Modal\Blazored.Modal.csproj" />
-		<ProjectReference Include="..\..\CalibrationSaaS.Infraestructure.Blazor.Services\CalibrationSaaS.Infraestructure.Blazor.Services.csproj" />
-		<ProjectReference Include="..\..\Reports.Domain.ReportViewModels\Reports.Domain.ReportViewModels.csproj" />
-		<ProjectReference Include="..\..\Helpers\Helpers.csproj" />
-		<ProjectReference Include="..\..\SqliteWasmHelper\SqliteWasmHelper.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<SupportedPlatform Include="browser" />
 	</ItemGroup>
 </Project>

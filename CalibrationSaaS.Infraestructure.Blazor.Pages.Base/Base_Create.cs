@@ -571,7 +571,21 @@ namespace CalibrationSaaS.Infraestructure.Blazor.Pages.Basics
     public class Base_Create<T, S, D> : KavokuComponentBase<T> where T : class,new()
     {
 
-        
+        public RenderFragment HeaderForm(string Title, bool Enabled, bool ActionBar) => builder =>
+        {
+
+
+
+            builder.OpenComponent<Blazed.Controls.HeaderComponent>(0);
+            builder.AddAttribute(1, "Title", Title);
+            builder.AddAttribute(2, "Enabled", Enabled);
+            builder.AddAttribute(3, "ActionBar", Enabled);
+            builder.CloseComponent();
+
+
+            //@< HeaderComponent Title = "Work Order" Enabled = "@Enabled" ActionBar = "@Enabled" ></ HeaderComponent >;
+
+        };
 
         //public static IComponentRenderMode Rendermode { get; set; } = new InteractiveServerRenderMode(prerender: false);
         public bool EnableSubTypeFilter { get; set; } = false;

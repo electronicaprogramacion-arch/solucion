@@ -6,12 +6,24 @@
 
 <div class="settings-sidebar" style="z-index: 1040; grid-area: rz-sidebar-settings;">
     <div class="settings-content">
+       
+
         <RadzenStack AlignItems="Radzen.AlignItems.Center" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding); border-bottom: var(--rz-panel-menu-item-border);">
             <div class="settings-header">
                 <RadzenText Text="Settings" TextStyle="Radzen.Blazor.TextStyle.Subtitle1" class="rz-mb-0" style="color: var(--rz-sidebar-color);" />
                @*  <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Click="@(() => OnClick())" /> *@
             </div>
         </RadzenStack>
+        <RadzenCard class="rz-mb-4">
+            <RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <RadzenLabel Text="Color Scheme" Component="ColorScheme" />
+                <RadzenDropDown Data="@colorSchemes" @bind-Value="@colorScheme" Name="ColorScheme">
+                    <Template Context="colorSchemeItem">
+                        @Enum.GetName(typeof(ColorScheme), colorSchemeItem)
+                    </Template>
+                </RadzenDropDown>
+            </RadzenStack>
+        </RadzenCard>
         <RadzenStack Gap="1rem" class="rz-p-4">
             <!-- Theme Selection -->
             @if(OperatingSystem.IsBrowser())            
@@ -80,6 +92,11 @@
 @* <RadzenButton Size="ButtonSize.ExtraSmall" Text="Open Side Dialog" Click="@OnClick" /> *@
 
 @code {
+
+
+    // Radzen chart color scheme
+    IEnumerable<ColorScheme> colorSchemes = Enum.GetValues(typeof(ColorScheme)).Cast<ColorScheme>();
+    ColorScheme colorScheme = ColorScheme.Palette;
 
     public Microsoft.Extensions.Localization.IStringLocalizer<BlazorApp1.Blazor.Pages.Layout.MainLayout> L { get; set; }
 

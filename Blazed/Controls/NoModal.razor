@@ -73,7 +73,7 @@
 
     @if (Enabled)
     {
-        if (Style == "Modal")
+        if (Style == "xxModal")
         {
 
 
@@ -127,31 +127,14 @@
             </RadzenHeader>
         }
 
-        if (Style == "Panel")
+        if (Style == "Modal")
         {
-            <div id="@ID" class="collapse @Show" aria-labelledby="headingTwo" data-parent="#accordion">
+          
                 <div class="card-body">
 
                     @ContentBody
 
                 </div>
-
-
-            </div>
-        }
-        if (Style == "Plain")
-        {
-            <RadzenStack>
-            <button class="close" type="button" data-bs-dismiss="modal" aria-label="Close"
-                    @onclick="@(async () => await CancelItem("" + "" + ""))"
-                    @onclick:stopPropagation @onclick:preventDefault>
-
-                <span aria-hidden="true">×</span>
-            </button>
-            </RadzenStack>
-                    @ContentBody
-
-              
 
 
            

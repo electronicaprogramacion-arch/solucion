@@ -1,6 +1,7 @@
 using Blazed.Controls;
 using Blazed.Controls.Toast;
 using Blazor.IndexedDB.Framework;
+using BlazorApp1.Blazor.Pages.Layout;
 using Blazored.Modal;
 using Blazored.Modal.Services;
 using CalibrationSaaS.Domain.Aggregates.Entities;
@@ -14,10 +15,13 @@ using Helpers.Controls;
 using Helpers.Controls.ValueObjects;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using ProtoBuf.Grpc;
 using Radzen;
+using Radzen.Blazor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +36,12 @@ namespace BlazorApp1.Blazor.Pages.AssetsBasics
     {
 
 
-         [Inject] 
+
+
+        public int selectedIndex = 0;
+        public int selectedIndex2 = 0;
+
+        [Inject] 
         public Func<dynamic, CalibrationSaaS.Application.Services.IWorkOrderDetailServices<CallContext>> WODServices { get; set; }
         public List<TestCode> TestCodeList { get; set; } = new List<TestCode>();
 
@@ -202,9 +211,23 @@ namespace BlazorApp1.Blazor.Pages.AssetsBasics
 
            
         }
+
+
+       
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             await base.OnAfterRenderAsync(firstRender);
+
+
+            if (firstRender && MainLayout != null && eq != null)
+            {
+                MainLayout.SetSubMenuContent(HeaderForm(eq?.WorkOrderId.ToString(), Enabled, Enabled));
+
+                await ShowProgress();
+
+            }
+
 
 
             if (weigset != null && WeightSetList2 != null)
@@ -228,6 +251,8 @@ namespace BlazorApp1.Blazor.Pages.AssetsBasics
                 TypeName = "WorkOrder";
 
                 await LoadWO2();
+
+               
             }
 
 
@@ -245,6 +270,10 @@ namespace BlazorApp1.Blazor.Pages.AssetsBasics
 
                 }
             }
+
+            
+
+
         }
         WorkOrderDetailGrpc wod;
         public async Task LoadWO2()
@@ -531,11 +560,15 @@ namespace BlazorApp1.Blazor.Pages.AssetsBasics
             LastSubmitResult = "OnInvalidSubmit was executed";
         }
 
+        [CascadingParameter]
+        public MainLayout MainLayout { get; set; }
 
-    
         public ICollection<Certification> Certifications { get; set; }
         protected override async Task OnInitializedAsync()
         {
+
+            
+
             Loading = true;
 
             await base.OnInitializedAsync();
@@ -558,7 +591,7 @@ namespace BlazorApp1.Blazor.Pages.AssetsBasics
             if (1 == 1)
             {
 
-                await ShowProgress();
+               
 
                 NameValidationMessage = "valid";
 
@@ -684,15 +717,56 @@ namespace BlazorApp1.Blazor.Pages.AssetsBasics
                     eq.WorkOrderDate = DateTime.Now;
                 }
 
-                await CloseProgress();  
+               
 
                 Loading = false;
+                await CloseProgress();
 
-                
                 //StateHasChanged();
 
             }
         }
+
+
+        private RenderFragment DashboardButtons => builder =>
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "dashboard-buttons");
+
+            // New Customer button
+            builder.OpenComponent<RadzenButton>(2);
+            builder.AddAttribute(3, "Text", "New Customer");
+            builder.AddAttribute(4, "Icon", "person_add");
+            builder.AddAttribute(5, "ButtonStyle", ButtonStyle.Primary);
+            //builder.AddAttribute(6, "Click", EventCallback.Factory.Create<MouseEventArgs>(this, NavigateCustomer));
+            builder.AddAttribute(7, "class", "rz-mr-2 action-button");
+            builder.CloseComponent();
+
+            // New Asset button
+            builder.OpenComponent<RadzenButton>(8);
+            builder.AddAttribute(9, "Text", "New Asset");
+            builder.AddAttribute(10, "Icon", "inventory");
+            builder.AddAttribute(11, "ButtonStyle", ButtonStyle.Primary);
+            //builder.AddAttribute(12, "Click", EventCallback.Factory.Create<MouseEventArgs>(this, NavigateAsset));
+            builder.AddAttribute(13, "class", "rz-mr-2 action-button");
+            builder.CloseComponent();
+
+            // New Order button
+            builder.OpenComponent<RadzenButton>(14);
+            builder.AddAttribute(15, "Text", "New Order");
+            builder.AddAttribute(16, "Icon", "shopping_cart");
+            builder.AddAttribute(17, "ButtonStyle", ButtonStyle.Primary);
+            //builder.AddAttribute(18, "Click", EventCallback.Factory.Create<MouseEventArgs>(this, NavigateOrder));
+            builder.AddAttribute(19, "class", "action-button");
+            builder.CloseComponent();
+
+            builder.CloseElement(); // close div
+        };
+
+
+        
+
+
         protected void FunctionName(EventArgs args)
         {
         

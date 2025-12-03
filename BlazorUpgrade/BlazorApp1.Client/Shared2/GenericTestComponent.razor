@@ -470,20 +470,31 @@
                         }
                         @if (CalibrationSubTypeView.HasNewButton && Enabled)
                         {
-
+                                        @*  <div class="row" >
+                            <div class="col">
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+                                    <CascadingValue Value="this">
+                                        <BlazorApp1.Client.Shared.Component.SubMenu ContextButtons="@SubMenuContent"
+                                                 NavigateBackClick="OnNavigateBack"
+                                                 NavigateForwardClick="OnNavigateForward"
+                                                 PinnedChanged="OnSubMenuPinnedChanged"  />
+                                    </CascadingValue>
+                                </RadzenStack>
+                            </div> 
+                            </div>*@
                             <div class="col">
                                 <div class="input-group mb-3">
                                     @*<input id="txtName" @bind-value="@TextNewValue" type="number" class="form-control" aria-label="Recipient's username" aria-describedby="basic-addon2">*@
                                     <div class="input-group-append">
-                                       @*  <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled="@(!Enabled)" @onclick=@(async() => await AddNewItem()) @onclick:stopPropagation @onclick:preventDefault
+                                        <button class="d-sm-inline-block btn btn-sm btn-primary shadow-sm" disabled="@(!Enabled)" @onclick=@(async() => await AddNewItem()) @onclick:stopPropagation @onclick:preventDefault
                                                 aria-expanded="false" aria-controls="collapseTwo">
                                             @NewButtonTitle
-                                        </button> *@
+                                        </button>
 
                                         @* <RadzenFab Style="--rz-fab-inset-block-start: 2rem; --rz-fab-inset-block-end: auto;" Icon="add" Click=@(async () => await AddNewItem())  Disabled="@(!Enabled)" MouseEnter="@(args => ShowTooltip(args, @NewButtonTitle))" />*@
 
-                                        <RadzenFab Style="--rz-fab-inset-block-start: 0rem;--rz-fab-inset-block-end: auto;position:fixed" ButtonStyle="ButtonStyle.Primary" Icon="add" Click=@(async () => await AddNewItem()) Disabled="@(!Enabled)" MouseEnter="@(args => ShowTooltip(args, @NewButtonTitle))" />
-
+                                       @*  <RadzenFab Style="--rz-fab-inset-block-start: 0rem;--rz-fab-inset-block-end: auto;position:fixed" ButtonStyle="ButtonStyle.Primary" Icon="add" Click=@(async () => await AddNewItem()) Disabled="@(!Enabled)" MouseEnter="@(args => ShowTooltip(args, @NewButtonTitle))" />
+                                        *@
                                         </div>
                                 </div>
                             </div>
@@ -1113,4 +1124,39 @@ if (WorkOrderItemCreate.eq != null && LIST != null && LIST.Count == 0)
        
 
     }
+
+
+
+    public RenderFragment SubMenuContent { get; set; }
+
+    // Method to set submenu content from page components
+    public void SetSubMenuContent(RenderFragment content)
+    {
+        SubMenuContent = content;
+        StateHasChanged();
+    }
+    private bool subMenuPinned = true;
+    // Submenu pinned state
+    public void OnSubMenuPinnedChanged(bool isPinned)
+    {
+        subMenuPinned = isPinned;
+        // You could save this preference to local storage or a user setting
+    }
+
+    // Navigation methods - implement your custom logic here
+    public void OnNavigateBack()
+    {
+       
+    }
+
+    public void OnNavigateForward()
+    {
+      
+    }
+
+
+
+
+
+
 }

@@ -4,6 +4,7 @@ using Blazed.Controls.Toast;
 using Blazor.IndexedDB.Framework;
 using BlazorApp1.Blazor.Blazor;
 using BlazorApp1.Blazor.Blazor.Pages.Order;
+using BlazorApp1.Blazor.Pages.Layout;
 using BlazorApp1.Blazor.Shared;
 
 using Blazored.Modal;
@@ -45,12 +46,28 @@ namespace BlazorApp1.Blazor.Pages.Order
         Base_Create<CalibrationSaaS.Domain.Aggregates.Entities.WorkOrderDetail,
             Func<dynamic, CalibrationSaaS.Application.Services.IWorkOrderDetailServices<CallContext>>, CalibrationSaaS.Domain.Aggregates.Shared.AppStateCompany>, BlazorApp1.Blazor.Blazor.Pages.Order.IWorkOrderItemCreate
     {
-
+        [CascadingParameter]
+        public MainLayout MainLayout { get; set; }
         public ChangeEventArgs StandardsToAssing { get; set; } = new ChangeEventArgs();
 
 
         public BlazorApp1.Blazor.Pages.Order.WorkOrderDetailChildren_Search WorkOrderDetailSearch
             = new  BlazorApp1.Blazor.Pages.Order.WorkOrderDetailChildren_Search();
+
+        private int _selectedIndex;
+
+        public int selectedIndex 
+        { get 
+            { 
+                   return _selectedIndex; 
+            } 
+            set 
+            { 
+                _selectedIndex = value;
+                Console.WriteLine("_selectedIndex" + _selectedIndex);
+            } 
+        }
+
 
 
         public List<WorkOrderDetail> listWorkOrderDetailchildren { get; set; } = new List<WorkOrderDetail>();
@@ -1352,7 +1369,9 @@ namespace BlazorApp1.Blazor.Pages.Order
             }
  
         }
-       
+
+        public bool DynamicLoad { get; set; }
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             int line = 0;
@@ -1504,7 +1523,7 @@ namespace BlazorApp1.Blazor.Pages.Order
                 
                 
 
-                if (firstRender)
+                if (firstRender || selectedIndex==3 && !DynamicLoad)
                 {
                     //await CloseProgress();
                     
