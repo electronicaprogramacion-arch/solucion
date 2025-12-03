@@ -560,7 +560,7 @@ else if(EquipmentTypeObject != null){
                    <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex>
                     <Tabs>
                             <RadzenTabsItem Text="Basic Information">
-                                <div class="card">
+                                <div class="">
                                     <BlazorApp1.Blazor.Pages.Order.BasicInformation Component="Component" @ref="@BasicInfo" CurrentStatus="@eq.CurrentStatus" eq="eq" _addressFiltered="Addresses" UsersAccess="@UsersAccess">
 
                                     </BlazorApp1.Blazor.Pages.Order.BasicInformation>
@@ -846,7 +846,7 @@ else if(EquipmentTypeObject != null){
                          @if (eq != null && eq.CurrentStatusID > 1 && eq.WorkOrderID != 0 && !IsModal)
                     {
                                 <RadzenTabsItem Text="Equipment Condition">
-                                    <div class="card shadow">
+                                    <div class="">
                                         <div class="accordion-header" id="EquipmentConditionHeader">
                                             <h2 class="mb-0">
                                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#EquipmentCondition" aria-expanded="false" aria-controls="collapseTwo">
@@ -854,7 +854,7 @@ else if(EquipmentTypeObject != null){
                                                 </button>
                                             </h2>
                                         </div>
-                                        <div id="EquipmentCondition" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionEquipmentCondition">
+                                        <div id="EquipmentCondition" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionEquipmentCondition">
                                             <div class="card-body">
                                                 @if (eq != null)
                                                 {
@@ -1025,9 +1025,6 @@ else if(EquipmentTypeObject != null){
                                             </div>
                                         }
                                    
-
-                                
-
 
                         </RadzenTabsItem>
                             }

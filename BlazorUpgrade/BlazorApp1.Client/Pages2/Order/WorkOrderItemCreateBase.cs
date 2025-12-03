@@ -46,8 +46,11 @@ namespace BlazorApp1.Blazor.Pages.Order
         Base_Create<CalibrationSaaS.Domain.Aggregates.Entities.WorkOrderDetail,
             Func<dynamic, CalibrationSaaS.Application.Services.IWorkOrderDetailServices<CallContext>>, CalibrationSaaS.Domain.Aggregates.Shared.AppStateCompany>, BlazorApp1.Blazor.Blazor.Pages.Order.IWorkOrderItemCreate
     {
+        
+        
         [CascadingParameter]
         public MainLayout MainLayout { get; set; }
+
         public ChangeEventArgs StandardsToAssing { get; set; } = new ChangeEventArgs();
 
 
@@ -67,8 +70,6 @@ namespace BlazorApp1.Blazor.Pages.Order
                 Console.WriteLine("_selectedIndex" + _selectedIndex);
             } 
         }
-
-
 
         public List<WorkOrderDetail> listWorkOrderDetailchildren { get; set; } = new List<WorkOrderDetail>();
         public EquipmentType EquipmentTypeObject { get; set; }

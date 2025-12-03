@@ -7,7 +7,7 @@
 @using CalibrationSaaS.Domain.Aggregates.Entities
 @namespace BlazorApp1.Blazor.Pages.Order
 @inherits EnviromentLTIComponentBase
-<div class="accordion-item">
+<div class="">
     <div class="accordion-header" id="EnvironmentHeader">
         
            
@@ -17,7 +17,7 @@
             </button>
         
     </div>
-    <div id="Environment" class="collapse" aria-labelledby="headingThree" data-parent="#accordionEquipmentCondition">
+    <div id="Environment" class="collapse show" aria-labelledby="headingThree" data-parent="#accordionEquipmentCondition">
         <div class="card-body">
             <EditForm Model="@WorkOrderItemCreate.eq" Context="context">
                 <DataAnnotationsValidator />
