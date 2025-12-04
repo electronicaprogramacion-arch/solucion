@@ -158,8 +158,17 @@
                     collapseclass = "collapse show";
                 }
             }
-
-            <RadzenTabs @ref="tabs" RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex >
+            <Modal ID="@("Pfmodal")" 
+     Style="Radzen"
+     ForceShow="true"
+     FullScreen="true"
+     DefaultHide="false" 
+     Enabled="true"
+     CloseWindow="CloseGenericWindow" 
+     ShowProgress="ShowProgress"   
+     ifNotShow="false">
+     <ContentBody>
+                <RadzenTabs @ref="tabs" RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex >
             <Tabs>
 
             @* <div id="CalibrationHeaderBody" class="@collapseclass" aria-labelledby="headingOne" data-bs-parent="@("#" + ParentAccordionID)">
@@ -497,7 +506,10 @@
 
                 </Tabs>
             </RadzenTabs>
-
+                </ContentBody>
+     </Modal>
+            
+           
         </div>
     }
         @*Sections  *@
