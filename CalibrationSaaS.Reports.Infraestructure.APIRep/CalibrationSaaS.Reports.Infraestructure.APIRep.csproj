@@ -33,7 +33,6 @@
     <ProjectReference Include="..\CalibrationSaaS.Data.EntityFramework\CalibrationSaaS.Infraestructure.EntityFramework.csproj" />
     <ProjectReference Include="..\CalibrationSaaS.Models\CalibrationSaaS.Domain.Aggregates.csproj" />
     <ProjectReference Include="..\IdentityClient\IdentityClient\IdentityClient.csproj" />
-    <ProjectReference Include="..\Jint\Jint.csproj" />
     <ProjectReference Include="..\Reports.Domain.ReportViewModels\Reports.Domain.ReportViewModels.csproj" />
     <ProjectReference Include="..\ServerContext\ServerContext.csproj" />
   </ItemGroup>

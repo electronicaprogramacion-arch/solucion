@@ -1524,7 +1524,8 @@
 
 
 
-
+    [Inject]
+    protected NotificationService NotificationService { get; set; }
 
 
     [Inject] public Blazed.Controls.Toast.IToastService Toast { get; set; }
@@ -1532,23 +1533,38 @@
     public async Task ShowToast(string message, ToastLevel level)
 
     {
+
+        NotificationSeverity severity= NotificationSeverity.Info;
+
         if (level == ToastLevel.Success)
         {
 
-            Toast.ShowSuccess(message);
+            //Toast.ShowSuccess(message);
+            severity = NotificationSeverity.Success;
+
         }
         if (level == ToastLevel.Error)
         {
-            Toast.ShowError(message);
+            //Toast.ShowError(message);
+
+            severity = NotificationSeverity.Error;
+            Console.WriteLine(message);
+
         }
         if (level == ToastLevel.Info)
         {
-            Toast.ShowInfo(message);
+           // Toast.ShowInfo(message);
+            severity = NotificationSeverity.Info;
         }
         if (level == ToastLevel.Warning)
         {
-            Toast.ShowWarning(message);
+            //Toast.ShowWarning(message);
+            severity = NotificationSeverity.Warning;
+
         }
+
+
+        NotificationService.Notify(new NotificationMessage { Severity = severity, Summary = "Data Configuration", Detail = message });
 
     }
 
@@ -1562,8 +1578,14 @@
         {
 
             var FR = CultureInfo.GetCultureInfo("en-US");
+            var engine2 = new Engine(cfg => cfg
+            .AllowClr().Culture(FR)
+            
+            );
 
-            var engine2 = new Engine(cfg => cfg.Culture(FR));
+            
+
+            //var engine2 = new Engine(cfg => cfg.Culture(FR));
 
             //var engine2 = new Engine();
             engine2.SetValue("model", Model);
@@ -1744,7 +1766,7 @@
 
                         engine2.Execute(" res2.value = " + @item.Formula + " ; ");
                         Console.WriteLine("helper -------xxxx------");
-                        Console.WriteLine(res2.value);
+                        // Console.WriteLine(res2.value);
 
                         //return;
                         obj2 = engine2.Evaluate("res2.value");
@@ -2207,9 +2229,6 @@
                 MessageError = errt;
 
             }
-
-
-
         }
 
 

@@ -23,6 +23,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using ProtoBuf.Grpc;
+using Radzen;
 using SqliteWasmHelper;
 using System;
 using System.Collections.Generic;
@@ -461,7 +462,8 @@ namespace CalibrationSaaS.Infraestructure.Blazor
             await CloseProgress();
 
         }
-
+        [Inject]
+        protected NotificationService NotificationService { get; set; }
         string messtemp = "";
 #pragma warning disable CS1998 // El método asincrónico carece de operadores "await" y se ejecutará de forma sincrónica. Puede usar el operador 'await' para esperar llamadas API que no sean de bloqueo o 'await Task.Run(...)' para hacer tareas enlazadas a la CPU en un subproceso en segundo plano.
         public async Task ShowToast(string message, ToastLevel level,bool always=true)
@@ -479,23 +481,37 @@ namespace CalibrationSaaS.Infraestructure.Blazor
 
 
 
+            NotificationSeverity severity = NotificationSeverity.Info;
+
             if (level == ToastLevel.Success)
             {
 
-                Toast.ShowSuccess(message);
+                //Toast.ShowSuccess(message);
+                severity = NotificationSeverity.Success;
+
             }
             if (level == ToastLevel.Error)
             {
-                Toast.ShowError(message);
+                //Toast.ShowError(message);
+
+                severity = NotificationSeverity.Error;
+                Console.WriteLine(message);
+
             }
             if (level == ToastLevel.Info)
             {
-                Toast.ShowInfo(message);
+                // Toast.ShowInfo(message);
+                severity = NotificationSeverity.Info;
             }
             if (level == ToastLevel.Warning)
             {
-                Toast.ShowWarning(message);
+                //Toast.ShowWarning(message);
+                severity = NotificationSeverity.Warning;
+
             }
+
+            NotificationService.Notify(new NotificationMessage { Severity = severity, Summary = "App Message", Detail = messtemp });
+
 
         }
 

@@ -1,7 +1,32 @@
-﻿@using Radzen
+﻿@using Blazed.Controls
+@using Blazored.Modal
+@using Blazored.Modal.Services
+@using BrowserInterop.Extensions;
+@using System.Timers;
+@using CalibrationSaaS.Application.Services
+@using CalibrationSaaS.Domain.Aggregates.Entities
+@using CalibrationSaaS.Domain.Aggregates.ValueObjects;
+
+
+@using CalibrationSaaS.Infraestructure.Blazor.Services
+@using Helpers
+@using Microsoft.Extensions.Logging
+@using ProtoBuf.Grpc;
+@using Grpc.Core;
+@using System.Reflection;
+@using System.Collections.Generic;
+@using System.Linq;
+@using Microsoft.Extensions.Options
+@using Helpers.Controls;
+@using Helpers.Controls.ValueObjects;
+@using Blazed.Controls.Toast;
+@using Radzen
 @using Radzen.Blazor
-@using Microsoft.AspNetCore.Components.Routing
-@namespace BlazorApp1.Client.Shared.Component
+@using Microsoft.AspNetCore.Components.Web
+
+@inherits CalibrationSaaS.Infraestructure.Blazor.FComponentBase
+@inject Microsoft.Extensions.Configuration.IConfiguration config;
+@inject CalibrationSaaS.Domain.Aggregates.Shared.AppSecurity AppSecurity
 @inject NavigationManager NavigationManager
 
 <div class="submenu-container @(IsCollapsed ? "collapsed" : "")" style="width:100%">
@@ -12,6 +37,10 @@
         </div>
 
         <div class="context-buttons">
+            <Blazed.Controls.SearchComponent>
+
+            </Blazed.Controls.SearchComponent>
+
             @if (ContextButtons != null)
             {
                 @ContextButtons
@@ -26,24 +55,24 @@
             }
         </div>
 
-        <div class="pin-button">
+        @* <div class="pin-button">
             <RadzenButton Icon="@(IsPinned ? "push_pin" : "push_pin_outlined")"
                           ButtonStyle="ButtonStyle.Secondary"
                           Click="TogglePin"
                           Title="@(IsPinned ? "Unpin submenu" : "Pin submenu")" />
-        </div>
+        </div> *@
     </div>
 </div>
 
 @if (IsCollapsed)
 {
-    <div class="pin-button">
+    @* <div class="pin-button">
         <RadzenButton Icon="keyboard_arrow_down"
                       ButtonStyle="ButtonStyle.Secondary"
                       Click="ToggleCollapse"
                       Size="ButtonSize.Small"
                       Title="Show submenu" />
-    </div>
+    </div> *@
 }
 
 @code {
@@ -274,3 +303,197 @@
         }
     }
 </style>
+
+
+
+  @code{
+
+
+    [Inject]
+    public IBasicsServices<CallContext> basicServices { get; set; }
+    [Inject]
+    public IPieceOfEquipmentService<CallContext> poeServices { get; set; }
+    [Inject]
+    public IWorkOrderDetailServices<CallContext> wodServices { get; set; }
+    [Inject]
+    public ICustomerService<CallContext> CustomerServices { get; set; }
+    [Inject]
+    public IWorkOrderService<CallContext> woServices { get; set; }
+
+    [Inject]
+    public IAssetsServices<CallContext> assetsServices { get; set; }
+
+    public async Task SearchFunction(string SearchTerm)
+    {
+        try
+        {
+            await ShowProgress();
+            await ShowModalPoEIndicator(SearchTerm);
+
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+        finally
+        {
+            await CloseProgress();
+        }
+
+     }
+    [CascadingParameter] public IModalService Modal { get; set; }
+
+    public async Task ShowModalPoEIndicator(string SearchTerm)
+    {
+        Pagination<PieceOfEquipment> pag = new Pagination<PieceOfEquipment>();
+
+        pag.Filter = SearchTerm;
+        pag.Show = 5;
+        pag.Top = 5;
+        ResultSet<PieceOfEquipment> result0 = new ResultSet<PieceOfEquipment>();
+
+        var _poeGrpc = new PieceOfEquipmentGRPC(poeServices);
+
+        var g = new CallOptions();
+
+        if (String.IsNullOrEmpty(SearchTerm))
+        {
+            await ShowToast("Please enter a keyword.", ToastLevel.Warning);
+            return;
+        }
+        result0 = (await _poeGrpc.GetPiecesOfEquipmentXDueDate(pag, g));
+
+        List<KeyValueSearch> lista = new List<KeyValueSearch>();
+
+        if (result0.List != null)
+        {
+            foreach (var item in result0.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Piece Of Equipment";
+                KeyValueSearch.Link = "PieceOfEquipmentCreate/" + item.PieceOfEquipmentID;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+
+
+        //PieceOfEquipmentCreate
+        Pagination<EquipmentTemplate> pag2 = new Pagination<EquipmentTemplate>();
+
+        pag2.Filter = SearchTerm;
+        pag2.Show = 5;
+        pag2.Top = 5;
+
+
+        ResultSet<EquipmentTemplate> result3 = new ResultSet<EquipmentTemplate>();
+
+        var basic = new BasicsServiceGRPC(basicServices);
+
+        //var g = new CallOptions();
+
+        result3 = (await basic.GetEquipment(pag2, g));
+
+        if (result3.List != null)
+        {
+            foreach (var item in result3.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Equipment Template";
+                KeyValueSearch.Link = "EquipmentTemplate/" + item.EquipmentTemplateID;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+        Pagination<WorkOrder> pag3 = new Pagination<WorkOrder>();
+
+        pag3.Filter = SearchTerm;
+        pag3.Show = 5;
+        pag3.Top = 5;
+
+        ResultSet<WorkOrder> result4 = new ResultSet<WorkOrder>();
+
+        var wod = new AssetsServiceGRPC(assetsServices);
+
+        //var g = new CallOptions();
+
+        result4 = (await wod.GetWorkOrders(pag3, g));
+
+        if (result4.List != null)
+        {
+            foreach (var item in result4.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Work Order";
+                KeyValueSearch.Link = "WorkOrderCreate/" + item.WorkOrderId;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+
+
+        Pagination<Customer> pag4 = new Pagination<Customer>();
+
+        pag4.Filter = SearchTerm;
+        pag4.Show = 5;
+        pag4.Top = 5;
+
+        ResultSet<Customer> result5 = new ResultSet<Customer>();
+
+        var cust = new CustomerGRPC(CustomerServices);
+
+        //var g = new CallOptions();
+
+        result5 = (await cust.GetCustomers(pag4, g));
+
+        if (result5.List != null)
+        {
+            foreach (var item in result5.List)
+            {
+                KeyValueSearch KeyValueSearch = new KeyValueSearch();
+
+                KeyValueSearch.Type = "Customer";
+                KeyValueSearch.Link = "Customer/" + item.CustomerID;
+                KeyValueSearch.Fields = item.GetFields(SearchTerm);
+                lista.Add(KeyValueSearch);
+            }
+        }
+
+
+
+        var parameters = new ModalParameters();
+        parameters.Add("SelectOnly", true);
+        parameters.Add("IsModal", true);
+        parameters.Add("Checkbox", false);
+        parameters.Add("Indicator", true);
+        parameters.Add("_pieceOfEquipmentsDueDate", lista);
+
+
+        ModalOptions op = new ModalOptions();
+        op.ContentScrollable = true;
+        op.Class = "blazored-modal " + ModalSize.MediumWindow;
+        //PieceOfEquipmentDueDate_Search
+        var messageForm = Modal.Show<BlazorApp1.Blazor.Blazor.Pages.Full_Search>("Results for Keyword " + SearchTerm, parameters, op);
+        var result = await messageForm.Result;
+        Console.Write("result " + result);
+        if (result != null && !result.Cancelled)
+        {
+
+            var res = (KeyValueSearch)result.Data;
+            //PieceOfEquipment _poe = new PieceOfEquipment();
+            //_poe.PieceOfEquipmentID = res.FirstOrDefault().PieceOfEquipmentID;
+
+            NavigationManager.NavigateTo(res.Link);
+
+            //StateHasChanged();
+        }
+
+    }
+   }

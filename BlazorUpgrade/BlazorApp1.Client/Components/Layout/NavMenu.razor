@@ -201,46 +201,92 @@
 @inject ILogger<NavMenu> Logger;
   <AuthorizeView Policy="HasAccess">
             <Authorized>
-<RadzenPanelMenu>
-    <RadzenPanelMenuItem Text="Dashboard" Path="" Icon="dashboard" />
+        <RadzenPanelMenu DisplayStyle="@(sidebarExpanded? MenuItemDisplayStyle.IconAndText: MenuItemDisplayStyle.Icon)" ShowArrow="@ShowArrow">
+          
+            
+   
 
-    @if (Customer?.ToLower() == "lti")
-    {
-        <RadzenPanelMenuItem Text="Backlog" Path="BackLog/0" Icon="assignment" />
-    }
+   @*  @if (Customer?.ToLower() == "lti")
+    { *@
+        
+    @* } *@
 
     @if (CanShow && ConnectionStatusService.GetCurrentStatus())
     {
-        <RadzenPanelMenuItem Text="Basics"  Icon="settings">
+         <RadzenPanelMenuItem Text="Create"  Icon="settings">
+
+                    <RadzenPanelMenuItem Text="Equipment Type" Path="EquipmentType/0" Icon="category" />
+                    <RadzenPanelMenuItem Text="Equipment Template" Path="EquipmentTemplate/0" Icon="description">
+                    </RadzenPanelMenuItem>
+                    <RadzenPanelMenuItem Text="Manufacturer" Path="Manufacturer/0" Icon="business" />
+                    <RadzenPanelMenuItem Text="Customer" Path="Customer/0" Icon="people"></RadzenPanelMenuItem>
+                    <RadzenPanelMenuItem Text="Piece Of Equipment" Path="PieceOfEquipmentCreate/0" Icon="build" />
+                    <RadzenPanelMenuItem Text="Orders" Icon="shopping_cart" Path="WorkOrderCreate/0"></RadzenPanelMenuItem>
+                    <RadzenPanelMenuItem Text="Users" Path="UserCreate/0" Icon="engineering" />
+                    <RadzenPanelMenuItem Text="CMC Values" Path="CMCValuesCreate/0" Icon="tune" />
+                    <RadzenPanelMenuItem Text="Test Codes" Path="TestCode/0" Icon="code" />
+                    <RadzenPanelMenuItem Text="Procedure" Path="Procedure/0" Icon="receipt_long" />  
+                    
+
+                    <RadzenPanelMenuItem  Path="QuoteCreate" Text="Create Quote">
+                        
+                    </RadzenPanelMenuItem>
+
+                    <RadzenPanelMenuItem Text="Price Types" Path="Quotes/PriceTypesConfiguration">Price Types</RadzenPanelMenuItem>
+
+         </RadzenPanelMenuItem>
+
+
+          <RadzenPanelMenuItem Text="Management" Icon="settings">
+
+                    <RadzenPanelMenuItem Text="Backlog" Path="BackLog/0" Icon="assignment" />
+                    <RadzenPanelMenuItem Text="Dashboard" Path="" Icon="dashboard" />
+
             @if (isdemo == "false")
             {
                 <RadzenPanelMenuItem Text="Equipment Type" Path="EquipmentType" Icon="category" />
             }
-                    <RadzenPanelMenuItem Text="Manufacturer" Path="ManufacturerSearch" Icon="business" />
+                
+            <RadzenPanelMenuItem Text="Manufacturer" Path="ManufacturerSearch" Icon="business" />
             <RadzenPanelMenuItem Text="Equipment Template" Path="EquipmentTemplateSearch" Icon="description" />
+                    <RadzenPanelMenuItem Text="Customer" Path="CustomerSearch" Icon="person_search" />
+                    <RadzenPanelMenuItem Text="Piece Of Equipment" Path="PieceOfEquipmentSearch" Icon="build" />
+                    <RadzenPanelMenuItem Text="Work Order" Path="WorkOrderSearchNew" Icon="assignment_turned_in" />
+                    <RadzenPanelMenuItem Text="Users" Path="UserSearch" Icon="engineering" />
             <RadzenPanelMenuItem Text="CMC Values" Path="CalibrationTypeDetail" Icon="tune" />
             <RadzenPanelMenuItem Text="Test Codes" Path="TestCodeSearch" Icon="code" />
             <RadzenPanelMenuItem Text="Procedure" Path="ProcedureSearch" Icon="receipt_long" />
+
+                    <RadzenPanelMenuItem Text="Search Quotes" Path="QuotesSearch"></RadzenPanelMenuItem>
+
+                    <RadzenPanelMenuItem Text="View Equipment Recalls" Path="EquipmentRecalls">View Equipment Recalls</RadzenPanelMenuItem>
+
+                    
+           
         </RadzenPanelMenuItem>
 
-        <RadzenPanelMenuItem Text="Company"  Icon="business_center">
-                    <RadzenPanelMenuItem Text="Technicians" Path="UserSearch" Icon="engineering" />
-        </RadzenPanelMenuItem>
-        <RadzenPanelMenuItem Text="Customer"  Icon="people">
-            <RadzenPanelMenuItem Text="Customer" Path="CustomerSearch" Icon="person_search" />
-        </RadzenPanelMenuItem>
+       
     }
 
-    <RadzenPanelMenuItem Text="Assets"  Icon="inventory">
-        <RadzenPanelMenuItem Text="Piece Of Equipment" Path="PieceOfEquipmentSearch" Icon="build" />
+
+           
+
+
+
+    <RadzenPanelMenuItem Text="Tool Box"  Icon="inventory">
+       
         @if (ConnectionStatusService.GetCurrentStatus())
         {
             <RadzenPanelMenuItem Text="Weight Set CSV" Path="weightCreateCSV" Icon="file_upload" />
-        }
+                }
+                <RadzenPanelMenuItem Text="Audit Log" Path="Log">
+                    
+                </RadzenPanelMenuItem>
+
     </RadzenPanelMenuItem>
-    <RadzenPanelMenuItem Text="Orders"  Icon="shopping_cart">
-        <RadzenPanelMenuItem Text="Work Order" Path="WorkOrderSearchNew" Icon="assignment_turned_in" />
-    </RadzenPanelMenuItem>
+    @* <RadzenPanelMenuItem Text="Orders"  Icon="shopping_cart"> 
+       
+    </RadzenPanelMenuItem>*@
     @if (!ConnectionStatusService.GetCurrentStatus())
     {
         <RadzenPanelMenuItem Text="Offline"  Icon="cloud_off">
@@ -264,10 +310,10 @@
         }
     </RadzenPanelMenuItem>
 
-    <RadzenPanelMenuItem Text="Examples"  Icon="code">
+   @*  <RadzenPanelMenuItem Text="Examples"  Icon="code">
         <RadzenPanelMenuItem Text="Radzen Table" Path="radzen-table-example" Icon="table_chart" />
         <RadzenPanelMenuItem Text="Radzen Table with Columns" Path="radzen-table-with-columns-example" Icon="view_column" />
-    </RadzenPanelMenuItem>
+    </RadzenPanelMenuItem> *@
 </RadzenPanelMenu>
 
 </Authorized>
@@ -285,3 +331,13 @@
             </NotAuthorized>
 </AuthorizeView>
 
+@code{
+
+
+    [Parameter]
+    public bool sidebarExpanded { get; set; } = false;
+
+    [Parameter]
+    public bool ShowArrow { get; set; } = true;
+
+}

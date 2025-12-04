@@ -1656,6 +1656,274 @@ else if(EquipmentTypeObject != null){
     }
 
 
+    RenderFragment ActionsMenu()
+    {
+        return@<RadzenFabMenu Direction="Radzen.FabMenuDirection.Top">@if (eq != null && eq.CurrentStatusID > 0)
+                        {
+
+                            <RadzenFabMenuItem Text="Save" Icon="Save" Click="@(async () => await SetCurrentStatus(null, true))">
+                            
+                            </RadzenFabMenuItem>
+                        }
+                   
+                  
+                        @if (eq != null && !IsModal)
+                        {
+
+                            var buttonDis = true;
+                            var a = GetAccess(Policies.ContractReview, Component);
+
+                            var b = GetAccess(Policies.ReadyforCalibration, Component);
+
+                            var c = GetAccess(Policies.TechnicalReview, Component);
+
+                            var d = GetAccess(Policies.Override, Component);
+
+                            if (a && eq.CurrentStatusID == 1 || b && eq.CurrentStatusID == 2 || c && eq.CurrentStatusID == 3 || d)
+                            {
+                                buttonDis = false;
+                            }
+                <RadzenFabMenuItem Icon="done" Text="Next >>" Click="@(async () => await SetCurrentStatus(null))" Disabled="@buttonDis">
+                           
+                            </RadzenFabMenuItem>
+
+                        }
+                  
+                        @if (eq != null && !IsModal)
+                        {     <RadzenFabMenuItem>
+                            <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                <Rules>
+                                    <Rule LambdaCondition="@(x => x.CurrentStatusID > 1)" TTYPE="WorkOrderDetail">
+                                        <div> la regla no se cumple</div>
+                                    </Rule>
+                                    <RulesTemplate TValue="string"
+                                                   TTYPE="WorkOrderDetail">
+
+                                        <ValidConditionsTemplate>
+
+
+
+                                        
+                                            <SearchButtonComponent FormType="typeof(WorkOrderDetailHist_Search)"
+                                                                   ID="@eq?.WorkOrderDetailID.ToString()" Type="search"
+                                                                   Size="@ModalSize.FullScreen"
+                                                                   Text="Check History"
+                                                                   AllWidth="false"
+                                                                   Enabled="false"
+                                                                   CSSButton="primary"
+                                                                   Parameters="@parameters"
+                                                                   CSSClass="d-sm-inline-block btn btn-sm">
+
+
+                                            </SearchButtonComponent>
+                                           
+
+                                        </ValidConditionsTemplate>
+                                        <InvalidConditionsTemplate>
+
+
+                                            <SearchButtonComponent FormType="typeof(WorkOrderDetailHist_Search)"
+                                                                   ID="@eq?.WorkOrderDetailID.ToString()" Type="search"
+                                                                   Size="@ModalSize.FullScreen"
+                                                                   Text="Check History"
+                                                                   AllWidth="false"
+                                                                   Enabled="false"
+                                                                   CSSButton="primaty"
+                                                                   Parameters="@parameters"
+                                                                   IsDisabled="true"
+                                                                   CSSClass="d-sm-inline-block btn btn-sm ">
+
+                                            </SearchButtonComponent>
+                                        </InvalidConditionsTemplate>
+                                    </RulesTemplate>
+                                </Rules>
+                            </MultiComponent>
+                            </RadzenFabMenuItem>
+                        }
+
+
+
+
+
+                  
+                    @if (EquipmentTypeObject?.CalibrationType != null && EquipmentTypeObject?.CalibrationType?.IsNivel1.HasValue == true && !EquipmentTypeObject?.CalibrationType.IsNivel1 == true)
+                    {
+                         <RadzenFabMenuItem>
+                            <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                <Rules>
+                                    <Rule LambdaCondition="@(Querys.WODRules.RuleDownLoadCertificateStatus().Compile())" TTYPE="WorkOrderDetail">
+                                        <div> la regla no se cumple</div>
+                                    </Rule>
+                                    <RulesTemplate TValue="string"
+                                                   TTYPE="WorkOrderDetail">
+
+                                        <ValidConditionsTemplate>
+
+                                            @if (EquipmentTypeObject != null && EquipmentTypeObject?.CalibrationTypeID > 0 && !string.IsNullOrEmpty(EquipmentTypeObject?.CalibrationType?.UrlReport))
+                                            {
+                                                <a href="@(url + EquipmentTypeObject.CalibrationType.UrlReport + eq.WorkOrderDetailID)" class="d-sm-inline-block btn btn-sm btn-primary " style="margin-right: 20px;" target="_blank">View Certificate</a>
+                                            }
+
+
+
+
+                                        </ValidConditionsTemplate>
+                                        <InvalidConditionsTemplate>
+                                            <a href="#" class="d-sm-inline-block btn btn-sm btn-primary disabled" style="margin-right: 20px;" target="_blank">View Certificate</a>
+
+                                        </InvalidConditionsTemplate>
+                                    </RulesTemplate>
+                                </Rules>
+                            </MultiComponent>
+                            </RadzenFabMenuItem>
+                    }
+
+                   
+
+                    @if (eq?.TestCode != null && eq?.TestCode?.ProcedureID != null && eq?.TestCode?.Procedure?.DocumentUrl != null && !IsModal)
+                    {
+                         <RadzenFabMenuItem>
+                            <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                <Rules>
+                                    <Rule LambdaCondition="@(Querys.WODRules.RuleDownLoadCertificateStatus().Compile())" TTYPE="WorkOrderDetail">
+                                        <div> la regla no se cumple</div>
+                                    </Rule>
+                                    <RulesTemplate TValue="string"
+                                                   TTYPE="WorkOrderDetail">
+
+
+                                        <ValidConditionsTemplate>
+
+                                            <a href="@(context?.TestCode?.Procedure?.DocumentUrl)" class="d-sm-inline-block btn btn-sm btn-primary " style="margin-right: 20px;" target="_blank">View Procedure</a>
+
+                                        </ValidConditionsTemplate>
+                                        <InvalidConditionsTemplate>
+                                            <a href="#" class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;" target="_blank">View Procedure</a>
+
+
+                                        </InvalidConditionsTemplate>
+                                    </RulesTemplate>
+                                </Rules>
+                            </MultiComponent>
+
+                       </RadzenFabMenuItem>
+
+                    }
+                    else if (!IsModal)
+                    {
+
+                        <RadzenFabMenuItem>
+                            <MultiComponent Instance="eq" Policy="@UsersAccess" TTYPE="WorkOrderDetail">
+                                <Rules>
+                                    <Rule LambdaCondition="@(Querys.WODRules.RuleDownLoadCertificateStatus().Compile())" TTYPE="WorkOrderDetail">
+                                        <div> la regla no se cumple</div>
+                                    </Rule>
+                                    <RulesTemplate TValue="string"
+                                                   TTYPE="WorkOrderDetail">
+
+
+                                        <ValidConditionsTemplate>
+
+                                            <a href="@(urlAzure + "Procedure_" + context?.TestCode?.ProcedureID + ".pdf")" class="d-sm-inline-block btn btn-sm btn-primary " style="margin-right: 20px;" target="_blank">View Procedure</a>
+
+                                        </ValidConditionsTemplate>
+                                        <InvalidConditionsTemplate>
+                                            <a href="#" class="d-sm-inline-block btn btn-sm btn-primary " style="margin-right: 20px;" target="_blank">View Procedure</a>
+
+
+                                        </InvalidConditionsTemplate>
+                                    </RulesTemplate>
+                                </Rules>
+                            </MultiComponent>
+                         </RadzenFabMenuItem>
+                       
+                    }
+
+                    @if (1 == 1 && Component.ConfigMode && !IsModal)
+                    {
+
+                <RadzenFabMenuItem Text="Templates" Click="@(async () => await CalibrationConfig(new CreateModel()))" id="SaveMenuButton">
+                            
+                            </RadzenFabMenuItem>
+                       
+
+                    }
+                    @if (isThread && urlWebExcel == null)
+                    {
+                       
+
+                             <RadzenFabMenuItem>
+                            <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                    type="button" id="UploadToExcel"
+                                    @onclick="@(async () => await UploadtoExcel())"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+
+                                Create Excel in OneDrive
+                            </button>
+                            </RadzenFabMenuItem>
+
+                        
+                    }
+                    @if (urlWebExcel != null)
+                    {
+                       
+                            <RadzenFabMenuItem>
+                            <a href="@(urlWebExcel)" target="_blank" class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;">Open file in OneDrive</a>
+                            </RadzenFabMenuItem>
+                        
+
+
+                        
+
+                             <RadzenFabMenuItem>
+                            <button class="d-sm-inline-block btn btn-sm btn-primary" style="margin-right: 20px;"
+                                    type="button" id="DownloadResults"
+                                    @onclick="@(async () => await DownloadResults())"
+                                    @onclick:stopPropagation @onclick:preventDefault>
+
+                                Get Results from Excel
+                            </button>
+                            </RadzenFabMenuItem>
+
+                       
+                    }
+
+                    @if (eq?.CurrentStatusID == 2 && !IsModal)
+                    {
+                       
+                            <RadzenFabMenuItem Text="Reset Work Order Detail" Click="@(async () => await ResetWOD())"  id="DownloadResults">
+                           
+                            </RadzenFabMenuItem>
+                        
+                    }
+
+                    @if (eq?.CurrentStatusID != 5)
+                    {
+                       
+
+                         <RadzenFabMenuItem Text="Cancel Work Order Detail" Click="@(async () => await CancelWOD())" id="CancelWOD">
+                           
+                            </RadzenFabMenuItem>
+
+                       
+                    }
+
+                    @if (eq?.CurrentStatusID == 5)
+                    {
+                       
+
+                <RadzenFabMenuItem Text="Open Work Order Detail" id="OpenWOD"
+                                    Click="@(async () => await OpenWOD())">
+                          
+                            </RadzenFabMenuItem>
+                        
+                    }
+        </RadzenFabMenu>
+              
+    ;
+    }
+
+
     int contqw = 0;
     public async Task ChangeControl2(ChangeEventArgs arg, dynamic lin, bool AddWeight = false)
     {
@@ -1754,7 +2022,8 @@ else if(EquipmentTypeObject != null){
 
         if (firstRender && MainLayout != null && eq != null)
         {
-            MainLayout.SetSubMenuContent(Actions());
+            MainLayout.SetMenuContent(ActionsMenu());
+            MainLayout.SetSubMenuContent(null);
 
             await ShowProgress();
 

@@ -133,7 +133,6 @@
 		<ProjectReference Include="..\..\csv-validator\src\Validate.Lib\Validate.Lib.csproj" />
 		<ProjectReference Include="..\..\DynamicClassLibrary\DynamicClassLibrary.csproj" />
 		<ProjectReference Include="..\..\Helpers\Helpers.csproj" />
-		<ProjectReference Include="..\..\Jint\Jint.csproj" />
 		<ProjectReference Include="..\..\LTIDomainLogic\LTIDomainLogic.csproj" />
 		<ProjectReference Include="..\..\LTI\LTI.csproj" />
 		<ProjectReference Include="..\..\Reports.Domain.ReportViewModels\Reports.Domain.ReportViewModels.csproj" />

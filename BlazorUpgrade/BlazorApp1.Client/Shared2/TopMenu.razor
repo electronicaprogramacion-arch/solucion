@@ -45,7 +45,7 @@
             </div>
         </div>
 
-        <div class="header-center col-3">
+       @*  <div class="header-center col-3">
             <RadzenTextBox @bind-Value="SearchTerm" @ref="textBoxRef"
                            @onkeyup="@(args => KeyEvent("Name", SearchTerm, args))"
                            Placeholder="Please enter a keyword." />
@@ -54,7 +54,7 @@
                  @onclick=@(async () => await SearchFunction()) @onclick:stopPropagation @onclick:preventDefault>
                 <RadzenIcon Icon="search" />
             </div>
-        </div>
+        </div> *@
 
         <div class="header-right col">
             @if (1 == 1 || IsInstalled == true || !ConnectionStatusService.GetCurrentStatus())
@@ -113,14 +113,14 @@
     private ElementReference searchE;
     private RadzenTextBox textBoxRef;
 
-    public string SearchTerm { get; set; } = "";
+    // public string SearchTerm { get; set; } = "";
     private static System.Timers.Timer aTimer;
-    public async Task SearchFunction()
+    public async Task SearchFunction(string SearchTerm)
     {
         try
         {
             await ShowProgress();
-            await ShowModalPoEIndicator();
+            await ShowModalPoEIndicator(SearchTerm);
 
         }
         catch (Exception ex)
@@ -172,7 +172,7 @@
     [Inject]
     public IAssetsServices<CallContext> assetsServices { get; set; }
 
-    public async Task ShowModalPoEIndicator()
+    public async Task ShowModalPoEIndicator(string SearchTerm)
     {
         Pagination<PieceOfEquipment> pag = new Pagination<PieceOfEquipment>();
 

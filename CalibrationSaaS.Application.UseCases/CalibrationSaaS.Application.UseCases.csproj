@@ -10,11 +10,11 @@
 
   <ItemGroup>
     <PackageReference Include="EPPlus" Version="8.3.1" />
+    <PackageReference Include="Esprima" Version="3.0.5" />
     <PackageReference Include="LinqKit.Core" Version="1.2.9" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="System.Text.Json" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,7 +23,7 @@
     <ProjectReference Include="..\CalibrationSaaS.Domain.Repositories\CalibrationSaaS.Domain.Repositories.csproj" />
     <ProjectReference Include="..\CalibrationSaaS.Models\CalibrationSaaS.Domain.Aggregates.csproj" />
     <ProjectReference Include="..\Helpers\Helpers.csproj" />
-    <ProjectReference Include="..\Jint\Jint.csproj" />
+    <ProjectReference Include="..\jint-main\Jint\Jint.csproj" />
     <ProjectReference Include="..\Reports.Domain.ReportViewModels\Reports.Domain.ReportViewModels.csproj" />
   </ItemGroup>
 
