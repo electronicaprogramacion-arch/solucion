@@ -4,6 +4,7 @@ using Blazed.Controls.Toast;
 using Blazor.IndexedDB.Framework;
 using Blazored.Modal;
 using Blazored.Modal.Services;
+using Bogus.DataSets;
 using CalibrationSaaS.Domain.Aggregates.Entities;
 using CalibrationSaaS.Domain.Aggregates.Interfaces;
 using CalibrationSaaS.Domain.Aggregates.Shared;
@@ -22,6 +23,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using ProtoBuf.Grpc;
+using Radzen;
 using Radzen.Blazor;
 using System;
 using System.Collections.Generic;
@@ -29,6 +31,9 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Timers;
+using static BlazorApp1.Client.Pages2.Test.RadzenTableWithColumnsExample;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using Modal = Blazed.Controls.Modal;
 using Type = System.Type;
 
@@ -50,7 +55,71 @@ namespace BlazorApp1.Blazor.Shared
 
 
         public RadzenTabs tabs;
-        public int selectedIndex = 0;
+
+        private int _selectedIndex=0;
+
+        public int selectedIndex { get 
+            { 
+                
+                return _selectedIndex; 
+            
+            } 
+            
+            set {
+
+               
+                    
+               
+                _selectedIndex = value;
+                if (!nochange)
+                {
+                    aTimer.Start();
+
+
+                }
+                else
+                {
+                    nochange = false;
+                }
+
+
+            } 
+        
+        }
+
+        private static System.Timers.Timer aTimer;
+        int currentindex = 0;
+        bool nochange;
+        public async Task<int> changeIndex()
+        {
+            
+            currentindex = selectedIndex;
+            Console.WriteLine("Current index " + currentindex);
+
+            var response = await DialogService.Confirm(
+                "Are you sure you want to continue without saving?",
+                "Confirm",
+                new ConfirmOptions()
+                {
+                    CloseDialogOnEsc = false,
+                    CloseDialogOnOverlayClick = false,
+                    ShowClose = false,
+                    CancelButtonText = "No",
+                    OkButtonText = "Yes",
+                });
+
+            if (response == false)
+            {   //T63KEy7P7k-tabpanel-2-label
+                nochange = true;
+                selectedIndex = 0;
+                return 0;
+            }
+            
+            return currentindex;
+
+
+        }
+
 
         [Parameter]
         public bool? RuleValue { get; set; }
@@ -123,7 +192,15 @@ namespace BlazorApp1.Blazor.Shared
 
 
 
-
+        private void OnUserFinish(System.Object source, ElapsedEventArgs e)
+        {
+            aTimer.Stop();
+            InvokeAsync(() =>
+            {
+                changeIndex().ConfigureAwait(true).GetAwaiter().GetResult();
+            });
+           
+        }
 
 
         protected override async Task OnInitializedAsync()
@@ -131,6 +208,9 @@ namespace BlazorApp1.Blazor.Shared
 
             JSInProcRuntime = Program.JSInProcRuntime;
             await base.OnInitializedAsync();
+
+            aTimer = new System.Timers.Timer(300);
+            aTimer.Elapsed += OnUserFinish;
 
             await CreateGrids();
 
@@ -1449,6 +1529,61 @@ namespace BlazorApp1.Blazor.Shared
            // console.Log($"{name} item with index {value} {action}");
         }
 
+        public async Task OnChange(int index)
+        {
+           
+
+
+            var response = await DialogService.Confirm(
+                "Are you sure you want to continue without saving?",
+                "Confirm",
+                new ConfirmOptions()
+                {
+                    CloseDialogOnEsc = false,
+                    CloseDialogOnOverlayClick = false,
+                    ShowClose = false,
+                    CancelButtonText = "No",
+                    OkButtonText = "Yes",
+                });
+
+            if (response == false)
+            {
+                selectedIndex= 0;
+            }
+
+
+        }
+
+
+        public bool DisableStep()
+            { return false; 
+        
+        }
+
+
+        [Inject]
+        public DialogService DialogService { get; set; }
+        public async Task CanChange(StepsCanChangeEventArgs args)
+        {
+            var selectindex = args.SelectedIndex;
+
+            var response = await DialogService.Confirm(
+                "Are you sure you want to continue without saving?",
+                "Confirm",
+                new ConfirmOptions()
+                {
+                    CloseDialogOnEsc = false,
+                    CloseDialogOnOverlayClick = false,
+                    ShowClose = false,
+                    CancelButtonText = "No",
+                    OkButtonText = "Yes",
+                });
+
+            if (response == false)
+            {
+                args.PreventDefault();
+            }
+        }
 
 
     }

@@ -168,34 +168,30 @@
      ShowProgress="ShowProgress"   
      ifNotShow="false">
      <ContentBody>
-                <RadzenTabs @ref="tabs" RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex >
+
+                    @{
+                        List<CalibrationSubType> listCa = new List<CalibrationSubType>();
+
+
+                        if (CurrentSubTypes > 0)
+                        {
+                            listCa = subtypesList.Take(CurrentSubTypes).DistinctBy(x => x.CalibrationSubTypeId).ToList();
+                        }
+                        else
+                        {
+                            listCa = subtypesList.DistinctBy(x => x.CalibrationSubTypeId).ToList();
+                        }
+                        int select = 0;
+
+                    }
+                  
+
+
+                    <RadzenTabs @ref="tabs"  RenderMode="TabRenderMode.Client" @bind-SelectedIndex=@selectedIndex>
             <Tabs>
 
-            @* <div id="CalibrationHeaderBody" class="@collapseclass" aria-labelledby="headingOne" data-bs-parent="@("#" + ParentAccordionID)">
-
-                <div class="@bodyclass">
-
-                    <div class="accordion" id="accordion"> *@
-                        @{
-                            List<CalibrationSubType> listCa = new List<CalibrationSubType>();
-
-                            // var lst = eq.CalibrationSubTypes.Where(x => x.Enabled == true && x.CalibrationSubTypeView != null && !string.IsNullOrEmpty(x.CalibrationSubTypeView.Component)
-                            // && x.CalibrationSubTypeView.Component.ToLower() == Component.Name.ToLower() && x.CalibrationSubTypeView?.AccordionType != "Section").OrderBy(x => x.Position).ToList();
-
-                            if (CurrentSubTypes > 0)
-                            {
-                                listCa = subtypesList.Take(CurrentSubTypes).DistinctBy(x=>x.CalibrationSubTypeId).ToList();
-                            }
-                            else
-                            {
-                                listCa = subtypesList.DistinctBy(x => x.CalibrationSubTypeId).ToList();
-                            }
-
-                            // if((UseIsVisible && !IsVisible)){
-                            //     listCa = new List<CalibrationSubType>();
-                            // }
-                        }
-
+     
+                           
 
                         @foreach (var itemcs in listCa)
                         {
@@ -249,20 +245,18 @@
              pn = true;
          }
 
-         //if ( itemcs.CalibrationSubTypeView.Style == "Modal")
-         //{
-         //    hide = true;
-         //    enable = true;
-         //}
-         if (!Init)
-         {
-             InitComponent(itemcs);
-         }
+       
+                                     if (!Init)
+                                     {
+                                         InitComponent(itemcs);
+                                     }
         
 
-     <RadzenTabsItem Text="@(itemcs.NameToShow)">
 
-     <Blazed.Controls.Modal 
+
+                                    <RadzenTabsItem Text="@(itemcs.NameToShow)" Disabled="DisableStep()" id="@("tabitem-" + itemcs.CalibrationSubTypeId.ToString())">
+
+                                    <Blazed.Controls.Modal 
      ID="@(iso.ToString() + "-modal")" 
      Style="@config.CalibrationSubTypeView.Style"
      ForceShow="true"
@@ -418,11 +412,12 @@
 
 
 
-
-                                         conta++;
+                                                                            
+                                          conta++;
+                                          
 
                                             
-                                 }
+                                          }
                             
                             
                                  </div>
@@ -487,22 +482,18 @@
              </Footer>
 
          </Blazed.Controls.Modal>
-         </RadzenTabsItem>
+                                    </RadzenTabsItem>
 
                             }
 
 
 
                             cont++;
+                            select=select + 1;
                         }
 
 
-                 @*    </div>
-
-
-                </div>
-
-            </div> *@
+                
 
                 </Tabs>
             </RadzenTabs>
